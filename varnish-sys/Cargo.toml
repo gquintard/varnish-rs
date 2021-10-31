@@ -1,0 +1,14 @@
+[package]
+name = "varnish-sys"
+version = "0.0.1"
+authors = ["Guillaume Quintard <guillaume.quintard@gmail.com>"]
+edition = "2018"
+license = "BSD-3-Clause"
+description = "Bindings to the Varnish Cache libraries"
+homepage = "https://github.com/gquintard/varnish-rs/blob/varnish-sys"
+repository = "https://github.com/gquintard/varnish-rs"
+readme = "README.md"
+
+[build-dependencies]
+bindgen = "0.54.0"
+pkg-config = "*"
