@@ -12,7 +12,7 @@ fn main() {
 
     let bindings = bindgen::Builder::default()
         .header("src/wrapper.h")
-        .blacklist_item("FP_.*")
+        .blocklist_item("FP_.*")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .clang_args(
             vapi.include_paths
