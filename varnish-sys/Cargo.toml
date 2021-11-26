@@ -2,7 +2,7 @@
 name = "varnish-sys"
 version = "0.0.1"
 authors = ["Guillaume Quintard <guillaume.quintard@gmail.com>"]
-edition = "2018"
+edition = "2021"
 license = "BSD-3-Clause"
 description = "Bindings to the Varnish Cache libraries"
 homepage = "https://github.com/gquintard/varnish-rs/blob/varnish-sys"
@@ -12,3 +12,6 @@ readme = "README.md"
 [build-dependencies]
 pkg-config = "0.3.22"
 bindgen = "0.59.1"
+
+[lib]
+name = "varnish_sys"
