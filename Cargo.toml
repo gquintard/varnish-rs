@@ -1,0 +1,7 @@
+[package]
+name = "varnish"
+version = "0.0.1"
+edition = "2021"
+
+[dependencies]
+varnish-sys = { path = "varnish-sys", version = "0.0.1" }
