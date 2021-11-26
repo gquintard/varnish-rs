@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 fn main() {
     println!("cargo:rustc-link-lib=varnishapi");
-    println!("cargo:rerun-if-changed=wrapper.h");
+    println!("cargo:rerun-if-changed=src/wrapper.h");
 
     let vapi = pkg_config::Config::new()
         .atleast_version("7.0")
