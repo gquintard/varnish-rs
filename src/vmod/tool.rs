@@ -11,8 +11,7 @@ pub fn generate() -> Result<(), String> {
     let rstool_bytes = include_bytes!("vmodtool-rs.py");
     let rs_tool_path =
         join_paths([env::var("OUT_DIR").unwrap(), String::from("rstool.py")]).unwrap();
-    fs::write(&rs_tool_path, &rstool_bytes).expect(&format!(
-        "couldn't write rstool.py tool in {:?}",
+    fs::write(&rs_tool_path, &rstool_bytes).unwrap_or_else(|_| panic!("couldn't write rstool.py tool in {:?}",
         &*rs_tool_path
     ));
 
@@ -31,7 +30,7 @@ pub fn generate() -> Result<(), String> {
         .arg(env::var("OUT_DIR").unwrap())
         .env(
             "PYTHONPATH",
-            join_paths([env::var("OUT_DIR").unwrap_or(String::new()), vmodtool_dir]).unwrap(),
+            join_paths([env::var("OUT_DIR").unwrap_or_default(), vmodtool_dir]).unwrap(),
         )
         .output()
         .expect("failed to run vmodtool");

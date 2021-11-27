@@ -41,7 +41,7 @@ impl<T> VPriv<T> {
 
     pub fn store(&mut self, obj: T) {
         unsafe {
-            if !self.get_inner().is_some() {
+            if self.get_inner().is_none() {
                 let name = Box::into_raw(Box::new(CString::new(type_name::<T>()).unwrap()));
                 let methods = varnish_sys::vmod_priv_methods {
                     magic: varnish_sys::VMOD_PRIV_METHODS_MAGIC,

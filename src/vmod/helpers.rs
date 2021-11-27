@@ -2,7 +2,13 @@ use std::os::raw::*;
 use std::ptr;
 use varnish_sys::*;
 
-pub fn empty_ctx() -> vrt_ctx {
+/// Creates a dummy `Ctx` for test purposes.
+///
+/// # Safety
+///
+/// The create struct will mostly lack **A LOT** of things that the varnish API considers
+/// essential, use at you own risk.
+pub unsafe fn empty_ctx() -> vrt_ctx {
     vrt_ctx {
         magic: VRT_CTX_MAGIC,
         syntax: 0,

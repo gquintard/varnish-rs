@@ -1,3 +1,5 @@
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
+
 use std::slice::{from_raw_parts, from_raw_parts_mut};
 use std::str::from_utf8;
 
@@ -12,15 +14,17 @@ pub struct Ctx<'a> {
 }
 
 impl<'a> Ctx<'a> {
-    pub unsafe fn new(raw: *mut varnish_sys::vrt_ctx) -> Self {
+    pub fn new(raw: *mut varnish_sys::vrt_ctx) -> Self {
+        let p = unsafe { raw.as_ref().unwrap() };
+        assert_eq!(p.magic, varnish_sys::VRT_CTX_MAGIC);
         Ctx {
             raw,
-            http_req: HTTP::new((*raw).http_req),
-            http_req_top: HTTP::new((*raw).http_req_top),
-            http_resp: HTTP::new((*raw).http_resp),
-            http_bereq: HTTP::new((*raw).http_bereq),
-            http_beresp: HTTP::new((*raw).http_beresp),
-            ws: WS::new((*raw).ws),
+            http_req: HTTP::new(p.http_req),
+            http_req_top: HTTP::new(p.http_req_top),
+            http_resp: HTTP::new(p.http_resp),
+            http_bereq: HTTP::new(p.http_bereq),
+            http_beresp: HTTP::new(p.http_beresp),
+            ws: WS::new(p.ws),
         }
     }
 }
@@ -52,7 +56,7 @@ impl HTTP {
             let mut hd = raw_http.hd.offset(raw_http.nhd as isize);
             (*hd).b = hdr_buf.as_ptr() as *const i8;
             /* -1 accounts for the null character */
-            (*hd).e = hdr_buf.as_ptr().offset((hdr_buf.len() - 1) as isize) as *const i8;
+            (*hd).e = hdr_buf.as_ptr().add(hdr_buf.len() - 1) as *const i8;
             let hdf = raw_http.hdf.offset(raw_http.nhd as isize);
             *hdf = 0;
         }
@@ -149,7 +153,7 @@ impl<'a> Iterator for HTTPIter<'a> {
                 let e = (*(*self.http.raw).hd.offset(self.cursor)).e;
                 self.cursor += 1;
                 let buf = from_raw_parts(b as *const u8, e.offset_from(b) as usize);
-                let colon = buf.iter().position(|x| *x == ':' as u8).unwrap();
+                let colon = buf.iter().position(|x| *x == b':').unwrap();
 
                 let name = from_utf8(&buf[..colon]).unwrap();
 

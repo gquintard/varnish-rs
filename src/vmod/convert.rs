@@ -15,7 +15,7 @@ pub trait IntoVCL<T> {
 
 impl IntoVCL<VCL_REAL> for f64 {
     fn into_vcl(self, _: &mut WS) -> VCL_REAL {
-        self.into()
+        self
     }
 }
 
@@ -44,7 +44,7 @@ impl IntoVCL<VCL_STRING> for &str {
             Err(_) => ptr::null(),
             Ok(buf) => {
                 buf[..l].copy_from_slice(self.as_bytes());
-                buf[l] = '\0' as u8;
+                buf[l] = b'\0';
                 buf.as_ptr() as *const i8
             }
         }
@@ -64,7 +64,7 @@ impl IntoVCL<VCL_STRING> for VCL_STRING {
 }
 
 impl IntoVCL<()> for () {
-    fn into_vcl(self, _: &mut WS) -> () {}
+    fn into_vcl(self, _: &mut WS) {}
 }
 
 const EMPTY_STRING: *const c_char = b"\0".as_ptr() as *const c_char;
