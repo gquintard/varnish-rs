@@ -104,5 +104,4 @@ fn exploration() {
 
         vpriv_free::<i32>(ptr::null::<varnish_sys::vrt_ctx>(), vp.priv_);
     }
-
 }

@@ -1,4 +1,4 @@
-use std::slice::{from_raw_parts, from_raw_parts_mut };
+use std::slice::{from_raw_parts, from_raw_parts_mut};
 use std::str::from_utf8;
 
 pub struct Ctx<'a> {
@@ -98,7 +98,9 @@ impl HTTP {
     }
 
     pub fn header(&self, key: &str) -> Option<&str> {
-        self.into_iter().find(|hdr| key.eq_ignore_ascii_case(hdr.0)).map(|hdr| hdr.1)
+        self.into_iter()
+            .find(|hdr| key.eq_ignore_ascii_case(hdr.0))
+            .map(|hdr| hdr.1)
     }
 }
 
@@ -107,7 +109,10 @@ impl<'a> IntoIterator for &'a HTTP {
     type IntoIter = HTTPIter<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
-        HTTPIter { http: self, cursor: varnish_sys::HTTP_HDR_FIRST as isize}
+        HTTPIter {
+            http: self,
+            cursor: varnish_sys::HTTP_HDR_FIRST as isize,
+        }
     }
 }
 
@@ -116,7 +121,10 @@ impl<'a> IntoIterator for &'a mut HTTP {
     type IntoIter = HTTPIter<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
-        HTTPIter { http: self, cursor: varnish_sys::HTTP_HDR_FIRST as isize}
+        HTTPIter {
+            http: self,
+            cursor: varnish_sys::HTTP_HDR_FIRST as isize,
+        }
     }
 }
 
@@ -148,8 +156,11 @@ impl<'a> Iterator for HTTPIter<'a> {
                 if colon == buf.len() - 1 {
                     Some((name, ""))
                 } else {
-                    let start = &buf[colon+1..].iter().position(|x| !char::is_whitespace(*x as char)).unwrap_or(0);
-                    Some((name, from_utf8(&buf[(colon+start+1)..]).unwrap()))
+                    let start = &buf[colon + 1..]
+                        .iter()
+                        .position(|x| !char::is_whitespace(*x as char))
+                        .unwrap_or(0);
+                    Some((name, from_utf8(&buf[(colon + start + 1)..]).unwrap()))
                 }
             }
         }
@@ -177,9 +188,7 @@ impl<'a> WS<'a> {
         if p.is_null() {
             Err(format!("workspace allocation ({} bytes) failed", size))
         } else {
-            unsafe {
-                Ok(from_raw_parts_mut(p, size))
-            }
+            unsafe { Ok(from_raw_parts_mut(p, size)) }
         }
     }
 

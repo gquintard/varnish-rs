@@ -7,7 +7,7 @@ use std::time::Duration;
 use crate::vmod::vpriv::VPriv;
 use crate::vrt::WS;
 use varnish_sys;
-use varnish_sys::{ VCL_REAL, VCL_INT, VCL_BOOL, VCL_STRING, VCL_DURATION };
+use varnish_sys::{VCL_BOOL, VCL_DURATION, VCL_INT, VCL_REAL, VCL_STRING};
 
 pub trait IntoVCL<T> {
     fn into_vcl(self, ws: &mut WS) -> T;
@@ -40,10 +40,8 @@ impl IntoVCL<VCL_DURATION> for Duration {
 impl IntoVCL<VCL_STRING> for &str {
     fn into_vcl(self, ws: &mut WS) -> VCL_STRING {
         let l = self.len();
-        match ws.alloc(l+1) {
-            Err(_) => {
-                ptr::null()
-            },
+        match ws.alloc(l + 1) {
+            Err(_) => ptr::null(),
             Ok(buf) => {
                 buf[..l].copy_from_slice(self.as_bytes());
                 buf[l] = '\0' as u8;
