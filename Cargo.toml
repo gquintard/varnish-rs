@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 varnish-sys = { path = "varnish-sys", version = "0.0.1" }
+pkg-config = "0.3.22"

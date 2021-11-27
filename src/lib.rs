@@ -2,6 +2,7 @@ pub mod vmod {
     pub mod convert;
     pub mod helpers;
     pub mod vpriv;
+    pub mod tool;
 }
 
 pub mod vrt;
