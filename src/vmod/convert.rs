@@ -5,42 +5,42 @@ use std::ptr;
 use std::time::Duration;
 
 use crate::vmod::vpriv::VPriv;
-use crate::vrt::Ctx;
+use crate::vrt::WS;
 use varnish_sys;
 use varnish_sys::{ VCL_REAL, VCL_INT, VCL_BOOL, VCL_STRING, VCL_DURATION };
 
 pub trait IntoVCL<T> {
-    fn into_vcl(self, ctx: &mut Ctx) -> T;
+    fn into_vcl(self, ws: &mut WS) -> T;
 }
 
 impl IntoVCL<VCL_REAL> for f64 {
-    fn into_vcl(self, _: &mut Ctx) -> VCL_REAL {
+    fn into_vcl(self, _: &mut WS) -> VCL_REAL {
         self.into()
     }
 }
 
 impl IntoVCL<VCL_INT> for i64 {
-    fn into_vcl(self, _: &mut Ctx) -> VCL_INT {
+    fn into_vcl(self, _: &mut WS) -> VCL_INT {
         self as VCL_INT
     }
 }
 
 impl IntoVCL<VCL_BOOL> for bool {
-    fn into_vcl(self, _: &mut Ctx) -> VCL_BOOL {
+    fn into_vcl(self, _: &mut WS) -> VCL_BOOL {
         self as VCL_BOOL
     }
 }
 
 impl IntoVCL<VCL_DURATION> for Duration {
-    fn into_vcl(self, _: &mut Ctx) -> VCL_DURATION {
+    fn into_vcl(self, _: &mut WS) -> VCL_DURATION {
         self.as_secs_f64()
     }
 }
 
 impl IntoVCL<VCL_STRING> for &str {
-    fn into_vcl(self, ctx: &mut Ctx) -> VCL_STRING {
+    fn into_vcl(self, ws: &mut WS) -> VCL_STRING {
         let l = self.len();
-        match ctx.ws.alloc(l+1) {
+        match ws.alloc(l+1) {
             Err(_) => {
                 ptr::null()
             },
@@ -54,25 +54,19 @@ impl IntoVCL<VCL_STRING> for &str {
 }
 
 impl IntoVCL<VCL_STRING> for String {
-    fn into_vcl(self, ctx: &mut Ctx) -> VCL_STRING {
-        <&str>::into_vcl(&self, ctx)
-    }
-}
-
-impl IntoVCL<VCL_STRING> for &String {
-    fn into_vcl(self, ctx: &mut Ctx) -> VCL_STRING {
-        <&str>::into_vcl(&*self, ctx)
+    fn into_vcl(self, ws: &mut WS) -> VCL_STRING {
+        <&str>::into_vcl(&self, ws)
     }
 }
 
 impl IntoVCL<VCL_STRING> for VCL_STRING {
-    fn into_vcl(self, _: &mut Ctx) -> VCL_STRING {
+    fn into_vcl(self, _: &mut WS) -> VCL_STRING {
         self
     }
 }
 
-impl<T> IntoVCL<()> for T {
-    fn into_vcl(self, _: &mut Ctx) -> () {}
+impl IntoVCL<()> for () {
+    fn into_vcl(self, _: &mut WS) -> () {}
 }
 
 const EMPTY_STRING: *const c_char = b"\0".as_ptr() as *const c_char;

@@ -1,17 +1,17 @@
 use std::slice::{from_raw_parts, from_raw_parts_mut };
 use std::str::from_utf8;
 
-pub struct Ctx<'a, 'b> {
+pub struct Ctx<'a> {
     pub raw: *mut varnish_sys::vrt_ctx,
     pub http_req: Option<HTTP>,
     pub http_req_top: Option<HTTP>,
     pub http_resp: Option<HTTP>,
     pub http_bereq: Option<HTTP>,
     pub http_beresp: Option<HTTP>,
-    pub ws: WS<'a, 'b>,
+    pub ws: WS<'a>,
 }
 
-impl<'a, 'b> Ctx<'a, 'b> {
+impl<'a> Ctx<'a> {
     pub unsafe fn new(raw: *mut varnish_sys::vrt_ctx) -> Self {
         Ctx {
             raw,
@@ -36,6 +36,28 @@ impl HTTP {
         } else {
             Some(HTTP { raw })
         }
+    }
+
+    pub fn set_header(&mut self, name: &str, value: &str) -> Result<(), String> {
+        let mut raw_http = unsafe { self.raw.as_mut().unwrap() };
+        assert!(raw_http.nhd <= raw_http.shd);
+        if raw_http.nhd == raw_http.shd {
+            return Err("no more header slot".to_string());
+        }
+
+        /* XXX: aliasing warning, it's the same pointer as the one in Ctx */
+        let mut ws = WS::new(raw_http.ws);
+        let hdr_buf = ws.copy_bytes(&format!("{}: {}\n", name, value))?;
+        unsafe {
+            let mut hd = raw_http.hd.offset(raw_http.nhd as isize);
+            (*hd).b = hdr_buf.as_ptr() as *const i8;
+            /* -1 accounts for the null character */
+            (*hd).e = hdr_buf.as_ptr().offset((hdr_buf.len() - 1) as isize) as *const i8;
+            let hdf = raw_http.hdf.offset(raw_http.nhd as isize);
+            *hdf = 0;
+        }
+        raw_http.nhd += 1;
+        Ok(())
     }
 
     fn field(&self, idx: u32) -> Option<&str> {
@@ -89,6 +111,15 @@ impl<'a> IntoIterator for &'a HTTP {
     }
 }
 
+impl<'a> IntoIterator for &'a mut HTTP {
+    type Item = (&'a str, &'a str);
+    type IntoIter = HTTPIter<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        HTTPIter { http: self, cursor: varnish_sys::HTTP_HDR_FIRST as isize}
+    }
+}
+
 pub struct HTTPIter<'a> {
     http: &'a HTTP,
     cursor: isize,
@@ -125,13 +156,12 @@ impl<'a> Iterator for HTTPIter<'a> {
     }
 }
 
-pub struct WS<'a, 'b: 'a> {
+pub struct WS<'a> {
     pub raw: *mut varnish_sys::ws,
     phantom_a: std::marker::PhantomData<&'a u8>,
-    phantom_b: std::marker::PhantomData<&'b u8>,
 }
 
-impl<'a, 'b> WS<'a, 'b> {
+impl<'a> WS<'a> {
     pub fn new(raw: *mut varnish_sys::ws) -> Self {
         if raw.is_null() {
             panic!("raw pointer was null");
@@ -139,7 +169,6 @@ impl<'a, 'b> WS<'a, 'b> {
         WS {
             raw,
             phantom_a: std::marker::PhantomData,
-            phantom_b: std::marker::PhantomData,
         }
     }
 
@@ -154,19 +183,22 @@ impl<'a, 'b> WS<'a, 'b> {
         }
     }
 
-    pub fn copy<T: Copy>(&'b mut self, src: &T) -> Result<&'a mut T, String> {
-        let dest = self.alloc(std::mem::size_of::<T>())?.as_mut_ptr() as *mut T;
-        unsafe {
-            std::ptr::copy_nonoverlapping(src, dest, 1);
-            Ok(&mut *dest as &mut T)
-        }
+    pub fn copy_bytes<T: AsRef<[u8]>>(&mut self, src: &T) -> Result<&'a [u8], String> {
+        let buf = src.as_ref();
+        let l = buf.len();
+
+        let dest = self.alloc(l)?;
+        dest.copy_from_slice(buf);
+        Ok(dest)
     }
 
-    pub fn own<T: Copy>(&'b mut self, src: T) -> Result<&'a mut T, String> {
-        let dest = self.alloc(std::mem::size_of::<T>())?.as_mut_ptr() as *mut T;
-        unsafe {
-            std::ptr::copy_nonoverlapping(&src, dest, 1);
-            Ok(&mut *dest as &mut T)
-        }
+    pub fn copy_str<T: AsRef<str>>(&mut self, src: &T) -> Result<&'a str, String> {
+        let s: &str = src.as_ref();
+        let buf = s.as_bytes();
+        let l = buf.len();
+
+        let dest = self.alloc(l)?;
+        dest.copy_from_slice(buf);
+        Ok(std::str::from_utf8(dest).unwrap())
     }
 }
