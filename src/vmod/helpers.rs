@@ -8,7 +8,7 @@ use varnish_sys::*;
 ///
 /// The create struct will mostly lack **A LOT** of things that the varnish API considers
 /// essential, use at you own risk.
-pub unsafe fn empty_ctx() -> vrt_ctx {
+pub fn empty_ctx() -> vrt_ctx {
     vrt_ctx {
         magic: VRT_CTX_MAGIC,
         syntax: 0,
