@@ -1,7 +1,13 @@
 [package]
 name = "varnish"
 version = "0.0.1"
+authors = ["Guillaume Quintard <guillaume.quintard@gmail.com>"]
 edition = "2021"
+license = "BSD-3-Clause"
+description = "Access to the Varnish modules API"
+homepage = "https://github.com/gquintard/varnish-rs"
+repository = "https://github.com/gquintard/varnish-rs"
+readme = "README.md"
 
 [dependencies]
 varnish-sys = { path = "varnish-sys", version = "0.0.1" }
