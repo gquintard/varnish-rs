@@ -114,8 +114,8 @@ def runmain(inputvcc, rstdir):
 use std::os::raw::*;
 use std::boxed::Box;
 use crate::vmod;
-use varnish::vrt::Ctx;
-use varnish::vmod::convert::{{IntoRust, IntoVCL}};
+use varnish::vcl::ctx::Ctx;
+use varnish::vcl::convert::{{IntoRust, IntoVCL}};
 
 pub const name: &'static str = "{modname}";
 

@@ -4,9 +4,8 @@ use std::os::raw::*;
 use std::ptr;
 use std::time::Duration;
 
-use crate::vmod::vpriv::VPriv;
-use crate::vrt::WS;
-use varnish_sys;
+use crate::vcl::vpriv::VPriv;
+use crate::vcl::ws::WS;
 use varnish_sys::{VCL_BOOL, VCL_DURATION, VCL_INT, VCL_REAL, VCL_STRING};
 
 pub trait IntoVCL<T> {
@@ -65,6 +64,22 @@ impl IntoVCL<VCL_STRING> for VCL_STRING {
 
 impl IntoVCL<()> for () {
     fn into_vcl(self, _: &mut WS) {}
+}
+
+pub trait IntoResult<T, E> {
+    fn into_result(self) -> Result<T, E>;
+}
+
+impl<T, E> IntoResult<T, E> for T {
+    fn into_result(self) -> Result<T, E> {
+        Ok(self)
+    }
+}
+
+impl<T, E> IntoResult<T, E> for Result<T, E> {
+    fn into_result(self) -> Result<T, E> {
+        self
+    }
 }
 
 const EMPTY_STRING: *const c_char = b"\0".as_ptr() as *const c_char;

@@ -1,11 +1,17 @@
-pub mod vmod {
+//! The Varnish RunTime wrapper
+//!
+//! This module provides access to the public API use by VCL and vmods.
+
+pub mod vcl {
     pub mod convert;
+    pub mod ctx;
     pub mod helpers;
-    pub mod tool;
+    pub mod http;
     pub mod vpriv;
+    pub mod ws;
 }
 
-pub mod vrt;
+pub mod vmodtool;
 
 #[macro_export]
 macro_rules! vtc {
