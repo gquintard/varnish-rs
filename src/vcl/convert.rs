@@ -8,36 +8,42 @@ use crate::vcl::vpriv::VPriv;
 use crate::vcl::ws::WS;
 use varnish_sys::{VCL_BOOL, VCL_DURATION, VCL_INT, VCL_REAL, VCL_STRING};
 
-pub trait IntoVCL<T> {
-    fn into_vcl(self, ws: &mut WS) -> T;
+pub trait IntoVCL {
+    type Item;
+    fn into_vcl(self, ws: &mut WS) -> Self::Item;
 }
 
-impl IntoVCL<VCL_REAL> for f64 {
-    fn into_vcl(self, _: &mut WS) -> VCL_REAL {
+impl IntoVCL for f64 {
+    type Item = VCL_REAL;
+    fn into_vcl(self, _: &mut WS) -> Self::Item {
         self
     }
 }
 
-impl IntoVCL<VCL_INT> for i64 {
-    fn into_vcl(self, _: &mut WS) -> VCL_INT {
+impl IntoVCL for i64 {
+    type Item = VCL_INT;
+    fn into_vcl(self, _: &mut WS) -> Self::Item {
         self as VCL_INT
     }
 }
 
-impl IntoVCL<VCL_BOOL> for bool {
-    fn into_vcl(self, _: &mut WS) -> VCL_BOOL {
+impl IntoVCL for bool {
+    type Item = VCL_BOOL;
+    fn into_vcl(self, _: &mut WS) -> Self::Item {
         self as VCL_BOOL
     }
 }
 
-impl IntoVCL<VCL_DURATION> for Duration {
-    fn into_vcl(self, _: &mut WS) -> VCL_DURATION {
+impl IntoVCL for Duration {
+    type Item = VCL_DURATION;
+    fn into_vcl(self, _: &mut WS) -> Self::Item {
         self.as_secs_f64()
     }
 }
 
-impl IntoVCL<VCL_STRING> for &str {
-    fn into_vcl(self, ws: &mut WS) -> VCL_STRING {
+impl IntoVCL for &str {
+    type Item = VCL_STRING;
+    fn into_vcl(self, ws: &mut WS) -> Self::Item {
         let l = self.len();
         match ws.alloc(l + 1) {
             Err(_) => ptr::null(),
@@ -50,34 +56,40 @@ impl IntoVCL<VCL_STRING> for &str {
     }
 }
 
-impl IntoVCL<VCL_STRING> for String {
-    fn into_vcl(self, ws: &mut WS) -> VCL_STRING {
+impl IntoVCL for String {
+    type Item = VCL_STRING;
+    fn into_vcl(self, ws: &mut WS) -> Self::Item {
         <&str>::into_vcl(&self, ws)
     }
 }
 
-impl IntoVCL<VCL_STRING> for VCL_STRING {
-    fn into_vcl(self, _: &mut WS) -> VCL_STRING {
+impl IntoVCL for VCL_STRING {
+    type Item = VCL_STRING;
+    fn into_vcl(self, _: &mut WS) -> Self::Item {
         self
     }
 }
 
-impl IntoVCL<()> for () {
-    fn into_vcl(self, _: &mut WS) {}
+impl IntoVCL for () {
+    type Item = ();
+    fn into_vcl(self, _: &mut WS) -> Self::Item {}
 }
 
-pub trait IntoResult<T, E> {
-    fn into_result(self) -> Result<T, E>;
+pub trait IntoResult {
+    type Item;
+    fn into_result(self) -> Result<Self::Item, String>;
 }
 
-impl<T, E> IntoResult<T, E> for T {
-    fn into_result(self) -> Result<T, E> {
+impl<T: IntoVCL> IntoResult for T {
+    type Item = T;
+    fn into_result(self) -> Result<Self::Item, String> {
         Ok(self)
     }
 }
 
-impl<T, E> IntoResult<T, E> for Result<T, E> {
-    fn into_result(self) -> Result<T, E> {
+impl<T> IntoResult for Result<T, String> {
+    type Item = T;
+    fn into_result(self) -> Result<Self::Item, String> {
         self
     }
 }

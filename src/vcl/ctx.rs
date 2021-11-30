@@ -46,22 +46,21 @@ impl<'a> Ctx<'a> {
         }
     }
 
-    pub fn fail<T: AsRef<[u8]>>(&mut self, msg: &T) {
+    pub fn fail(&mut self, msg: &str) -> u8 {
         let p = unsafe { *self.raw };
         assert!(!p.handling.is_null());
         unsafe {
             if *p.handling == VCL_RET_FAIL {
-                return;
+                return 0;
             }
             assert!(*p.handling == 0);
             *p.handling = VCL_RET_FAIL;
         }
 
-        let buf = msg.as_ref();
         if p.vsl.is_null() {
             assert!(!p.msg.is_null());
             unsafe {
-                varnish_sys::VSB_bcat(p.msg, buf.as_ptr() as *const c_void, buf.len() as i64);
+                varnish_sys::VSB_bcat(p.msg, msg.as_ptr() as *const c_void, msg.len() as i64);
                 varnish_sys::VSB_putc(p.msg, '\n' as i32);
             }
         } else {
@@ -69,10 +68,11 @@ impl<'a> Ctx<'a> {
                 varnish_sys::VSLb_bin(
                     p.vsl,
                     SLT_VCL_ERROR,
-                    buf.len() as i64,
-                    buf.as_ptr() as *const c_void,
+                    msg.len() as i64,
+                    msg.as_ptr() as *const c_void,
                 );
             }
         }
+        0
     }
 }
