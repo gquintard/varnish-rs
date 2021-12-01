@@ -40,6 +40,8 @@ def rustFuncArgs(self, t):
     args = []
     args.append("\t\t&mut _ctx")
     if self.argstruct:
+        if t == "ini":
+            args.append("\t\t&vcl_name.into_rust()")
         for a in self.args:
             if a.opt:
                 args.append("\t\tif (*args).valid_{nm} == 0 {{ None }} else {{ Some({conv}(*args).{nm}.into_rust() ) }},".format(conv = conv(a.vt, "from"), nm = a.nm2))
@@ -54,7 +56,7 @@ def rustFuncArgs(self, t):
 
 def defaultReturn(t):
     if t == "VOID":
-        return ""
+        return ";"
     elif t == "STRING":
         return "; ptr::null()"
     else:
@@ -81,7 +83,7 @@ def rustfuncBody(self, vcc, t):
     elif  t== "fini":
         print("\tBox::from_raw(*objp);")
     elif t == "meth":
-        print("\tmatch (*obj){name}((".format(name = self.cname()))
+        print("\tmatch (*obj){name}(".format(name = self.bname))
         rustFuncArgs(self, t)
         print('''\t).into_result() {{
             Err(ref e) => {{ _ctx.fail(&e){0} }},
