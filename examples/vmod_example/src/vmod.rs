@@ -47,3 +47,7 @@ fn even_test() {
     assert_eq!(true,is_even(ctx, 1024));
     assert_eq!(false, is_even(ctx, 421321));
 }
+
+// we also want to run test/test01.vtc
+#[cfg(test)]
+varnish::vtc!(test01);
