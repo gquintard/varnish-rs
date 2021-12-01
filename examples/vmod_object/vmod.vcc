@@ -1,0 +1,14 @@
+#-
+$Module object 3 "An example vmod"
+
+$Object kv([INT cap])
+
+Create a new key-value store, with an optional capacity. If `cap` is 0 or less, it will be ignored.
+
+$Method VOID .set(STRING key, STRING value)
+
+Insert a key-value pair into the store.
+
+$Method STRING .get(STRING key)
+
+Retrieve the value associated `key`, or an empty string if `key` didn't exist.
