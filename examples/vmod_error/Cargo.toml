@@ -1,0 +1,15 @@
+[package]
+name = "vmod_error"
+version = "0.0.1"
+edition = "2021"
+
+[build-dependencies]
+varnish = { path = "../.." }
+
+[dependencies]
+varnish = { path = "../.." }
+varnish-sys = { path = "../../varnish-sys" }
+rand = "0.8.3"
+
+[lib]
+crate-type = ["cdylib"]

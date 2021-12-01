@@ -1,0 +1,6 @@
+#-
+$Module error 3 "Generate random numbers"
+
+$Function INT cannot_fail(STRING path)
+$Function INT manual_fail(STRING path)
+$Function INT result_fail(STRING path)
