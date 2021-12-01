@@ -1,7 +1,6 @@
 
 import optparse
 import json
-#import pprint
 import io
 import os
 
@@ -53,6 +52,14 @@ def rustFuncArgs(self, t):
             args.append("\t\t{conv}{nm}.into_rust()".format(conv = conv(a.vt, "from"), nm = a.nm2))
     print(",\n".join(args))
 
+def defaultReturn(t):
+    if t == "VOID":
+        return ""
+    elif t == "STRING":
+        return "; ptr::null()"
+    else:
+        return ".into()"
+
 def rustfuncBody(self, vcc, t):
     if self.argstruct:
         print("#[repr(C)]\nstruct arg_{0}{1}_{2} {{".format(vcc.sympfx, vcc.modname, self.cname()))
@@ -79,14 +86,14 @@ def rustfuncBody(self, vcc, t):
         print('''\t).into_result() {{
             Err(ref e) => {{ _ctx.fail(&e){0} }},
             Ok(v) => v.into_vcl(&mut _ctx.ws),
-        }}'''.format(";" if self.retval.vt == "VOID" else ".into()"))
+        }}'''.format(defaultReturn(self.retval.vt)))
     else:
         print("\tmatch vmod::{name}(".format(name = self.cname()))
         rustFuncArgs(self, t)
         print('''\t).into_result() {{
             Err(ref e) => {{ _ctx.fail(&e){0} }},
             Ok(v) => v.into_vcl(&mut _ctx.ws),
-        }}'''.format(";" if self.retval.vt == "VOID" else ".into()"))
+        }}'''.format(defaultReturn(self.retval.vt)))
     print("}")
 
 def runmain(inputvcc, rstdir):
@@ -117,6 +124,7 @@ def runmain(inputvcc, rstdir):
 
 
     print("""
+use std::ptr;
 use std::os::raw::*;
 use std::boxed::Box;
 use crate::vmod;
