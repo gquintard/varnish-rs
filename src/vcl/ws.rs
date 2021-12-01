@@ -6,7 +6,7 @@ use std::slice::from_raw_parts_mut;
 /// transaction and the workspace is wiped, so there's no need to free the objects living in it.
 ///
 /// The workspace is usually a few tens of kilobytes large, don't be greedy. If you need more
-/// space, consider storing your data in a [`VPriv`](crate::vmod::vpriv::VPriv).
+/// space, consider storing your data in a [`VPriv`](crate::vcl::vpriv::VPriv).
 pub struct WS<'a> {
     pub raw: *mut varnish_sys::ws,
     phantom_a: std::marker::PhantomData<&'a u8>,
