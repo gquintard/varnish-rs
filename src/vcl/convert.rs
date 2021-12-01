@@ -75,21 +75,21 @@ impl IntoVCL for () {
     fn into_vcl(self, _: &mut WS) -> Self::Item {}
 }
 
-pub trait IntoResult {
+pub trait IntoResult<U> {
     type Item;
-    fn into_result(self) -> Result<Self::Item, String>;
+    fn into_result(self) -> Result<Self::Item, U>;
 }
 
-impl<T: IntoVCL> IntoResult for T {
+impl<T: IntoVCL> IntoResult<&'static str> for T {
     type Item = T;
-    fn into_result(self) -> Result<Self::Item, String> {
+    fn into_result(self) -> Result<Self::Item, &'static str> {
         Ok(self)
     }
 }
 
-impl<T> IntoResult for Result<T, String> {
+impl<T, U: AsRef<str>> IntoResult<U> for Result<T, U> {
     type Item = T;
-    fn into_result(self) -> Result<Self::Item, String> {
+    fn into_result(self) -> Result<Self::Item, U> {
         self
     }
 }
