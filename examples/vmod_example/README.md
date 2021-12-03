@@ -1,6 +1,6 @@
 # vmod_example
 
-Here you will find a starting point for your own vmods, and to learn coding vmods in `rust`. Ideally, you should be familiar at least with either vmod development, or with `rust` development, but if your starting fresh, this should get you going to.
+Here you will find a starting point for your own vmods, and to learn coding vmods in `rust`. Ideally, you should be familiar at least with either vmod development, or with `rust` development, but if your starting fresh, this should get you going too.
 
 # Compiling
 
