@@ -1,5 +1,5 @@
-use varnish::vcl::ctx::Ctx;
 use std::time::{Duration, Instant};
+use varnish::vcl::ctx::Ctx;
 
 use varnish::vcl::vpriv::VPriv;
 
@@ -14,13 +14,9 @@ pub fn timestamp(_: &Ctx, vp: &mut VPriv<Instant>) -> Duration {
 
     let interval = match vp.get() {
         // if `.get()` returns None, we just store `now` and interval is 0
-        None => {
-            Duration::new(0, 0)
-        }
+        None => Duration::new(0, 0),
         // if there was a value, compute the difference with now
-        Some(old_now) => {
-            now.duration_since(*old_now)
-        }
+        Some(old_now) => now.duration_since(*old_now),
     };
     // store the current time and return `interval`
     vp.store(now);

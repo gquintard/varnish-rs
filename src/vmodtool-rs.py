@@ -86,14 +86,14 @@ def rustfuncBody(self, vcc, t):
         print("\tmatch (*obj){name}(".format(name = self.bname))
         rustFuncArgs(self, t)
         print('''\t).into_result() {{
-            Err(ref e) => {{ _ctx.fail(&e){0} }},
+            Err(ref e) => {{ _ctx.fail(e){0} }},
             Ok(v) => v.into_vcl(&mut _ctx.ws),
         }}'''.format(defaultReturn(self.retval.vt)))
     else:
         print("\tmatch vmod::{name}(".format(name = self.cname()))
         rustFuncArgs(self, t)
         print('''\t).into_result() {{
-            Err(ref e) => {{ _ctx.fail(&e){0} }},
+            Err(ref e) => {{ _ctx.fail(e){0} }},
             Ok(v) => v.into_vcl(&mut _ctx.ws),
         }}'''.format(defaultReturn(self.retval.vt)))
     print("}")
@@ -133,7 +133,7 @@ use crate::vmod;
 use varnish::vcl::ctx::Ctx;
 use varnish::vcl::convert::{{IntoRust, IntoVCL, IntoResult}};
 
-pub const name: &'static str = "{modname}";
+pub const name: &str = "{modname}";
 
 const PROTO: *const c_char = b"
 {buf}

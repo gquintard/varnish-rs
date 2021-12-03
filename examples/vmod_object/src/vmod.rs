@@ -1,10 +1,10 @@
 // prevent the compiler warnings because it'd prefer `kv` to be named `Kv` instead
 #![allow(non_camel_case_types)]
 
-use varnish::vcl::ctx::Ctx;
 use std::collections::HashMap;
-use varnish::vcl::convert::IntoVCL;
 use std::sync::Mutex;
+use varnish::vcl::convert::IntoVCL;
+use varnish::vcl::ctx::Ctx;
 use varnish_sys::VCL_STRING;
 
 #[cfg(test)]
