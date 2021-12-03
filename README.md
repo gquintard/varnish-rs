@@ -18,6 +18,10 @@ Varnish bindings, notably to build vmods
 
 Right now, the only Varnish version supported is `7.0`.
 
+## Python3
+
+At the moment, we use an embedded [python script](src/vmodtool-rs.py) to generate the boilerplate that exposes the rust vmod code to Varnish. Make sure that `python3` is in your path.
+
 ## Building
 
 ``` bash

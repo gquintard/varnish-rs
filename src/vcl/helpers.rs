@@ -6,7 +6,7 @@ use varnish_sys::*;
 ///
 /// # Safety
 ///
-/// The create struct will mostly lack **A LOT** of things that the varnish API considers
+/// The created struct will mostly lack **A LOT** of things that the varnish API considers
 /// essential, use at you own risk.
 pub fn empty_ctx() -> vrt_ctx {
     vrt_ctx {

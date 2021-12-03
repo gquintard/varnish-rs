@@ -7,6 +7,7 @@ Here you will find a starting point for your own vmods, and to learn coding vmod
 You need only two things:
 - a stable version of `cargo`/`rust`
 - the `libvarnish` development files installed where `pkg-config` can find them
+- `python31
 
 From within this directory, run:
 
