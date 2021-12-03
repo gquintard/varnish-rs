@@ -1,5 +1,5 @@
 #-
-$Module object 3 "An example vmod"
+$Module object 3 "a simple STRING dictionary in your VCL"
 
 $Object kv([INT cap])
 

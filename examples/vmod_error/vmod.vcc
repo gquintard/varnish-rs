@@ -1,5 +1,5 @@
 #-
-$Module error 3 "Generate random numbers"
+$Module error 3 "Parse files into numbers"
 
 All three functions will do the same thing: read a file and try to parse its content into a VCL_INT.
 However, they will handle failure (file not found, permission issue, unparsable content, etc.) differently.

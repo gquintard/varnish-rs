@@ -23,6 +23,8 @@ pub struct kv {
 impl kv {
     // constructor doesn't need a Ctx, or the VCL name, hence the _ prefix
     pub fn new(_ctx: &Ctx, _vcl_name: &str, cap: Option<i64>) -> Self {
+        // depending on whether cap was actually passed, and on its value,
+        // call a different constructor
         let h = match cap {
             None => HashMap::new(),
             Some(n) if n <= 0 => HashMap::new(),
@@ -36,13 +38,13 @@ impl kv {
     // to be more efficient and avoid duplicating the string result just to
     // pass it to the boilerplate, we can do the conversion to a VCL ourselves
     pub fn get(&self, ctx: &mut Ctx, key: &str) -> VCL_STRING {
-        self.mutexed_hash_map // access our member field
-            .lock() // lock the mutex to access the hashmap
-            .unwrap() // panic if unlocking went wrong
-            .get(key) // look for key
-            .unwrap_or(&EMPTY_STRING) // used EMPTY_STRING if key isn't found
-            .as_str() // make it an &str
-            .into_vcl(&mut ctx.ws) // copy the key before returning it
+        self.mutexed_hash_map           // access our member field
+            .lock()                     // lock the mutex to access the hashmap
+            .unwrap()                   // panic if unlocking went wrong
+            .get(key)                   // look for key
+            .unwrap_or(&EMPTY_STRING)   // used EMPTY_STRING if key isn't found
+            .as_str()                   // make it an &str
+            .into_vcl(&mut ctx.ws)      // copy the key before returning it
     }
 
     pub fn set(&self, _: &Ctx, key: &str, value: &str) {

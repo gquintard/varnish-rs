@@ -6,8 +6,9 @@ use varnish::vcl::vpriv::VPriv;
 #[cfg(test)]
 varnish::vtc!(test01);
 
-// VPriv is defined in vmoddev and wraps an Instant here, storing and getting is
-// up to the vmod writer but this removes the worry of NULL dereferencing
+// VPriv can wrap any (possibly custom) struct, here we only need an Instand from std::time.
+// Storing and getting is up to the vmod writer but this removes the worry of NULL dereferencing
+// and of the memory management
 pub fn timestamp(_: &Ctx, vp: &mut VPriv<Instant>) -> Duration {
     // we will need this either way
     let now = Instant::now();
