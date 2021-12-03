@@ -2,6 +2,14 @@
 
 [Documentation](https://docs.rs/varnish/0.0.3/varnish/)
 
+In your `Cargo.toml`:
+
+```
+[dependencies]
+varnish = "0.0.3"
+# and if you are building a vmod:
+varnish-sys = "0.0.3"
+```
 # varnish-rs
 
 Varnish bindings, notably to build vmods
