@@ -1,0 +1,2 @@
+varnish::boilerplate!();
+mod vmod;

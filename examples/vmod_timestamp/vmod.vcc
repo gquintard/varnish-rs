@@ -1,0 +1,3 @@
+#-
+$Module timestamp 3 "An timestamp vmod"
+$Function DURATION timestamp(PRIV_TASK)
