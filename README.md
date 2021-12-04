@@ -1,4 +1,6 @@
 ![crates.io](https://img.shields.io/crates/v/varnish.svg)
+![tests](https://github.com/gquintard/varnish-rs/actions/workflows/tests.yaml/badge.svg)
+![docs.rs](https://img.shields.io/badge/docs.rs-0.0.3-brightgreen)
 
 [Documentation](https://docs.rs/varnish/0.0.3/varnish/)
 
