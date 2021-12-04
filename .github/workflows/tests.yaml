@@ -25,6 +25,7 @@ jobs:
         with:
           toolchain: stable
       - run: |
+          apt-get install -y curl
           curl -s https://packagecloud.io/install/repositories/varnishcache/varnish70/script.deb.sh | bash
           apt-get install varnish-dev
       - run: |
