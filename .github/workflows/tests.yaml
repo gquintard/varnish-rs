@@ -10,13 +10,6 @@ jobs:
           toolchain: stable
       - run: |
           cargo doc
-          for dir in $(ls -d examples/vmod_*); do
-            (
-              cargo build --all-targets
-              cargo build --all-targets --release
-              cargo test
-            )
-          done
   with-libvarnish:
     runs-on: ubuntu-latest
     steps:
