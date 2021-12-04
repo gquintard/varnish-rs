@@ -1,0 +1,39 @@
+name: Build
+on: [push]
+jobs:
+  no-libvarnish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - run: |
+          cargo doc
+          for dir in $(ls -d examples/vmod_*); do
+            (
+              cargo build --all-targets
+              cargo build --all-targets --release
+              cargo test
+            )
+          done
+  with-libvarnish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - run: |
+          curl -s https://packagecloud.io/install/repositories/varnishcache/varnish70/script.deb.sh | bash
+          apt-get install varnish-dev
+      - run: |
+          cargo doc
+          for dir in $(ls -d examples/vmod_*); do
+            (
+              cargo build --all-targets
+              cargo build --all-targets --release
+              cargo test
+            )
+          done
+
