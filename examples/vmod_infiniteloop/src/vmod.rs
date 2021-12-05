@@ -1,10 +1,10 @@
 use varnish::vcl::ctx::Ctx;
-use varnish_sys::{VRT_CTX_MAGIC, REQ_MAGIC, BUSYOBJ_MAGIC};
+use varnish_sys::{BUSYOBJ_MAGIC, REQ_MAGIC, VRT_CTX_MAGIC};
 
 #[cfg(test)]
 varnish::vtc!(test01);
 
-// this function is unsafe from the varnish point of view, doing away with 
+// this function is unsafe from the varnish point of view, doing away with
 // important safeguards, but it's also unsafe in the rust way: it dereferences
 // pointers which may lead nowhere
 pub unsafe fn reset(ctx: &mut Ctx) {

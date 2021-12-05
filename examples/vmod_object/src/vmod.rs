@@ -38,13 +38,13 @@ impl kv {
     // to be more efficient and avoid duplicating the string result just to
     // pass it to the boilerplate, we can do the conversion to a VCL ourselves
     pub fn get(&self, ctx: &mut Ctx, key: &str) -> VCL_STRING {
-        self.mutexed_hash_map           // access our member field
-            .lock()                     // lock the mutex to access the hashmap
-            .unwrap()                   // panic if unlocking went wrong
-            .get(key)                   // look for key
-            .unwrap_or(&EMPTY_STRING)   // used EMPTY_STRING if key isn't found
-            .as_str()                   // make it an &str
-            .into_vcl(&mut ctx.ws)      // copy the key before returning it
+        self.mutexed_hash_map // access our member field
+            .lock() // lock the mutex to access the hashmap
+            .unwrap() // panic if unlocking went wrong
+            .get(key) // look for key
+            .unwrap_or(&EMPTY_STRING) // used EMPTY_STRING if key isn't found
+            .as_str() // make it an &str
+            .into_vcl(&mut ctx.ws) // copy the key before returning it
     }
 
     pub fn set(&self, _: &Ctx, key: &str, value: &str) {

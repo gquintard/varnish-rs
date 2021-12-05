@@ -5,7 +5,6 @@
 pub mod vcl {
     pub mod convert;
     pub mod ctx;
-    pub mod helpers;
     pub mod http;
     pub mod vpriv;
     pub mod ws;

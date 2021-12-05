@@ -1,7 +1,11 @@
 use std::os::raw::{c_uint, c_void};
 
 use crate::vcl::http::HTTP;
-use crate::vcl::ws::WS;
+use crate::vcl::ws::{TestWS, WS};
+use std::ptr;
+use varnish_sys::{
+    busyobj, req, sess, vrt_ctx, vsb, vsl_log, ws, VCL_HTTP, VCL_VCL, VRT_CTX_MAGIC,
+};
 
 // XXX: cheat: avoid dealing with too many bindgen issues and just cherry-pick SLT_VCL_Error and VCL_RET_FAIL
 const SLT_VCL_ERROR: c_uint = 73;
@@ -75,4 +79,55 @@ impl<'a> Ctx<'a> {
         }
         0
     }
+}
+/// A struct holding both a native vrt_ctx struct, as well as the space it points to.
+///
+/// As the name implies, this struct mainly exist to facilitate testing and should probably not be
+/// used elsewhere.
+pub struct TestCtx {
+    vrt_ctx: vrt_ctx,
+    test_ws: TestWS,
+}
+
+impl TestCtx {
+    /// Instantiate a vrt_ctx, as well as the workspace (of size `sz`) it links to.
+    pub fn new(sz: usize) -> Self {
+        let mut test_ctx = TestCtx {
+            vrt_ctx: vrt_ctx {
+                magic: VRT_CTX_MAGIC,
+                syntax: 0,
+                method: 0,
+                handling: ptr::null::<c_uint>() as *mut c_uint,
+                vclver: 0,
+                msg: ptr::null::<vsb>() as *mut vsb,
+                vsl: ptr::null::<vsl_log>() as *mut vsl_log,
+                vcl: ptr::null::<VCL_VCL>() as VCL_VCL,
+                ws: 0 as *mut ws,
+                sp: ptr::null::<sess>() as *mut sess,
+                req: ptr::null::<req>() as *mut req,
+                http_req: ptr::null::<VCL_HTTP>() as VCL_HTTP,
+                http_req_top: ptr::null::<VCL_HTTP>() as VCL_HTTP,
+                http_resp: ptr::null::<VCL_HTTP>() as VCL_HTTP,
+                bo: ptr::null::<VCL_HTTP>() as *mut busyobj,
+                http_bereq: ptr::null::<VCL_HTTP>() as VCL_HTTP,
+                http_beresp: ptr::null::<VCL_HTTP>() as VCL_HTTP,
+                now: 0.0,
+                specific: ptr::null::<VCL_HTTP>() as *mut c_void,
+                called: ptr::null::<vsb>() as *mut c_void,
+            },
+            test_ws: TestWS::new(sz),
+        };
+        test_ctx.vrt_ctx.ws = test_ctx.test_ws.as_ptr();
+        test_ctx
+    }
+
+    pub fn ctx(&mut self) -> Ctx {
+        Ctx::new(&mut self.vrt_ctx)
+    }
+}
+
+#[test]
+fn ctx_test() {
+    let mut test_ctx = TestCtx::new(100);
+    test_ctx.ctx();
 }

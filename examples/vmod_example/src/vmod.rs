@@ -1,9 +1,5 @@
 // even though we won't use it here, we still need to know what the context type is
-use varnish::vcl::ctx::Ctx;
-
-// this one is only useful for tests
-#[cfg(test)]
-use varnish::vcl::helpers::empty_ctx;
+use varnish::vcl::ctx::{Ctx, TestCtx};
 
 // we now implement both functionis from vmod.vcc, but with rust types.
 // Don't forget to make the function public with "pub" in front of them
@@ -28,16 +24,16 @@ pub fn captain_obvious(_: &Ctx, opt: Option<i64>) -> String {
 // Write some more unit tests
 #[test]
 fn obviousness() {
-    let mut vrt_ctx = empty_ctx();
-    let ctx = &mut Ctx::new(&mut vrt_ctx);
+    let mut test_ctx = TestCtx::new(100);
+    let ctx = test_ctx.ctx();
 
     assert_eq!(
         "I was called without an argument",
-        captain_obvious(ctx, None)
+        captain_obvious(&ctx, None)
     );
     assert_eq!(
         "I was given 975322 as argument",
-        captain_obvious(ctx, Some(975322))
+        captain_obvious(&ctx, Some(975322))
     );
 }
 
@@ -45,12 +41,12 @@ fn obviousness() {
 #[test]
 fn even_test() {
     // we don't use it, but we still need one
-    let mut vrt_ctx = empty_ctx();
-    let ctx = &mut Ctx::new(&mut vrt_ctx);
+    let mut test_ctx = TestCtx::new(100);
+    let ctx = test_ctx.ctx();
 
-    assert_eq!(true, is_even(ctx, 0));
-    assert_eq!(true, is_even(ctx, 1024));
-    assert_eq!(false, is_even(ctx, 421321));
+    assert_eq!(true, is_even(&ctx, 0));
+    assert_eq!(true, is_even(&ctx, 1024));
+    assert_eq!(false, is_even(&ctx, 421321));
 }
 
 // we also want to run test/test01.vtc
