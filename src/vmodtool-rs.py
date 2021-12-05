@@ -21,11 +21,11 @@ def rustFuncSig(self, vcc, t):
     buf = io.StringIO()
     buf.write("(vrt_ctx: * mut varnish_sys::vrt_ctx")
     if t == "ini" or t == "fini":
-        buf.write(", objp: *mut *mut vmod::{0}".format(self.obj[1:]))
+        buf.write(", objp: *mut *mut crate::{0}".format(self.obj[1:]))
     if t == "ini":
         buf.write(", vcl_name: *const c_char")
     if t == "meth":
-        buf.write(", obj: *mut vmod::{0}".format(self.obj[1:]))
+        buf.write(", obj: *mut crate::{0}".format(self.obj[1:]))
     if self.argstruct:
         buf.write(", args: *const arg_{0}{1}_{2}".format(vcc.sympfx, vcc.modname, self.cname()))
     else:
@@ -76,7 +76,7 @@ def rustfuncBody(self, vcc, t):
     print("unsafe extern \"C\" fn vmod_c_{0}{1} {{".format(self.cname(), rustFuncSig(self, vcc, t)))
     print("\tlet mut _ctx = Ctx::new(vrt_ctx);");
     if t == "ini":
-        print("\tlet o = vmod::{0}::new(".format(self.obj[1:]))
+        print("\tlet o = crate::{0}::new(".format(self.obj[1:]))
         rustFuncArgs(self, t)
         print("\t);")
         print("\t*objp = Box::into_raw(Box::new(o));")
@@ -90,7 +90,7 @@ def rustfuncBody(self, vcc, t):
             Ok(v) => v.into_vcl(&mut _ctx.ws),
         }}'''.format(defaultReturn(self.retval.vt)))
     else:
-        print("\tmatch vmod::{name}(".format(name = self.cname()))
+        print("\tmatch crate::{name}(".format(name = self.cname()))
         rustFuncArgs(self, t)
         print('''\t).into_result() {{
             Err(ref e) => {{ _ctx.fail(e){0} }},
@@ -129,7 +129,6 @@ def runmain(inputvcc, rstdir):
 use std::ptr;
 use std::os::raw::*;
 use std::boxed::Box;
-use crate::vmod;
 use varnish::vcl::ctx::Ctx;
 use varnish::vcl::convert::{{IntoRust, IntoVCL, IntoResult}};
 

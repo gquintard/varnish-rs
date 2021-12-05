@@ -29,5 +29,4 @@ Look around, everything should be decently documented:
 - [src/vmod.rs](src/vmod.rs): the file contianing the actual implementation and unit tests
 - [tests/test01.vtc](tests/test01.vtc): a VTC (full stack) test, actually running Varnish against mock clients and servers
 - [Cargo.toml](Cargo.toml): the file describing the name of the vmod, as well as its dependencies
-- [src/lib.rs](src/lib.rs): this is the entry point for the compiler, not much to see
 - [build.rs](build.rs): a short program in charge of generating some boilerplate before the compiler starts
