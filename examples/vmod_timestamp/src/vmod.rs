@@ -1,9 +1,8 @@
 use std::time::{Duration, Instant};
-use varnish::vcl::ctx::Ctx;
 
+use varnish::vcl::ctx::Ctx;
 use varnish::vcl::vpriv::VPriv;
 
-#[cfg(test)]
 varnish::vtc!(test01);
 
 // VPriv can wrap any (possibly custom) struct, here we only need an Instand from std::time.

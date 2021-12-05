@@ -1,7 +1,6 @@
 use std::fs::read_to_string;
 use varnish::vcl::ctx::Ctx;
 
-#[cfg(test)]
 varnish::vtc!(test01);
 
 // no error, just return 0 if anything goes wrong

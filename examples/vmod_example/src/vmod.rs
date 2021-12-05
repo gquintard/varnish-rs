@@ -1,5 +1,9 @@
 // even though we won't use it here, we still need to know what the context type is
-use varnish::vcl::ctx::{Ctx, TestCtx};
+use varnish::vcl::ctx::Ctx;
+
+// this import is only needed for tests
+#[cfg(test)]
+use varnish::vcl::ctx::TestCtx;
 
 // we now implement both functionis from vmod.vcc, but with rust types.
 // Don't forget to make the function public with "pub" in front of them
@@ -50,5 +54,4 @@ fn even_test() {
 }
 
 // we also want to run test/test01.vtc
-#[cfg(test)]
 varnish::vtc!(test01);

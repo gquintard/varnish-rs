@@ -1,7 +1,6 @@
 use varnish::vcl::ctx::Ctx;
 use varnish_sys::{BUSYOBJ_MAGIC, REQ_MAGIC, VRT_CTX_MAGIC};
 
-#[cfg(test)]
 varnish::vtc!(test01);
 
 // this function is unsafe from the varnish point of view, doing away with

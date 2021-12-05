@@ -7,7 +7,6 @@ use varnish::vcl::convert::IntoVCL;
 use varnish::vcl::ctx::Ctx;
 use varnish_sys::VCL_STRING;
 
-#[cfg(test)]
 varnish::vtc!(test01);
 
 const EMPTY_STRING: String = String::new();
