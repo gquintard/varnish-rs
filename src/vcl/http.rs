@@ -2,6 +2,7 @@
 
 use std::slice::{from_raw_parts, from_raw_parts_mut};
 use std::str::from_utf8;
+use std::os::raw::c_uint;
 
 use crate::vcl::ws::WS;
 
@@ -12,6 +13,7 @@ const HDR_METHOD: u16 = varnish_sys::HTTP_HDR_METHOD as u16;
 const HDR_PROTO: u16 = varnish_sys::HTTP_HDR_PROTO as u16;
 const HDR_REASON: u16 = varnish_sys::HTTP_HDR_REASON as u16;
 const HDR_STATUS: u16 = varnish_sys::HTTP_HDR_STATUS as u16;
+const HDR_UNSET: u16 = varnish_sys::HTTP_HDR_UNSET as u16;
 const HDR_URL: u16 = varnish_sys::HTTP_HDR_URL as u16;
 
 /// HTTP headers of an object
@@ -48,7 +50,7 @@ impl<'a> HTTP<'a> {
         Ok(())
     }
 
-    /// Append a new header using `name` and `value`. This can fail if we run out of internal slot
+    /// Append a new header using `name` and `value`. This can fail if we run out of internal slots
     /// to store the new header
     pub fn set_header(&mut self, name: &str, value: &str) -> Result<(), String> {
         assert!(self.raw.nhd <= self.raw.shd);
@@ -58,7 +60,16 @@ impl<'a> HTTP<'a> {
 
         let idx = self.raw.nhd;
         self.raw.nhd += 1;
-        self.change_header(idx, name, value)
+        let res = self.change_header(idx, name, value);
+        if res.is_ok() {
+            unsafe {
+                varnish_sys::VSLbt(self.raw.vsl, self.raw.logtag as c_uint + HDR_FIRST as c_uint,
+                                   *self.raw.hd.add(idx as usize));
+            }
+        } else {
+            self.raw.nhd -= 1;
+        }
+        res
     }
 
     pub fn unset_header(&mut self, name: &str) {
@@ -70,6 +81,10 @@ impl<'a> HTTP<'a> {
         for (idx, hd) in hdrs.iter().enumerate() {
             let (n, _) = header_from_hd(hd).unwrap();
             if name.eq_ignore_ascii_case(n) {
+                unsafe {
+                    varnish_sys::VSLbt(self.raw.vsl, self.raw.logtag + HDR_UNSET as u32 - HDR_METHOD as u32,
+                                       *self.raw.hd.add(HDR_FIRST as usize + idx as usize));
+                }
                 continue;
             }
             if idx != idx_empty {
@@ -139,7 +154,7 @@ impl<'a> HTTP<'a> {
 
     /// Returns the value of a header based on its name
     ///
-    /// The header names are compare in a case-insensitive manner
+    /// The header names are compared in a case-insensitive manner
     pub fn header(&self, name: &str) -> Option<&str> {
         self.into_iter()
             .find(|hdr| name.eq_ignore_ascii_case(hdr.0))

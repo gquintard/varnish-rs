@@ -23,8 +23,9 @@ jobs:
           sudo apt-get install varnish-dev
       - run: |
           cargo doc
-          for dir in $(ls -d examples/vmod_*); do
+          for dir in vmod_test $(ls -d examples/vmod_*); do
             (
+              cd $dir
               cargo build --all-targets
               cargo build --all-targets --release
               cargo test

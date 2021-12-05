@@ -1,0 +1,25 @@
+varnishtest "header manipulation"
+
+server s1 {
+	rxreq
+	expect req.http.foo == "bar_replaced"
+	expect req.http.baz == "qux"
+	expect req.http.quxx == <undef>
+	txresp
+} -start
+
+varnish v1 -vcl+backend {
+	import rustest from "${vmod}";
+
+	sub vcl_recv {
+		rustest.set_hdr("foo", "bar_replaced");
+		rustest.set_hdr("baz", "qux");
+		rustest.unset_hdr("quxx");
+	}
+} -start
+
+client c1 {
+	txreq -hdr "quxx: quz"
+	rxresp
+	expect resp.status == 200
+} -run
