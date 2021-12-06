@@ -1,3 +1,4 @@
+//! Expose the Varnish context (`struct vrt_ctx`) as a Rust object
 use std::os::raw::{c_uint, c_void};
 
 use crate::vcl::http::HTTP;
@@ -21,6 +22,18 @@ const VCL_RET_FAIL: c_uint = 4;
 /// the C original pointer that can be used to directly, and unsafely, act on the structure.
 ///
 /// Which `http_*` are present will depend on which VCL sub routine the function is called from.
+///
+/// ``` rust
+/// use varnish::vcl::ctx::Ctx;
+///
+/// fn foo(ctx: &Ctx) {
+///     if let Some(ref req) = ctx.http_req {
+///         for (name, value) in req {
+///             println!("header {} has value {}", name, value);
+///         }
+///     }
+/// }
+/// ```
 pub struct Ctx<'a> {
     pub raw: *const varnish_sys::vrt_ctx,
     pub http_req: Option<HTTP<'a>>,

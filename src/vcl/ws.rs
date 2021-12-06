@@ -1,3 +1,15 @@
+//! Store data in a task-centric store to share with the C layers
+//!
+//! The workspace is a memory allocator with a simple API that allows Varnish to store data that
+//! needs only to live for the lifetime of a task (handling a client or backend request for example).
+//! At the end of the task, the workspace is wiped, simplifying memory management.
+//!
+//! Rust handles its own memory, but some data must be shared/returned to the C caller, and the
+//! workspace is usually the easiest store available.
+//!
+//! **Note:** unless you know what you are doing, you should probably just use the automatic type
+//! conversion provided by [`crate::vcl::convert`], or store things in
+//! [`crate::vcl::vpriv::VPriv`].
 use std::ffi::c_void;
 use std::ptr;
 use std::slice::from_raw_parts_mut;

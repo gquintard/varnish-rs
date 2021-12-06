@@ -53,7 +53,7 @@
 //! don't support all types and niceties just yet. Check out the [`crate::vcl::convert`] page for
 //! more information.
 //!
-//! ```
+//! ``` text
 //! # we need a comment at the top, possibly describing the license
 //! $Module example 3 "An example vmod"
 //!
@@ -67,9 +67,9 @@
 //! (also alongside `Cargo.toml`).
 //! The nitty-gritty details have been hidden away and you can have a fairly simple file:
 //!
-//! ``` rust
+//! ``` ignore
 //! fn main() {
-//!     varnish::vmodtool::generate().unwrap();
+//!     varnish::generate_boilerplate().unwrap();
 //! }
 //! ```
 //!
@@ -79,7 +79,7 @@
 //! implement public functions that mirror what you described in `vmod.vcc`, and the first
 //! argument needs to be a reference to [`crate::vcl::ctx::Ctx`]:
 //!
-//! ``` rust
+//! ``` ignore 
 //! varnish::boilerplate!();
 //!
 //! use varnish::vcl::ctx::Ctx;
@@ -91,7 +91,13 @@
 //!
 //! The various type translations are described in detail in [`crate::vcl::convert`].
 
-
+use std::env;
+use std::env::join_paths;
+use std::fs;
+use std::io::{self, Write};
+use std::path::{Path, PathBuf};
+use std::process::Command;
+ 
 pub mod vcl {
     pub mod convert;
     pub mod ctx;
@@ -99,8 +105,6 @@ pub mod vcl {
     pub mod vpriv;
     pub mod ws;
 }
-
-pub mod vmodtool;
 
 /// Automate VTC testing
 ///
@@ -177,7 +181,7 @@ macro_rules! vtc {
 /// Convenience macro to include the generate boilerplate code.
 ///
 /// Simply add a call to it anywhere in your code to include the code Varnish needs to load your
-/// module.
+/// module. This requires `vmod::vmod::generate` to have been run first in `build.rs`.
 #[macro_export]
 macro_rules! boilerplate {
     () => {
@@ -190,4 +194,47 @@ macro_rules! boilerplate {
             include!(concat!(env!("OUT_DIR"), "/generated.rs"));
         }
     };
+}
+
+/// Process the `vmod.vcc` file into the boilerplate code
+///
+/// This function is meant to be called from `build.rs` to translate the API described in
+/// `vmod.vcc` into C-compatible code that will allow Varnish to load and use your vmod.
+///
+/// It does require `python3` to run as it embed a script to do the processing.
+pub fn generate_boilerplate() -> Result<(), String> {
+    println!("cargo:rerun-if-changed=vmod.vcc");
+
+    let rstool_bytes = include_bytes!("vmodtool-rs.py");
+    let rs_tool_path =
+        join_paths([env::var("OUT_DIR").unwrap(), String::from("rstool.py")]).unwrap();
+    fs::write(&rs_tool_path, &rstool_bytes)
+        .unwrap_or_else(|_| panic!("couldn't write rstool.py tool in {:?}", &*rs_tool_path));
+
+    let vmodtool_path = pkg_config::get_variable("varnishapi", "vmodtool").unwrap();
+    let vmodtool_dir = (vmodtool_path.as_ref() as &Path)
+        .parent()
+        .expect("couldn't find the directory name containing vmodtool.py")
+        .to_str()
+        .unwrap()
+        .to_string();
+
+    let cmd = Command::new("python3")
+        .arg(rs_tool_path)
+        .arg("vmod.vcc")
+        .arg("-w")
+        .arg(env::var("OUT_DIR").unwrap())
+        .env(
+            "PYTHONPATH",
+            join_paths([env::var("OUT_DIR").unwrap_or_default(), vmodtool_dir]).unwrap(),
+        )
+        .output()
+        .expect("failed to run vmodtool");
+
+    io::stdout().write_all(&cmd.stderr).unwrap();
+    assert!(cmd.status.success());
+
+    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("generated.rs");
+    fs::write(out_path, &cmd.stdout).expect("Couldn't write boilerplate!");
+    Ok(())
 }

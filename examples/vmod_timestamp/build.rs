@@ -1,3 +1,3 @@
 fn main() {
-    varnish::vmodtool::generate().unwrap();
+    varnish::generate_boilerplate().unwrap();
 }
