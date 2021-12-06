@@ -4,7 +4,7 @@ version = "0.0.1"
 edition = "2021"
 
 # if you copy this into a standalone repository,
-# replace `{ path = "../.." }` with `"0.0.1"`
+# replace `{ path = "../.." }` with `"0.0.4"`
 [build-dependencies]
 varnish = { path = "../.." }
 
