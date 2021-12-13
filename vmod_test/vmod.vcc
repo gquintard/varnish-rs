@@ -4,3 +4,4 @@ $Module rustest 3 "Test vmod"
 
 $Function VOID set_hdr(STRING, STRING)
 $Function VOID unset_hdr(STRING)
+$Function STRING ws_reserve(STRING)

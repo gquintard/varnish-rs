@@ -75,6 +75,8 @@ def rustfuncBody(self, vcc, t):
 
     print("unsafe extern \"C\" fn vmod_c_{0}{1} {{".format(self.cname(), rustFuncSig(self, vcc, t)))
     print("\tlet mut _ctx = Ctx::new(vrt_ctx);");
+    print("\t//XXX: aliasing warning, we're cheating hard, and we'll need to fix it");
+    print("\tlet mut _ctx2 = Ctx::new(vrt_ctx);");
     if t == "ini":
         print("\tlet o = crate::{0}::new(".format(self.obj[1:]))
         rustFuncArgs(self, t)
@@ -86,15 +88,15 @@ def rustfuncBody(self, vcc, t):
         print("\tmatch (*obj){name}(".format(name = self.bname))
         rustFuncArgs(self, t)
         print('''\t).into_result() {{
-            Err(ref e) => {{ _ctx.fail(e){0} }},
-            Ok(v) => v.into_vcl(&mut _ctx.ws),
+            Err(ref e) => {{ _ctx2.fail(e){0} }},
+            Ok(v) => v.into_vcl(&mut _ctx2.ws),
         }}'''.format(defaultReturn(self.retval.vt)))
     else:
         print("\tmatch crate::{name}(".format(name = self.cname()))
         rustFuncArgs(self, t)
         print('''\t).into_result() {{
-            Err(ref e) => {{ _ctx.fail(e){0} }},
-            Ok(v) => v.into_vcl(&mut _ctx.ws),
+            Err(ref e) => {{ _ctx2.fail(e){0} }},
+            Ok(v) => v.into_vcl(&mut _ctx2.ws),
         }}'''.format(defaultReturn(self.retval.vt)))
     print("}")
 

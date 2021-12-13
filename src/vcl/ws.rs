@@ -90,6 +90,108 @@ impl<'a> WS<'a> {
         dest.copy_from_slice(buf);
         Ok(std::str::from_utf8(dest).unwrap())
     }
+
+    /// Allocate all the free space in the workspace in a buffer that can be reclaimed or truncated
+    /// later.
+    ///
+    /// Note: don't assume the slice has been zeroed when it is returned to you, see
+    /// [`ReservedBuf::release()`] for more information.
+    pub fn reserve(&mut self) -> ReservedBuf<'a> {
+        let wsp = unsafe { self.raw.as_mut().unwrap() };
+        assert_eq!(wsp.magic, varnish_sys::WS_MAGIC);
+
+        unsafe {
+            let sz = varnish_sys::WS_ReserveAll(wsp) as usize;
+
+            let buf = from_raw_parts_mut(wsp.f as *mut u8, sz);
+            ReservedBuf {
+                buf,
+                wsp: self.raw,
+                b: wsp.f as *mut u8,
+                len: 0,
+            }
+        }
+    }
+}
+
+/// The free region of the workspace. The buffer is fully writable but must be finalized using
+/// `release()` to avoid being reclaimed when the struct is dropped.
+///
+/// Because [`ReservedBuf::release()`] starts counting at the beginning of the slice and because the
+/// `Write` traits will actually move that same beginning of the slice, you can
+/// `reserve/write/release(0)`:
+///
+/// ``` ignore
+/// // write trait needs to be in scope
+/// use std::io::Write;
+/// use varnish::vcl::ws::TestWS;
+///
+/// // init a workspace
+/// let mut test_ws = TestWS::new(160);
+/// let mut ws = test_ws.ws();
+///
+/// // first reservation gets the full buffer
+/// let mut r = ws.reserve();
+/// assert_eq!(r.buf.len(), 160);
+///
+/// // release AFTER the part we've written
+/// r.buf.write(b"0123456789").unwrap();
+/// assert_eq!(r.release(0), b"0123456789");
+///
+/// {
+///     // second reservation get 160 - 10 bytes
+///     let r2 = ws.reserve();
+///     assert_eq!(r2.buf.len(), 150);
+///     // the ReservedBuf goes out of scope without a call to .release()
+///     // so now data is fully allocated
+/// }
+///
+/// let r3 = ws.reserve();
+/// assert_eq!(r3.buf.len(), 150);
+/// ```
+pub struct ReservedBuf<'a> {
+    pub buf: &'a mut [u8],
+    wsp: *mut varnish_sys::ws,
+    b: *mut u8,
+    len: usize,
+}
+
+impl<'a> ReservedBuf<'a> {
+    /// Release a [`ReservedBuf`], returning the allocated and now truncated buffer.
+    ///
+    /// # Safety
+    ///
+    /// `release` doesn't wipe the unused part of the buffer, so you should not assume that the
+    /// slice is pristine when you receive it.
+    ///
+    /// ``` ignore
+    /// use varnish::vcl::ws::TestWS;
+    /// let mut test_ws = TestWS::new(160);
+    /// let mut ws = test_ws.ws();
+    ///
+    /// let r = ws.reserve();
+    /// r.buf[..9].copy_from_slice(b"IAmNotZero");
+    /// r.release(0);
+    ///
+    /// let r2 = ws.reserve();
+    /// assert_eq!(&r2.buf[..9], b"IAmNotZero");
+    /// ```
+    pub fn release(mut self, sz: usize) -> &'a mut [u8] {
+        unsafe {
+            self.len = self.buf.as_ptr().add(sz).offset_from(self.b) as usize;
+            from_raw_parts_mut(self.b, self.len)
+        }
+    }
+}
+
+impl<'a> Drop for ReservedBuf<'a> {
+    fn drop(&mut self) {
+        unsafe {
+            let wsp = self.wsp.as_mut().unwrap();
+            assert_eq!(wsp.magic, varnish_sys::WS_MAGIC);
+            varnish_sys::WS_Release(wsp, self.len as u32);
+        }
+    }
 }
 
 /// A struct holding both a native ws struct, as well as the space it points to.
