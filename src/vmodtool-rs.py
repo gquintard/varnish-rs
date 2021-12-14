@@ -102,8 +102,6 @@ def runmain(inputvcc, rstdir):
     v = vmodtool.vcc(inputvcc, rstdir, None)
     v.parse()
 
-    v.rstfile(man=False)
-    v.rstfile(man=True)
     v.commit()
 
     buf = io.StringIO()
