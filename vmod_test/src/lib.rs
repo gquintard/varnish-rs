@@ -19,7 +19,7 @@ pub fn unset_hdr(ctx: &mut Ctx, name: &str) -> Result<(), String> {
     }
 }
 
-pub fn ws_reserve<'a, 'b: 'a>(ctx: &'b mut Ctx<'a>, s: &str) -> Result<varnish_sys::VCL_STRING, String> {
+pub fn ws_reserve<'a, 'b>(ctx: &'b mut Ctx<'a>, s: &str) -> Result<varnish_sys::VCL_STRING, String> {
     let mut rbuf = ctx.ws.reserve();
     match write!(rbuf.buf, "{} {} {}\0", s, s, s) {
         Ok(()) => {
