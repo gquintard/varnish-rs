@@ -43,6 +43,17 @@ pub trait IntoVCL<T> {
     fn into_vcl(self, ws: &mut WS) -> T;
 }
 
+macro_rules! into_res {
+    ( $x:ty ) => {
+        impl IntoResult<&'static str> for $x {
+            type Item = $x;
+            fn into_result(self) -> Result<Self::Item, &'static str> {
+                Ok(self)
+            }
+        }
+    };
+}
+
 macro_rules! vcl_types {
     ($( $x:ident ),* $(,)?) => {
         $(
@@ -51,6 +62,7 @@ macro_rules! vcl_types {
                 self
             }
         }
+        into_res!($x);
         )*
     };
 }
@@ -122,25 +134,10 @@ pub trait IntoResult<E> {
     fn into_result(self) -> Result<Self::Item, E>;
 }
 
-macro_rules! into_res {
-    ( $x:ty ) => {
-        impl IntoResult<&'static str> for $x {
-            type Item = $x;
-            fn into_result(self) -> Result<Self::Item, &'static str> {
-                Ok(self)
-            }
-        }
-    };
-}
-
 into_res!(());
 into_res!(Duration);
 into_res!(String);
 into_res!(bool);
-into_res!(i64);
-into_res!(u64);
-into_res!(VCL_STRING);
-into_res!(VCL_BOOL);
 
 impl<'a> IntoResult<&'static str> for &'a str {
     type Item = &'a str;
