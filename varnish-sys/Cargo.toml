@@ -9,6 +9,9 @@ homepage = "https://github.com/gquintard/varnish-rs/blob/varnish-sys"
 repository = "https://github.com/gquintard/varnish-rs"
 readme = "README.md"
 
+[package.metadata.libvarnishapi]
+version = "7.0.1"
+
 [build-dependencies]
 pkg-config = "0.3.22"
 bindgen = "0.59.1"
