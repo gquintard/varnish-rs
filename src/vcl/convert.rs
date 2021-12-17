@@ -34,47 +34,67 @@ use std::time::Duration;
 
 use crate::vcl::vpriv::VPriv;
 use crate::vcl::ws::WS;
-use varnish_sys::{VCL_BOOL, VCL_DURATION, VCL_INT, VCL_REAL, VCL_STRING};
+use varnish_sys::*;
 
 /// Convert a Rust type into a VCL one
 ///
 /// It will use the `WS` to persist the data during the VCL task if necessary
-pub trait IntoVCL {
-    type Item;
-    fn into_vcl(self, ws: &mut WS) -> Self::Item;
+pub trait IntoVCL<T> {
+    fn into_vcl(self, ws: &mut WS) -> T;
 }
 
-impl IntoVCL for f64 {
-    type Item = VCL_REAL;
-    fn into_vcl(self, _: &mut WS) -> Self::Item {
-        self
-    }
+macro_rules! vcl_types {
+    ($( $x:ident ),* $(,)?) => {
+        $(
+        impl IntoVCL<$x> for $x {
+            fn into_vcl(self, _: &mut WS) -> $x {
+                self
+            }
+        }
+        )*
+    };
 }
 
-impl IntoVCL for i64 {
-    type Item = VCL_INT;
-    fn into_vcl(self, _: &mut WS) -> Self::Item {
-        self as VCL_INT
-    }
+vcl_types!{
+    VCL_ACL,
+    VCL_BACKEND,
+    VCL_BLOB,
+    VCL_BODY,
+    VCL_BOOL,
+    VCL_BYTES,
+    VCL_DURATION,
+//    VCL_ENUM, // same as VCL_BODY
+    VCL_HEADER,
+    VCL_HTTP,
+    VCL_INSTANCE,
+//    VCL_INT, // same as VCL_BYTES
+    VCL_IP,
+    VCL_PROBE,
+//    VCL_REAL, // same as VCL_DURATION
+    VCL_REGEX,
+    VCL_STEVEDORE,
+    VCL_STRANDS,
+//    VCL_STRING, // same as VCL_BODY
+    VCL_SUB,
+//    VCL_TIME, // same as VCL_DURATION
+    VCL_VCL,
+//    VCL_VOID, // same as VCL_INSTANCE
 }
 
-impl IntoVCL for bool {
-    type Item = VCL_BOOL;
-    fn into_vcl(self, _: &mut WS) -> Self::Item {
+impl IntoVCL<VCL_BOOL> for bool {
+    fn into_vcl(self, _: &mut WS) -> VCL_BOOL {
         self as VCL_BOOL
     }
 }
 
-impl IntoVCL for Duration {
-    type Item = VCL_DURATION;
-    fn into_vcl(self, _: &mut WS) -> Self::Item {
+impl IntoVCL<VCL_DURATION> for Duration {
+    fn into_vcl(self, _: &mut WS) -> VCL_DURATION {
         self.as_secs_f64()
     }
 }
 
-impl IntoVCL for &str {
-    type Item = VCL_STRING;
-    fn into_vcl(self, ws: &mut WS) -> Self::Item {
+impl IntoVCL<VCL_STRING> for &str {
+    fn into_vcl(self, ws: &mut WS) -> VCL_STRING {
         let l = self.len();
         match ws.alloc(l + 1) {
             Err(_) => ptr::null(),
@@ -87,40 +107,51 @@ impl IntoVCL for &str {
     }
 }
 
-impl IntoVCL for String {
-    type Item = VCL_STRING;
-    fn into_vcl(self, ws: &mut WS) -> Self::Item {
+impl IntoVCL<VCL_STRING> for String {
+    fn into_vcl(self, ws: &mut WS) -> VCL_STRING {
         <&str>::into_vcl(&self, ws)
     }
 }
 
-impl IntoVCL for VCL_STRING {
-    type Item = VCL_STRING;
-    fn into_vcl(self, _: &mut WS) -> Self::Item {
-        self
-    }
+impl IntoVCL<()> for () {
+    fn into_vcl(self, _: &mut WS) {}
 }
 
-impl IntoVCL for () {
-    type Item = ();
-    fn into_vcl(self, _: &mut WS) -> Self::Item {}
-}
-
-pub trait IntoResult<U> {
+pub trait IntoResult<E> {
     type Item;
-    fn into_result(self) -> Result<Self::Item, U>;
+    fn into_result(self) -> Result<Self::Item, E>;
 }
 
-impl<T: IntoVCL> IntoResult<&'static str> for T {
-    type Item = T;
+macro_rules! into_res {
+    ( $x:ty ) => {
+        impl IntoResult<&'static str> for $x {
+            type Item = $x;
+            fn into_result(self) -> Result<Self::Item, &'static str> {
+                Ok(self)
+            }
+        }
+    };
+}
+
+into_res!(());
+into_res!(Duration);
+into_res!(String);
+into_res!(bool);
+into_res!(i64);
+into_res!(u64);
+into_res!(VCL_STRING);
+into_res!(VCL_BOOL);
+
+impl<'a> IntoResult<&'static str> for &'a str {
+    type Item = &'a str;
     fn into_result(self) -> Result<Self::Item, &'static str> {
         Ok(self)
     }
 }
 
-impl<T, U: AsRef<str>> IntoResult<U> for Result<T, U> {
+impl<T, E: AsRef<str>> IntoResult<E> for Result<T, E> {
     type Item = T;
-    fn into_result(self) -> Result<Self::Item, U> {
+    fn into_result(self) -> Result<Self::Item, E> {
         self
     }
 }
@@ -168,7 +199,7 @@ impl IntoRust<Duration> for VCL_DURATION {
     }
 }
 
-impl<T> IntoRust<VPriv<T>> for *mut varnish_sys::vmod_priv {
+impl<T> IntoRust<VPriv<T>> for *mut vmod_priv {
     fn into_rust(self) -> VPriv<T> {
         VPriv::<T>::new(self)
     }
