@@ -7,3 +7,5 @@ This is a small collection of vmods, written using the [varnish crate](https://c
 - [vmod_object](vmod_object): how to map a vmod object into a rust equivalent
 - [vmod_timestamp](vmod_timestamp): use of a `PRIV_TASK`
 - [vmod_infiniteloop](vmod_infiniteloop): access regular C structures
+
+Note that you can also use [vmod-rs-template](https://github.com/gquintard/vmod-rs-template) for a stand-alone, out-of-tree vmod, with packaging framework.
