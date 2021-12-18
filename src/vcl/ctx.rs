@@ -6,11 +6,18 @@ use crate::vcl::ws::{TestWS, WS};
 use std::ptr;
 use varnish_sys::{
     busyobj, req, sess, vrt_ctx, vsb, vsl_log, ws, VCL_HTTP, VCL_VCL, VRT_CTX_MAGIC,
+    VSL_tag_e_SLT_Debug, VSL_tag_e_SLT_Error, VSL_tag_e_SLT_VCL_Error
 };
 
-// XXX: cheat: avoid dealing with too many bindgen issues and just cherry-pick SLT_VCL_Error and VCL_RET_FAIL
-const SLT_VCL_ERROR: c_uint = 73;
+// XXX: cheat: avoid dealing with too many bindgen issues and just cherry-pick VCL_RET_FAIL
 const VCL_RET_FAIL: c_uint = 4;
+
+pub enum LogTag {
+    Debug,
+    Error,
+    VclError,
+    Any(u32),
+}
 
 /// VCL context
 ///
@@ -81,18 +88,30 @@ impl<'a> Ctx<'a> {
                 varnish_sys::VSB_putc(p.msg, '\n' as i32);
             }
         } else {
-            unsafe {
-                varnish_sys::VSLb_bin(
-                    p.vsl,
-                    SLT_VCL_ERROR,
-                    msg.len() as i64,
-                    msg.as_ptr() as *const c_void,
-                );
-            }
+            self.log(LogTag::VclError, msg);
         }
         0
     }
+
+    pub fn log(&mut self, logtag: LogTag, msg: &str) {
+        let t = match logtag {
+            LogTag::Debug => VSL_tag_e_SLT_Debug,
+            LogTag::Error => VSL_tag_e_SLT_Error,
+            LogTag::VclError => VSL_tag_e_SLT_VCL_Error,
+            LogTag::Any(n) => n,
+        };
+        unsafe {
+            let p = *self.raw;
+            varnish_sys::VSLb_bin(
+                p.vsl,
+                t,
+                msg.len() as i64,
+                msg.as_ptr() as *const c_void,
+                );
+        }
+    }
 }
+
 /// A struct holding both a native vrt_ctx struct, as well as the space it points to.
 ///
 /// As the name implies, this struct mainly exist to facilitate testing and should probably not be
