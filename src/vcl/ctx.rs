@@ -42,7 +42,7 @@ pub enum LogTag {
 /// }
 /// ```
 pub struct Ctx<'a> {
-    pub raw: *const varnish_sys::vrt_ctx,
+    pub raw: &'a varnish_sys::vrt_ctx,
     pub http_req: Option<HTTP<'a>>,
     pub http_req_top: Option<HTTP<'a>>,
     pub http_resp: Option<HTTP<'a>>,
@@ -57,22 +57,21 @@ impl<'a> Ctx<'a> {
     /// The pointer must be non-null, and the magic must match
     #[allow(clippy::not_unsafe_ptr_arg_deref)]
     pub fn new(raw: *mut varnish_sys::vrt_ctx) -> Self {
-        let p = unsafe { raw.as_ref().unwrap() };
-        assert_eq!(p.magic, varnish_sys::VRT_CTX_MAGIC);
+        let raw = unsafe { raw.as_ref().unwrap() };
+        assert_eq!(raw.magic, varnish_sys::VRT_CTX_MAGIC);
         Ctx {
             raw,
-            http_req: HTTP::new(p.http_req),
-            http_req_top: HTTP::new(p.http_req_top),
-            http_resp: HTTP::new(p.http_resp),
-            http_bereq: HTTP::new(p.http_bereq),
-            http_beresp: HTTP::new(p.http_beresp),
-            ws: WS::new(p.ws),
+            http_req: HTTP::new(raw.http_req),
+            http_req_top: HTTP::new(raw.http_req_top),
+            http_resp: HTTP::new(raw.http_resp),
+            http_bereq: HTTP::new(raw.http_bereq),
+            http_beresp: HTTP::new(raw.http_beresp),
+            ws: WS::new(raw.ws),
         }
     }
 
     pub fn fail(&mut self, msg: &str) -> u8 {
-        let p = unsafe { *self.raw };
-        assert!(!p.handling.is_null());
+        let p = self.raw;
         unsafe {
             if *p.handling == VCL_RET_FAIL {
                 return 0;

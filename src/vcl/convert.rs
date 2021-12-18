@@ -242,5 +242,3 @@ impl<T> IntoRust<VPriv<T>> for *mut vmod_priv {
         VPriv::<T>::new(self)
     }
 }
-
-
