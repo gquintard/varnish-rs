@@ -12,6 +12,11 @@ use varnish_sys::{
 // XXX: cheat: avoid dealing with too many bindgen issues and just cherry-pick VCL_RET_FAIL
 const VCL_RET_FAIL: c_uint = 4;
 
+/// VSL logging tag
+///
+/// An `enum` wrapper around [VSL tags](https://varnish-cache.org/docs/trunk/reference/vsl.html#vsl-tags).
+/// Only the most current tags (for vmod writers) are mapped, and [`LogTag::Any`] will allow to
+/// directly pass a native tag code (`varnish_sys::VSL_tag_e_SLT_*`).
 pub enum LogTag {
     Debug,
     Error,
@@ -70,6 +75,10 @@ impl<'a> Ctx<'a> {
         }
     }
 
+    /// Log an error message and fail the current VSL task.
+    ///
+    /// Once the control goes back to Varnish, it will see that the transaction was marked as fail
+    /// and will return a synthetic error to the client.
     pub fn fail(&mut self, msg: &str) -> u8 {
         let p = self.raw;
         unsafe {
@@ -92,6 +101,7 @@ impl<'a> Ctx<'a> {
         0
     }
 
+    /// Log a message, attached to the current context
     pub fn log(&mut self, logtag: LogTag, msg: &str) {
         let t = match logtag {
             LogTag::Debug => VSL_tag_e_SLT_Debug,
