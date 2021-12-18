@@ -194,10 +194,6 @@ impl VCLDefault for () {
     }
 }
 
-pub fn vcl_default_value<T: VCLDefault>() -> <T as VCLDefault>::Item {
-    T::vcl_default()
-}
-
 const EMPTY_STRING: *const c_char = b"\0".as_ptr() as *const c_char;
 
 /// Convert a VCL type into a Rust one.

@@ -82,7 +82,7 @@ def rustfuncBody(self, vcc, t):
         rustFuncArgs(self, t)
         print('''\t).into_result().and_then(|v| v.into_vcl(&mut _ctx.ws)) {{
             Ok(v) => v,
-            Err(ref e) => {{ _ctx.fail(e); vcl_default_value::<{0}>() }},
+            Err(ref e) => {{ _ctx.fail(e); <{0}>::vcl_default() }},
         }}'''.format(self.retval.ct if self.retval.vt != "VOID" else "()"))
     print("}")
 
@@ -116,7 +116,7 @@ use std::ptr;
 use std::os::raw::*;
 use std::boxed::Box;
 use varnish::vcl::ctx::Ctx;
-use varnish::vcl::convert::{{IntoRust, IntoVCL, IntoResult, vcl_default_value}};
+use varnish::vcl::convert::{{IntoRust, IntoVCL, IntoResult, VCLDefault}};
 
 pub const name: &str = "{modname}";
 
