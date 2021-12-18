@@ -10,7 +10,7 @@ repository = "https://github.com/gquintard/varnish-rs"
 readme = "README.md"
 
 [package.metadata.libvarnishapi]
-version = "7.0.1"
+version = "7.0"
 
 [build-dependencies]
 pkg-config = "0.3.22"

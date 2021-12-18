@@ -42,11 +42,14 @@ cargo build
 
 ## Versions
 
-The `varnish-rs` and `varnish-sys` versions will work in tandem: to build version X of `varnish`, you will need `varnish-sys` at the same version X. In turn, `varnish-sys` will depend on a specific Varnish C library version:
+The `varnish-rs` and `varnish-sys` versions will work in tandem: to build version X of `varnish`, you need version X of `varnish-sys`, in turn `varnish-sys` will depend on a specific Varnish C library version:
 
 | varnish-sys (rust) | libvarnish (C) |
 | :----------------: | :------------: |
-| 0.0.1              | 7.0            |
-| 0.0.2              | 7.0            |
-| 0.0.3              | 7.0            |
-| 0.0.4              | 7.0            |
+| 0.0.1 to 0.0.4     | 7.0            |
+
+You can check which Varnish version is required using the `libvarnish` metadata field of `varnish-sys`:
+
+``` bash
+cargo metadata --format-version 1 | jq -r '.packages[] | select(.name == "varnish-sys") | .metadata.libvarnishapi.version '
+```
