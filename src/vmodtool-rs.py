@@ -54,14 +54,6 @@ def rustFuncArgs(self, t):
             args.append("\t\t{conv}{nm}.into_rust()".format(conv = conv(a.vt, "from"), nm = a.nm2))
     print(",\n".join(args))
 
-def defaultReturn(t):
-    if t == "VOID":
-        return ";"
-    elif t == "STRING":
-        return "; ptr::null()"
-    else:
-        return ".into()"
-
 def rustfuncBody(self, vcc, t):
     if self.argstruct:
         print("#[repr(C)]\nstruct arg_{0}{1}_{2} {{".format(vcc.sympfx, vcc.modname, self.cname()))
@@ -82,20 +74,16 @@ def rustfuncBody(self, vcc, t):
         print("\t*objp = Box::into_raw(Box::new(o));")
     elif  t== "fini":
         print("\tBox::from_raw(*objp);")
-    elif t == "meth":
-        print("\tmatch (*obj){name}(".format(name = self.bname))
-        rustFuncArgs(self, t)
-        print('''\t).into_result() {{
-            Err(ref e) => {{ _ctx.fail(e){0} }},
-            Ok(v) => v.into_vcl(&mut _ctx.ws),
-        }}'''.format(defaultReturn(self.retval.vt)))
     else:
-        print("\tmatch crate::{name}(".format(name = self.cname()))
+        if t == "meth":
+            print("\tmatch (*obj){name}(".format(name = self.bname))
+        else:
+            print("\tmatch crate::{name}(".format(name = self.cname()))
         rustFuncArgs(self, t)
-        print('''\t).into_result() {{
-            Err(ref e) => {{ _ctx.fail(e){0} }},
-            Ok(v) => v.into_vcl(&mut _ctx.ws),
-        }}'''.format(defaultReturn(self.retval.vt)))
+        print('''\t).into_result().and_then(|v| v.into_vcl(&mut _ctx.ws)) {{
+            Ok(v) => v,
+            Err(ref e) => {{ _ctx.fail(e); vcl_default_value::<{0}>() }},
+        }}'''.format(self.retval.ct if self.retval.vt != "VOID" else "()"))
     print("}")
 
 def runmain(inputvcc, rstdir):
@@ -128,7 +116,7 @@ use std::ptr;
 use std::os::raw::*;
 use std::boxed::Box;
 use varnish::vcl::ctx::Ctx;
-use varnish::vcl::convert::{{IntoRust, IntoVCL, IntoResult}};
+use varnish::vcl::convert::{{IntoRust, IntoVCL, IntoResult, vcl_default_value}};
 
 pub const name: &str = "{modname}";
 

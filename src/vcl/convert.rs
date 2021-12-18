@@ -40,15 +40,21 @@ use varnish_sys::*;
 ///
 /// It will use the `WS` to persist the data during the VCL task if necessary
 pub trait IntoVCL<T> {
-    fn into_vcl(self, ws: &mut WS) -> T;
+    fn into_vcl(self, ws: &mut WS) -> Result<T, String>;
 }
 
 macro_rules! into_res {
     ( $x:ty ) => {
-        impl IntoResult<&'static str> for $x {
+        impl IntoResult<String> for $x {
             type Item = $x;
-            fn into_result(self) -> Result<Self::Item, &'static str> {
+            fn into_result(self) -> Result<Self::Item, String> {
                 Ok(self)
+            }
+        }
+        impl<E: AsRef<str>> IntoResult<E> for Result<$x, E> {
+            type Item = $x;
+            fn into_result(self) -> Result<Self::Item, E> {
+                self
             }
         }
     };
@@ -58,8 +64,8 @@ macro_rules! vcl_types {
     ($( $x:ident ),* $(,)?) => {
         $(
         impl IntoVCL<$x> for $x {
-            fn into_vcl(self, _: &mut WS) -> $x {
-                self
+            fn into_vcl(self, _: &mut WS) -> Result<$x, String> {
+                Ok(self)
             }
         }
         into_res!($x);
@@ -93,40 +99,48 @@ vcl_types!{
 //    VCL_VOID, // same as VCL_INSTANCE
 }
 
+impl IntoVCL<()> for () {
+    fn into_vcl(self, _: &mut WS) -> Result<(), String> {
+        Ok(())
+    }
+}
+
 impl IntoVCL<VCL_BOOL> for bool {
-    fn into_vcl(self, _: &mut WS) -> VCL_BOOL {
-        self as VCL_BOOL
+    fn into_vcl(self, _: &mut WS) -> Result<VCL_BOOL, String> {
+        Ok(self as VCL_BOOL)
     }
 }
 
 impl IntoVCL<VCL_DURATION> for Duration {
-    fn into_vcl(self, _: &mut WS) -> VCL_DURATION {
-        self.as_secs_f64()
+    fn into_vcl(self, _: &mut WS) -> Result<VCL_DURATION, String> {
+        Ok(self.as_secs_f64())
     }
 }
 
 impl IntoVCL<VCL_STRING> for &str {
-    fn into_vcl(self, ws: &mut WS) -> VCL_STRING {
+    fn into_vcl(self, ws: &mut WS) -> Result<VCL_STRING, String> {
         let l = self.len();
         match ws.alloc(l + 1) {
-            Err(_) => ptr::null(),
+            Err(_) => Err("workspace allocation error".to_owned()),
             Ok(buf) => {
                 buf[..l].copy_from_slice(self.as_bytes());
                 buf[l] = b'\0';
-                buf.as_ptr() as *const i8
+                Ok(buf.as_ptr() as *const i8)
             }
         }
     }
 }
 
 impl IntoVCL<VCL_STRING> for String {
-    fn into_vcl(self, ws: &mut WS) -> VCL_STRING {
+    fn into_vcl(self, ws: &mut WS) -> Result<VCL_STRING, String> {
         <&str>::into_vcl(&self, ws)
     }
 }
 
-impl IntoVCL<()> for () {
-    fn into_vcl(self, _: &mut WS) {}
+impl IntoVCL<()> for Result<(), String> {
+    fn into_vcl(self, _: &mut WS) -> Result<(), String> {
+        Ok(())
+    }
 }
 
 pub trait IntoResult<E> {
@@ -134,23 +148,54 @@ pub trait IntoResult<E> {
     fn into_result(self) -> Result<Self::Item, E>;
 }
 
+
 into_res!(());
 into_res!(Duration);
 into_res!(String);
 into_res!(bool);
 
-impl<'a> IntoResult<&'static str> for &'a str {
-    type Item = &'a str;
-    fn into_result(self) -> Result<Self::Item, &'static str> {
-        Ok(self)
+pub trait VCLDefault {
+    type Item;
+    fn vcl_default() -> Self::Item;
+}
+
+impl<T> VCLDefault for *const T {
+    type Item = *const T;
+    fn vcl_default() -> Self::Item {
+        ptr::null()
     }
 }
 
-impl<T, E: AsRef<str>> IntoResult<E> for Result<T, E> {
-    type Item = T;
-    fn into_result(self) -> Result<Self::Item, E> {
-        self
+impl VCLDefault for f64 {
+    type Item = f64;
+    fn vcl_default() -> Self::Item {
+        0.0
     }
+}
+
+impl VCLDefault for i64 {
+    type Item = i64;
+    fn vcl_default() -> Self::Item {
+        0
+    }
+}
+
+impl VCLDefault for u32 {
+    type Item = u32;
+    fn vcl_default() -> Self::Item {
+        0
+    }
+}
+
+impl VCLDefault for () {
+    type Item = ();
+    fn vcl_default() -> Self::Item {
+        ()
+    }
+}
+
+pub fn vcl_default_value<T: VCLDefault>() -> <T as VCLDefault>::Item {
+    T::vcl_default()
 }
 
 const EMPTY_STRING: *const c_char = b"\0".as_ptr() as *const c_char;
@@ -201,3 +246,5 @@ impl<T> IntoRust<VPriv<T>> for *mut vmod_priv {
         VPriv::<T>::new(self)
     }
 }
+
+
