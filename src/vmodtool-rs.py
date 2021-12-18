@@ -8,7 +8,7 @@ import vmodtool
 
 #######################################################################
 
-def conv(vt, direction = "from"):
+def conv(vt):
     s = ""
     if vt.startswith("PRIV_"):
         return "&mut " + s
@@ -44,14 +44,14 @@ def rustFuncArgs(self, t):
             args.append("\t\t&vcl_name.into_rust()")
         for a in self.args:
             if a.opt:
-                args.append("\t\tif (*args).valid_{nm} == 0 {{ None }} else {{ Some({conv}(*args).{nm}.into_rust() ) }},".format(conv = conv(a.vt, "from"), nm = a.nm2))
+                args.append("\t\tif (*args).valid_{nm} == 0 {{ None }} else {{ Some({conv}(*args).{nm}.into_rust() ) }},".format(conv = conv(a.vt), nm = a.nm2))
             else:
-                args.append("\t\t{conv}(*args).{nm}.into_rust()".format(conv = conv(a.vt, "from"), nm = a.nm2))
+                args.append("\t\t{conv}(*args).{nm}.into_rust()".format(conv = conv(a.vt), nm = a.nm2))
     else:
         if t == "ini":
             args.append("\t\t&vcl_name.into_rust()")
         for a in self.args:
-            args.append("\t\t{conv}{nm}.into_rust()".format(conv = conv(a.vt, "from"), nm = a.nm2))
+            args.append("\t\t{conv}{nm}.into_rust()".format(conv = conv(a.vt), nm = a.nm2))
     print(",\n".join(args))
 
 def rustfuncBody(self, vcc, t):
