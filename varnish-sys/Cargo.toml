@@ -1,6 +1,6 @@
 [package]
 name = "varnish-sys"
-version = "0.0.4"
+version = "0.0.5"
 authors = ["Guillaume Quintard <guillaume.quintard@gmail.com>"]
 edition = "2021"
 license = "BSD-3-Clause"

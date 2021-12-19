@@ -1,6 +1,6 @@
 [package]
 name = "varnish"
-version = "0.0.4"
+version = "0.0.5"
 authors = ["Guillaume Quintard <guillaume.quintard@gmail.com>"]
 edition = "2021"
 license = "BSD-3-Clause"
@@ -10,5 +10,5 @@ repository = "https://github.com/gquintard/varnish-rs"
 readme = "README.md"
 
 [dependencies]
-varnish-sys = { path = "varnish-sys", version = "0.0.4" }
+varnish-sys = { path = "varnish-sys", version = "0.0.5" }
 pkg-config = "0.3.22"
