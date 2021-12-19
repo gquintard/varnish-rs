@@ -2,13 +2,15 @@
 # Author: Guillaume Quintard <guillaume.quintard@gmail.com>
 # (vmodtool requires this format.)
 
-# We describe our vmod, all lines starting with a $ are special as they
-# are used to generate boilerplate code
-# the "example" here matches the "vmod_example" in `Cargo.toml`
-# for more information, check https://varnish-cache.org/docs/trunk/reference/vmod.html
 $Module example 3 "An example vmod"
 
-# this describes our function prototypse, and we can add some explanation about it underneath
+We describe our vmod, all lines starting with a $ are special as they
+are used to generate boilerplate code, the others are regular documentation
+
+The `example` above matches the `vmod_example` in `Cargo.toml`
+
+for more information, check https://varnish-cache.org/docs/trunk/reference/vmod.html
+
 $Function BOOL is_even(INT)
 
 This will tell you if a number is even, isn't that odd?
