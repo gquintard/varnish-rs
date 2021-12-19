@@ -1,3 +1,6 @@
+# 0.0.6 (unreleased)
+
+- `VARNISH_INCLUDE_PATHS` allows to build bindings in non-standard environments
 # 0.0.5 (2021-12-18)
 
 - introduce `WS::reserve()` and `WS::release()`

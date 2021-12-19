@@ -40,6 +40,12 @@ cd varnish-rs
 cargo build
 ```
 
+If your `varnish` headers are installed where `pkg-config` can find them, it's all there is to it. If not, you can set the `VARNISH_INCLUDE_PATHS` environment variable to a colon-separated list of paths to search:
+
+```
+VARNISH_INCLUDE_PATHS=/my/custom/libpath:/my/other/custom/libpath cargo build
+```
+
 ## Versions
 
 The `varnish-rs` and `varnish-sys` versions will work in tandem: to build version X of `varnish`, you need version X of `varnish-sys`, in turn `varnish-sys` will depend on a specific Varnish C library version:
