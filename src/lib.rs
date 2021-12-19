@@ -79,7 +79,7 @@
 //! implement public functions that mirror what you described in `vmod.vcc`, and the first
 //! argument needs to be a reference to [`crate::vcl::ctx::Ctx`]:
 //!
-//! ``` ignore 
+//! ``` ignore
 //! varnish::boilerplate!();
 //!
 //! use varnish::vcl::ctx::Ctx;
@@ -97,7 +97,7 @@ use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
- 
+
 pub mod vcl {
     pub mod convert;
     pub mod ctx;

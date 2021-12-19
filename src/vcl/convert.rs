@@ -1,5 +1,7 @@
 //! Convert Rust types into their VCL_* equivalent, and back
 //!
+//! # Type conversion
+//!
 //! To allow for easier development the generated boilerplate will handle conversion between the
 //! lightly disguised C types used by `vmod.vcc` into regular Rust, and it will also do the
 //! opposite conversion when it is time to send the return value to Varnish.
@@ -9,8 +11,8 @@
 //! request. This allows vmod writes to just return easy-to-work-with `Strings` and let the
 //! boilerplate handle the allocation, copy and error handling.
 //!
-//! If one wants to hand manually, `VCL_STRING` to `VCL_STRING` is implemented as a no-op, allowing
-//! the vmod writer to do the work manually if wished.
+//! If one wants to handle things manually, all `VCL_*` types implement [`IntoVCL`] as a no-op. It
+//! can be useful to avoid extra memory allocations by the boilerplate, if that is a worry.
 //!
 //! Here's a table of the type correspondences:
 //!
@@ -18,14 +20,26 @@
 //! | :--: | :-------: | :-:
 //! | `f64`  | <-> | `VCL_REAL` |
 //! | `i64`  | <-> | `VCL_INT` |
+//! | `i64`  | <-> | `VCL_BYTES` |
 //! | `bool` | <-> | `VCL_BOOL` |
 //! | `std::time::Duration` | <-> | `VCL_DURATION` |
 //! | `()` | <-> | `VOID` |
 //! | `&str` | <-> | `VCL_STRING` |
 //! | `String` | -> | `VCL_STRING` |
-//! | `VCL_STRING` | -> | `VCL_STRING` |
 //!
+//! For all the other types, which are pointers, you will need to use the native types.
 //!
+//! *Note:* It is possible to simply return a `VCL_*` type (or a Result<VCL_*, _>), in which case
+//! the boilerplate will just skip the conversion.
+//!
+//! # Result
+//!
+//! It's possible for a vmod writer to return a bare value, or a `Result<_, E: AsRef<str>>` to
+//! potentially abort VCL processing in case the vmod hit an unrecoverable error.
+//!
+//! If a vmod function returns `Err(msg)`, the boilerplat will log `msg`, marke the current task as
+//! failed and will return a default value to the VCL. In turn, the VCL will stop its processing
+//! and will create a synthetic error object.
 use std::borrow::Cow;
 use std::ffi::CStr;
 use std::os::raw::*;
@@ -73,7 +87,7 @@ macro_rules! vcl_types {
     };
 }
 
-vcl_types!{
+vcl_types! {
     VCL_ACL,
     VCL_BACKEND,
     VCL_BLOB,
@@ -143,11 +157,15 @@ impl IntoVCL<()> for Result<(), String> {
     }
 }
 
+/// Create a `Result` from a bare value, or from a `Result`
+///
+/// For code simplicity, the boilerplate expects all vmod functions to return a `Result`, and for
+/// ease-of-use, vmod functions can return either `T: IntoVCL` or `Result<T: IntoVCL, E: AsRef<str>>.
+/// `into_result` is in charge of the normalization.
 pub trait IntoResult<E> {
     type Item;
     fn into_result(self) -> Result<Self::Item, E>;
 }
-
 
 into_res!(());
 into_res!(Duration);
@@ -159,6 +177,9 @@ pub trait VCLDefault {
     fn vcl_default() -> Self::Item;
 }
 
+/// Generate a default value to return.
+///
+/// `Default` isn't implemented for `std::ptr`, so we roll out our own.
 impl<T> VCLDefault for *const T {
     type Item = *const T;
     fn vcl_default() -> Self::Item {
@@ -189,8 +210,7 @@ impl VCLDefault for u32 {
 
 impl VCLDefault for () {
     type Item = ();
-    fn vcl_default() -> Self::Item {
-    }
+    fn vcl_default() -> Self::Item {}
 }
 
 const EMPTY_STRING: *const c_char = b"\0".as_ptr() as *const c_char;

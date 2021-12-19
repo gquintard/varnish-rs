@@ -5,8 +5,8 @@ use crate::vcl::http::HTTP;
 use crate::vcl::ws::{TestWS, WS};
 use std::ptr;
 use varnish_sys::{
-    busyobj, req, sess, vrt_ctx, vsb, vsl_log, ws, VCL_HTTP, VCL_VCL, VRT_CTX_MAGIC,
-    VSL_tag_e_SLT_Debug, VSL_tag_e_SLT_Error, VSL_tag_e_SLT_VCL_Error
+    busyobj, req, sess, vrt_ctx, vsb, vsl_log, ws, VSL_tag_e_SLT_Debug, VSL_tag_e_SLT_Error,
+    VSL_tag_e_SLT_VCL_Error, VCL_HTTP, VCL_VCL, VRT_CTX_MAGIC,
 };
 
 // XXX: cheat: avoid dealing with too many bindgen issues and just cherry-pick VCL_RET_FAIL
@@ -116,15 +116,10 @@ impl<'a> Ctx<'a> {
                     t,
                     0,
                     b"%s\0".as_ptr() as *const i8,
-                    (msg.to_owned() + "\0").as_ptr() as *const i8
-                    );
+                    (msg.to_owned() + "\0").as_ptr() as *const i8,
+                );
             } else {
-                varnish_sys::VSLb_bin(
-                    p.vsl,
-                    t,
-                    msg.len() as i64,
-                    msg.as_ptr() as *const c_void,
-                    );
+                varnish_sys::VSLb_bin(p.vsl, t, msg.len() as i64, msg.as_ptr() as *const c_void);
             }
         }
     }

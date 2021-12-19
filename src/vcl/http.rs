@@ -1,8 +1,8 @@
 #![allow(clippy::not_unsafe_ptr_arg_deref)]
 
+use std::os::raw::c_uint;
 use std::slice::{from_raw_parts, from_raw_parts_mut};
 use std::str::from_utf8;
-use std::os::raw::c_uint;
 
 use crate::vcl::ws::WS;
 
@@ -63,8 +63,11 @@ impl<'a> HTTP<'a> {
         let res = self.change_header(idx, name, value);
         if res.is_ok() {
             unsafe {
-                varnish_sys::VSLbt(self.raw.vsl, self.raw.logtag as c_uint + HDR_FIRST as c_uint,
-                                   *self.raw.hd.add(idx as usize));
+                varnish_sys::VSLbt(
+                    self.raw.vsl,
+                    self.raw.logtag as c_uint + HDR_FIRST as c_uint,
+                    *self.raw.hd.add(idx as usize),
+                );
             }
         } else {
             self.raw.nhd -= 1;
@@ -82,8 +85,11 @@ impl<'a> HTTP<'a> {
             let (n, _) = header_from_hd(hd).unwrap();
             if name.eq_ignore_ascii_case(n) {
                 unsafe {
-                    varnish_sys::VSLbt(self.raw.vsl, self.raw.logtag + HDR_UNSET as u32 - HDR_METHOD as u32,
-                                       *self.raw.hd.add(HDR_FIRST as usize + idx as usize));
+                    varnish_sys::VSLbt(
+                        self.raw.vsl,
+                        self.raw.logtag + HDR_UNSET as u32 - HDR_METHOD as u32,
+                        *self.raw.hd.add(HDR_FIRST as usize + idx as usize),
+                    );
                 }
                 continue;
             }
