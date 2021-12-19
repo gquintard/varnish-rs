@@ -190,7 +190,6 @@ impl VCLDefault for u32 {
 impl VCLDefault for () {
     type Item = ();
     fn vcl_default() -> Self::Item {
-        ()
     }
 }
 
