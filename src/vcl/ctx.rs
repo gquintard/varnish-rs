@@ -152,7 +152,7 @@ impl TestCtx {
                 msg: ptr::null::<vsb>() as *mut vsb,
                 vsl: ptr::null::<vsl_log>() as *mut vsl_log,
                 vcl: ptr::null::<VCL_VCL>() as VCL_VCL,
-                ws: 0 as *mut ws,
+                ws: std::ptr::null_mut::<ws>(),
                 sp: ptr::null::<sess>() as *mut sess,
                 req: ptr::null::<req>() as *mut req,
                 http_req: ptr::null::<VCL_HTTP>() as VCL_HTTP,

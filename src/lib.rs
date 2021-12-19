@@ -116,23 +116,23 @@ pub mod vcl {
 /// ``` vtc
 ///
 /// server s1 {
-/// 	rxreq
-/// 	expect req.http.even == "true"
-/// 	txresp
+///     rxreq
+///     expect req.http.even == "true"
+///     txresp
 /// } -start
 ///
 /// varnish v1 -vcl+backend {
-/// 	import example from "${vmod}";
+///     import example from "${vmod}";
 ///
-/// 	sub vcl_recv {
-/// 		set req.http.even = example.is_even(8);
-/// 	}
+///     sub vcl_recv {
+///         set req.http.even = example.is_even(8);
+///     }
 /// } -start
 ///
 /// client c1 {
-/// 	txreq
-/// 	rxresp
-/// 	expect resp.status == 200
+///     txreq
+///     rxresp
+///     expect resp.status == 200
 /// ```
 ///
 /// Provided your VTC files are in `tests/` and have the `.vtc` extension, you can declare these
