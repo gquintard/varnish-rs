@@ -1,0 +1,12 @@
+#-
+$Module event 3 "Listen to VCL event"
+
+$Event event_function
+
+This function is csalled implicitly when your VCL is loaded, discarded, warmed or cooled.
+In this vmod, the event function will prevent the second VCL that imports the vmod from loading. It will also store the number of time this VCL has been loaded.
+For more information, check out https://varnish-cache.org/docs/6.2/reference/vmod.html#event-functions
+
+$Function INT loaded(PRIV_VCL)
+
+Return the number of VCL loads stored during when the event function ran.

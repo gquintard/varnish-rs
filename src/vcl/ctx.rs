@@ -111,12 +111,21 @@ impl<'a> Ctx<'a> {
         };
         unsafe {
             let p = *self.raw;
-            varnish_sys::VSLb_bin(
-                p.vsl,
-                t,
-                msg.len() as i64,
-                msg.as_ptr() as *const c_void,
-                );
+            if p.vsl.is_null() {
+                varnish_sys::VSL(
+                    t,
+                    0,
+                    b"%s\0".as_ptr() as *const i8,
+                    (msg.to_owned() + "\0").as_ptr() as *const i8
+                    );
+            } else {
+                varnish_sys::VSLb_bin(
+                    p.vsl,
+                    t,
+                    msg.len() as i64,
+                    msg.as_ptr() as *const c_void,
+                    );
+            }
         }
     }
 }
@@ -171,4 +180,27 @@ impl TestCtx {
 fn ctx_test() {
     let mut test_ctx = TestCtx::new(100);
     test_ctx.ctx();
+}
+
+/// Qualify a VCL phase, mainly consumed by vmod `event` functions.
+#[derive(Debug)]
+pub enum Event {
+    Load,
+    Warm,
+    Cold,
+    Discard,
+}
+
+impl Event {
+    /// Create a new event from a [`varnish_sys::vcl_event_e`]. Note that it *will panic* if
+    /// provided with an invalid number.
+    pub fn new(event: varnish_sys::vcl_event_e) -> Self {
+        match event {
+            varnish_sys::vcl_event_e_VCL_EVENT_LOAD => Event::Load,
+            varnish_sys::vcl_event_e_VCL_EVENT_WARM => Event::Warm,
+            varnish_sys::vcl_event_e_VCL_EVENT_COLD => Event::Cold,
+            varnish_sys::vcl_event_e_VCL_EVENT_DISCARD => Event::Discard,
+            _ => panic!("invalid event number"),
+        }
+    }
 }

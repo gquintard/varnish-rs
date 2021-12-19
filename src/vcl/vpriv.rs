@@ -63,7 +63,12 @@ impl<T> VPriv<T> {
         inner_priv.obj = Some(obj);
     }
 
-    pub fn get(&mut self) -> Option<&mut T> {
+    pub fn as_ref(&self) -> Option<&T> {
+        let inner = unsafe { ((*self.ptr).priv_ as *mut InnerVPriv<T>).as_ref()? };
+        inner.obj.as_ref()
+    }
+
+    pub fn as_mut(&mut self) -> Option<&mut T> {
         self.get_inner()?.obj.as_mut()
     }
 
@@ -90,14 +95,14 @@ fn exploration() {
     };
 
     let mut vpriv_int = VPriv::new(&mut vp);
-    assert_eq!(None, vpriv_int.get());
+    assert_eq!(None, vpriv_int.as_ref());
 
     let x_in = 5;
     vpriv_int.store(x_in);
-    assert_eq!(x_in, *vpriv_int.get().unwrap());
+    assert_eq!(x_in, *vpriv_int.as_ref().unwrap());
 
     vpriv_int.store(7);
-    assert_eq!(7, *vpriv_int.get().unwrap());
+    assert_eq!(7, *vpriv_int.as_ref().unwrap());
 
     unsafe {
         assert_eq!(CStr::from_ptr((*vp.methods).type_).to_str().unwrap(), "i32");

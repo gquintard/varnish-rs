@@ -1,0 +1,16 @@
+[package]
+name = "vmod_object"
+version = "0.0.1"
+edition = "2021"
+
+# if you copy this into a standalone repository,
+# replace `{ path = "../.." }` with `"0.0.1"`
+[build-dependencies]
+varnish = { path = "../.." }
+
+[dependencies]
+varnish = { path = "../.." }
+varnish-sys = { path = "../../varnish-sys" }
+
+[lib]
+crate-type = ["cdylib"]

@@ -14,7 +14,7 @@ pub fn timestamp(_: &Ctx, vp: &mut VPriv<Instant>) -> Duration {
     // we will need this either way
     let now = Instant::now();
 
-    let interval = match vp.get() {
+    let interval = match vp.as_ref() {
         // if `.get()` returns None, we just store `now` and interval is 0
         None => Duration::new(0, 0),
         // if there was a value, compute the difference with now

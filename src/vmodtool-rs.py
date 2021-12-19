@@ -86,6 +86,21 @@ def rustfuncBody(self, vcc, t):
         }}'''.format(self.retval.ct if self.retval.vt != "VOID" else "()"))
     print("}")
 
+def rustEventFunc():
+    print('''
+unsafe extern "C" fn vmod_c__event(vrt_ctx: * mut varnish_sys::vrt_ctx, vp: *mut varnish_sys::vmod_priv, ev: varnish_sys::vcl_event_e) -> varnish_sys::VCL_INT {
+    let mut ctx = Ctx::new(vrt_ctx);
+    let event = Event::new(ev);
+    match crate::event(
+        &mut ctx,
+        &mut vp.into_rust(),
+        event).into_result() {
+            Ok(()) => 0,
+            Err(ref e) => {{ ctx.fail(e); 1 }},
+    }
+}
+''')
+
 def runmain(inputvcc, rstdir):
     v = vmodtool.vcc(inputvcc, rstdir, None)
     v.parse()
@@ -110,12 +125,11 @@ def runmain(inputvcc, rstdir):
     buf.write('#undef VARGS\n')
     buf.write('#undef VENUM\n')
 
-
     print("""
 use std::ptr;
 use std::os::raw::*;
 use std::boxed::Box;
-use varnish::vcl::ctx::Ctx;
+use varnish::vcl::ctx::{{ Ctx, Event }};
 use varnish::vcl::convert::{{IntoRust, IntoVCL, IntoResult, VCLDefault}};
 
 pub const name: &str = "{modname}";
@@ -143,6 +157,8 @@ static struct {csn} {csn};\\0".as_ptr() as *const c_char;
             rustfuncBody(i.fini, v, "fini")
             for m in i.methods:
                 rustfuncBody(m.proto, v, "meth")
+        elif isinstance(i, vmodtool.EventStanza):
+            rustEventFunc()
 
     print("""
 #[repr(C)]
@@ -150,7 +166,9 @@ pub struct {csn} {{""".format(csn = v.csn))
     for i in v.contents:
         def rustMemberDeclare(name, func, t):
             print("\t{0}:\tOption<unsafe extern \"C\" fn{1}>,".format(name, rustFuncSig(func, v, t)))
-        if isinstance(i, vmodtool.FunctionStanza):
+        if isinstance(i, vmodtool.EventStanza):
+            print('''\t_event: Option<unsafe extern "C" fn(vrt_ctx: * mut varnish_sys::vrt_ctx, vp: *mut varnish_sys::vmod_priv, ev: varnish_sys::vcl_event_e) -> varnish_sys::VCL_INT>,''')
+        elif isinstance(i, vmodtool.FunctionStanza):
             rustMemberDeclare(i.proto.cname(), i.proto, "func")
         elif isinstance(i, vmodtool.ObjectStanza):
             rustMemberDeclare(i.init.cname(), i.init, "ini")
@@ -165,7 +183,9 @@ pub static {csn}: {csn} = {csn} {{""".format(csn = v.csn))
     for i in v.contents:
         def rustMemberAssign(name):
             print("\t{0}: Some(vmod_c_{0}),".format(name))
-        if isinstance(i, vmodtool.FunctionStanza):
+        if isinstance(i, vmodtool.EventStanza):
+            print("\t_event: Some(vmod_c__event),")
+        elif isinstance(i, vmodtool.FunctionStanza):
             rustMemberAssign(i.proto.cname())
         elif isinstance(i, vmodtool.ObjectStanza):
             rustMemberAssign(i.init.cname())
