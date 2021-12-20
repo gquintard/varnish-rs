@@ -172,6 +172,20 @@ into_res!(Duration);
 into_res!(String);
 into_res!(bool);
 
+impl<'a> IntoResult<String> for &'a str {
+    type Item = &'a str;
+    fn into_result(self) -> Result<Self::Item, String> {
+        Ok(self)
+    }
+}
+
+impl<'a, E: AsRef<str>> IntoResult<E> for Result<&'a str, E> {
+    type Item = &'a str;
+    fn into_result(self) -> Result<Self::Item, E> {
+        self
+    }
+}
+
 pub trait VCLDefault {
     type Item;
     fn vcl_default() -> Self::Item;

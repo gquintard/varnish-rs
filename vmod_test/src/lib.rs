@@ -1,6 +1,8 @@
 varnish::boilerplate!();
 
 use std::io::Write;
+use std::time::Duration;
+
 use varnish::vcl::ctx::Ctx;
 
 pub fn set_hdr(ctx: &mut Ctx, name: &str, value: &str) -> Result<(), String> {
@@ -33,6 +35,54 @@ pub fn ws_reserve<'a, 'b>(
         }
         _ => Err("workspace issue".to_owned()),
     }
+}
+
+pub fn out_str (
+    _: &mut Ctx
+    ) -> &'static str {
+    "str"
+}
+
+pub fn out_res_str (
+    _: &mut Ctx
+    ) -> Result<&'static str, String> {
+    Ok("str")
+}
+
+pub fn out_string (
+    _: &mut Ctx
+    ) -> String {
+    "str".to_owned()
+}
+
+pub fn out_res_string (
+    _: &mut Ctx
+    ) -> Result<String, String> {
+    Ok("str".to_owned())
+}
+
+pub fn out_bool (
+    _: &mut Ctx
+    ) -> bool {
+    true
+}
+
+pub fn out_res_bool (
+    _: &mut Ctx
+    ) -> Result<bool, String> {
+    Ok(true)
+}
+
+pub fn out_duration (
+    _: &mut Ctx
+    ) -> Duration {
+    Duration::new(0, 0)
+}
+
+pub fn out_res_duration (
+    _: &mut Ctx
+    ) -> Result<Duration, String> {
+    Ok(Duration::new(0, 0))
 }
 
 varnish::vtc!(test01);

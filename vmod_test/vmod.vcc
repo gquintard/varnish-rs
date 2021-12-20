@@ -5,3 +5,12 @@ $Module rustest 3 "Test vmod"
 $Function VOID set_hdr(STRING, STRING)
 $Function VOID unset_hdr(STRING)
 $Function STRING ws_reserve(STRING)
+
+$Function STRING out_str()
+$Function STRING out_res_str()
+$Function STRING out_string()
+$Function STRING out_res_string()
+$Function BOOL out_bool()
+$Function BOOL out_res_bool()
+$Function DURATION out_duration()
+$Function DURATION out_res_duration()
