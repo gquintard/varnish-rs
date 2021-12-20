@@ -172,6 +172,7 @@ macro_rules! vtc {
                 .unwrap();
             if !cmd.status.success() {
                 io::stdout().write_all(&cmd.stdout).unwrap();
+                io::stdout().write_all(&cmd.stderr).unwrap();
                 panic!(concat!("tests/", stringify!($name), ".vtc failed"));
             }
         }

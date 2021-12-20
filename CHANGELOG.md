@@ -1,6 +1,8 @@
 # 0.0.6 (unreleased)
 
 - `VARNISH_INCLUDE_PATHS` allows to build bindings in non-standard environments
+- `vtc!` macro will also print `stderr` in case of failure
+
 # 0.0.5 (2021-12-18)
 
 - introduce `WS::reserve()` and `WS::release()`
