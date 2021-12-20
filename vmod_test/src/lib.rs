@@ -85,5 +85,20 @@ pub fn out_res_duration (
     Ok(Duration::new(0, 0))
 }
 
+// this is a pretty terrible idea, the request body is probably big, and your workspace is tiny,
+// but hey, it's a test function
+pub fn req_body(ctx: &mut Ctx) -> Result<varnish_sys::VCL_STRING, String> {
+    let mut body_chunks = ctx.cached_req_body()?;
+    // make sure the body will be null-terminated
+    body_chunks.push(b"\0");
+    // open a ws reservation and blast the body into it
+    let mut r = ctx.ws.reserve();
+    for chunk in body_chunks {
+        r.buf.write(chunk).map_err(|_| "workspace issue".to_owned())?;
+    }
+    Ok(r.release(0).as_ptr() as *const i8)
+}
+
 varnish::vtc!(test01);
 varnish::vtc!(test02);
+varnish::vtc!(test03);

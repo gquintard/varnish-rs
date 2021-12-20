@@ -2,6 +2,7 @@
 
 - `VARNISH_INCLUDE_PATHS` allows to build bindings in non-standard environments
 - `vtc!` macro will also print `stderr` in case of failure
+- introduce `Ctx::req_body()`
 
 # 0.0.5 (2021-12-18)
 
