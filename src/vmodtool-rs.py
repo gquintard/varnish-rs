@@ -44,11 +44,11 @@ def rustFuncArgs(self, t):
     for a in self.args:
         if self.argstruct:
             if a.opt:
-                args.append("\t\tif (*args).valid_{nm} == 0 {{ None }} else {{ Some({conv}(*args).{nm}.into_rust() ) }}".format(conv = conv(a.vt), nm = a.nm2))
+                args.append("\t\tif (*args).valid_{nm} == 0 {{ None }} else {{ Some({conv}arg_{nm}) }}".format(conv = conv(a.vt), nm = a.nm2))
             else:
-                args.append("\t\t{conv}(*args).{nm}.into_rust()".format(conv = conv(a.vt), nm = a.nm2))
+                args.append("\t\t{conv}arg_{nm}".format(conv = conv(a.vt), nm = a.nm2))
         else:
-            args.append("\t\t{conv}{nm}.into_rust()".format(conv = conv(a.vt), nm = a.nm2))
+            args.append("\t\t{conv}arg_{nm}".format(conv = conv(a.vt), nm = a.nm2))
     print(",\n".join(args))
 
 def rustfuncBody(self, vcc, t):
@@ -62,8 +62,14 @@ def rustfuncBody(self, vcc, t):
             print("\t{0}: {1},".format(a.nm2, a.ct))
         print("}\n")
 
+    print("#[allow(unused_mut)]")
     print("unsafe extern \"C\" fn vmod_c_{0}{1} {{".format(self.cname(), rustFuncSig(self, vcc, t)))
     print("\tlet mut _ctx = Ctx::new(vrt_ctx);");
+    for a in self.args:
+        if self.argstruct:
+            print("\tlet mut arg_{nm} = (*args).{nm}.into_rust();".format(nm = a.nm2))
+        else:
+            print("\tlet mut arg_{nm} = {nm}.into_rust();".format(nm = a.nm2))
     if t == "ini":
         print("\tlet o = crate::{0}::new(".format(self.obj[1:]))
         rustFuncArgs(self, t)
@@ -128,6 +134,7 @@ use std::os::raw::*;
 use std::boxed::Box;
 use varnish::vcl::ctx::{{ Ctx, Event }};
 use varnish::vcl::convert::{{IntoRust, IntoVCL, IntoResult, VCLDefault}};
+
 
 pub const name: &str = "{modname}";
 
