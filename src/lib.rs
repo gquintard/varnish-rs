@@ -207,8 +207,7 @@ pub fn generate_boilerplate() -> Result<(), String> {
     println!("cargo:rerun-if-changed=vmod.vcc");
 
     let rstool_bytes = include_bytes!("vmodtool-rs.py");
-    let rs_tool_path =
-        join_paths([env::var("OUT_DIR").unwrap(), String::from("rstool.py")]).unwrap();
+    let rs_tool_path = Path::new(&env::var("OUT_DIR").unwrap()).join(String::from("rstool.py"));
     fs::write(&rs_tool_path, &rstool_bytes)
         .unwrap_or_else(|_| panic!("couldn't write rstool.py tool in {:?}", &*rs_tool_path));
 
