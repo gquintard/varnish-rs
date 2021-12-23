@@ -135,9 +135,6 @@ use std::boxed::Box;
 use varnish::vcl::ctx::{{ Ctx, Event }};
 use varnish::vcl::convert::{{IntoRust, IntoVCL, IntoResult, VCLDefault}};
 
-
-pub const name: &str = "{modname}";
-
 const PROTO: *const c_char = b"
 {buf}
 static struct {csn} {csn};\\0".as_ptr() as *const c_char;
