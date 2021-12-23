@@ -1,3 +1,7 @@
+# 0.0.7 (unreleased)
+
+- fix a boilerplate issue when using options (extra comma)
+
 # 0.0.6 (2021-12-23)
 
 - `VARNISH_INCLUDE_PATHS` allows to build bindings in non-standard environments
