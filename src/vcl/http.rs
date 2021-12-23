@@ -1,5 +1,17 @@
-#![allow(clippy::not_unsafe_ptr_arg_deref)]
+//! Headers and top line of an http object
+//!
+//! Depending on the VCL subroutine, the `Ctx` will give access to various [`HTTP`] object which
+//! expose the request line (`req`, `req_top` and `bereq`), response line (`resp`, `beresp`) and
+//! headers of the objects Varnish is manipulating.
+//!
+//! `HTTP` implements `IntoIterator` that will expose the headers only (not the `method`, `status`,
+//! etc.)
+//!
+//! **Note:** at this stage, headers are asumed to be utf8, and you will get a panic if it's not
+//! the case. Future work needs to sanitize the headers to make this safer to use. It is tracked in
+//! this [issue](https://github.com/gquintard/varnish-rs/issues/4).
 
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
 use std::os::raw::c_uint;
 use std::slice::{from_raw_parts, from_raw_parts_mut};
 use std::str::from_utf8;
