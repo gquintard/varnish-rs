@@ -1,4 +1,4 @@
-# 0.0.6 (unreleased)
+# 0.0.6 (2021-12-23)
 
 - `VARNISH_INCLUDE_PATHS` allows to build bindings in non-standard environments
 - `vtc!` macro will also print `stderr` in case of failure
@@ -14,7 +14,7 @@
 - vmod event support
 - `example/vmod_event`
 
-# 0.0.5 (2021-12-05)
+# 0.0.4 (2021-12-05)
 
 - documentation starts getting a bit serious
 - CI with github actions
