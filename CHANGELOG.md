@@ -2,6 +2,7 @@
 
 - fix a boilerplate issue when using options (extra comma)
 - fix handling of option `STRING` parameters
+- introduce delivery processors
 
 # 0.0.6 (2021-12-23)
 

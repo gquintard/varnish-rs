@@ -125,19 +125,24 @@ impl<'a> Ctx<'a> {
     }
 
     pub fn cached_req_body(&mut self) -> Result<Vec<&'a [u8]>, String> {
-        unsafe extern "C" fn chunk_collector<'a> (
+        unsafe extern "C" fn chunk_collector<'a>(
             priv_: *mut c_void,
             _flush: c_uint,
             ptr: *const c_void,
             len: std::os::raw::c_long,
-            ) -> std::os::raw::c_int {
+        ) -> std::os::raw::c_int {
             let v = (priv_ as *mut Vec<&'a [u8]>).as_mut().unwrap();
             let buf = std::slice::from_raw_parts(ptr as *const u8, len as usize);
             v.push(buf);
             0
         }
 
-        let req = unsafe { self.raw.req.as_mut().ok_or("req object isn't available".to_owned())? };
+        let req = unsafe {
+            self.raw
+                .req
+                .as_mut()
+                .ok_or("req object isn't available".to_owned())?
+        };
         unsafe {
             if req.req_body_status != varnish_sys::BS_CACHED.as_ptr() {
                 return Err("request body hasn't been previously cached".to_owned());
@@ -145,7 +150,15 @@ impl<'a> Ctx<'a> {
         }
         let mut v: Box<Vec<&'a [u8]>> = Box::new(Vec::new());
         let p: *mut Vec<&'a [u8]> = &mut *v;
-        match unsafe { varnish_sys::VRB_Iterate(req.wrk, req.vsl.as_mut_ptr(), req, Some(chunk_collector), p as *mut c_void) } {
+        match unsafe {
+            varnish_sys::VRB_Iterate(
+                req.wrk,
+                req.vsl.as_mut_ptr(),
+                req,
+                Some(chunk_collector),
+                p as *mut c_void,
+            )
+        } {
             0 => Ok(*v),
             _ => Err("req.body iteration failed".to_owned()),
         }

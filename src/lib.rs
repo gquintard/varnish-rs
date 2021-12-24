@@ -102,6 +102,7 @@ pub mod vcl {
     pub mod convert;
     pub mod ctx;
     pub mod http;
+    pub mod processor;
     pub mod vpriv;
     pub mod ws;
 }
