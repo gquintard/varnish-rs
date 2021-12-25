@@ -40,7 +40,7 @@ where
 {
     /// Create a new processor, possibly using knowledge from the pipeline, or from the current
     /// request.
-    fn new(ctx: &mut OutCtx, oc: *mut varnish_sys::objcore) -> Result<Self, String>;
+    fn new(ctx: &mut OutCtx, oc: *mut varnish_sys::objcore) -> Option<Self>;
     /// Handle the data buffer from the previous processor. This function generally uses
     /// [`OutCtx::push_bytes`] to push data to the next processor.
     fn bytes(
@@ -63,13 +63,11 @@ unsafe extern "C" fn gen_vdp_init<T: OutProc>(
     assert_ne!(priv_, ptr::null_mut());
     assert_eq!(*priv_, ptr::null_mut());
     match T::new(&mut OutCtx::new(ctx_raw), oc) {
-        Ok(proc) => {
+        Some(proc) => {
             *priv_ = Box::into_raw(Box::new(proc)) as *mut c_void;
             0
-        }
-        Err(_) => {
-            1 /* TODO: log*/
-        }
+        },
+        None => { 1 },
     }
 }
 
