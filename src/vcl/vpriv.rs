@@ -4,7 +4,6 @@ use std::ffi::CStr;
 use std::ffi::CString;
 use std::marker::PhantomData;
 use std::os::raw::c_void;
-#[cfg(test)]
 use std::ptr;
 
 use varnish_sys;
@@ -21,7 +20,7 @@ pub struct VPriv<T> {
     phantom: PhantomData<T>,
 }
 
-pub struct InnerVPriv<T> {
+struct InnerVPriv<T> {
     methods: *mut varnish_sys::vmod_priv_methods,
     name: *mut CString,
     obj: Option<T>,
@@ -29,6 +28,7 @@ pub struct InnerVPriv<T> {
 
 impl<T> VPriv<T> {
     pub fn new(vp: *mut varnish_sys::vmod_priv) -> Self {
+        assert_ne!(vp, ptr::null_mut());
         VPriv::<T> {
             ptr: vp,
             phantom: PhantomData,
@@ -36,7 +36,9 @@ impl<T> VPriv<T> {
     }
 
     fn get_inner(&mut self) -> Option<&mut InnerVPriv<T>> {
-        unsafe { ((*self.ptr).priv_ as *mut InnerVPriv<T>).as_mut() }
+        unsafe {
+            (self.ptr.as_mut()?.priv_ as *mut InnerVPriv<T>).as_mut()
+        }
     }
 
     pub fn store(&mut self, obj: T) {
@@ -70,6 +72,11 @@ impl<T> VPriv<T> {
 
     pub fn as_mut(&mut self) -> Option<&mut T> {
         self.get_inner()?.obj.as_mut()
+    }
+
+    pub fn take(&mut self) -> Option<T> {
+        let inner = self.get_inner()?;
+        std::mem::take(&mut inner.obj)
     }
 
     pub fn clear(&mut self) {
