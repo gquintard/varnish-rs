@@ -47,7 +47,7 @@ pub enum LogTag {
 /// }
 /// ```
 pub struct Ctx<'a> {
-    pub raw: &'a varnish_sys::vrt_ctx,
+    pub raw: &'a mut varnish_sys::vrt_ctx,
     pub http_req: Option<HTTP<'a>>,
     pub http_req_top: Option<HTTP<'a>>,
     pub http_resp: Option<HTTP<'a>>,
@@ -62,16 +62,22 @@ impl<'a> Ctx<'a> {
     /// The pointer must be non-null, and the magic must match
     #[allow(clippy::not_unsafe_ptr_arg_deref)]
     pub fn new(raw: *mut varnish_sys::vrt_ctx) -> Self {
-        let raw = unsafe { raw.as_ref().unwrap() };
+        let raw = unsafe { raw.as_mut().unwrap() };
         assert_eq!(raw.magic, varnish_sys::VRT_CTX_MAGIC);
+        let http_req = HTTP::new(raw.http_req);
+        let http_req_top = HTTP::new(raw.http_req_top);
+        let http_resp = HTTP::new(raw.http_resp);
+        let http_bereq = HTTP::new(raw.http_bereq);
+        let http_beresp = HTTP::new(raw.http_beresp);
+        let ws = WS::new(raw.ws);
         Ctx {
             raw,
-            http_req: HTTP::new(raw.http_req),
-            http_req_top: HTTP::new(raw.http_req_top),
-            http_resp: HTTP::new(raw.http_resp),
-            http_bereq: HTTP::new(raw.http_bereq),
-            http_beresp: HTTP::new(raw.http_beresp),
-            ws: WS::new(raw.ws),
+            http_req,
+            http_req_top,
+            http_resp,
+            http_bereq,
+            http_beresp,
+            ws,
         }
     }
 
@@ -80,7 +86,7 @@ impl<'a> Ctx<'a> {
     /// Once the control goes back to Varnish, it will see that the transaction was marked as fail
     /// and will return a synthetic error to the client.
     pub fn fail(&mut self, msg: &str) -> u8 {
-        let p = self.raw;
+        let p = &self.raw;
         unsafe {
             if *p.handling == VCL_RET_FAIL {
                 return 0;
