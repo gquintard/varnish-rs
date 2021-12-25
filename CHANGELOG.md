@@ -4,6 +4,7 @@
 - fix handling of option `STRING` parameters
 - introduce delivery processors
 - introduce `VPriv::take()`
+- introduce `WS::copy_bytes_with_null()`
 
 # 0.0.6 (2021-12-23)
 

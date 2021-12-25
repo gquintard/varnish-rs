@@ -80,6 +80,19 @@ impl<'a> WS<'a> {
         Ok(dest)
     }
 
+    /// Same as [`copy_bytes`] but adds NULL character at the end to help converts buffers into
+    /// `VCL_STRING`s
+    pub fn copy_bytes_with_null<T: AsRef<[u8]>>(&mut self, src: &T) -> Result<&'a [u8], String> {
+        let buf = src.as_ref();
+        let l = buf.len();
+
+        let dest = self.alloc(l + 1)?;
+        dest[..l].copy_from_slice(buf);
+        dest[l] = b'\0';
+        Ok(dest)
+    }
+
+
     /// Copy any "`str`-like" struct into the workspace
     pub fn copy_str<T: AsRef<str>>(&mut self, src: &T) -> Result<&'a str, String> {
         let s: &str = src.as_ref();
