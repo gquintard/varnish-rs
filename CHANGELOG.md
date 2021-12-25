@@ -5,6 +5,7 @@
 - introduce delivery processors
 - introduce `VPriv::take()`
 - introduce `WS::copy_bytes_with_null()`
+- `convert` accepts more types, including `Option<&std|String|&[u8]>`
 
 # 0.0.6 (2021-12-23)
 

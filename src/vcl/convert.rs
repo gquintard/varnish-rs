@@ -131,29 +131,36 @@ impl IntoVCL<VCL_DURATION> for Duration {
     }
 }
 
+impl IntoVCL<VCL_STRING> for &[u8] {
+    fn into_vcl(self, ws: &mut WS) -> Result<VCL_STRING, String> {
+        Ok(ws.copy_bytes_with_null(&self)?.as_ptr() as *const i8 as *const i8)
+    }
+}
+
 impl IntoVCL<VCL_STRING> for &str {
     fn into_vcl(self, ws: &mut WS) -> Result<VCL_STRING, String> {
-        let l = self.len();
-        match ws.alloc(l + 1) {
-            Err(_) => Err("workspace allocation error".to_owned()),
-            Ok(buf) => {
-                buf[..l].copy_from_slice(self.as_bytes());
-                buf[l] = b'\0';
-                Ok(buf.as_ptr() as *const i8)
-            }
-        }
+        self.as_bytes().into_vcl(ws)
     }
 }
 
 impl IntoVCL<VCL_STRING> for String {
     fn into_vcl(self, ws: &mut WS) -> Result<VCL_STRING, String> {
-        <&str>::into_vcl(&self, ws)
+        self.as_str().into_vcl(ws)
     }
 }
 
 impl IntoVCL<()> for Result<(), String> {
     fn into_vcl(self, _: &mut WS) -> Result<(), String> {
         Ok(())
+    }
+}
+
+impl<T: IntoVCL<VCL_STRING> + AsRef<[u8]>> IntoVCL<VCL_STRING> for Option<T> {
+    fn into_vcl(self, ws: &mut WS) -> Result<VCL_STRING, String> {
+        match self {
+            None => Ok(ptr::null()),
+            Some(t) => Ok(ws.copy_bytes_with_null(&t)?.as_ptr() as *const i8 as *const i8),
+        }
     }
 }
 
@@ -171,9 +178,10 @@ into_res!(());
 into_res!(Duration);
 into_res!(String);
 into_res!(bool);
+into_res!(Option<String>);
 
 impl<'a> IntoResult<String> for &'a str {
-    type Item = &'a str;
+    type Item = Self;
     fn into_result(self) -> Result<Self::Item, String> {
         Ok(self)
     }
@@ -185,6 +193,35 @@ impl<'a, E: AsRef<str>> IntoResult<E> for Result<&'a str, E> {
         self
     }
 }
+
+impl<'a> IntoResult<String> for Option<&'a str> {
+    type Item = Self;
+    fn into_result(self) -> Result<Self::Item, String> {
+        Ok(self)
+    }
+}
+
+impl<'a, E: AsRef<str>> IntoResult<E> for Result<Option<&'a str>, E> {
+    type Item = Option<&'a str>;
+    fn into_result(self) -> Result<Self::Item, E> {
+        self
+    }
+}
+
+impl<'a> IntoResult<String> for Option<&'a [u8]> {
+    type Item = Self;
+    fn into_result(self) -> Result<Self::Item, String> {
+        Ok(self)
+    }
+}
+
+impl<'a, E: AsRef<str>> IntoResult<E> for Result<Option<&'a [u8]>, E> {
+    type Item = Option<&'a [u8]>;
+    fn into_result(self) -> Result<Self::Item, E> {
+        self
+    }
+}
+
 
 pub trait VCLDefault {
     type Item;
