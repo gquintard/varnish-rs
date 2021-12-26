@@ -2,7 +2,7 @@
 
 - fix a boilerplate issue when using options (extra comma)
 - fix handling of option `STRING` parameters
-- introduce delivery processors
+- introduce delivery and fetch processors
 - introduce `VPriv::take()`
 - introduce `WS::copy_bytes_with_null()`
 - `convert` accepts more types, including `Option<&std|String|&[u8]>`
