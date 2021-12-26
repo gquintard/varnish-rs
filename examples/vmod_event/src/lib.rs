@@ -26,9 +26,11 @@ pub unsafe fn event(ctx: &mut Ctx, vp: &mut VPriv<i64>, event: Event) -> Result<
     // we only care about load events, which is why we don't use `match`
     if matches!(event, Event::Load) {
         N += 1;
-        if N == 2 { //fail the second load, because reasons
+        if N == 2 {
+            //fail the second load, because reasons
             Err("second load always fail")
-        } else { // store a copy of n
+        } else {
+            // store a copy of n
             vp.store(N);
             Ok(())
         }

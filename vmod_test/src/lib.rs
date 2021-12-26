@@ -37,51 +37,35 @@ pub fn ws_reserve<'a, 'b>(
     }
 }
 
-pub fn out_str (
-    _: &mut Ctx
-    ) -> &'static str {
+pub fn out_str(_: &mut Ctx) -> &'static str {
     "str"
 }
 
-pub fn out_res_str (
-    _: &mut Ctx
-    ) -> Result<&'static str, String> {
+pub fn out_res_str(_: &mut Ctx) -> Result<&'static str, String> {
     Ok("str")
 }
 
-pub fn out_string (
-    _: &mut Ctx
-    ) -> String {
+pub fn out_string(_: &mut Ctx) -> String {
     "str".to_owned()
 }
 
-pub fn out_res_string (
-    _: &mut Ctx
-    ) -> Result<String, String> {
+pub fn out_res_string(_: &mut Ctx) -> Result<String, String> {
     Ok("str".to_owned())
 }
 
-pub fn out_bool (
-    _: &mut Ctx
-    ) -> bool {
+pub fn out_bool(_: &mut Ctx) -> bool {
     true
 }
 
-pub fn out_res_bool (
-    _: &mut Ctx
-    ) -> Result<bool, String> {
+pub fn out_res_bool(_: &mut Ctx) -> Result<bool, String> {
     Ok(true)
 }
 
-pub fn out_duration (
-    _: &mut Ctx
-    ) -> Duration {
+pub fn out_duration(_: &mut Ctx) -> Duration {
     Duration::new(0, 0)
 }
 
-pub fn out_res_duration (
-    _: &mut Ctx
-    ) -> Result<Duration, String> {
+pub fn out_res_duration(_: &mut Ctx) -> Result<Duration, String> {
     Ok(Duration::new(0, 0))
 }
 
@@ -94,7 +78,9 @@ pub fn req_body(ctx: &mut Ctx) -> Result<varnish_sys::VCL_STRING, String> {
     // open a ws reservation and blast the body into it
     let mut r = ctx.ws.reserve();
     for chunk in body_chunks {
-        r.buf.write(chunk).map_err(|_| "workspace issue".to_owned())?;
+        r.buf
+            .write(chunk)
+            .map_err(|_| "workspace issue".to_owned())?;
     }
     Ok(r.release(0).as_ptr() as *const i8)
 }
