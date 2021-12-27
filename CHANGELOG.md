@@ -1,4 +1,4 @@
-# 0.0.7 (unreleased)
+# 0.0.7 (2021-12-26)
 
 - fix a boilerplate issue when using options (extra comma)
 - fix handling of option `STRING` parameters
