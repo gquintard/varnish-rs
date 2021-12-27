@@ -27,7 +27,6 @@ jobs:
             (
               cd $dir
               cargo build --all-targets
-              cargo build --all-targets --release
               cargo test
             )
           done

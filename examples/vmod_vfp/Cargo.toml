@@ -1,5 +1,5 @@
 [package]
-name = "vmod_vdp"
+name = "vmod_vfp"
 version = "0.0.1"
 edition = "2021"
 
