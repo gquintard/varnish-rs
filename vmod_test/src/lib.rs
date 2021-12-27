@@ -3,14 +3,11 @@ varnish::boilerplate!();
 use std::io::Write;
 use std::time::Duration;
 
-use varnish::vcl::ctx::{Ctx, Event};
-use varnish::vcl::processor::{new_vdp, InitResult, PushAction, PushResult, VDPCtx, VDP};
-use varnish::vcl::vpriv::VPriv;
+use varnish::vcl::ctx::Ctx;
 
 varnish::vtc!(test01);
 varnish::vtc!(test02);
 varnish::vtc!(test03);
-varnish::vtc!(test04);
 
 pub fn set_hdr(ctx: &mut Ctx, name: &str, value: &str) -> Result<(), String> {
     if let Some(ref mut req) = ctx.http_req {
@@ -90,51 +87,4 @@ pub fn req_body(ctx: &mut Ctx) -> Result<varnish_sys::VCL_STRING, String> {
             .map_err(|_| "workspace issue".to_owned())?;
     }
     Ok(r.release(0).as_ptr() as *const i8)
-}
-
-#[derive(Default)]
-struct Flipper {
-    body: Vec<u8>,
-}
-
-impl VDP for Flipper {
-    // just return an default struct, thanks to the derive macro
-    fn new(_ctx: &mut VDPCtx, _oc: *mut varnish_sys::objcore) -> InitResult<Self> {
-        InitResult::Ok(Default::default())
-    }
-
-    fn push(&mut self, ctx: &mut VDPCtx, act: PushAction, buf: &[u8]) -> PushResult {
-        // ingest everything we're givem
-        self.body.extend_from_slice(buf);
-
-        // nod along if it isn't the last call
-        if !matches!(act, PushAction::End) {
-            return PushResult::Ok;
-        }
-
-        // flip the whole body
-        self.body.reverse();
-        // send
-        ctx.push(act, &self.body)
-    }
-
-    fn name() -> &'static str {
-        "flipper\0"
-    }
-}
-
-pub unsafe fn event(
-    ctx: &mut Ctx,
-    vp: &mut VPriv<varnish_sys::vdp>,
-    event: Event,
-) -> Result<(), &'static str> {
-    match event {
-        Event::Load => {
-            vp.store(new_vdp::<Flipper>());
-            varnish_sys::VRT_AddVDP(ctx.raw, vp.as_ref().unwrap())
-        }
-        Event::Discard => varnish_sys::VRT_RemoveVDP(ctx.raw, vp.as_ref().unwrap()),
-        _ => (),
-    }
-    Ok(())
 }

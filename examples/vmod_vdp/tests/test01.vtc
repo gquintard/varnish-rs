@@ -9,7 +9,7 @@ server s1 {
 } -start
 
 varnish v1 -vcl+backend {
-	import rustest from "${vmod}";
+	import vdp from "${vmod}";
 
 	sub vcl_deliver {
 		set resp.filters = "flipper";

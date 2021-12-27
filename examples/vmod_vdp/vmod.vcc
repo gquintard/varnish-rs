@@ -1,0 +1,9 @@
+#-
+$Module vdp 3 "Manipulate resp.body"
+
+Varnish Delivery Processors allow a vmod writer to insert themselves into a delivery pipeline and alter an object body as it is being delivered to a client.
+In this vmod, the transformation is very simple: we simply send the body backwards using a VDP named "flipper".
+
+$Event event_function
+
+We need the event function here to declare our VDP. However, there's no "manual" VCL function for us to implement here, loading the vmod is sufficient to add the VDP to the list of available processors, and we'll set it on a per-request basis using `resp.filters` in VCL.

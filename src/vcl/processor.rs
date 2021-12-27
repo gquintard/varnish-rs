@@ -176,12 +176,12 @@ where
     Self: Sized,
 {
     /// Create a new processor, possibly using knowledge from the pipeline
-    fn new(ctx: *mut varnish_sys::vfp_ctx) -> InitResult<Self>;
+    fn new(ctx: &mut VFPCtx) -> InitResult<Self>;
     /// Write data into `buf`, generally using `VFP_Suck` to collect data from the previous
     /// processor.
     fn pull(
         &mut self,
-        ctx: *mut varnish_sys::vfp_ctx,
+        ctx: &mut VFPCtx,
         buf: &mut [u8],
     ) -> PullResult;
     /// The name of the processor.
@@ -197,7 +197,7 @@ unsafe extern "C" fn gen_vfp_init<T: VFP>(ctxp: *mut varnish_sys::vfp_ctx, vfep:
     let vfe = vfep.as_mut().unwrap();
     assert_eq!(vfe.magic, varnish_sys::VFP_ENTRY_MAGIC);
 
-    match T::new(ctx) {
+    match T::new(&mut VFPCtx::new(ctx)) {
         InitResult::Ok(proc) => {
             vfe.priv1 = Box::into_raw(Box::new(proc)) as *mut c_void;
             0
@@ -220,7 +220,7 @@ unsafe extern "C" fn gen_vfp_pull<T: VFP>(
 
     let buf = std::slice::from_raw_parts_mut(ptr as *mut u8, len as usize);
     let obj = (vfe.priv1 as *mut T).as_mut().unwrap();
-    match obj.pull(ctx, buf) {
+    match obj.pull(&mut VFPCtx::new(ctx), buf) {
         PullResult::Err => varnish_sys::vfp_status_VFP_ERROR, // TODO: log error
         PullResult::Ok(l) => {
             *len = l as ssize_t;

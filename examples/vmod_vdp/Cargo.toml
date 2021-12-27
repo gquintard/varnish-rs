@@ -1,5 +1,5 @@
 [package]
-name = "vmod_timestamp"
+name = "vmod_vdp"
 version = "0.0.1"
 edition = "2021"
 
