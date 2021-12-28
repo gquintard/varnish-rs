@@ -36,9 +36,7 @@ impl<T> VPriv<T> {
     }
 
     fn get_inner(&mut self) -> Option<&mut InnerVPriv<T>> {
-        unsafe {
-            (self.ptr.as_mut()?.priv_ as *mut InnerVPriv<T>).as_mut()
-        }
+        unsafe { (self.ptr.as_mut()?.priv_ as *mut InnerVPriv<T>).as_mut() }
     }
 
     pub fn store(&mut self, obj: T) {

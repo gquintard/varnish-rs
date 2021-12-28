@@ -222,7 +222,6 @@ impl<'a, E: AsRef<str>> IntoResult<E> for Result<Option<&'a [u8]>, E> {
     }
 }
 
-
 pub trait VCLDefault {
     type Item;
     fn vcl_default() -> Self::Item;

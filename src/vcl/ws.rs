@@ -92,7 +92,6 @@ impl<'a> WS<'a> {
         Ok(dest)
     }
 
-
     /// Copy any "`str`-like" struct into the workspace
     pub fn copy_str<T: AsRef<str>>(&mut self, src: &T) -> Result<&'a str, String> {
         let s: &str = src.as_ref();

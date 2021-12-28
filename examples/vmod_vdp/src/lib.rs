@@ -26,7 +26,6 @@ impl VDP for Flipper {
         InitResult::Ok(Default::default())
     }
 
-
     // buffer everything, then reverse the buffer, and send it, easy
     fn push(&mut self, ctx: &mut VDPCtx, act: PushAction, buf: &[u8]) -> PushResult {
         // ingest everything we're given

@@ -11,14 +11,18 @@ fn main() {
         Err(_) => {
             match pkg_config::Config::new()
                 .atleast_version("7.0")
-                .probe("varnishapi") {
-                    Ok(l) => l.include_paths,
-                    Err(e) => {
-                        println!("no system libvarnish found, using the pre-generated bindings {}", e);
-                        std::fs::copy("src/bindings.rs.saved", out_path).unwrap();
-                        return;
-                    }
+                .probe("varnishapi")
+            {
+                Ok(l) => l.include_paths,
+                Err(e) => {
+                    println!(
+                        "no system libvarnish found, using the pre-generated bindings {}",
+                        e
+                    );
+                    std::fs::copy("src/bindings.rs.saved", out_path).unwrap();
+                    return;
                 }
+            }
         }
     };
 
@@ -27,7 +31,11 @@ fn main() {
         .header("src/wrapper.h")
         .blocklist_item("FP_.*")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
-        .clang_args(varnish_paths.iter().map(|i| format!("-I{}", i.to_str().unwrap())))
+        .clang_args(
+            varnish_paths
+                .iter()
+                .map(|i| format!("-I{}", i.to_str().unwrap())),
+        )
         .generate()
         .expect("Unable to generate bindings");
 

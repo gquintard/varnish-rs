@@ -5,11 +5,11 @@
 //! *Note:* The rust wrapper here is pretty thin and the vmod writer will most probably need to have to
 //! deal with the raw Varnish internals.
 
+use std::os::raw::c_int;
 use std::os::raw::c_void;
 use std::ptr;
-use std::os::raw::c_int;
 
-use varnish_sys::{objcore, vdp_ctx, ssize_t, vfp_ctx, vfp_entry};
+use varnish_sys::{objcore, ssize_t, vdp_ctx, vfp_ctx, vfp_entry};
 
 /// passed to [`VDP::push`] to describe special conditions occuring in the pipeline.
 #[derive(Debug, Copy, Clone)]
@@ -45,7 +45,6 @@ pub enum PullResult {
     End(usize),
 }
 
-
 /// The return type for [`VDP::new`] and [`VFP::new`]
 #[derive(Debug)]
 pub enum InitResult<T> {
@@ -64,12 +63,7 @@ where
     fn new(ctx: &mut VDPCtx, oc: *mut varnish_sys::objcore) -> InitResult<Self>;
     /// Handle the data buffer from the previous processor. This function generally uses
     /// [`VDPCtx::push`] to push data to the next processor.
-    fn push(
-        &mut self,
-        ctx: &mut VDPCtx,
-        act: PushAction,
-        buf: &[u8],
-    ) -> PushResult;
+    fn push(&mut self, ctx: &mut VDPCtx, act: PushAction, buf: &[u8]) -> PushResult;
     /// The name of the processor.
     ///
     /// **Note:** it must be NULL-terminated as it will be used directly as a C string.
@@ -87,9 +81,9 @@ unsafe extern "C" fn gen_vdp_init<T: VDP>(
         InitResult::Ok(proc) => {
             *priv_ = Box::into_raw(Box::new(proc)) as *mut c_void;
             0
-        },
+        }
         InitResult::Err(_) => -1, // TODO: log error
-        InitResult::Pass => { 1 },
+        InitResult::Pass => 1,
     }
 }
 
@@ -124,7 +118,7 @@ unsafe extern "C" fn gen_vdp_push<T: VDP>(
     match obj.push(&mut VDPCtx::new(ctx_raw), out_action, buf) {
         PushResult::Err => -1, // TODO: log error
         PushResult::Ok => 0,
-        PushResult::End => 1
+        PushResult::End => 1,
     }
 }
 
@@ -152,17 +146,19 @@ impl<'a> VDPCtx<'a> {
     pub unsafe fn new(raw: *mut varnish_sys::vdp_ctx) -> Self {
         let raw = raw.as_mut().unwrap();
         assert_eq!(raw.magic, varnish_sys::VDP_CTX_MAGIC);
-        VDPCtx { raw  }
+        VDPCtx { raw }
     }
 
     /// Send buffer down the pipeline
     pub fn push(&mut self, act: PushAction, buf: &[u8]) -> PushResult {
-        match unsafe { varnish_sys::VDP_bytes(
+        match unsafe {
+            varnish_sys::VDP_bytes(
                 self.raw,
                 act as std::os::raw::c_uint,
                 buf.as_ptr() as *const c_void,
                 buf.len() as varnish_sys::ssize_t,
-                ) } {
+            )
+        } {
             r if r < 0 => PushResult::Err,
             0 => PushResult::Ok,
             _ => PushResult::End,
@@ -179,18 +175,17 @@ where
     fn new(ctx: &mut VFPCtx) -> InitResult<Self>;
     /// Write data into `buf`, generally using `VFP_Suck` to collect data from the previous
     /// processor.
-    fn pull(
-        &mut self,
-        ctx: &mut VFPCtx,
-        buf: &mut [u8],
-    ) -> PullResult;
+    fn pull(&mut self, ctx: &mut VFPCtx, buf: &mut [u8]) -> PullResult;
     /// The name of the processor.
     ///
     /// **Note:** it must be NULL-terminated as it will be used directly as a C string.
     fn name() -> &'static str;
 }
 
-unsafe extern "C" fn gen_vfp_init<T: VFP>(ctxp: *mut varnish_sys::vfp_ctx, vfep: *mut vfp_entry) -> varnish_sys::vfp_status {
+unsafe extern "C" fn gen_vfp_init<T: VFP>(
+    ctxp: *mut varnish_sys::vfp_ctx,
+    vfep: *mut vfp_entry,
+) -> varnish_sys::vfp_status {
     let ctx = ctxp.as_mut().unwrap();
     assert_eq!(ctx.magic, varnish_sys::VFP_CTX_MAGIC);
 
@@ -201,18 +196,18 @@ unsafe extern "C" fn gen_vfp_init<T: VFP>(ctxp: *mut varnish_sys::vfp_ctx, vfep:
         InitResult::Ok(proc) => {
             vfe.priv1 = Box::into_raw(Box::new(proc)) as *mut c_void;
             0
-        },
+        }
         InitResult::Err(_) => -1, // TODO: log the error,
         InitResult::Pass => 1,
     }
 }
 
 unsafe extern "C" fn gen_vfp_pull<T: VFP>(
-        ctxp: *mut varnish_sys::vfp_ctx,
-        vfep: *mut varnish_sys::vfp_entry,
-        ptr: *mut c_void,
-        len: *mut ssize_t,
-    ) -> varnish_sys::vfp_status {
+    ctxp: *mut varnish_sys::vfp_ctx,
+    vfep: *mut varnish_sys::vfp_entry,
+    ptr: *mut c_void,
+    len: *mut ssize_t,
+) -> varnish_sys::vfp_status {
     let ctx = ctxp.as_mut().unwrap();
     assert_eq!(ctx.magic, varnish_sys::VFP_CTX_MAGIC);
     let vfe = vfep.as_mut().unwrap();
@@ -225,11 +220,11 @@ unsafe extern "C" fn gen_vfp_pull<T: VFP>(
         PullResult::Ok(l) => {
             *len = l as ssize_t;
             varnish_sys::vfp_status_VFP_OK
-        },
+        }
         PullResult::End(l) => {
             *len = l as ssize_t;
             varnish_sys::vfp_status_VFP_END
-        },
+        }
     }
 }
 
@@ -268,7 +263,7 @@ impl<'a> VFPCtx<'a> {
     pub unsafe fn new(raw: *mut varnish_sys::vfp_ctx) -> Self {
         let raw = raw.as_mut().unwrap();
         assert_eq!(raw.magic, varnish_sys::VFP_CTX_MAGIC);
-        VFPCtx { raw  }
+        VFPCtx { raw }
     }
 
     /// Pull data from the pipeline
@@ -276,21 +271,17 @@ impl<'a> VFPCtx<'a> {
         let mut len = buf.len() as varnish_sys::ssize_t;
         let max_len = len;
 
-        match unsafe { varnish_sys::VFP_Suck(
-                self.raw,
-                buf.as_ptr() as *mut c_void,
-                &mut len,
-                ) } {
+        match unsafe { varnish_sys::VFP_Suck(self.raw, buf.as_ptr() as *mut c_void, &mut len) } {
             varnish_sys::vfp_status_VFP_OK => {
                 assert!(len <= max_len);
                 assert!(len >= 0);
                 PullResult::Ok(len as usize)
-            } ,
+            }
             varnish_sys::vfp_status_VFP_END => {
                 assert!(len <= max_len);
                 assert!(len >= 0);
                 PullResult::End(len as usize)
-            },
+            }
             varnish_sys::vfp_status_VFP_ERROR => PullResult::Err,
             n => panic!("unknown vfp_status: {}", n),
         }
