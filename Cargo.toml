@@ -12,3 +12,7 @@ readme = "README.md"
 [dependencies]
 varnish-sys = { path = "varnish-sys", version = "0.0.7" }
 pkg-config = "0.3.22"
+
+[workspace]
+
+members = [ "examples/vmod_*", "vmod_test" ]

@@ -151,24 +151,26 @@ macro_rules! vtc {
         #[test]
         fn $name() {
             use std::io::{self, Write};
+            use std::path::Path;
             use std::process::Command;
-            let target = if cfg!(debug_assertions) {
-                "debug"
-            } else {
-                "release"
+
+            // find the vmod so file
+            let llp = std::env::var("LD_LIBRARY_PATH").unwrap();
+            let vmod_filename =
+                String::from("lib") + &std::env::var("CARGO_PKG_NAME").unwrap() + ".so";
+            let vmod_path = match std::env::split_paths(&llp)
+                .into_iter()
+                .map(|p| p.join(&vmod_filename))
+                .filter(|p| p.exists())
+                .nth(0)
+            {
+                None => panic!("couldn't find {} in {}", &vmod_filename, llp),
+                Some(p) => p.to_str().unwrap().to_owned(),
             };
             let cmd = Command::new("varnishtest")
                 .arg(concat!("tests/", stringify!($name), ".vtc"))
                 .arg("-D")
-                .arg(
-                    String::from("vmod=")
-                        + std::env::current_dir().unwrap().to_str().unwrap()
-                        + "/target/"
-                        + target
-                        + "/lib"
-                        + &std::env::var("CARGO_PKG_NAME").unwrap()
-                        + ".so",
-                )
+                .arg(format!("vmod={}", vmod_path))
                 .output()
                 .unwrap();
             if !cmd.status.success() {
