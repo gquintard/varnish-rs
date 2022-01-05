@@ -213,7 +213,7 @@ unsafe extern "C" fn gen_vfp_pull<T: VFP>(
     let vfe = vfep.as_mut().unwrap();
     assert_eq!(vfe.magic, varnish_sys::VFP_ENTRY_MAGIC);
 
-    let buf = std::slice::from_raw_parts_mut(ptr as *mut u8, len as usize);
+    let buf = std::slice::from_raw_parts_mut(ptr as *mut u8, *len as usize);
     let obj = (vfe.priv1 as *mut T).as_mut().unwrap();
     match obj.pull(&mut VFPCtx::new(ctx), buf) {
         PullResult::Err => varnish_sys::vfp_status_VFP_ERROR, // TODO: log error
