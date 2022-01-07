@@ -133,7 +133,7 @@ impl IntoVCL<VCL_DURATION> for Duration {
 
 impl IntoVCL<VCL_STRING> for &[u8] {
     fn into_vcl(self, ws: &mut WS) -> Result<VCL_STRING, String> {
-        Ok(ws.copy_bytes_with_null(&self)?.as_ptr() as *const i8 as *const i8)
+        Ok(ws.copy_bytes_with_null(&self)?.as_ptr() as *const i8)
     }
 }
 
@@ -159,7 +159,7 @@ impl<T: IntoVCL<VCL_STRING> + AsRef<[u8]>> IntoVCL<VCL_STRING> for Option<T> {
     fn into_vcl(self, ws: &mut WS) -> Result<VCL_STRING, String> {
         match self {
             None => Ok(ptr::null()),
-            Some(t) => Ok(ws.copy_bytes_with_null(&t)?.as_ptr() as *const i8 as *const i8),
+            Some(t) => Ok(ws.copy_bytes_with_null(&t)?.as_ptr() as *const i8),
         }
     }
 }
