@@ -221,6 +221,13 @@ impl<'a> IntoResult<String> for Option<&'a [u8]> {
     }
 }
 
+impl<'a, E: AsRef<str>> IntoResult<E> for Result<&'a [u8], E> {
+    type Item = &'a [u8];
+    fn into_result(self) -> Result<Self::Item, E> {
+        self
+    }
+}
+
 impl<'a, E: AsRef<str>> IntoResult<E> for Result<Option<&'a [u8]>, E> {
     type Item = Option<&'a [u8]>;
     fn into_result(self) -> Result<Self::Item, E> {
