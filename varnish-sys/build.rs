@@ -36,6 +36,9 @@ fn main() {
                 .iter()
                 .map(|i| format!("-I{}", i.to_str().unwrap())),
         )
+        .derive_copy(true)
+        .derive_debug(true)
+        .derive_default(true)
         .generate()
         .expect("Unable to generate bindings");
 
