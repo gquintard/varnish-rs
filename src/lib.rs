@@ -194,6 +194,8 @@ macro_rules! boilerplate {
         #[allow(non_snake_case)]
         #[allow(unused_imports)]
         #[allow(dead_code)]
+        #[allow(clippy::unnecessary_mut_passed)]
+        #[allow(clippy::needless_borrow)]
         mod generated {
             include!(concat!(env!("OUT_DIR"), "/generated.rs"));
         }
