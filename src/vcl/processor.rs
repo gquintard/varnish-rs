@@ -60,17 +60,17 @@ where
 {
     /// Create a new processor, possibly using knowledge from the pipeline, or from the current
     /// request.
-    fn new(ctx: &mut VDPCtx, oc: *mut varnish_sys::objcore) -> InitResult<Self>;
+    fn new(_ctx: &mut VDPCtx, _oc: *mut varnish_sys::objcore) -> InitResult<Self>;
     /// Handle the data buffer from the previous processor. This function generally uses
     /// [`VDPCtx::push`] to push data to the next processor.
     fn push(&mut self, ctx: &mut VDPCtx, act: PushAction, buf: &[u8]) -> PushResult;
     /// The name of the processor.
     ///
     /// **Note:** it must be NULL-terminated as it will be used directly as a C string.
-    fn name() -> &'static str;
+    fn name() -> &'static str ;
 }
 
-unsafe extern "C" fn gen_vdp_init<T: VDP>(
+pub unsafe extern "C" fn gen_vdp_init<T: VDP>(
     ctx_raw: *mut vdp_ctx,
     priv_: *mut *mut c_void,
     oc: *mut objcore,
@@ -87,18 +87,20 @@ unsafe extern "C" fn gen_vdp_init<T: VDP>(
     }
 }
 
-unsafe extern "C" fn gen_vdp_fini<T: VDP>(
+pub unsafe extern "C" fn gen_vdp_fini<T: VDP>(
     _: *mut vdp_ctx,
     priv_: *mut *mut c_void,
 ) -> std::os::raw::c_int {
-    assert_ne!(priv_, ptr::null_mut());
+    if priv_.is_null() {
+        return 0;
+    }
     assert_ne!(*priv_, ptr::null_mut());
     Box::from_raw(*priv_ as *mut T);
     *priv_ = ptr::null_mut();
     0
 }
 
-unsafe extern "C" fn gen_vdp_push<T: VDP>(
+pub unsafe extern "C" fn gen_vdp_push<T: VDP>(
     ctx_raw: *mut vdp_ctx,
     act: varnish_sys::vdp_action,
     priv_: *mut *mut c_void,
@@ -172,17 +174,17 @@ where
     Self: Sized,
 {
     /// Create a new processor, possibly using knowledge from the pipeline
-    fn new(ctx: &mut VFPCtx) -> InitResult<Self>;
+    fn new(_ctx: &mut VFPCtx) -> InitResult<Self> { unimplemented!() }
     /// Write data into `buf`, generally using `VFP_Suck` to collect data from the previous
     /// processor.
     fn pull(&mut self, ctx: &mut VFPCtx, buf: &mut [u8]) -> PullResult;
     /// The name of the processor.
     ///
     /// **Note:** it must be NULL-terminated as it will be used directly as a C string.
-    fn name() -> &'static str;
+    fn name() -> &'static str { unimplemented!() }
 }
 
-unsafe extern "C" fn gen_vfp_init<T: VFP>(
+unsafe extern "C" fn wrap_vfp_init<T: VFP>(
     ctxp: *mut varnish_sys::vfp_ctx,
     vfep: *mut vfp_entry,
 ) -> varnish_sys::vfp_status {
@@ -202,7 +204,7 @@ unsafe extern "C" fn gen_vfp_init<T: VFP>(
     }
 }
 
-unsafe extern "C" fn gen_vfp_pull<T: VFP>(
+pub unsafe extern "C" fn wrap_vfp_pull<T: VFP>(
     ctxp: *mut varnish_sys::vfp_ctx,
     vfep: *mut varnish_sys::vfp_entry,
     ptr: *mut c_void,
@@ -228,7 +230,7 @@ unsafe extern "C" fn gen_vfp_pull<T: VFP>(
     }
 }
 
-unsafe extern "C" fn gen_vfp_fini<T: VFP>(ctxp: *mut vfp_ctx, vfep: *mut vfp_entry) {
+pub unsafe extern "C" fn wrap_vfp_fini<T: VFP>(ctxp: *mut vfp_ctx, vfep: *mut vfp_entry) {
     let ctx = ctxp.as_mut().unwrap();
     assert_eq!(ctx.magic, varnish_sys::VFP_CTX_MAGIC);
     let vfe = vfep.as_mut().unwrap();
@@ -242,9 +244,9 @@ unsafe extern "C" fn gen_vfp_fini<T: VFP>(ctxp: *mut vfp_ctx, vfep: *mut vfp_ent
 pub fn new_vfp<T: VFP>() -> varnish_sys::vfp {
     varnish_sys::vfp {
         name: T::name().as_ptr() as *const i8,
-        init: Some(gen_vfp_init::<T>),
-        pull: Some(gen_vfp_pull::<T>),
-        fini: Some(gen_vfp_fini::<T>),
+        init: Some(wrap_vfp_init::<T>),
+        pull: Some(wrap_vfp_pull::<T>),
+        fini: Some(wrap_vfp_fini::<T>),
         priv1: ptr::null(),
     }
 }
