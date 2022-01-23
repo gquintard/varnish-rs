@@ -45,12 +45,12 @@ impl<'a> HTTP<'a> {
         }
     }
 
-    fn change_header(&mut self, idx: u16, name: &str, value: &str) -> Result<(), String> {
+    fn change_header(&mut self, idx: u16, value: &str) -> Result<(), String> {
         assert!(idx < self.raw.nhd);
 
         /* XXX: aliasing warning, it's the same pointer as the one in Ctx */
         let mut ws = WS::new(self.raw.ws);
-        let hdr_buf = ws.copy_bytes(&format!("{}: {}\0", name, value))?;
+        let hdr_buf = ws.copy_bytes_with_null(&value)?;
         unsafe {
             let mut hd = self.raw.hd.offset(idx as isize);
             (*hd).b = hdr_buf.as_ptr() as *const i8;
@@ -72,7 +72,7 @@ impl<'a> HTTP<'a> {
 
         let idx = self.raw.nhd;
         self.raw.nhd += 1;
-        let res = self.change_header(idx, name, value);
+        let res = self.change_header(idx, &format!("{}: {}", name, value));
         if res.is_ok() {
             unsafe {
                 varnish_sys::VSLbt(
@@ -160,14 +160,34 @@ impl<'a> HTTP<'a> {
         self.field(HDR_PROTO)
     }
 
+    pub fn set_proto(&mut self, value: &str) -> Result<(), String> {
+        self.raw.protover = match value {
+            "HTTP/0.9" => 9,
+            "HTTP/1.0" => 10,
+            "HTTP/1.1" => 10,
+            "HTTP/2.0" => 20,
+            _ => 0,
+        };
+        self.change_header(HDR_PROTO, value)
+    }
+
     /// Response status, `None` for a request
     pub fn status(&self) -> Option<&str> {
         self.field(HDR_STATUS)
     }
 
+    /// Set the response status, it will also set the reason
+    pub fn set_status(&mut self, status: u16) {
+        unsafe { varnish_sys::http_SetStatus(self.raw, status, std::ptr::null()) }
+    }
+
     /// Response reason, `None` for a request
     pub fn reason(&self) -> Option<&str> {
         self.field(HDR_REASON)
+    }
+
+    pub fn set_reason(&mut self, value: &str) -> Result<(), String> {
+        self.change_header(HDR_REASON, value)
     }
 
     /// Returns the value of a header based on its name
