@@ -1,6 +1,6 @@
 [![crates.io](https://img.shields.io/crates/v/varnish.svg)](https://crates.io/crates/varnish)
 [![tests](https://github.com/gquintard/varnish-rs/actions/workflows/tests.yaml/badge.svg)](https://github.com/gquintard/varnish-rs/actions)
-[![docs.rs](https://img.shields.io/badge/docs.rs-v0.0.7-brightgreen)](https://docs.rs/varnish/latest/varnish/)
+[![docs.rs](https://img.shields.io/badge/docs.rs-v0.0.8-brightgreen)](https://docs.rs/varnish/latest/varnish/)
 
 [Documentation](https://docs.rs/varnish/)
 
@@ -8,9 +8,9 @@ In your `Cargo.toml`:
 
 ```
 [dependencies]
-varnish = "0.0.7"
+varnish = "0.0.8"
 # and if you are building a vmod:
-varnish-sys = "0.0.7"
+varnish-sys = "0.0.8"
 ```
 # varnish-rs
 
@@ -52,7 +52,7 @@ The `varnish-rs` and `varnish-sys` versions will work in tandem: to build versio
 
 | varnish-sys (rust) | libvarnish (C) |
 | :----------------: | :------------: |
-| 0.0.1 to 0.0.7     | 7.0            |
+| 0.0.*              | 7.0            |
 
 You can check which Varnish version is required using the `libvarnish` metadata field of `varnish-sys`:
 

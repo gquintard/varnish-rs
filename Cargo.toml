@@ -1,6 +1,6 @@
 [package]
 name = "varnish"
-version = "0.0.7"
+version = "0.0.8"
 authors = ["Guillaume Quintard <guillaume.quintard@gmail.com>"]
 edition = "2021"
 license = "BSD-3-Clause"
@@ -8,9 +8,11 @@ description = "Access to the Varnish modules API"
 homepage = "https://github.com/gquintard/varnish-rs"
 repository = "https://github.com/gquintard/varnish-rs"
 readme = "README.md"
+keywords = ["varnish", "vmod", "cache", "http", "reverse-proxy"]
+categories = [ "api-bindings"]
 
 [dependencies]
-varnish-sys = { path = "varnish-sys", version = "0.0.7" }
+varnish-sys = { path = "varnish-sys", version = "0.0.8" }
 pkg-config = "0.3.22"
 
 [workspace]
