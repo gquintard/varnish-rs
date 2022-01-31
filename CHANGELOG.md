@@ -1,3 +1,7 @@
+# 0.08 (unreleased)
+
+- fix generated code involving default STRING arguments
+
 # 0.0.7 (2021-12-26)
 
 - fix a boilerplate issue when using options (extra comma)

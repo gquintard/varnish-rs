@@ -244,8 +244,16 @@ const JSON: *const c_char =
         csn = v.csn,
         major = major,
         minor = minor,
-        json = json.dumps(jl, indent=4).replace('"', '\\"')
+        json = escape_json(json.dumps(jl, indent=4))
     ))
+
+def escape_json(s):
+    n = ""
+    for i in s:
+        if i in '"\\':
+            n += '\\'
+        n += i
+    return n
 
 if __name__ == "__main__":
     usagetext = "Usage: %prog [options] <vmod.vcc>"

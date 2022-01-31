@@ -8,6 +8,7 @@ use varnish::vcl::ctx::Ctx;
 varnish::vtc!(test01);
 varnish::vtc!(test02);
 varnish::vtc!(test03);
+varnish::vtc!(test04);
 
 pub fn set_hdr(ctx: &mut Ctx, name: &str, value: &str) -> Result<(), String> {
     if let Some(ref mut req) = ctx.http_req {
@@ -87,4 +88,8 @@ pub fn req_body(ctx: &mut Ctx) -> Result<varnish_sys::VCL_STRING, String> {
             .map_err(|_| "workspace issue".to_owned())?;
     }
     Ok(r.release(0).as_ptr() as *const i8)
+}
+
+pub fn default_arg<'a, 'b>(_ctx: &'b mut Ctx, foo: &'a str) -> &'a str {
+    foo
 }
