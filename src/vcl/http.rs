@@ -160,6 +160,7 @@ impl<'a> HTTP<'a> {
         self.field(HDR_PROTO)
     }
 
+    /// Set prototype
     pub fn set_proto(&mut self, value: &str) -> Result<(), String> {
         self.raw.protover = match value {
             "HTTP/0.9" => 9,
@@ -186,6 +187,7 @@ impl<'a> HTTP<'a> {
         self.field(HDR_REASON)
     }
 
+    /// Set reason
     pub fn set_reason(&mut self, value: &str) -> Result<(), String> {
         self.change_header(HDR_REASON, value)
     }

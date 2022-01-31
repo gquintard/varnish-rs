@@ -1,6 +1,13 @@
-# 0.08 (unreleased)
+# 0.0.8 (unreleased)
 
+- switch to a cargo workspace to speed up builds
+- fix buffer size issue in VFPs
+- do not copy workspace STRINGS into the workspace again
 - fix generated code involving default STRING arguments
+- C types now derive `Copy`, `Debug` and `Default`
+- silence `clippy` for generated code
+- expose `http_conn`
+- introdude `HTTP::set_status()`, `HTTP::set_prototype()` and `HTTP::set_reason()`
 
 # 0.0.7 (2021-12-26)
 
