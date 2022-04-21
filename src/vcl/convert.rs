@@ -106,7 +106,7 @@ vcl_types! {
     VCL_REGEX,
     VCL_STEVEDORE,
     VCL_STRANDS,
-//    VCL_STRING, // same as VCL_BODY
+    VCL_STRING,
     VCL_SUB,
 //    VCL_TIME, // same as VCL_DURATION
     VCL_VCL,

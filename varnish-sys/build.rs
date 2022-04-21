@@ -10,7 +10,7 @@ fn main() {
         Ok(s) => s.split(":").map(PathBuf::from).collect(),
         Err(_) => {
             match pkg_config::Config::new()
-                .atleast_version("7.0")
+                .atleast_version("7.1")
                 .probe("varnishapi")
             {
                 Ok(l) => l.include_paths,

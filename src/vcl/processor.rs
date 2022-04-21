@@ -9,6 +9,7 @@ use std::os::raw::c_int;
 use std::os::raw::c_void;
 use std::ptr;
 
+use crate::vcl::ctx::Ctx;
 use varnish_sys::{objcore, ssize_t, vdp_ctx, vfp_ctx, vfp_entry};
 
 /// passed to [`VDP::push`] to describe special conditions occuring in the pipeline.
@@ -60,7 +61,7 @@ where
 {
     /// Create a new processor, possibly using knowledge from the pipeline, or from the current
     /// request.
-    fn new(_ctx: &mut VDPCtx, _oc: *mut varnish_sys::objcore) -> InitResult<Self>;
+    fn new(vrt_ctx: &Ctx, vdp_ctx: &mut VDPCtx, oc: *mut varnish_sys::objcore) -> InitResult<Self>;
     /// Handle the data buffer from the previous processor. This function generally uses
     /// [`VDPCtx::push`] to push data to the next processor.
     fn push(&mut self, ctx: &mut VDPCtx, act: PushAction, buf: &[u8]) -> PushResult;
@@ -71,13 +72,14 @@ where
 }
 
 pub unsafe extern "C" fn gen_vdp_init<T: VDP>(
+    vrt_ctx: *const varnish_sys::vrt_ctx,
     ctx_raw: *mut vdp_ctx,
     priv_: *mut *mut c_void,
     oc: *mut objcore,
 ) -> c_int {
     assert_ne!(priv_, ptr::null_mut());
     assert_eq!(*priv_, ptr::null_mut());
-    match T::new(&mut VDPCtx::new(ctx_raw), oc) {
+    match T::new(&Ctx::new(vrt_ctx as *mut varnish_sys::vrt_ctx), &mut VDPCtx::new(ctx_raw), oc) {
         InitResult::Ok(proc) => {
             *priv_ = Box::into_raw(Box::new(proc)) as *mut c_void;
             0
@@ -174,7 +176,7 @@ where
     Self: Sized,
 {
     /// Create a new processor, possibly using knowledge from the pipeline
-    fn new(_ctx: &mut VFPCtx) -> InitResult<Self> { unimplemented!() }
+    fn new(_vrt_ctx: &Ctx, _vfp_ctx: &mut VFPCtx) -> InitResult<Self> { unimplemented!() }
     /// Write data into `buf`, generally using `VFP_Suck` to collect data from the previous
     /// processor.
     fn pull(&mut self, ctx: &mut VFPCtx, buf: &mut [u8]) -> PullResult;
@@ -185,6 +187,7 @@ where
 }
 
 unsafe extern "C" fn wrap_vfp_init<T: VFP>(
+    vrt_ctx: *const varnish_sys::vrt_ctx,
     ctxp: *mut varnish_sys::vfp_ctx,
     vfep: *mut vfp_entry,
 ) -> varnish_sys::vfp_status {
@@ -194,7 +197,7 @@ unsafe extern "C" fn wrap_vfp_init<T: VFP>(
     let vfe = vfep.as_mut().unwrap();
     assert_eq!(vfe.magic, varnish_sys::VFP_ENTRY_MAGIC);
 
-    match T::new(&mut VFPCtx::new(ctx)) {
+    match T::new(&Ctx::new(vrt_ctx as *mut varnish_sys::vrt_ctx), &mut VFPCtx::new(ctx)) {
         InitResult::Ok(proc) => {
             vfe.priv1 = Box::into_raw(Box::new(proc)) as *mut c_void;
             0

@@ -22,7 +22,7 @@ impl VDP for Flipper {
 
     // `new` is called when the VCL specifies "flipper" in `resp.filters`
     // just return an default struct, thanks to the derive macro
-    fn new(_ctx: &mut VDPCtx, _oc: *mut varnish_sys::objcore) -> InitResult<Self> {
+    fn new(_: &Ctx, _: &mut VDPCtx, _oc: *mut varnish_sys::objcore) -> InitResult<Self> {
         InitResult::Ok(Default::default())
     }
 

@@ -3,13 +3,11 @@
 #include "vmod_abi.h"
 #include "vsb.h"
 
-#define HTTP_CONN_MAGIC 0x3e19edd1
-// for now, cherry-pick from "cache/cache_varnishd.h"
 struct http_conn {
         unsigned                magic;
-
+#define HTTP_CONN_MAGIC         0x3e19edd1
         int                     *rfd;
-        enum sess_close         doclose;
+        stream_close_t          doclose;
         body_status_t           body_status;
         struct ws               *ws;
         char                    *rxbuf_b;

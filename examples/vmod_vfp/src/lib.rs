@@ -17,7 +17,7 @@ impl VFP for Lower {
         "lower\0"
     }
 
-    fn new(_ctx: &mut VFPCtx) -> InitResult<Self> {
+    fn new(_: &Ctx, _: &mut VFPCtx) -> InitResult<Self> {
         InitResult::Ok(Lower {})
     }
 
