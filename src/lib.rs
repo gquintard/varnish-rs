@@ -36,11 +36,11 @@
 //!
 //! ``` toml
 //! [build-dependencies]
-//! varnish = "0.0.8"
+//! varnish = "0.0.9"
 //!
 //! [dependencies]
-//! varnish = "0.0.8"
-//! varnish-sys = "0.0.8"
+//! varnish = "0.0.9"
+//! varnish-sys = "0.0.9"
 //! ```
 //!
 //! ## vmod.vcc

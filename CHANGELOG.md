@@ -1,4 +1,8 @@
-# 0.0.8 (unreleased)
+# 0.0.9 (2022-05-01)
+
+- adjust to Varnish 7.1.0
+
+# 0.0.8 (2022-01-30)
 
 - switch to a cargo workspace to speed up builds
 - fix buffer size issue in VFPs
