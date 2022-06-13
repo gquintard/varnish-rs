@@ -1,4 +1,5 @@
 //! Expose the Varnish context (`struct vrt_ctx`) as a Rust object
+use std::ffi::CString;
 use std::os::raw::{c_uint, c_void};
 
 use crate::vcl::http::HTTP;
@@ -6,7 +7,7 @@ use crate::vcl::ws::{TestWS, WS};
 use std::ptr;
 use varnish_sys::{
     busyobj, req, sess, vrt_ctx, vsb, vsl_log, ws, VSL_tag_e_SLT_Debug, VSL_tag_e_SLT_Error,
-    VSL_tag_e_SLT_VCL_Error, VCL_HTTP, VCL_VCL, VRT_CTX_MAGIC,
+    VSL_tag_e_SLT_VCL_Error, VSL_tag_e_SLT_Backend_health, VSL_tag_e_SLT_FetchError, VCL_HTTP, VCL_VCL, VRT_CTX_MAGIC,
 };
 
 // XXX: cheat: avoid dealing with too many bindgen issues and just cherry-pick VCL_RET_FAIL
@@ -21,7 +22,22 @@ pub enum LogTag {
     Debug,
     Error,
     VclError,
+    FetchError,
+    BackendHealth,
     Any(u32),
+}
+
+impl LogTag {
+    pub fn into_u32(&self) -> u32 {
+        match self {
+            LogTag::Debug => VSL_tag_e_SLT_Debug,
+            LogTag::Error => VSL_tag_e_SLT_Error,
+            LogTag::VclError => VSL_tag_e_SLT_VCL_Error,
+            LogTag::FetchError => VSL_tag_e_SLT_FetchError,
+            LogTag::BackendHealth => VSL_tag_e_SLT_Backend_health,
+            LogTag::Any(n) => *n,
+        }
+    }
 }
 
 /// VCL context
@@ -109,23 +125,12 @@ impl<'a> Ctx<'a> {
 
     /// Log a message, attached to the current context
     pub fn log(&mut self, logtag: LogTag, msg: &str) {
-        let t = match logtag {
-            LogTag::Debug => VSL_tag_e_SLT_Debug,
-            LogTag::Error => VSL_tag_e_SLT_Error,
-            LogTag::VclError => VSL_tag_e_SLT_VCL_Error,
-            LogTag::Any(n) => n,
-        };
         unsafe {
             let p = *self.raw;
             if p.vsl.is_null() {
-                varnish_sys::VSL(
-                    t,
-                    0,
-                    b"%s\0".as_ptr() as *const i8,
-                    (msg.to_owned() + "\0").as_ptr() as *const i8,
-                );
+                log(logtag, msg);
             } else {
-                varnish_sys::VSLb_bin(p.vsl, t, msg.len() as i64, msg.as_ptr() as *const c_void);
+                varnish_sys::VSLb_bin(p.vsl, logtag.into_u32(), msg.len() as i64, msg.as_ptr() as *const c_void);
             }
         }
     }
@@ -243,5 +248,13 @@ impl Event {
             varnish_sys::vcl_event_e_VCL_EVENT_DISCARD => Event::Discard,
             _ => panic!("invalid event number"),
         }
+    }
+}
+
+// TODO: avoid Stringification
+pub fn log(logtag: LogTag, msg: &str) {
+    unsafe {
+        let c_cstring = CString::new(msg).unwrap();
+        varnish_sys::VSL(logtag.into_u32(), 0, b"%s\0".as_ptr() as *const i8, c_cstring.as_ptr() as *const u8);
     }
 }
