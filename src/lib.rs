@@ -103,6 +103,7 @@ pub mod vcl {
     pub mod ctx;
     pub mod http;
     pub mod processor;
+    pub mod probe;
     pub mod vpriv;
     pub mod ws;
 }

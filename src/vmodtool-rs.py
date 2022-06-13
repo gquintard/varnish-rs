@@ -12,6 +12,8 @@ def conv(vt):
     s = ""
     if vt.startswith("PRIV_"):
         return "&mut " + s
+    #if vt.startswith("PROBE"):
+    #    return "&" + s
     elif vt == "STRING":
         return "&*" + s
     else:

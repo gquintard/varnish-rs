@@ -4,11 +4,13 @@ use std::io::Write;
 use std::time::Duration;
 
 use varnish::vcl::ctx::Ctx;
+use varnish::vcl::probe;
 
 varnish::vtc!(test01);
 varnish::vtc!(test02);
 varnish::vtc!(test03);
 varnish::vtc!(test04);
+varnish::vtc!(test05);
 
 pub fn set_hdr(ctx: &mut Ctx, name: &str, value: &str) -> Result<(), String> {
     if let Some(ref mut req) = ctx.http_req {
@@ -92,4 +94,22 @@ pub fn req_body(ctx: &mut Ctx) -> Result<varnish_sys::VCL_STRING, String> {
 
 pub fn default_arg<'a, 'b>(_ctx: &'b mut Ctx, foo: &'a str) -> &'a str {
     foo
+}
+
+pub fn probe_prop<'a, 'b>(_ctx: &'b mut Ctx, probe: Option<probe::Probe<'a>>) -> String {
+    match probe {
+        Some(probe) => format!(
+            "{}-{}-{}-{}-{}-{}",
+            match probe.request {
+                probe::Request::URL(url) => format!("url:{}", &url),
+                probe::Request::Text(text) => format!("text:{}", &text),
+            },
+            probe.threshold,
+            probe.timeout.as_secs(),
+            probe.interval.as_secs(),
+            probe.initial,
+            probe.window
+        ),
+        None => "no probe".to_string(),
+    }
 }

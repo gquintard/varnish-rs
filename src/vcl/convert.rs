@@ -26,6 +26,7 @@
 //! | `()` | <-> | `VOID` |
 //! | `&str` | <-> | `VCL_STRING` |
 //! | `String` | -> | `VCL_STRING` |
+//! | `Probe` | -> | `VCL_PROBE` |
 //!
 //! For all the other types, which are pointers, you will need to use the native types.
 //!
@@ -48,6 +49,8 @@ use std::time::Duration;
 
 use crate::vcl::vpriv::VPriv;
 use crate::vcl::ws::WS;
+use crate::vcl::probe;
+use crate::vcl::probe::Probe;
 use varnish_sys::*;
 
 /// Convert a Rust type into a VCL one
@@ -170,6 +173,24 @@ impl<T: IntoVCL<VCL_STRING> + AsRef<[u8]>> IntoVCL<VCL_STRING> for Option<T> {
     }
 }
 
+impl<'a> IntoVCL<VCL_PROBE> for Probe<'a> {
+    fn into_vcl(self, ws: &mut WS) -> Result<VCL_PROBE, String> {
+        let p = ws.alloc(std::mem::size_of::<varnish_sys::vrt_backend_probe>())?.as_mut_ptr() as *mut vrt_backend_probe;
+        let probe = unsafe { p.as_mut().unwrap() };
+        probe.magic = varnish_sys::VRT_BACKEND_PROBE_MAGIC;
+        match self.request {
+            probe::Request::URL(ref s) => { probe.url = s.into_vcl(ws)?; },
+            probe::Request::Text(ref s) => { probe.request = s.into_vcl(ws)?; },
+        }
+        probe.timeout = self.timeout.into_vcl(ws)?;
+        probe.interval = self.interval.into_vcl(ws)?;
+        probe.exp_status = self.exp_status.into_vcl(ws)?;
+        probe.window = self.window.into_vcl(ws)?;
+        probe.initial = self.initial.into_vcl(ws)?;
+        Ok(probe)
+    }
+}
+
 /// Create a `Result` from a bare value, or from a `Result`
 ///
 /// For code simplicity, the boilerplate expects all vmod functions to return a `Result`, and for
@@ -185,6 +206,19 @@ into_res!(Duration);
 into_res!(String);
 into_res!(bool);
 into_res!(Option<String>);
+
+impl<'a> IntoResult<String> for Probe<'a> {
+    type Item = Probe<'a>;
+    fn into_result(self) -> Result<Self::Item, String> {
+        Ok(self)
+    }
+}
+impl<'a, E: AsRef<str>> IntoResult<E> for Result<Probe<'a>, E> {
+    type Item = Probe<'a>;
+    fn into_result(self) -> Result<Self::Item, E> {
+        self
+    }
+}
 
 impl<'a> IntoResult<String> for &'a str {
     type Item = Self;
@@ -322,5 +356,25 @@ impl IntoRust<Duration> for VCL_DURATION {
 impl<T> IntoRust<VPriv<T>> for *mut vmod_priv {
     fn into_rust(self) -> VPriv<T> {
         VPriv::<T>::new(self)
+    }
+}
+
+impl<'a> IntoRust<Option<Probe<'a>>> for VCL_PROBE {
+    fn into_rust(self) -> Option<Probe<'a>> {
+        let pr = unsafe { self.as_ref()? };
+        assert!((pr.url.is_null() && !pr.request.is_null()) || pr.request.is_null() && !pr.url.is_null());
+        Some(Probe {
+            request: if !pr.url.is_null() {
+                crate::vcl::probe::Request::URL(pr.url.into_rust())
+            } else {
+                crate::vcl::probe::Request::Text(pr.request.into_rust())
+            },
+            timeout: pr.timeout.into_rust(),
+            interval: pr.interval.into_rust(),
+            exp_status: pr.exp_status,
+            window: pr.window,
+            threshold: pr.threshold,
+            initial: pr.initial,
+        })
     }
 }
