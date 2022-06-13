@@ -73,10 +73,12 @@ def rustfuncBody(self, vcc, t):
         else:
             print("\tlet mut arg_{nm} = {nm}.into_rust();".format(nm = a.nm2))
     if t == "ini":
-        print("\tlet o = crate::{0}::new(".format(self.obj[1:]))
+        print("\tmatch crate::{0}::new(".format(self.obj[1:]))
         rustFuncArgs(self, t)
-        print("\t);")
-        print("\t*objp = Box::into_raw(Box::new(o));")
+        print('''\t) {
+\t\tOk(o) => { *objp = Box::into_raw(Box::new(o)); },
+\t\tErr(e) => { _ctx.fail(&e.to_string()); },
+\t}''')
     elif  t== "fini":
         print("\tBox::from_raw(*objp);")
     else:

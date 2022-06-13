@@ -23,7 +23,7 @@ pub struct kv {
 // name of the object in VLC (_vcl_name)
 impl kv {
     // constructor doesn't need a Ctx, or the VCL name, hence the _ prefix
-    pub fn new(_ctx: &Ctx, _vcl_name: &str, cap: Option<i64>) -> Self {
+    pub fn new(_ctx: &Ctx, _vcl_name: &str, cap: Option<i64>) -> Result<Self, String> {
         // depending on whether cap was actually passed, and on its value,
         // call a different constructor
         let h = match cap {
@@ -31,9 +31,9 @@ impl kv {
             Some(n) if n <= 0 => HashMap::new(),
             Some(n) => HashMap::with_capacity(n as usize),
         };
-        kv {
+        Ok(kv {
             mutexed_hash_map: Mutex::new(h),
-        }
+        })
     }
 
     // to be more efficient and avoid duplicating the string result just to
