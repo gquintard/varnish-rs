@@ -68,10 +68,10 @@ macro_rules! into_res {
                 Ok(self)
             }
         }
-        impl<E: AsRef<str>> IntoResult<E> for Result<$x, E> {
+        impl<E: ToString> IntoResult<E> for Result<$x, E> {
             type Item = $x;
-            fn into_result(self) -> Result<Self::Item, E> {
-                self
+            fn into_result(self) -> Result<Self::Item, String> {
+                self.map_err(|x| x.to_string())
             }
         }
     };
@@ -198,7 +198,7 @@ impl<'a> IntoVCL<VCL_PROBE> for Probe<'a> {
 /// `into_result` is in charge of the normalization.
 pub trait IntoResult<E> {
     type Item;
-    fn into_result(self) -> Result<Self::Item, E>;
+    fn into_result(self) -> Result<Self::Item, String>;
 }
 
 into_res!(());
@@ -213,10 +213,10 @@ impl<'a> IntoResult<String> for Probe<'a> {
         Ok(self)
     }
 }
-impl<'a, E: AsRef<str>> IntoResult<E> for Result<Probe<'a>, E> {
+impl<'a, E: ToString> IntoResult<E> for Result<Probe<'a>, E> {
     type Item = Probe<'a>;
-    fn into_result(self) -> Result<Self::Item, E> {
-        self
+    fn into_result(self) -> Result<Self::Item, String> {
+        self.map_err(|x| x.to_string())
     }
 }
 
@@ -227,10 +227,10 @@ impl<'a> IntoResult<String> for &'a str {
     }
 }
 
-impl<'a, E: AsRef<str>> IntoResult<E> for Result<&'a str, E> {
+impl<'a, E: ToString> IntoResult<E> for Result<&'a str, E> {
     type Item = &'a str;
-    fn into_result(self) -> Result<Self::Item, E> {
-        self
+    fn into_result(self) -> Result<Self::Item, String> {
+        self.map_err(|x| x.to_string())
     }
 }
 
@@ -241,10 +241,10 @@ impl<'a> IntoResult<String> for Option<&'a str> {
     }
 }
 
-impl<'a, E: AsRef<str>> IntoResult<E> for Result<Option<&'a str>, E> {
+impl<'a, E: ToString> IntoResult<E> for Result<Option<&'a str>, E> {
     type Item = Option<&'a str>;
-    fn into_result(self) -> Result<Self::Item, E> {
-        self
+    fn into_result(self) -> Result<Self::Item, String> {
+        self.map_err(|x| x.to_string())
     }
 }
 
@@ -255,17 +255,17 @@ impl<'a> IntoResult<String> for Option<&'a [u8]> {
     }
 }
 
-impl<'a, E: AsRef<str>> IntoResult<E> for Result<&'a [u8], E> {
+impl<'a, E: ToString> IntoResult<E> for Result<&'a [u8], E> {
     type Item = &'a [u8];
-    fn into_result(self) -> Result<Self::Item, E> {
-        self
+    fn into_result(self) -> Result<Self::Item, String> {
+        self.map_err(|x| x.to_string())
     }
 }
 
-impl<'a, E: AsRef<str>> IntoResult<E> for Result<Option<&'a [u8]>, E> {
+impl<'a, E: ToString> IntoResult<E> for Result<Option<&'a [u8]>, E> {
     type Item = Option<&'a [u8]>;
-    fn into_result(self) -> Result<Self::Item, E> {
-        self
+    fn into_result(self) -> Result<Self::Item, String> {
+        self.map_err(|x| x.to_string())
     }
 }
 
