@@ -105,6 +105,7 @@ pub mod vcl {
     pub mod processor;
     pub mod probe;
     pub mod vpriv;
+    pub mod vsb;
     pub mod ws;
 }
 
