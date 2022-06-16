@@ -1,6 +1,6 @@
 [package]
 name = "varnish"
-version = "0.0.9"
+version = "0.0.10"
 authors = ["Guillaume Quintard <guillaume.quintard@gmail.com>"]
 edition = "2021"
 license = "BSD-3-Clause"
@@ -12,7 +12,7 @@ keywords = ["varnish", "vmod", "cache", "http", "reverse-proxy"]
 categories = [ "api-bindings"]
 
 [dependencies]
-varnish-sys = { path = "varnish-sys", version = "0.0.9" }
+varnish-sys = { path = "varnish-sys", version = "0.0.10" }
 pkg-config = "0.3.22"
 serde = { version = "1", features = ["derive"] }
 

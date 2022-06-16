@@ -52,7 +52,7 @@ The `varnish-rs` and `varnish-sys` versions will work in tandem: to build versio
 
 | varnish-sys (rust) | libvarnish (C) |
 | :----------------: | :------------: |
-| 0.0.9              | 7.1            |
+| 0.0.9 & 0.0.10     | 7.1            |
 | 0.0.*              | 7.0            |
 
 You can check which Varnish version is required using the `libvarnish` metadata field of `varnish-sys`:

@@ -1,3 +1,10 @@
+# 0.0.10 (2022-06-16)
+
+- dumb vsb support (`vcl::vsb::Vsb`))
+- probe support (`vcl::probe::Probe`)
+- vmod object constructors must now return results
+- `Intoresult` require the `Err()` to implement `ToString()`
+
 # 0.0.9 (2022-05-01)
 
 - adjust to Varnish 7.1.0
