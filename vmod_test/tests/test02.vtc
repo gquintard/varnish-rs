@@ -2,8 +2,8 @@ varnishtest "workspace reservation"
 
 server s1 {
 	rxreq
-#	expect req.http.foo == "bar bar bar"
-#	expect req.http.bar == "foo foo foo"
+	expect req.http.foo == "bar bar bar"
+	expect req.http.bar == "foo foo foo"
 	txresp
 } -start
 
