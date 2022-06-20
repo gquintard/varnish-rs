@@ -57,7 +57,7 @@ varnish v1 -vcl {
 # manual fail, we get <undef>, and a 503 response code
 	# the error message should be in the logs, make sure it popped up
 	logexpect l1 -v v1 -d 1 -g raw {
-		expect * *   VCL_Error "manual_fail: couldn't read file"
+		expect * *   VCL_Error "manual_fail: couldn't read file into string"
 	} -start
 	
 	client c1 {
@@ -71,7 +71,7 @@ varnish v1 -vcl {
 
 	# same with the other error
 	logexpect l1 -v v1 -d 1 -g raw {
-		expect * *   VCL_Error {manual_fail: conversion}
+		expect * *   VCL_Error "manual_fail: conversion failed"
 	} -start
 
 	client c1 {
@@ -111,5 +111,3 @@ varnish v1 -vcl {
 	} -run
 
 	logexpect l1 -wait
-
-
