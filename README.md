@@ -16,6 +16,8 @@ varnish-sys = "0.0.8"
 
 Varnish bindings, notably to build vmods
 
+Don't hesitate to open github issues if something is unclear or impractical. You can also join us on [discord](https://discord.com/invite/EuwdvbZR6d).
+
 ## Requirements
 
 ### Rust
