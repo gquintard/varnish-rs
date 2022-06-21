@@ -130,9 +130,12 @@ impl<'a> Ctx<'a> {
             if p.vsl.is_null() {
                 log(logtag, msg);
             } else {
-                let c_cstring = CString::new(msg).unwrap();
+                let t = varnish_sys::txt {
+                    b: msg.as_ptr() as *const i8,
+                    e: msg.as_ptr().add(msg.len()) as *const i8,
+                };
+                varnish_sys::VSLbt(p.vsl, logtag.into_u32(), t);
 
-                varnish_sys::VSLb_bin(p.vsl, logtag.into_u32(), msg.len() as i64 + 1, c_cstring.as_ptr() as *const c_void);
             }
         }
     }
