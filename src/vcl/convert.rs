@@ -26,7 +26,7 @@
 //! | `()` | <-> | `VOID` |
 //! | `&str` | <-> | `VCL_STRING` |
 //! | `String` | -> | `VCL_STRING` |
-//! | `Probe` | -> | `VCL_PROBE` |
+//! | `Option<Probe>` | -> | `VCL_PROBE` |
 //!
 //! For all the other types, which are pointers, you will need to use the native types.
 //!
