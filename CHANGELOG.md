@@ -1,3 +1,7 @@
+# 0.0.11 (2022-06-16)
+
+- fix generated `__fini` prototype
+
 # 0.0.10 (2022-06-16)
 
 - dumb vsb support (`vcl::vsb::Vsb`))
