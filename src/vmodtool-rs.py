@@ -21,8 +21,11 @@ def conv(vt):
 
 def rustFuncSig(self, vcc, t):
     buf = io.StringIO()
+    if t == "fini":
+        buf.write("(objp: *mut *mut crate::{0})".format(self.obj[1:]))
+        return buf.getvalue()
     buf.write("(vrt_ctx: * mut varnish_sys::vrt_ctx")
-    if t == "ini" or t == "fini":
+    if t == "ini":
         buf.write(", objp: *mut *mut crate::{0}".format(self.obj[1:]))
     if t == "ini":
         buf.write(", vcl_name: *const c_char")
@@ -66,7 +69,8 @@ def rustfuncBody(self, vcc, t):
 
     print("#[allow(unused_mut)]")
     print("unsafe extern \"C\" fn vmod_c_{0}{1} {{".format(self.cname(), rustFuncSig(self, vcc, t)))
-    print("\tlet mut _ctx = Ctx::new(vrt_ctx);");
+    if (t != "fini"):
+        print("\tlet mut _ctx = Ctx::new(vrt_ctx);");
     for a in self.args:
         if self.argstruct:
             print("\tlet mut arg_{nm} = (*args).{nm}.into_rust();".format(nm = a.nm2))

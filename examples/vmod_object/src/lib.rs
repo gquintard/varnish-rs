@@ -10,6 +10,7 @@ use varnish::vcl::ctx::Ctx;
 use varnish_sys::VCL_STRING;
 
 varnish::vtc!(test01);
+varnish::vtc!(test02);
 
 const EMPTY_STRING: String = String::new();
 
