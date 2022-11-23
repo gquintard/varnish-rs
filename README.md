@@ -8,9 +8,9 @@ In your `Cargo.toml`:
 
 ```
 [dependencies]
-varnish = "0.0.8"
+varnish = "0.0.12"
 # and if you are building a vmod:
-varnish-sys = "0.0.8"
+varnish-sys = "0.0.12"
 ```
 # varnish-rs
 
@@ -22,7 +22,7 @@ Don't hesitate to open github issues if something is unclear or impractical. You
 
 ### Rust
 
-`varnish-rs` works on stable Rust and should be fine with more recent versions too. If it doesn't, plus open an issue.
+`varnish-rs` works on stable Rust and should be fine with more recent versions too. If it doesn't, please open an issue.
 
 ### Varnish
 
