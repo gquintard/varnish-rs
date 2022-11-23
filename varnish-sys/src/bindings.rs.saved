@@ -114,7 +114,7 @@ pub const __STDC_IEC_60559_COMPLEX__: u32 = 201404;
 pub const __STDC_ISO_10646__: u32 = 201706;
 pub const __GNU_LIBRARY__: u32 = 6;
 pub const __GLIBC__: u32 = 2;
-pub const __GLIBC_MINOR__: u32 = 35;
+pub const __GLIBC_MINOR__: u32 = 36;
 pub const _SYS_CDEFS_H: u32 = 1;
 pub const __glibc_c99_flexarr_available: u32 = 1;
 pub const __LDOUBLE_REDIRECTS_TO_FLOAT128_ABI: u32 = 0;
@@ -250,7 +250,7 @@ pub const __timeval_defined: u32 = 1;
 pub const FD_SETSIZE: u32 = 1024;
 pub const VRT_INTEGER_MAX: u64 = 999999999999999;
 pub const VRT_INTEGER_MIN: i64 = -999999999999999;
-pub const VRT_MAJOR_VERSION: u32 = 15;
+pub const VRT_MAJOR_VERSION: u32 = 16;
 pub const VRT_MINOR_VERSION: u32 = 0;
 pub const _STDINT_H: u32 = 1;
 pub const _BITS_WCHAR_H: u32 = 1;
@@ -486,7 +486,7 @@ pub const VFP_CTX_MAGIC: u32 = 1641665509;
 pub const VDP_ENTRY_MAGIC: u32 = 893302657;
 pub const VDP_CTX_MAGIC: u32 = 3998227959;
 pub const VMOD_ABI_Version: &[u8; 55usize] =
-    b"Varnish 7.1.0 c2c07517ddddbc187604b800eff733296e93aaad\0";
+    b"Varnish 7.2.1 399fa7ed46d68f4c4f42a8fd2748339750d99a8b\0";
 pub const VSB_MAGIC: u32 = 1250090378;
 pub const VSB_FIXEDLEN: u32 = 0;
 pub const VSB_AUTOEXTEND: u32 = 1;
@@ -4707,6 +4707,11 @@ pub struct vsc_seg {
 pub struct vsmw_cluster {
     _unused: [u8; 0],
 }
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct wrk_vpi {
+    _unused: [u8; 0],
+}
 pub type stream_close_t = *const stream_close;
 #[doc = " VCL_STRANDS:"]
 #[doc = ""]
@@ -4890,7 +4895,7 @@ pub struct vrt_ctx {
     pub syntax: ::std::os::raw::c_uint,
     pub vclver: ::std::os::raw::c_uint,
     pub method: ::std::os::raw::c_uint,
-    pub handling: *mut ::std::os::raw::c_uint,
+    pub vpi: *mut wrk_vpi,
     pub msg: *mut vsb,
     pub vsl: *mut vsl_log,
     pub vcl: VCL_VCL,
@@ -4960,13 +4965,13 @@ fn bindgen_test_layout_vrt_ctx() {
         )
     );
     assert_eq!(
-        unsafe { &(*(::std::ptr::null::<vrt_ctx>())).handling as *const _ as usize },
+        unsafe { &(*(::std::ptr::null::<vrt_ctx>())).vpi as *const _ as usize },
         16usize,
         concat!(
             "Offset of field: ",
             stringify!(vrt_ctx),
             "::",
-            stringify!(handling)
+            stringify!(vpi)
         )
     );
     assert_eq!(
@@ -7445,7 +7450,8 @@ pub const task_prio_TASK_QUEUE_RUSH: task_prio = 1;
 pub const task_prio_TASK_QUEUE_REQ: task_prio = 2;
 pub const task_prio_TASK_QUEUE_STR: task_prio = 3;
 pub const task_prio_TASK_QUEUE_VCA: task_prio = 4;
-pub const task_prio_TASK_QUEUE__END: task_prio = 5;
+pub const task_prio_TASK_QUEUE_BG: task_prio = 5;
+pub const task_prio_TASK_QUEUE__END: task_prio = 6;
 pub type task_prio = ::std::os::raw::c_uint;
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -7463,7 +7469,7 @@ pub struct worker {
     pub aws: [ws; 1usize],
     pub cur_method: ::std::os::raw::c_uint,
     pub seen_methods: ::std::os::raw::c_uint,
-    pub handling: ::std::os::raw::c_uint,
+    pub vpi: *mut wrk_vpi,
 }
 #[test]
 fn bindgen_test_layout_worker() {
@@ -7608,13 +7614,13 @@ fn bindgen_test_layout_worker() {
         )
     );
     assert_eq!(
-        unsafe { &(*(::std::ptr::null::<worker>())).handling as *const _ as usize },
+        unsafe { &(*(::std::ptr::null::<worker>())).vpi as *const _ as usize },
         184usize,
         concat!(
             "Offset of field: ",
             stringify!(worker),
             "::",
-            stringify!(handling)
+            stringify!(vpi)
         )
     );
 }
@@ -8703,99 +8709,99 @@ impl Default for busyobj {
 }
 impl busyobj {
     #[inline]
-    pub fn do_esi(&self) -> ::std::os::raw::c_uint {
+    pub fn uncacheable(&self) -> ::std::os::raw::c_uint {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_do_esi(&mut self, val: ::std::os::raw::c_uint) {
+    pub fn set_uncacheable(&mut self, val: ::std::os::raw::c_uint) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(0usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn do_gzip(&self) -> ::std::os::raw::c_uint {
+    pub fn is_bgfetch(&self) -> ::std::os::raw::c_uint {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_do_gzip(&mut self, val: ::std::os::raw::c_uint) {
+    pub fn set_is_bgfetch(&mut self, val: ::std::os::raw::c_uint) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(1usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn do_gunzip(&self) -> ::std::os::raw::c_uint {
+    pub fn is_hitmiss(&self) -> ::std::os::raw::c_uint {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(2usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_do_gunzip(&mut self, val: ::std::os::raw::c_uint) {
+    pub fn set_is_hitmiss(&mut self, val: ::std::os::raw::c_uint) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(2usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn do_stream(&self) -> ::std::os::raw::c_uint {
+    pub fn is_hitpass(&self) -> ::std::os::raw::c_uint {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_do_stream(&mut self, val: ::std::os::raw::c_uint) {
+    pub fn set_is_hitpass(&mut self, val: ::std::os::raw::c_uint) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(3usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn uncacheable(&self) -> ::std::os::raw::c_uint {
+    pub fn do_esi(&self) -> ::std::os::raw::c_uint {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_uncacheable(&mut self, val: ::std::os::raw::c_uint) {
+    pub fn set_do_esi(&mut self, val: ::std::os::raw::c_uint) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(4usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn was_304(&self) -> ::std::os::raw::c_uint {
+    pub fn do_gzip(&self) -> ::std::os::raw::c_uint {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_was_304(&mut self, val: ::std::os::raw::c_uint) {
+    pub fn set_do_gzip(&mut self, val: ::std::os::raw::c_uint) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(5usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn is_bgfetch(&self) -> ::std::os::raw::c_uint {
+    pub fn do_gunzip(&self) -> ::std::os::raw::c_uint {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(6usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_is_bgfetch(&mut self, val: ::std::os::raw::c_uint) {
+    pub fn set_do_gunzip(&mut self, val: ::std::os::raw::c_uint) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(6usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn is_hitmiss(&self) -> ::std::os::raw::c_uint {
+    pub fn do_stream(&self) -> ::std::os::raw::c_uint {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_is_hitmiss(&mut self, val: ::std::os::raw::c_uint) {
+    pub fn set_do_stream(&mut self, val: ::std::os::raw::c_uint) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(7usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn is_hitpass(&self) -> ::std::os::raw::c_uint {
+    pub fn was_304(&self) -> ::std::os::raw::c_uint {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(8usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_is_hitpass(&mut self, val: ::std::os::raw::c_uint) {
+    pub fn set_was_304(&mut self, val: ::std::os::raw::c_uint) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(8usize, 1u8, val as u64)
@@ -8803,52 +8809,52 @@ impl busyobj {
     }
     #[inline]
     pub fn new_bitfield_1(
+        uncacheable: ::std::os::raw::c_uint,
+        is_bgfetch: ::std::os::raw::c_uint,
+        is_hitmiss: ::std::os::raw::c_uint,
+        is_hitpass: ::std::os::raw::c_uint,
         do_esi: ::std::os::raw::c_uint,
         do_gzip: ::std::os::raw::c_uint,
         do_gunzip: ::std::os::raw::c_uint,
         do_stream: ::std::os::raw::c_uint,
-        uncacheable: ::std::os::raw::c_uint,
         was_304: ::std::os::raw::c_uint,
-        is_bgfetch: ::std::os::raw::c_uint,
-        is_hitmiss: ::std::os::raw::c_uint,
-        is_hitpass: ::std::os::raw::c_uint,
     ) -> __BindgenBitfieldUnit<[u8; 2usize]> {
         let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 2usize]> = Default::default();
         __bindgen_bitfield_unit.set(0usize, 1u8, {
-            let do_esi: u32 = unsafe { ::std::mem::transmute(do_esi) };
-            do_esi as u64
-        });
-        __bindgen_bitfield_unit.set(1usize, 1u8, {
-            let do_gzip: u32 = unsafe { ::std::mem::transmute(do_gzip) };
-            do_gzip as u64
-        });
-        __bindgen_bitfield_unit.set(2usize, 1u8, {
-            let do_gunzip: u32 = unsafe { ::std::mem::transmute(do_gunzip) };
-            do_gunzip as u64
-        });
-        __bindgen_bitfield_unit.set(3usize, 1u8, {
-            let do_stream: u32 = unsafe { ::std::mem::transmute(do_stream) };
-            do_stream as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 1u8, {
             let uncacheable: u32 = unsafe { ::std::mem::transmute(uncacheable) };
             uncacheable as u64
         });
-        __bindgen_bitfield_unit.set(5usize, 1u8, {
-            let was_304: u32 = unsafe { ::std::mem::transmute(was_304) };
-            was_304 as u64
-        });
-        __bindgen_bitfield_unit.set(6usize, 1u8, {
+        __bindgen_bitfield_unit.set(1usize, 1u8, {
             let is_bgfetch: u32 = unsafe { ::std::mem::transmute(is_bgfetch) };
             is_bgfetch as u64
         });
-        __bindgen_bitfield_unit.set(7usize, 1u8, {
+        __bindgen_bitfield_unit.set(2usize, 1u8, {
             let is_hitmiss: u32 = unsafe { ::std::mem::transmute(is_hitmiss) };
             is_hitmiss as u64
         });
-        __bindgen_bitfield_unit.set(8usize, 1u8, {
+        __bindgen_bitfield_unit.set(3usize, 1u8, {
             let is_hitpass: u32 = unsafe { ::std::mem::transmute(is_hitpass) };
             is_hitpass as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let do_esi: u32 = unsafe { ::std::mem::transmute(do_esi) };
+            do_esi as u64
+        });
+        __bindgen_bitfield_unit.set(5usize, 1u8, {
+            let do_gzip: u32 = unsafe { ::std::mem::transmute(do_gzip) };
+            do_gzip as u64
+        });
+        __bindgen_bitfield_unit.set(6usize, 1u8, {
+            let do_gunzip: u32 = unsafe { ::std::mem::transmute(do_gunzip) };
+            do_gunzip as u64
+        });
+        __bindgen_bitfield_unit.set(7usize, 1u8, {
+            let do_stream: u32 = unsafe { ::std::mem::transmute(do_stream) };
+            do_stream as u64
+        });
+        __bindgen_bitfield_unit.set(8usize, 1u8, {
+            let was_304: u32 = unsafe { ::std::mem::transmute(was_304) };
+            was_304 as u64
         });
         __bindgen_bitfield_unit
     }
@@ -9514,55 +9520,55 @@ impl req {
         }
     }
     #[inline]
-    pub fn is_hitmiss(&self) -> ::std::os::raw::c_uint {
+    pub fn waitinglist(&self) -> ::std::os::raw::c_uint {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_is_hitmiss(&mut self, val: ::std::os::raw::c_uint) {
+    pub fn set_waitinglist(&mut self, val: ::std::os::raw::c_uint) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(5usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn is_hitpass(&self) -> ::std::os::raw::c_uint {
+    pub fn want100cont(&self) -> ::std::os::raw::c_uint {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(6usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_is_hitpass(&mut self, val: ::std::os::raw::c_uint) {
+    pub fn set_want100cont(&mut self, val: ::std::os::raw::c_uint) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(6usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn waitinglist(&self) -> ::std::os::raw::c_uint {
+    pub fn late100cont(&self) -> ::std::os::raw::c_uint {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_waitinglist(&mut self, val: ::std::os::raw::c_uint) {
+    pub fn set_late100cont(&mut self, val: ::std::os::raw::c_uint) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(7usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn want100cont(&self) -> ::std::os::raw::c_uint {
+    pub fn is_hitmiss(&self) -> ::std::os::raw::c_uint {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(8usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_want100cont(&mut self, val: ::std::os::raw::c_uint) {
+    pub fn set_is_hitmiss(&mut self, val: ::std::os::raw::c_uint) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(8usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn late100cont(&self) -> ::std::os::raw::c_uint {
+    pub fn is_hitpass(&self) -> ::std::os::raw::c_uint {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(9usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_late100cont(&mut self, val: ::std::os::raw::c_uint) {
+    pub fn set_is_hitpass(&mut self, val: ::std::os::raw::c_uint) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(9usize, 1u8, val as u64)
@@ -9575,11 +9581,11 @@ impl req {
         hash_ignore_vary: ::std::os::raw::c_uint,
         hash_always_miss: ::std::os::raw::c_uint,
         is_hit: ::std::os::raw::c_uint,
-        is_hitmiss: ::std::os::raw::c_uint,
-        is_hitpass: ::std::os::raw::c_uint,
         waitinglist: ::std::os::raw::c_uint,
         want100cont: ::std::os::raw::c_uint,
         late100cont: ::std::os::raw::c_uint,
+        is_hitmiss: ::std::os::raw::c_uint,
+        is_hitpass: ::std::os::raw::c_uint,
     ) -> __BindgenBitfieldUnit<[u8; 2usize]> {
         let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 2usize]> = Default::default();
         __bindgen_bitfield_unit.set(0usize, 1u8, {
@@ -9603,24 +9609,24 @@ impl req {
             is_hit as u64
         });
         __bindgen_bitfield_unit.set(5usize, 1u8, {
-            let is_hitmiss: u32 = unsafe { ::std::mem::transmute(is_hitmiss) };
-            is_hitmiss as u64
-        });
-        __bindgen_bitfield_unit.set(6usize, 1u8, {
-            let is_hitpass: u32 = unsafe { ::std::mem::transmute(is_hitpass) };
-            is_hitpass as u64
-        });
-        __bindgen_bitfield_unit.set(7usize, 1u8, {
             let waitinglist: u32 = unsafe { ::std::mem::transmute(waitinglist) };
             waitinglist as u64
         });
-        __bindgen_bitfield_unit.set(8usize, 1u8, {
+        __bindgen_bitfield_unit.set(6usize, 1u8, {
             let want100cont: u32 = unsafe { ::std::mem::transmute(want100cont) };
             want100cont as u64
         });
-        __bindgen_bitfield_unit.set(9usize, 1u8, {
+        __bindgen_bitfield_unit.set(7usize, 1u8, {
             let late100cont: u32 = unsafe { ::std::mem::transmute(late100cont) };
             late100cont as u64
+        });
+        __bindgen_bitfield_unit.set(8usize, 1u8, {
+            let is_hitmiss: u32 = unsafe { ::std::mem::transmute(is_hitmiss) };
+            is_hitmiss as u64
+        });
+        __bindgen_bitfield_unit.set(9usize, 1u8, {
+            let is_hitpass: u32 = unsafe { ::std::mem::transmute(is_hitpass) };
+            is_hitpass as u64
         });
         __bindgen_bitfield_unit
     }
@@ -9886,10 +9892,16 @@ extern "C" {
     pub fn http_ForceHeader(to: *mut http, arg1: hdr_t, val: *const ::std::os::raw::c_char);
 }
 extern "C" {
+    pub fn http_AppendHeader(to: *mut http, arg1: hdr_t, val: *const ::std::os::raw::c_char);
+}
+extern "C" {
     pub fn http_PrintfHeader(to: *mut http, fmt: *const ::std::os::raw::c_char, ...);
 }
 extern "C" {
     pub fn http_TimeHeader(to: *mut http, fmt: *const ::std::os::raw::c_char, now: vtim_real);
+}
+extern "C" {
+    pub fn http_ViaHeader() -> *const ::std::os::raw::c_char;
 }
 extern "C" {
     pub fn http_Proto(to: *mut http);

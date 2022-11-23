@@ -1,3 +1,9 @@
+# 0.0.12 (2022-11-23)
+
+- ctx->handling is now hidden from us, so we use `VRT_fail`, at the cost of a string copy
+- the JSON format in vmod_data changed slightly, adjust for that
+- explicitly `drop` `Box::from_raw` results to silence `rustc`
+
 # 0.0.11 (2022-06-16)
 
 - fix generated `__fini` prototype
