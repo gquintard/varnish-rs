@@ -97,7 +97,7 @@ pub unsafe extern "C" fn gen_vdp_fini<T: VDP>(
         return 0;
     }
     assert_ne!(*priv_, ptr::null_mut());
-    Box::from_raw(*priv_ as *mut T);
+    drop(Box::from_raw(*priv_ as *mut T));
     *priv_ = ptr::null_mut();
     0
 }
@@ -239,7 +239,7 @@ pub unsafe extern "C" fn wrap_vfp_fini<T: VFP>(ctxp: *mut vfp_ctx, vfep: *mut vf
     let vfe = vfep.as_mut().unwrap();
     assert_eq!(vfe.magic, varnish_sys::VFP_ENTRY_MAGIC);
 
-    Box::from_raw(vfe.priv1 as *mut T);
+    drop(Box::from_raw(vfe.priv1 as *mut T));
     vfe.priv1 = ptr::null_mut();
 }
 

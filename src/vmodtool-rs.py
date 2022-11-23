@@ -84,7 +84,7 @@ def rustfuncBody(self, vcc, t):
 \t\tErr(e) => { _ctx.fail(&e.to_string()); },
 \t}''')
     elif  t== "fini":
-        print("\tBox::from_raw(*objp);")
+        print("\tdrop(Box::from_raw(*objp));")
     else:
         if t == "meth":
             print("\tmatch (*obj){name}(".format(name = self.bname))
@@ -112,7 +112,7 @@ unsafe extern "C" fn vmod_c__event(vrt_ctx: * mut varnish_sys::vrt_ctx, vp: *mut
 }
 ''')
 
-def runmain(inputvcc, rstdir):
+def runmain(inputvcc, rstdir, abi):
     v = vmodtool.vcc(inputvcc, rstdir, None)
     v.parse()
 
@@ -136,18 +136,16 @@ def runmain(inputvcc, rstdir):
     buf.write('#undef VARGS\n')
     buf.write('#undef VENUM\n')
 
+    proto = buf.getvalue() + "static struct {csn} {csn};".format(csn = v.csn)
+    buf.close()
+
     print("""
 use std::ptr;
 use std::os::raw::*;
 use std::boxed::Box;
 use varnish::vcl::ctx::{{ Ctx, Event }};
 use varnish::vcl::convert::{{IntoRust, IntoVCL, IntoResult, VCLDefault}};
-
-const PROTO: *const c_char = b"
-{buf}
-static struct {csn} {csn};\\0".as_ptr() as *const c_char;
-""".format(buf = buf.getvalue(), csn = v.csn, modname = v.modname))
-    buf.close()
+""".format(modname = v.modname))
 
     # C stuff is done, get comfortable with our own types
     for i in vmodtool.CTYPES:
@@ -204,13 +202,14 @@ pub static {csn}: {csn} = {csn} {{""".format(csn = v.csn))
     print("};")
 
     if v.strict_abi:
-        major = 0
-        minor = 0
+        major = "0"
+        minor = "0"
     else:
         major = "varnish_sys::VRT_MAJOR_VERSION"
         minor = "varnish_sys::VRT_MInOR_VERSION"
 
-    jl = [["$VMOD", "1.0"]]
+    jl = [["$VMOD", "1.0", v.modname, v.csn, v.file_id, abi, major, minor]]
+    jl.append(["$CPROTO", proto])
     for j in v.contents:
             j.json(jl)
 
@@ -241,11 +240,11 @@ pub static Vmod_{name}_Data: vmod_data = vmod_data {{
 	func: &{csn} as *const _ as *const c_void,
 	abi: varnish_sys::VMOD_ABI_Version.as_ptr() as *const c_char,
 	json: JSON,
-	proto: PROTO,
+    proto: std::ptr::null(),
 }};
 
 const JSON: *const c_char =
-    b"{json}\\n\\0".as_ptr() as *const c_char;
+    b"VMOD_JSON_SPEC\x02\\n{json}\\n\x03\\0".as_ptr() as *const c_char;
 """.format(
         file_id = v.file_id,
         name = v.modname,
@@ -272,6 +271,8 @@ if __name__ == "__main__":
     oparser.add_option('-w', '--rstdir', metavar="directory", default='.',
                        help='Where to save the generated RST files ' +
                        '(default: ".")')
+    oparser.add_option('-a', '--abi',
+                       help='abi string (VMOD_ABI_Version in C)')
     (opts, args) = oparser.parse_args()
 
     i_vcc = None
@@ -286,4 +287,4 @@ if __name__ == "__main__":
         oparser.print_help()
         exit(-1)
 
-    runmain(i_vcc, opts.rstdir)
+    runmain(i_vcc, opts.rstdir, opts.abi)

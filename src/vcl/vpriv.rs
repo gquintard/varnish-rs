@@ -86,8 +86,8 @@ impl<T> VPriv<T> {
 
 unsafe extern "C" fn vpriv_free<T>(_: *const varnish_sys::vrt_ctx, ptr: *mut c_void) {
     let inner_priv = Box::from_raw(ptr as *mut InnerVPriv<T>);
-    Box::from_raw(inner_priv.name);
-    Box::from_raw(inner_priv.methods);
+    drop(Box::from_raw(inner_priv.name));
+    drop(Box::from_raw(inner_priv.methods));
 }
 
 #[test]

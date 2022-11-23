@@ -8,10 +8,8 @@ use std::ptr;
 use varnish_sys::{
     busyobj, req, sess, vrt_ctx, vsb, vsl_log, ws, VSL_tag_e_SLT_Debug, VSL_tag_e_SLT_Error,
     VSL_tag_e_SLT_VCL_Error, VSL_tag_e_SLT_Backend_health, VSL_tag_e_SLT_FetchError, VCL_HTTP, VCL_VCL, VRT_CTX_MAGIC,
+    VRT_fail,
 };
-
-// XXX: cheat: avoid dealing with too many bindgen issues and just cherry-pick VCL_RET_FAIL
-const VCL_RET_FAIL: c_uint = 4;
 
 /// VSL logging tag
 ///
@@ -102,23 +100,10 @@ impl<'a> Ctx<'a> {
     /// Once the control goes back to Varnish, it will see that the transaction was marked as fail
     /// and will return a synthetic error to the client.
     pub fn fail(&mut self, msg: &str) -> u8 {
-        let p = &self.raw;
+        // not great, we have to copy the string to add a null character
+        let c_cstring = CString::new(msg).unwrap();
         unsafe {
-            if *p.handling == VCL_RET_FAIL {
-                return 0;
-            }
-            assert!(*p.handling == 0);
-            *p.handling = VCL_RET_FAIL;
-        }
-
-        if p.vsl.is_null() {
-            assert!(!p.msg.is_null());
-            unsafe {
-                varnish_sys::VSB_bcat(p.msg, msg.as_ptr() as *const c_void, msg.len() as i64);
-                varnish_sys::VSB_putc(p.msg, '\n' as i32);
-            }
-        } else {
-            self.log(LogTag::VclError, msg);
+            VRT_fail(self.raw, "%s\0".as_ptr() as *const i8, c_cstring.as_ptr());
         }
         0
     }
@@ -198,7 +183,6 @@ impl TestCtx {
                 magic: VRT_CTX_MAGIC,
                 syntax: 0,
                 method: 0,
-                handling: ptr::null::<c_uint>() as *mut c_uint,
                 vclver: 0,
                 msg: ptr::null::<vsb>() as *mut vsb,
                 vsl: ptr::null::<vsl_log>() as *mut vsl_log,
@@ -215,6 +199,7 @@ impl TestCtx {
                 now: 0.0,
                 specific: ptr::null::<VCL_HTTP>() as *mut c_void,
                 called: ptr::null::<vsb>() as *mut c_void,
+                vpi: ptr::null::<vsb>() as *mut varnish_sys::wrk_vpi,
             },
             test_ws: TestWS::new(sz),
         };
