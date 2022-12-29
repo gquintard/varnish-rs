@@ -2,7 +2,7 @@
 $Module vfp 3 "Manipulate resp.body"
 
 Varnish Fetch Processors allow a vmod writer to insert themselves into a delivery pipeline and alter an object body as it is being received from the backend.
-In this vmod, we simply lowercase the ascii letters using a VFP named "flipper".
+In this vmod, we simply lowercase the ascii letters using a VFP named "lower".
 
 $Event event_function
 
