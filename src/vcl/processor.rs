@@ -111,7 +111,6 @@ pub unsafe extern "C" fn gen_vdp_push<T: VDP>(
 ) -> c_int {
     assert_ne!(priv_, ptr::null_mut());
     assert_ne!(*priv_, ptr::null_mut());
-    let obj = (*priv_ as *mut T).as_mut().unwrap();
     let out_action = match act {
         varnish_sys::vdp_action_VDP_NULL => PushAction::None,
         varnish_sys::vdp_action_VDP_FLUSH => PushAction::Flush,
@@ -119,7 +118,7 @@ pub unsafe extern "C" fn gen_vdp_push<T: VDP>(
         _ => return 1, /* TODO: log */
     };
     let buf = std::slice::from_raw_parts(ptr as *const u8, len as usize);
-    match obj.push(&mut VDPCtx::new(ctx_raw), out_action, buf) {
+    match (*(*priv_ as *mut T)).push(&mut VDPCtx::new(ctx_raw), out_action, buf) {
         PushResult::Err => -1, // TODO: log error
         PushResult::Ok => 0,
         PushResult::End => 1,
