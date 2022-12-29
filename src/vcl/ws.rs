@@ -41,7 +41,10 @@ impl<'a> WS<'a> {
     /// Allocate a `[u8; sz]` and return a reference to it.
     #[cfg(not(test))]
     pub fn alloc(&mut self, sz: usize) -> Result<&'a mut [u8], String> {
-        let p = unsafe { varnish_sys::WS_Alloc(self.raw, sz as u32) as *mut u8 };
+        let wsp = unsafe { self.raw.as_mut().unwrap() };
+        assert_eq!(wsp.magic, varnish_sys::WS_MAGIC);
+
+        let p = unsafe { varnish_sys::WS_Alloc(wsp, sz as u32) as *mut u8 };
         if p.is_null() {
             Err(format!("workspace allocation ({} bytes) failed", sz))
         } else {
