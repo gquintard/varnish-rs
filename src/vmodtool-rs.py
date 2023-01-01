@@ -24,7 +24,7 @@ def rustFuncSig(self, vcc, t):
     if t == "fini":
         buf.write("(objp: *mut *mut crate::{0})".format(self.obj[1:]))
         return buf.getvalue()
-    buf.write("(vrt_ctx: * mut varnish_sys::vrt_ctx")
+    buf.write("(vrt_ctx: * mut varnish::vcl::boilerplate::vrt_ctx")
     if t == "ini":
         buf.write(", objp: *mut *mut crate::{0}".format(self.obj[1:]))
     if t == "ini":
@@ -99,7 +99,7 @@ def rustfuncBody(self, vcc, t):
 
 def rustEventFunc():
     print('''
-unsafe extern "C" fn vmod_c__event(vrt_ctx: * mut varnish_sys::vrt_ctx, vp: *mut varnish_sys::vmod_priv, ev: varnish_sys::vcl_event_e) -> varnish_sys::VCL_INT {
+unsafe extern "C" fn vmod_c__event(vrt_ctx: * mut varnish::vcl::boilerplate::vrt_ctx, vp: *mut varnish::vcl::boilerplate::vmod_priv, ev: varnish::vcl::boilerplate::vcl_event_e) -> varnish::vcl::boilerplate::VCL_INT {
     let mut ctx = Ctx::new(vrt_ctx);
     let event = Event::new(ev);
     match crate::event(
@@ -150,9 +150,9 @@ use varnish::vcl::convert::{{IntoRust, IntoVCL, IntoResult, VCLDefault}};
     # C stuff is done, get comfortable with our own types
     for i in vmodtool.CTYPES:
         if i.startswith("PRIV_"):
-            vmodtool.CTYPES[i] = "*mut varnish_sys::vmod_priv"
+            vmodtool.CTYPES[i] = "*mut varnish::vcl::boilerplate::vmod_priv"
         else:
-            vmodtool.CTYPES[i] = "varnish_sys::" + vmodtool.CTYPES[i]
+            vmodtool.CTYPES[i] = "varnish::vcl::boilerplate::" + vmodtool.CTYPES[i]
     v = vmodtool.vcc(inputvcc, None, None)
     v.parse()
 
@@ -174,7 +174,7 @@ pub struct {csn} {{""".format(csn = v.csn))
         def rustMemberDeclare(name, func, t):
             print("\t{0}:\tOption<unsafe extern \"C\" fn{1}>,".format(name, rustFuncSig(func, v, t)))
         if isinstance(i, vmodtool.EventStanza):
-            print('''\t_event: Option<unsafe extern "C" fn(vrt_ctx: * mut varnish_sys::vrt_ctx, vp: *mut varnish_sys::vmod_priv, ev: varnish_sys::vcl_event_e) -> varnish_sys::VCL_INT>,''')
+            print('''\t_event: Option<unsafe extern "C" fn(vrt_ctx: * mut varnish::vcl::boilerplate::vrt_ctx, vp: *mut varnish::vcl::boilerplate::vmod_priv, ev: varnish::vcl::boilerplate::vcl_event_e) -> varnish::vcl::boilerplate::VCL_INT>,''')
         elif isinstance(i, vmodtool.FunctionStanza):
             rustMemberDeclare(i.proto.cname(), i.proto, "func")
         elif isinstance(i, vmodtool.ObjectStanza):
@@ -205,8 +205,8 @@ pub static {csn}: {csn} = {csn} {{""".format(csn = v.csn))
         major = "0"
         minor = "0"
     else:
-        major = "varnish_sys::VRT_MAJOR_VERSION"
-        minor = "varnish_sys::VRT_MInOR_VERSION"
+        major = "varnish::vcl::boilerplate::VRT_MAJOR_VERSION"
+        minor = "varnish::vcl::boilerplate::VRT_MINOR_VERSION"
 
     jl = [["$VMOD", "1.0", v.modname, v.csn, v.file_id, abi, major, minor]]
     jl.append(["$CPROTO", proto])
@@ -238,7 +238,7 @@ pub static Vmod_{name}_Data: vmod_data = vmod_data {{
 	func_name: "{csn}\\0".as_ptr() as *const c_char,
 	func_len: ::std::mem::size_of::<{csn}>() as c_int,
 	func: &{csn} as *const _ as *const c_void,
-	abi: varnish_sys::VMOD_ABI_Version.as_ptr() as *const c_char,
+	abi: varnish::vcl::boilerplate::VMOD_ABI_Version.as_ptr() as *const c_char,
 	json: JSON,
     proto: std::ptr::null(),
 }};

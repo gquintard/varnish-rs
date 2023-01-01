@@ -9,8 +9,6 @@ In your `Cargo.toml`:
 ```
 [dependencies]
 varnish = "0.0.12"
-# and if you are building a vmod:
-varnish-sys = "0.0.12"
 ```
 # varnish-rs
 
@@ -28,7 +26,7 @@ Don't hesitate to open github issues if something is unclear or impractical. You
 
 `varnish-rs` relies on `varnish-sys` (in this same repository) to generate bindings from the `libvarnish` headers which you will need to install, depending on you linux distribution, the related package can be named `varnish-devel`, `varnish-dev` or maybe `libvarnish-dev`.
 
-Right now, the only Varnish version supported is `7.0`.
+Right now, the only Varnish versions supported are `7.*`.
 
 ## Python3
 
@@ -50,9 +48,9 @@ VARNISH_INCLUDE_PATHS=/my/custom/libpath:/my/other/custom/libpath cargo build
 
 ## Versions
 
-The `varnish-rs` and `varnish-sys` versions will work in tandem: to build version X of `varnish`, you need version X of `varnish-sys`, in turn `varnish-sys` will depend on a specific Varnish C library version:
+The `varnish-rs` and `varnish-sys` versions will work in tandem: to build version X of `varnish`, you need version X of `varnish-rs` and of `varnish-sys`, in turn `varnish-sys` will depend on a specific Varnish C library version:
 
-| varnish-sys (rust) | libvarnish (C) |
+| varnish-rs/varnish-sys (rust) | libvarnish (C) |
 | :----------------: | :------------: |
 | 0.0.12             | 7.2            |
 | 0.0.9 -> 0.0.11    | 7.1            |

@@ -38,7 +38,7 @@ impl kv {
     }
 
     // to be more efficient and avoid duplicating the string result just to
-    // pass it to the boilerplate, we can do the conversion to a VCL ourselves
+    // pass it to the boilerplate code, we can do the conversion to a VCL_STRING ourselves
     pub fn get(&self, ctx: &mut Ctx, key: &str) -> Result<VCL_STRING, String> {
         self.mutexed_hash_map // access our member field
             .lock() // lock the mutex to access the hashmap

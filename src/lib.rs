@@ -30,9 +30,8 @@
 //! ```
 //! ## Cargo.toml
 //!
-//! You will need both `varnish-rs` (this crate), but also
-//! [`varnish-sys`](https://crates.io/crates/varnish-sys) to build the vmod as the boilerplate code
-//! uses it.
+//! You will need at least `varnish-rs` (this crate), and maybe
+//! [`varnish-sys`](https://crates.io/crates/varnish-sys) if you use Varnish internals directly.
 //!
 //! ``` toml
 //! [build-dependencies]
@@ -40,7 +39,8 @@
 //!
 //! [dependencies]
 //! varnish = "0.0.12"
-//! varnish-sys = "0.0.12"
+//! // and optionally:
+//! //varnish-sys = "0.0.12"
 //! ```
 //!
 //! ## vmod.vcc
@@ -107,6 +107,8 @@ pub mod vcl {
     pub mod vpriv;
     pub mod vsb;
     pub mod ws;
+
+    pub mod boilerplate;
 }
 
 /// Automate VTC testing
