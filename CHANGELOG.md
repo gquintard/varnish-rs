@@ -1,3 +1,11 @@
+# 0.0.13 (unreleased)
+
+- `cache_director.h` added to `varnish-sys`
+- `generate_boilerplate!` now reads the `PYTHON` environment variable before falling
+  back to `python3` to generate code
+- `varnish-rs` reexports the VCL types needed to generate boilerplate code, so that
+  vmods don't need to add `varnish-sys` to their `Cargo.toml` anymore.
+
 # 0.0.12 (2022-11-23)
 
 - ctx->handling is now hidden from us, so we use `VRT_fail`, at the cost of a string copy

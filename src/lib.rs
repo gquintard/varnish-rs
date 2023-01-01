@@ -228,7 +228,8 @@ pub fn generate_boilerplate() -> Result<(), String> {
         .unwrap()
         .to_string();
 
-    let cmd = Command::new("python3")
+    let python = env::var("PYTHON").unwrap_or_else(|_| "python3".into());
+    let cmd = Command::new(python)
         .arg(rs_tool_path)
         .arg("vmod.vcc")
         .arg("-w")

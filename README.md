@@ -30,7 +30,7 @@ Right now, the only Varnish versions supported are `7.*`.
 
 ## Python3
 
-At the moment, we use an embedded [python script](src/vmodtool-rs.py) to generate the boilerplate that exposes the rust vmod code to Varnish. Make sure that `python3` is in your path.
+At the moment, we use an embedded [python script](src/vmodtool-rs.py) to generate the boilerplate that exposes the rust vmod code to Varnish. Make sure that `python3` is in your path, or that the `PYTHON` environment variable is pointing at a compatible interpreter.
 
 ## Building
 
