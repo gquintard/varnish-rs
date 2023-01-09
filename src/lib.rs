@@ -110,6 +110,38 @@ pub mod vcl {
     pub mod ws;
 
     pub mod boilerplate;
+
+    pub struct Error {
+        s: String,
+    }
+
+    impl std::fmt::Debug for Error {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            std::fmt::Debug::fmt(&self.s, f)
+        }
+    }
+
+    impl std::fmt::Display for Error {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            std::fmt::Display::fmt(&self.s, f)
+        }
+    }
+
+    impl std::error::Error for Error{}
+
+    impl std::convert::From<String> for Error {
+        fn from(s: String) -> Self {
+            Error{s}
+        }
+    }
+
+    impl std::convert::From<&str> for Error {
+        fn from(s: &str) -> Self {
+            Error{s: s.into()}
+        }
+    }
+
+    pub type Result<T> = std::result::Result<T, Error>;
 }
 
 /// Automate VTC testing
@@ -213,12 +245,12 @@ macro_rules! boilerplate {
 /// `vmod.vcc` into C-compatible code that will allow Varnish to load and use your vmod.
 ///
 /// It does require `python3` to run as it embed a script to do the processing.
-pub fn generate_boilerplate() -> Result<(), String> {
+pub fn generate_boilerplate() -> Result<(), vcl::Error> {
     println!("cargo:rerun-if-changed=vmod.vcc");
 
     let rstool_bytes = include_bytes!("vmodtool-rs.py");
     let rs_tool_path = Path::new(&env::var("OUT_DIR").unwrap()).join(String::from("rstool.py"));
-    fs::write(&rs_tool_path, &rstool_bytes)
+    fs::write(&rs_tool_path, rstool_bytes)
         .unwrap_or_else(|_| panic!("couldn't write rstool.py tool in {:?}", &*rs_tool_path));
 
     let vmodtool_path = pkg_config::get_variable("varnishapi", "vmodtool").unwrap();

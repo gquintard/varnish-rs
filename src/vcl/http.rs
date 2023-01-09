@@ -16,6 +16,7 @@ use std::os::raw::c_uint;
 use std::slice::{from_raw_parts, from_raw_parts_mut};
 use std::str::from_utf8;
 
+use crate::vcl::Result;
 use crate::vcl::ws::WS;
 
 // C constants pop up as u32, but header indexing uses u16, redefine
@@ -45,7 +46,7 @@ impl<'a> HTTP<'a> {
         }
     }
 
-    fn change_header(&mut self, idx: u16, value: &str) -> Result<(), String> {
+    fn change_header(&mut self, idx: u16, value: &str) -> Result<()> {
         assert!(idx < self.raw.nhd);
 
         /* XXX: aliasing warning, it's the same pointer as the one in Ctx */
@@ -64,10 +65,10 @@ impl<'a> HTTP<'a> {
 
     /// Append a new header using `name` and `value`. This can fail if we run out of internal slots
     /// to store the new header
-    pub fn set_header(&mut self, name: &str, value: &str) -> Result<(), String> {
+    pub fn set_header(&mut self, name: &str, value: &str) -> Result<()> {
         assert!(self.raw.nhd <= self.raw.shd);
         if self.raw.nhd == self.raw.shd {
-            return Err("no more header slot".to_string());
+            return Err("no more header slot".into());
         }
 
         let idx = self.raw.nhd;
@@ -161,7 +162,7 @@ impl<'a> HTTP<'a> {
     }
 
     /// Set prototype
-    pub fn set_proto(&mut self, value: &str) -> Result<(), String> {
+    pub fn set_proto(&mut self, value: &str) -> Result<()> {
         self.raw.protover = match value {
             "HTTP/0.9" => 9,
             "HTTP/1.0" => 10,
@@ -188,7 +189,7 @@ impl<'a> HTTP<'a> {
     }
 
     /// Set reason
-    pub fn set_reason(&mut self, value: &str) -> Result<(), String> {
+    pub fn set_reason(&mut self, value: &str) -> Result<()> {
         self.change_header(HDR_REASON, value)
     }
 

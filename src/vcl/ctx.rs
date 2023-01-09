@@ -125,7 +125,7 @@ impl<'a> Ctx<'a> {
         }
     }
 
-    pub fn cached_req_body(&mut self) -> Result<Vec<&'a [u8]>, String> {
+    pub fn cached_req_body(&mut self) -> Result<Vec<&'a [u8]>, crate::vcl::Error> {
         unsafe extern "C" fn chunk_collector<'a>(
             priv_: *mut c_void,
             _flush: c_uint,
@@ -142,11 +142,11 @@ impl<'a> Ctx<'a> {
             self.raw
                 .req
                 .as_mut()
-                .ok_or("req object isn't available".to_owned())?
+                .ok_or("req object isn't available")?
         };
         unsafe {
             if req.req_body_status != varnish_sys::BS_CACHED.as_ptr() {
-                return Err("request body hasn't been previously cached".to_owned());
+                return Err("request body hasn't been previously cached".into());
             }
         }
         let mut v: Box<Vec<&'a [u8]>> = Box::new(Vec::new());
@@ -161,7 +161,7 @@ impl<'a> Ctx<'a> {
             )
         } {
             0 => Ok(*v),
-            _ => Err("req.body iteration failed".to_owned()),
+            _ => Err("req.body iteration failed".into()),
         }
     }
 }
