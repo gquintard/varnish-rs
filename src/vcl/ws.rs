@@ -10,7 +10,7 @@
 //! **Note:** unless you know what you are doing, you should probably just use the automatic type
 //! conversion provided by [`crate::vcl::convert`], or store things in
 //! [`crate::vcl::vpriv::VPriv`].
-use std::ffi::c_void;
+use std::ffi::{c_char, c_void};
 use std::ptr;
 use std::slice::from_raw_parts_mut;
 
@@ -216,7 +216,7 @@ impl<'a> Drop for ReservedBuf<'a> {
 pub struct TestWS {
     c_ws: varnish_sys::ws,
     #[allow(dead_code)]
-    space: Vec<i8>,
+    space: Vec<c_char>,
 }
 
 impl TestWS {
@@ -225,14 +225,14 @@ impl TestWS {
         let al = std::mem::align_of::<*const c_void>();
         let aligned_sz = (sz / al) * al;
 
-        let mut v = Vec::new();
+        let mut v: Vec<c_char> = Vec::with_capacity(sz);
         v.resize(sz, 0);
 
         let s = v.as_mut_ptr();
         TestWS {
             c_ws: varnish_sys::ws {
                 magic: varnish_sys::WS_MAGIC,
-                id: ['t' as i8, 's' as i8, 't' as i8, '\0' as i8],
+                id: ['t' as c_char, 's' as c_char, 't' as c_char, '\0' as c_char],
                 s,
                 f: s,
                 r: ptr::null_mut(),
