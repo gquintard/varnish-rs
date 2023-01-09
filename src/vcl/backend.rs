@@ -3,8 +3,7 @@ use std::ffi::c_char;
 use std::io::Read;
 use std::ptr;
 
-use anyhow::{anyhow, Result};
-
+use crate::vcl::Result;
 use crate::vcl::ws::WS;
 use crate::vcl::ctx::Ctx;
 
@@ -47,7 +46,17 @@ pub unsafe extern "C" fn vfp_pull<T: Read>(
 
     let reader = (vfe.priv1 as *mut T).as_mut().unwrap();
     match reader.read(buf) {
-        Err(e) => varnish_sys::vfp_status_VFP_ERROR, // TODO: log error
+        Err(e) => {
+            let msg = e.to_string();
+            // TODO: we should grow a VSL object
+            let t = varnish_sys::txt {
+                b: msg.as_ptr() as *const c_char,
+                e: msg.as_ptr().add(msg.len()) as *const c_char,
+            };
+            varnish_sys::VSLbt((*(*ctxp).req).vsl, varnish_sys::VSL_tag_e_SLT_Error, t);
+
+            varnish_sys::vfp_status_VFP_ERROR
+        },
         Ok(0) => {
             *len = 0;
             varnish_sys::vfp_status_VFP_END
@@ -175,9 +184,12 @@ unsafe extern "C" fn wrap_finish<S: Serve<T>, T: Transfer + Read> (
 
 pub struct Backend<S: Serve<T>, T: Transfer + Read> {
     bep: *const varnish_sys::director,
+    #[allow(dead_code)]
     methods: Box<varnish_sys::vdi_methods>,
     info: Box<S>,
+    #[allow(dead_code)]
     type_: CString,
+    #[allow(dead_code)]
     name: CString,
     phantom: std::marker::PhantomData<T>,
 }
@@ -207,7 +219,7 @@ impl<S: Serve<T>, T: Transfer + Read> BackendBuilder<S, T> {
     pub fn new(n: &str, info: S) -> Result<Self> {
         Ok(BackendBuilder {
             info: Box::new(info),
-            name: CString::new(n)?,
+            name: CString::new(n).map_err(|e| e.to_string())?,
             methods: Box::new(varnish_sys::vdi_methods {
                 magic: varnish_sys::VDI_METHODS_MAGIC,
                 finish: Some(wrap_finish::<S, T>),
@@ -222,7 +234,7 @@ impl<S: Serve<T>, T: Transfer + Read> BackendBuilder<S, T> {
     }
 
     pub fn build(mut self, ctx: &mut Ctx) -> Result<Backend<S, T>> {
-        let type_ = CString::new(&*self.info.get_type())?;
+        let type_ = CString::new(&*self.info.get_type()).map_err(|e| e.to_string())?;
         let bep = unsafe {
             varnish_sys::VRT_AddDirector(
                 ctx.raw,
@@ -232,7 +244,7 @@ impl<S: Serve<T>, T: Transfer + Read> BackendBuilder<S, T> {
             )
         };
         if bep.is_null() {
-            return Err(anyhow!("VRT_AddDirector return null while creating {}", self.name.into_string().unwrap()));
+            return Err(format!("VRT_AddDirector return null while creating {}", self.name.into_string().unwrap()).into());
         }
         Ok(Backend {
             bep,

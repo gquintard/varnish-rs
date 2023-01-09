@@ -99,7 +99,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 pub mod vcl {
-//    pub mod backend;
+    pub mod backend;
     pub mod convert;
     pub mod ctx;
     pub mod http;
