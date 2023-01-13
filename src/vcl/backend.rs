@@ -1,6 +1,5 @@
 use std::ffi::{CStr, CString};
 use std::ffi::c_char;
-use std::io::Read;
 use std::ptr;
 
 use crate::vcl::Result;
@@ -11,12 +10,14 @@ use crate::vcl::ctx::Ctx;
 pub trait Transfer {
     fn len(&self) -> Option<usize> {None}
     fn ip(&self) -> Option<std::net::IpAddr> {None}
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize>;
 }
 
-pub trait Serve<T: Transfer + Read> {
+pub trait Serve<T: Transfer> {
     fn get_type(&self) -> String;
     fn get_headers(&self, ctx: &mut Ctx) -> Result<Option<T>>;
     fn finish(&self, _ctx: &mut Ctx) {}
+// for now, we are ignoring:
 //        event: None,
 //        healthy: None,
 //        http1pipe: None,
@@ -27,7 +28,7 @@ pub trait Serve<T: Transfer + Read> {
 
 use std::os::raw::c_void;
 use varnish_sys::ssize_t;
-pub unsafe extern "C" fn vfp_pull<T: Read>(
+pub unsafe extern "C" fn vfp_pull<T: Transfer>(
     ctxp: *mut varnish_sys::vfp_ctx,
     vfep: *mut varnish_sys::vfp_entry,
     ptr: *mut c_void,
@@ -68,7 +69,7 @@ pub unsafe extern "C" fn vfp_pull<T: Read>(
     }
 }
 
-unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer + Read> (
+unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer> (
     ctxp: *const varnish_sys::vrt_ctx,
     be: varnish_sys::VCL_BACKEND,
 ) -> ::std::os::raw::c_int {
@@ -163,7 +164,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer + Read> (
     }
 }
 
-unsafe extern "C" fn wrap_finish<S: Serve<T>, T: Transfer + Read> (
+unsafe extern "C" fn wrap_finish<S: Serve<T>, T: Transfer> (
     ctxp: *const varnish_sys::vrt_ctx,
     be: varnish_sys::VCL_BACKEND
     ) {
@@ -182,7 +183,7 @@ unsafe extern "C" fn wrap_finish<S: Serve<T>, T: Transfer + Read> (
     (*backend).info.finish(&mut Ctx::new(ctxp as *mut varnish_sys::vrt_ctx));
 }
 
-pub struct Backend<S: Serve<T>, T: Transfer + Read> {
+pub struct Backend<S: Serve<T>, T: Transfer> {
     bep: *const varnish_sys::director,
     #[allow(dead_code)]
     methods: Box<varnish_sys::vdi_methods>,
@@ -194,13 +195,13 @@ pub struct Backend<S: Serve<T>, T: Transfer + Read> {
     phantom: std::marker::PhantomData<T>,
 }
 
-impl<S: Serve<T>, T: Transfer + Read> Backend<S, T> {
+impl<S: Serve<T>, T: Transfer> Backend<S, T> {
     pub fn vcl_ptr(&self) -> *const varnish_sys::director {
         self.bep
     }
 }
 
-impl<S: Serve<T>, T: Transfer + Read> Drop for Backend<S, T> {
+impl<S: Serve<T>, T: Transfer> Drop for Backend<S, T> {
     fn drop(&mut self) {
         unsafe { 
             varnish_sys::VRT_DelDirector(&mut self.bep);
@@ -215,7 +216,7 @@ pub struct BackendBuilder<S, T> {
     phantom: std::marker::PhantomData<T>,
 }
 
-impl<S: Serve<T>, T: Transfer + Read> BackendBuilder<S, T> {
+impl<S: Serve<T>, T: Transfer> BackendBuilder<S, T> {
     pub fn new(n: &str, info: S) -> Result<Self> {
         Ok(BackendBuilder {
             info: Box::new(info),
