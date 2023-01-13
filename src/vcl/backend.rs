@@ -89,12 +89,25 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer> (
     let backend = (*be).priv_ as *const S;
     match (*backend).get_headers(&mut ctx) {
         Ok(res) => {
+
+            // default to HTTP/1.1 200 if the backend didn't provide anything
+            let beresp = ctx.http_beresp.as_mut().unwrap();
+            if beresp.status().is_none() {
+                beresp.set_status(200);
+            }
+            if beresp.proto().is_none() {
+                if let Err(e) = beresp.set_proto("HTTP/1.1") {
+                    ctx.fail(&format!("{}: {}", backend.as_ref().unwrap().get_type(), e.to_string()));
+                    return 1;
+                }
+            }
+
             let htc = varnish_sys::WS_Alloc(
                 (*ctx.raw.bo).ws.as_mut_ptr(),
                 std::mem::size_of::<varnish_sys::http_conn>() as u32,
                 ) as *mut varnish_sys::http_conn;
             if htc.is_null() {
-                ctx.fail("fileserver: insuficient workspace");
+                ctx.fail(&format!("{}: insuficient workspace", backend.as_ref().unwrap().get_type()));
                 return -1;
             }
             (*htc).magic = varnish_sys::HTTP_CONN_MAGIC;
@@ -152,7 +165,6 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer> (
 
                 }
             }
-
 
             (*ctx.raw.bo).htc = htc;
             0
