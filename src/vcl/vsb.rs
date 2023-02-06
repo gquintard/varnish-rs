@@ -19,7 +19,7 @@ impl<'a> Vsb<'a> {
         let buf = src.as_ref().as_ptr() as *const std::ffi::c_void;
         let l = src.as_ref().len();
 
-        match unsafe {varnish_sys::VSB_bcat(self.raw, buf, l as i64) } {
+        match unsafe {varnish_sys::VSB_bcat(self.raw, buf, l as isize) } {
             0 => Ok(()),
             _ => Err(()),
         }

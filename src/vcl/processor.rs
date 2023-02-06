@@ -9,7 +9,7 @@ use std::ffi::{c_char, c_int, c_void};
 use std::ptr;
 
 use crate::vcl::ctx::Ctx;
-use varnish_sys::{objcore, ssize_t, vdp_ctx, vfp_ctx, vfp_entry};
+use varnish_sys::{objcore, vdp_ctx, vfp_ctx, vfp_entry};
 
 /// passed to [`VDP::push`] to describe special conditions occuring in the pipeline.
 #[derive(Debug, Copy, Clone)]
@@ -106,7 +106,7 @@ pub unsafe extern "C" fn gen_vdp_push<T: VDP>(
     act: varnish_sys::vdp_action,
     priv_: *mut *mut c_void,
     ptr: *const c_void,
-    len: ssize_t,
+    len: isize,
 ) -> c_int {
     assert_ne!(priv_, ptr::null_mut());
     assert_ne!(*priv_, ptr::null_mut());
@@ -158,7 +158,7 @@ impl<'a> VDPCtx<'a> {
                 self.raw,
                 act as std::os::raw::c_uint,
                 buf.as_ptr() as *const c_void,
-                buf.len() as varnish_sys::ssize_t,
+                buf.len() as isize,
             )
         } {
             r if r < 0 => PushResult::Err,
@@ -209,7 +209,7 @@ pub unsafe extern "C" fn wrap_vfp_pull<T: VFP>(
     ctxp: *mut varnish_sys::vfp_ctx,
     vfep: *mut varnish_sys::vfp_entry,
     ptr: *mut c_void,
-    len: *mut ssize_t,
+    len: *mut isize,
 ) -> varnish_sys::vfp_status {
     let ctx = ctxp.as_mut().unwrap();
     assert_eq!(ctx.magic, varnish_sys::VFP_CTX_MAGIC);
@@ -221,11 +221,11 @@ pub unsafe extern "C" fn wrap_vfp_pull<T: VFP>(
     match obj.pull(&mut VFPCtx::new(ctx), buf) {
         PullResult::Err => varnish_sys::vfp_status_VFP_ERROR, // TODO: log error
         PullResult::Ok(l) => {
-            *len = l as ssize_t;
+            *len = l as isize;
             varnish_sys::vfp_status_VFP_OK
         }
         PullResult::End(l) => {
-            *len = l as ssize_t;
+            *len = l as isize;
             varnish_sys::vfp_status_VFP_END
         }
     }
@@ -271,7 +271,7 @@ impl<'a> VFPCtx<'a> {
 
     /// Pull data from the pipeline
     pub fn pull(&mut self, buf: &mut [u8]) -> PullResult {
-        let mut len = buf.len() as varnish_sys::ssize_t;
+        let mut len = buf.len() as isize;
         let max_len = len;
 
         match unsafe { varnish_sys::VFP_Suck(self.raw, buf.as_ptr() as *mut c_void, &mut len) } {

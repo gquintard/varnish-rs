@@ -130,7 +130,7 @@ impl<'a> Ctx<'a> {
             priv_: *mut c_void,
             _flush: c_uint,
             ptr: *const c_void,
-            len: std::os::raw::c_long,
+            len: isize,
         ) -> std::os::raw::c_int {
             let v = (priv_ as *mut Vec<&'a [u8]>).as_mut().unwrap();
             let buf = std::slice::from_raw_parts(ptr as *const u8, len as usize);

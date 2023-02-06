@@ -1,8 +1,11 @@
+#include <sys/socket.h>
+
 #include "cache/cache.h"
 #include "cache/cache_director.h"
 #include "cache/cache_filter.h"
 #include "vmod_abi.h"
 #include "vsb.h"
+#include "vsa.h"
 
 struct http_conn {
         unsigned                magic;
