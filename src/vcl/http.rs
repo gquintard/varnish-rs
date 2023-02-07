@@ -237,7 +237,7 @@ impl<'a> Iterator for HTTPIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            let nhd = (*self.http.raw).nhd;
+            let nhd = self.http.raw.nhd;
             if self.cursor >= nhd as isize {
                 return None;
             } else {

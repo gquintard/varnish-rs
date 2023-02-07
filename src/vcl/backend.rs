@@ -121,7 +121,7 @@ unsafe extern "C" fn vfp_pull<T: Transfer>(
     assert_eq!(vfe.magic, varnish_sys::VFP_ENTRY_MAGIC);
 
     let buf = std::slice::from_raw_parts_mut(ptr as *mut u8, *len as usize);
-    if buf.len() == 0 {
+    if buf.is_empty() {
             *len = 0;
             return varnish_sys::vfp_status_VFP_OK;
     }
@@ -173,7 +173,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer> (
             }
             if beresp.proto().is_none() {
                 if let Err(e) = beresp.set_proto("HTTP/1.1") {
-                    ctx.fail(&format!("{}: {}", backend.as_ref().unwrap().get_type(), e.to_string()));
+                    ctx.fail(&format!("{}: {}", backend.as_ref().unwrap().get_type(), e));
                     return 1;
                 }
             }
@@ -292,8 +292,8 @@ unsafe extern "C" fn wrap_getip<T: Transfer> (
     let transfer = (*bo.htc).priv_ as *const T;
     match (*transfer).get_ip().and_then(|ip| ip.into_vcl(&mut ctx.ws).map_err(|e| e.into())) {
         Err(e) => { 
-            ctx.fail(&format!("{}", e.to_string()));
-            return std::ptr::null()
+            ctx.fail(&format!("{}", e));
+            std::ptr::null()
         }
         Ok(p) => p,
     }
