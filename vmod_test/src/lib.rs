@@ -1,6 +1,7 @@
 varnish::boilerplate!();
 
 use std::io::Write;
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::time::Duration;
 
 use varnish::vcl::ctx::Ctx;
@@ -12,6 +13,7 @@ varnish::vtc!(test02);
 varnish::vtc!(test03);
 varnish::vtc!(test04);
 varnish::vtc!(test05);
+varnish::vtc!(test06);
 
 pub fn set_hdr(ctx: &mut Ctx, name: &str, value: &str) -> Result<()> {
     if let Some(ref mut req) = ctx.http_req {
@@ -72,6 +74,26 @@ pub fn out_duration(_: &mut Ctx) -> Duration {
 
 pub fn out_res_duration(_: &mut Ctx) -> Result<Duration> {
     Ok(Duration::new(0, 0))
+}
+
+pub fn build_ip4(_: &mut Ctx) -> SocketAddr {
+    SocketAddr::new(IpAddr::V4(Ipv4Addr::new(12, 34, 56, 78)), 9012)
+}
+
+pub fn build_ip6(_: &mut Ctx) -> SocketAddr {
+    SocketAddr::new(
+        IpAddr::V6(Ipv6Addr::new(
+            0x1234, 0x5678, 0x9012, 0x3456, 0x7890, 0x1111, 0x2222, 0x3333,
+        )),
+        4444,
+    )
+}
+
+pub fn print_ip(_: &mut Ctx, maybe_ip: Option<SocketAddr>) -> String {
+    match maybe_ip {
+        None => "0.0.0.0".to_string(),
+        Some(ip) => ip.to_string(),
+    }
 }
 
 // this is a pretty terrible idea, the request body is probably big, and your workspace is tiny,

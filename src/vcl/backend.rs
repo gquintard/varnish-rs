@@ -8,13 +8,14 @@ use std::ffi::CString;
 use std::ffi::c_char;
 use std::ptr;
 use std::time::SystemTime;
+use std::net::SocketAddr;
 
 use std::os::raw::c_void;
-use varnish_sys::__ssize_t;
 
 use crate::vcl::Result;
 use crate::vcl::ws::WS;
 use crate::vcl::ctx::Ctx;
+use crate::vcl::convert::IntoVCL;
 
 /// Alias for [`varnish_sys::VCL_BACKEND`]
 pub type VCLBackendPtr = varnish_sys::VCL_BACKEND;
@@ -104,7 +105,7 @@ pub trait Transfer {
     fn len(&self) -> Option<usize> {None}
 
     /// TODO
-    fn get_ip(&self) {}
+    fn get_ip(&self) -> Result<Option<SocketAddr>> {Ok(None)}
 }
 
 
@@ -275,8 +276,8 @@ unsafe extern "C" fn wrap_healthy<S: Serve<T>, T: Transfer>(
 
 unsafe extern "C" fn wrap_getip<T: Transfer> (
     ctxp: *const varnish_sys::vrt_ctx,
-    be: varnish_sys::VCL_BACKEND,
-) {
+    _be: varnish_sys::VCL_BACKEND,
+) -> varnish_sys::VCL_IP {
     assert!(!ctxp.is_null());
     assert_eq!((*ctxp).magic, varnish_sys::VRT_CTX_MAGIC);
     assert!(!(*ctxp).bo.is_null());
@@ -286,8 +287,16 @@ unsafe extern "C" fn wrap_getip<T: Transfer> (
     assert_eq!((*bo.htc).magic, varnish_sys::BUSYOBJ_MAGIC);
     assert!(!(*bo.htc).priv_.is_null());
 
+    let mut ctx = Ctx::new(ctxp as *mut varnish_sys::vrt_ctx);
+
     let transfer = (*bo.htc).priv_ as *const T;
-    (*transfer).get_ip()
+    match (*transfer).get_ip().and_then(|ip| ip.into_vcl(&mut ctx.ws).map_err(|e| e.into())) {
+        Err(e) => { 
+            ctx.fail(&format!("{}", e.to_string()));
+            return std::ptr::null()
+        }
+        Ok(p) => p,
+    }
 }
 
 unsafe extern "C" fn wrap_finish<S: Serve<T>, T: Transfer> (
