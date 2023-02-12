@@ -1,4 +1,5 @@
 #include <sys/socket.h>
+#include <sys/types.h>
 
 #include "cache/cache.h"
 #include "cache/cache_director.h"
