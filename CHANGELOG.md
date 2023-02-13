@@ -5,6 +5,10 @@
   back to `python3` to generate code
 - `varnish-rs` reexports the VCL types needed to generate boilerplate code, so that
   vmods don't need to add `varnish-sys` to their `Cargo.toml` anymore.
+- introduce `vcl::Backend` and co.
+- `VCL_IP can be translated to `Option<std::net::SockAdd>` and back
+- fix compilation issues on arm
+- introduce `vcl::Error` and `vcl::Result`
 
 # 0.0.12 (2022-11-23)
 

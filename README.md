@@ -8,7 +8,7 @@ In your `Cargo.toml`:
 
 ```
 [dependencies]
-varnish = "0.0.12"
+varnish = "0.0.13"
 ```
 # varnish-rs
 
@@ -52,7 +52,7 @@ The `varnish-rs` and `varnish-sys` versions will work in tandem: to build versio
 
 | varnish-rs/varnish-sys (rust) | libvarnish (C) |
 | :----------------: | :------------: |
-| 0.0.12             | 7.2            |
+| 0.0.12 -> 0.0.13   | 7.2            |
 | 0.0.9 -> 0.0.11    | 7.1            |
 | 0.0.*              | 7.0            |
 
