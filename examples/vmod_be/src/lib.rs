@@ -13,7 +13,7 @@ varnish::vtc!(test01);
 // - new(), so that the VCL can instantiate it
 // - backend(), so that we can produce a C pointer for varnish to use
 pub struct parrot {
-    be: Backend<Sentence, SentenceTransfer>,
+    be: Backend<Sentence, Body>,
 }
 
 impl parrot {
@@ -21,14 +21,14 @@ impl parrot {
         // to create the backend, we need:
         // - the vcl context, that we just pass along
         // - the vcl_name (how the vcl writer named the object)
-        // - an 
+        // - an struct that implements the Serve trait
         let be = Backend::new(
-                ctx,
-                vcl_name,
-                Sentence {
-                    v: Vec::from(to_repeat),
-                },
-            )?;
+            ctx,
+            vcl_name,
+            Sentence {
+                v: Vec::from(to_repeat),
+            },
+        )?;
 
         Ok(parrot { be })
     }
@@ -38,43 +38,64 @@ impl parrot {
     }
 }
 
+// Sentence is just a Vec<u8> holding the string we were asked to repeat
 pub struct Sentence {
     v: Vec<u8>,
 }
 
-impl Serve<SentenceTransfer> for Sentence {
-    fn get_type(&self) -> String {
-        "parrot".to_string()
+// a lot of the Serve trait's methods are optional, but we need to implement
+// - get_type() for debugging reasons when something fails
+// - get_headers() that actually builds the response headers,
+//   and returns a Body
+impl Serve<Body> for Sentence {
+    fn get_type(&self) -> &str {
+        "parrot"
     }
 
-    fn get_headers(&self, _ctx: &mut Ctx) -> Result<Option<SentenceTransfer>> {
-        Ok(Some(SentenceTransfer {
-            v: self.v.clone(),
-            cursor: 0,
+    fn get_headers(&self, ctx: &mut Ctx) -> Result<Option<Body>> {
+        let beresp = ctx.http_beresp.as_mut().unwrap();
+        beresp.set_status(200);
+        beresp.set_header("server", "parrot")?;
+
+        Ok(Some(Body {
+            p: self.v.as_ptr(),
+            left: self.v.len(),
         }))
     }
 }
 
-pub struct SentenceTransfer {
-    v: Vec<u8>,
-    cursor: usize,
+// it's not great to be passing pointers around, but that save us from copying
+// the vector or from using a mutex/arc, and we know the Vec will survive the
+// transfer
+pub struct Body {
+    p: *const u8,
+    left: usize,
 }
 
-impl Transfer for SentenceTransfer {
+impl Transfer for Body {
+    // Varnish will call us over and over, asking us to fill buffers
+    // we'll happily oblige by filling as much as we can every time
     fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
-        // don't worry about what we already transfered
-        let remaining = &self.v[self.cursor..];
-
         // can't send more than what we have, or more than what the buffer can hold
-        let l = std::cmp::min(remaining.len(), buf.len());
+        let l = std::cmp::min(self.left, buf.len());
+
+        // there's no way for the compiler to prove that self.p isn't dangling
+        // at this stage, so we'll ask it to trust us as we rebuild the slice
+        // it points to
+        let to_send = unsafe { std::slice::from_raw_parts(self.p, l) };
 
         // copy data into the buffer
-        for (p, val) in std::iter::zip(buf, remaining) {
+        for (p, val) in std::iter::zip(buf, to_send) {
             *p = *val;
         }
 
-        // move the buffer for nex time
-        self.cursor += l;
+        // increment the pointer and decrease left for next time
+        // and once again, we must ask the compiler to trust us as pointer
+        // arithmetic is dangerous
+        unsafe {
+            self.p = self.p.add(l);
+        }
+        self.left -= l;
 
         // everything went fine, we copied l bytes into buf
         Ok(l)
@@ -82,6 +103,6 @@ impl Transfer for SentenceTransfer {
 
     // we know from the start how much we'll send
     fn len(&self) -> Option<usize> {
-        Some(self.v.len())
+        Some(self.left)
     }
 }

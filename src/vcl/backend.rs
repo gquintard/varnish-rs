@@ -2,8 +2,73 @@
 //!
 //! [`varnish_sys::VCL_BACKEND`] can be a bit confusing to create and manipulate, notably as they
 //! involves a bunch of structures with different lifetimes and quite a lot of casting. This
-//! modules hopes to alleviate those issues by handling the most of them and by offering a more
+//! module hopes to alleviate those issues by handling the most of them and by offering a more
 //! idiomatic interface centered around vmod objects.
+//!
+//! Here's what's in the toolbox:
+//! - [VCLBackendPtr] is just an alias for [`varnish_sys::VCL_BACKEND`] to avoid depending on
+//!   `varnish_sys`.
+//! - the [Backend] type  wraps a `Serve` struct into a C backend
+//! - the [Serve] trait defines which methods to implement to act as a backend, and includes
+//!   default implementations for most methods.
+//! - the [Transfer] trait provides a way to generate a response body,notably handling the
+//!   transfer-encoding for you.
+//!
+//! Note: You can check out the [example/vmod_be
+//! code](https://github.com/gquintard/varnish-rs/blob/main/examples/vmod_be/src/lib.rs) for a
+//! fully commented vmod.
+//!
+//! For a very simple example, let's build a backend that just replies with 'A' a predetermined
+//! number of times.
+//!
+//! ```
+//! use varnish::vcl::Result;
+//! use varnish::vcl::backend::{ Backend, Serve, Transfer };
+//! use varnish::vcl::ctx::Ctx;
+//!
+//! // First we need to define a struct that implement [Transfer]:
+//! struct BodyResponse {
+//!     left: usize,
+//! }
+//!
+//! impl Transfer for BodyResponse {
+//!     fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
+//!         let mut done = 0;
+//!         for p in buf {
+//!              if self.left == 0 {
+//!                  break;
+//!              }
+//!              *p = 'A' as u8;
+//!              done += 1;
+//!              self.left -= 1;
+//!         }
+//!         return Ok(done);
+//!     }
+//! }
+//!
+//! // Then, we need a struct implementing `Serve` to build the headers and return a BodyResponse
+//! // Here, MyBe only needs to know how many times to repeat the character
+//! struct MyBe {
+//!     n: usize
+//! }
+//!
+//! impl Serve<BodyResponse> for MyBe {
+//!      fn get_type(&self) -> &str { "example" }
+//!
+//!      fn get_headers(&self, ctx: &mut Ctx) -> Result<Option<BodyResponse>> {
+//!          Ok(Some(
+//!            BodyResponse { left: self.n }, 
+//!          ))
+//!      }
+//! }
+//!
+//! // Finally, we create a `Backend` wrapping a `MyBe`, and we can ask for a pointer to give to the C
+//! // layers.
+//! fn some_vmod_function(ctx: &mut Ctx) {
+//!     let backend = Backend::new(ctx, "name", MyBe { n: 42 }).expect("couldn't create the backend");
+//!     let ptr = backend.vcl_ptr();
+//! }
+//! ```
 use std::ffi::CString;
 use std::ffi::c_char;
 use std::ptr;
@@ -24,13 +89,13 @@ pub type VCLBackendPtr = varnish_sys::VCL_BACKEND;
 
 /// Fat wrapper around [`VCLBackendPtr`]/[`varnish_sys::VCL_BACKEND`].
 ///
-/// It will handle almost all the necessary boilerplate needed to create a vmod. Most importantly, it destrosy/deregisters the backend as part of it's `Drop` implementation, and
-/// will convert the C methods to somehting more idomatic. Once created, a [`Backend`]'s sole purpose
-/// is to exist as a C reference for the VCL. Hence, all its fields are private, and the only method it provides returns a
-/// [`VCLBackendPtr`] pointer pointing to the wrapped C structure.
+/// It will handle almost all the necessary boilerplate needed to create a vmod. Most importantly, it destroys/deregisters the backend as part of it's `Drop` implementation, and
+/// will convert the C methods to something more idomatic.
 ///
-/// You can use a [`BackendBuilder`] to initiate and register a backend based on any object
-/// implementing the `Serve` trait.
+/// Once created, a [`Backend`]'s sole purpose is to exist as a C reference for the VCL. As a
+/// result, you don't want to drop it until after all the transfers are done. The most common way
+/// is just to have the backend be part of a vmod object because the object won't be dropped until
+/// the VCL is discarded and that can only happen once all the backend fetches are done.
 pub struct Backend<S: Serve<T>, T: Transfer> {
     bep: *const varnish_sys::director,
     #[allow(dead_code)]
@@ -42,6 +107,12 @@ pub struct Backend<S: Serve<T>, T: Transfer> {
 }
 
 impl<S: Serve<T>, T: Transfer> Backend<S, T> {
+    /// Access the inner type wrapped by [Backend]. Note that it isn't `mut` as other threads are
+    /// likely to have access to it too.
+    pub fn get_inner(&self) -> &S {
+        &self.inner
+    }
+
     /// Return the C pointer wrapped by the [`Backend`]. Conventionally used by the `.backend()`
     /// methods of VCL objects.
     pub fn vcl_ptr(&self) -> *const varnish_sys::director {
@@ -53,7 +124,7 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
     pub fn new(ctx: &mut Ctx, name: &str, be: S) -> Result<Self> {
         let mut inner = Box::new(be);
         let cstring_name: CString = CString::new(inner.get_type()).map_err(|e| e.to_string())?;
-        let type_: CString = CString::new(name).map_err(|e| e.to_string())?;
+        let type_: CString = CString::new(inner.get_type()).map_err(|e| e.to_string())?;
         let methods = Box::new(varnish_sys::vdi_methods {
                 type_: type_.as_ptr(),
                 magic: varnish_sys::VDI_METHODS_MAGIC,
@@ -92,14 +163,18 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
     }
 }
 
-/// `Serve` as a trait maps to the `vdi_methods` structure of the C api, but presented in a more
-/// "rusty" form. Apart from `get_type`, all methods are optional, as a [`BackendBuilder`] can choose
-/// to ignore the unimplemented ones.
+/// The trait to implement to "be" a backend
+/// 
+/// `Serve` maps to the `vdi_methods` structure of the C api, but presented in a more
+/// "rusty" form. Apart from [Serve::get_type] and [Serve::get_headers] all methods are optional.
+///
+/// If your backend doesn't return any body, you can implement `Serve<()>` as `()` has a default
+/// `Transfer` implementation.
 pub trait Serve<T: Transfer> {
     /// What kind of backend this is, for example, pick a descriptive name, possibly linked to the
-    /// vmod which creates it. Pick an ASCII string, otherwise building the [`Backend`] via a
-    /// [`BackendBuilder`] will fail.
-   fn get_type(&self) -> String;
+    /// vmod which creates it. Pick an ASCII string, otherwise building the [`Backend`] via
+    /// [Backend::new] will fail.
+   fn get_type(&self) -> &str;
 
    /// If the VCL pick this backend (or a director ended up choosing it), this method gets called
    /// so that the `Serve` implementer can:
@@ -108,15 +183,14 @@ pub trait Serve<T: Transfer> {
    /// - possibly return a `Transfer` object that will generate the response body
    ///
    /// If this function returns a `Ok(_)` without having set the method and protocol of
-   /// `ctx.http_beresp`, a [`Backend`] created with [`BackendBuilder`] will just default to
-   /// `200` and `HTTP/1.1`.
+   /// `ctx.http_beresp`, we'll default to `HTTP/1.1 200 OK`
     fn get_headers(&self, _ctx: &mut Ctx) -> Result<Option<T>>;
 
     /// Once a backend transaction is finished, the [`Backend`] has a chance to clean up, collect
     /// data and others in the finish methods.
     fn finish(&self, _ctx: &mut Ctx) {}
 
-    /// TODO
+    /// Is your backend healthy, and when did its health change for the last time.
     fn healthy(&self, _ctx: &mut Ctx) -> (bool, SystemTime) { (true, SystemTime::UNIX_EPOCH) }
 
     fn pipe(&self, ctx: &mut Ctx, _tcp_stream: TcpStream) -> StreamClose {
@@ -131,13 +205,15 @@ pub trait Serve<T: Transfer> {
     fn list(&self, _ctx: &mut Ctx, _vsb: &mut Vsb, _detailed: bool, _json: bool) {}
 }
 
+/// An in-flight response body
+///
 /// When `Serve::get_headers()` get called, the backend [`Backend`] can return a
 /// `Result<Option<Transfer>>`:
-/// - Err(_): something went wrong, the error will be logged and synthetic backend response will be
-/// generated by Varnish
-/// - Ok(None): headers are set, but the response as no body.
-/// - Ok(Some(transfer)): headers are set, and Varnish can `transfer`'s method to get extra
-/// innerrmation about the transfer and create the body.
+/// - `Err(_)`: something went wrong, the error will be logged and synthetic backend response will be
+///   generated by Varnish
+/// - `Ok(None)`: headers are set, but the response as no body.
+/// - `Ok(Some(Transfer))`: headers are set, and Varnish will use the `Transfer` object to build
+/// the response body.
 pub trait Transfer {
     /// The only mandatory method, it will be called repeated so that the `Transfer` object can
     /// fill `buf`. The transfer will stop if any of its calls returns an error, and it will
@@ -148,11 +224,12 @@ pub trait Transfer {
     fn read(&mut self, buf: &mut [u8]) -> Result<usize>;
 
     /// If returning `Some(_)`, we know the size of the body generated, and it'll be used to fill the
-    /// `content-length` header ofthe response. Otherwise chunked encoding will be used, which is
+    /// `content-length` header of the response. Otherwise chunked encoding will be used, which is
     /// what's assumed by default.
     fn len(&self) -> Option<usize> {None}
 
-    /// TODO
+    /// Potentially return the IP:port pair that the backend is using to transfer the body. It
+    /// might not make sense for your implementation.
     fn get_ip(&self) -> Result<Option<SocketAddr>> {Ok(None)}
 }
 
@@ -440,7 +517,10 @@ impl<S: Serve<T>, T: Transfer> Drop for Backend<S, T> {
         };
     }
 }
-
+/// Return type for [Serve::pipe]
+///
+/// When piping a response, the backend is in charge of closing the file descriptor (which is done
+/// automatically by the rust layer), but also to provide how/why it got closed.
 pub enum StreamClose {
     RemClose,
     ReqClose,
@@ -462,7 +542,7 @@ pub enum StreamClose {
     VclFailure,
 }
 
-pub fn sc_to_ptr(sc: StreamClose) -> varnish_sys::stream_close_t {
+fn sc_to_ptr(sc: StreamClose) -> varnish_sys::stream_close_t {
     unsafe {
         match sc {
             StreamClose::RemClose      =>  &varnish_sys::SC_REM_CLOSE as *const _,
