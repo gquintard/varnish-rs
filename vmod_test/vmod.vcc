@@ -22,3 +22,4 @@ $Function STRING req_body()
 $Function STRING default_arg(STRING s = "foo")
 
 $Function STRING probe_prop(PROBE)
+$Function STRING cowprobe_prop(PROBE)

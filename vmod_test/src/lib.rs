@@ -116,7 +116,25 @@ pub fn default_arg<'a, 'b>(_ctx: &'b mut Ctx, foo: &'a str) -> &'a str {
     foo
 }
 
-pub fn probe_prop<'a, 'b>(_ctx: &'b mut Ctx, probe: Option<probe::Probe<'a>>) -> String {
+pub fn cowprobe_prop<'a, 'b>(_ctx: &'b mut Ctx, probe: Option<probe::COWProbe<'a>>) -> String {
+    match probe {
+        Some(probe) => format!(
+            "{}-{}-{}-{}-{}-{}",
+            match probe.request {
+                probe::COWRequest::URL(url) => format!("url:{}", &url),
+                probe::COWRequest::Text(text) => format!("text:{}", &text),
+            },
+            probe.threshold,
+            probe.timeout.as_secs(),
+            probe.interval.as_secs(),
+            probe.initial,
+            probe.window
+        ),
+        None => "no probe".to_string(),
+    }
+}
+
+pub fn probe_prop<'b>(_ctx: &'b mut Ctx, probe: Option<probe::Probe>) -> String {
     match probe {
         Some(probe) => format!(
             "{}-{}-{}-{}-{}-{}",

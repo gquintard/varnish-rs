@@ -1,4 +1,9 @@
-# 0.0.13 (unreleased)
+# 0.0.14 (unreleased)
+
+- `Backend::new()` get an extra argument: `has_probe`
+- `Probe` is renamed `COWProbe`, and `Probe` now owns its `String`s
+
+# 0.0.13 (2022-02-12)
 
 - `cache_director.h` added to `varnish-sys`
 - `generate_boilerplate!` now reads the `PYTHON` environment variable before falling

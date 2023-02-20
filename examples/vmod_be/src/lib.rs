@@ -28,6 +28,7 @@ impl parrot {
             Sentence {
                 v: Vec::from(to_repeat),
             },
+            false,
         )?;
 
         Ok(parrot { be })

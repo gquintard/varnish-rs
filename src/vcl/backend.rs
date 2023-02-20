@@ -65,7 +65,7 @@
 //! // Finally, we create a `Backend` wrapping a `MyBe`, and we can ask for a pointer to give to the C
 //! // layers.
 //! fn some_vmod_function(ctx: &mut Ctx) {
-//!     let backend = Backend::new(ctx, "name", MyBe { n: 42 }).expect("couldn't create the backend");
+//!     let backend = Backend::new(ctx, "name", MyBe { n: 42 }, false).expect("couldn't create the backend");
 //!     let ptr = backend.vcl_ptr();
 //! }
 //! ```
@@ -119,11 +119,12 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
         self.bep
     }
 
-    /// Create a new builder, wrapping the `inner` structure (that implements `Serve`), planning to
-    /// call the backend `name`.
-    pub fn new(ctx: &mut Ctx, name: &str, be: S) -> Result<Self> {
+    /// Create a new builder, wrapping the `inner` structure (that implements `Serve`),
+    /// calling the backend `name`. If the backend has a probe attached to it, set `has_probe` to
+    /// true.
+    pub fn new(ctx: &mut Ctx, name: &str, be: S, has_probe: bool) -> Result<Self> {
         let mut inner = Box::new(be);
-        let cstring_name: CString = CString::new(inner.get_type()).map_err(|e| e.to_string())?;
+        let cstring_name: CString = CString::new(name).map_err(|e| e.to_string())?;
         let type_: CString = CString::new(inner.get_type()).map_err(|e| e.to_string())?;
         let methods = Box::new(varnish_sys::vdi_methods {
                 type_: type_.as_ptr(),
@@ -133,7 +134,7 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
                 finish: Some(wrap_finish::<S, T>),
                 gethdrs: Some(wrap_gethdrs::<S, T>),
                 getip: Some(wrap_getip::<T>),
-                healthy: Some(wrap_healthy::<S, T>),
+                healthy: if has_probe { Some(wrap_healthy::<S, T>) } else { None },
                 http1pipe: Some(wrap_pipe::<S, T>),
                 list: Some(wrap_list::<S, T>),
                 panic: Some(wrap_panic::<S, T>),
@@ -145,7 +146,7 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
                 ctx.raw,
                 &*methods,
                 &mut *inner as *mut S as *mut std::ffi::c_void,
-                "%s".as_ptr() as *const c_char,
+                "%s\0".as_ptr() as *const c_char,
                 cstring_name.as_ptr() as *const c_char,
             )
         };
@@ -176,14 +177,14 @@ pub trait Serve<T: Transfer> {
     /// [Backend::new] will fail.
    fn get_type(&self) -> &str;
 
-   /// If the VCL pick this backend (or a director ended up choosing it), this method gets called
-   /// so that the `Serve` implementer can:
-   /// - inspect the request headers (`ctx.http_bereq`)
-   /// - fill the response headers (`ctx.http_beresp`)
-   /// - possibly return a `Transfer` object that will generate the response body
-   ///
-   /// If this function returns a `Ok(_)` without having set the method and protocol of
-   /// `ctx.http_beresp`, we'll default to `HTTP/1.1 200 OK`
+    /// If the VCL pick this backend (or a director ended up choosing it), this method gets called
+    /// so that the `Serve` implementer can:
+    /// - inspect the request headers (`ctx.http_bereq`)
+    /// - fill the response headers (`ctx.http_beresp`)
+    /// - possibly return a `Transfer` object that will generate the response body
+    ///
+    /// If this function returns a `Ok(_)` without having set the method and protocol of
+    /// `ctx.http_beresp`, we'll default to `HTTP/1.1 200 OK`
     fn get_headers(&self, _ctx: &mut Ctx) -> Result<Option<T>>;
 
     /// Once a backend transaction is finished, the [`Backend`] has a chance to clean up, collect
@@ -193,16 +194,44 @@ pub trait Serve<T: Transfer> {
     /// Is your backend healthy, and when did its health change for the last time.
     fn healthy(&self, _ctx: &mut Ctx) -> (bool, SystemTime) { (true, SystemTime::UNIX_EPOCH) }
 
+    /// If your backend is used inside `vcl_pipe`, this method is in charge of sending the request
+    /// headers that Varnish already read, and then the body. The second argument, a `TcpStream` is
+    /// the raw client stream that Varnish was using (convertied fro a raw fd).
+    ///
+    /// Once done, you should return a `StreamClose` describing how/why the transaction ended.
     fn pipe(&self, ctx: &mut Ctx, _tcp_stream: TcpStream) -> StreamClose {
         ctx.log(LogTag::Error, "Backend does not support pipe");
         StreamClose::TxError
     }
 
+    /// The method will get called when the VCL changes temperature or is discarded. It's notably a
+    /// chance to start/stop probes to consume fewer resources.
     fn event(&self, _event: Event) {}
 
     fn panic(&self, _vsb: &mut Vsb) {}
 
-    fn list(&self, _ctx: &mut Ctx, _vsb: &mut Vsb, _detailed: bool, _json: bool) {}
+    /// Convenience function for the implementors to call if they don't have a probe. This one is
+    /// not used by Varnish directly.
+    fn list_without_probe(&self, ctx: &mut Ctx, vsb: &mut Vsb, detailed: bool, json: bool) {
+        if detailed {
+            return;
+        }
+        let state = if self.healthy(ctx).0 { "healthy" } else { "sick" };
+        if json {
+            vsb.cat(&"[0, 0, ").unwrap();
+            vsb.cat(&state).unwrap();
+            vsb.cat(&"]").unwrap();
+        } else {
+            vsb.cat(&"0/0\t").unwrap();
+            vsb.cat(&state).unwrap();
+        }
+    }
+
+    /// Used to generate the output of `varnishadm backend.list`. `detailed` means the `-p`
+    /// argument was passed and `json` means `-j` was passed.
+    fn list(&self, ctx: &mut Ctx, vsb: &mut Vsb, detailed: bool, json: bool) {
+        self.list_without_probe(ctx, vsb,detailed, json)
+    }
 }
 
 /// An in-flight response body
@@ -389,6 +418,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer> (
                     match transfer.len() {
                         None => {
                             (*htc).body_status = varnish_sys::BS_CHUNKED.as_ptr();
+                            (*htc).content_length = -1;
                         },
                         Some(0) => {
                             (*htc).body_status = varnish_sys::BS_NONE.as_ptr();
@@ -438,7 +468,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer> (
             0
         },
         Err(s) => {
-            ctx.fail(&s.to_string());
+            ctx.log(LogTag::FetchError, &format!("{}: {}", (*backend).get_type(), &s.to_string()));
             1
         },
     }

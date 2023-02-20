@@ -26,7 +26,8 @@
 //! | `()` | <-> | `VOID` |
 //! | `&str` | <-> | `VCL_STRING` |
 //! | `String` | -> | `VCL_STRING` |
-//! | `Option<Probe>` | -> | `VCL_PROBE` |
+//! | `Option<COWProbe>` | <-> | `VCL_PROBE` |
+//! | `Option<Probe>` | <-> | `VCL_PROBE` |
 //! | `Option<std::net::SockAdd>` | -> | `VCL_IP` |
 //!
 //! For all the other types, which are pointers, you will need to use the native types.
@@ -52,7 +53,7 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use crate::vcl::vpriv::VPriv;
 use crate::vcl::ws::WS;
 use crate::vcl::probe;
-use crate::vcl::probe::Probe;
+use crate::vcl::probe::{ COWProbe, Probe };
 use varnish_sys::*;
 
 /// Convert a Rust type into a VCL one
@@ -175,14 +176,32 @@ impl<T: IntoVCL<VCL_STRING> + AsRef<[u8]>> IntoVCL<VCL_STRING> for Option<T> {
     }
 }
 
-impl<'a> IntoVCL<VCL_PROBE> for Probe<'a> {
+impl<'a> IntoVCL<VCL_PROBE> for COWProbe<'a> {
     fn into_vcl(self, ws: &mut WS) -> Result<VCL_PROBE, String> {
         let p = ws.alloc(std::mem::size_of::<varnish_sys::vrt_backend_probe>())?.as_mut_ptr() as *mut vrt_backend_probe;
         let probe = unsafe { p.as_mut().unwrap() };
         probe.magic = varnish_sys::VRT_BACKEND_PROBE_MAGIC;
         match self.request {
-            probe::Request::URL(ref s) => { probe.url = s.into_vcl(ws)?; },
-            probe::Request::Text(ref s) => { probe.request = s.into_vcl(ws)?; },
+            probe::COWRequest::URL(ref s) => { probe.url = s.into_vcl(ws)?; },
+            probe::COWRequest::Text(ref s) => { probe.request = s.into_vcl(ws)?; },
+        }
+        probe.timeout = self.timeout.into_vcl(ws)?;
+        probe.interval = self.interval.into_vcl(ws)?;
+        probe.exp_status = self.exp_status.into_vcl(ws)?;
+        probe.window = self.window.into_vcl(ws)?;
+        probe.initial = self.initial.into_vcl(ws)?;
+        Ok(probe)
+    }
+}
+
+impl<'a> IntoVCL<VCL_PROBE> for Probe {
+    fn into_vcl(self, ws: &mut WS) -> Result<VCL_PROBE, String> {
+        let p = ws.alloc(std::mem::size_of::<varnish_sys::vrt_backend_probe>())?.as_mut_ptr() as *mut vrt_backend_probe;
+        let probe = unsafe { p.as_mut().unwrap() };
+        probe.magic = varnish_sys::VRT_BACKEND_PROBE_MAGIC;
+        match self.request {
+            probe::Request::URL(ref s) => { probe.url = s.as_str().into_vcl(ws)?; },
+            probe::Request::Text(ref s) => { probe.request = s.as_str().into_vcl(ws)?; },
         }
         probe.timeout = self.timeout.into_vcl(ws)?;
         probe.interval = self.interval.into_vcl(ws)?;
@@ -250,14 +269,29 @@ into_res!(bool);
 into_res!(Option<String>);
 into_res!(SocketAddr);
 
-impl<'a> IntoResult<String> for Probe<'a> {
-    type Item = Probe<'a>;
+impl<'a> IntoResult<String> for COWProbe<'a> {
+    type Item = COWProbe<'a>;
     fn into_result(self) -> Result<Self::Item, String> {
         Ok(self)
     }
 }
-impl<'a, E: ToString> IntoResult<E> for Result<Probe<'a>, E> {
-    type Item = Probe<'a>;
+
+impl<'a> IntoResult<String> for Probe {
+    type Item = Probe;
+    fn into_result(self) -> Result<Self::Item, String> {
+        Ok(self)
+    }
+}
+
+impl<'a, E: ToString> IntoResult<E> for Result<COWProbe<'a>, E> {
+    type Item = COWProbe<'a>;
+    fn into_result(self) -> Result<Self::Item, String> {
+        self.map_err(|x| x.to_string())
+    }
+}
+
+impl<'a, E: ToString> IntoResult<E> for Result<Probe, E> {
+    type Item = Probe;
     fn into_result(self) -> Result<Self::Item, String> {
         self.map_err(|x| x.to_string())
     }
@@ -403,15 +437,35 @@ impl<T> IntoRust<VPriv<T>> for *mut vmod_priv {
     }
 }
 
-impl<'a> IntoRust<Option<Probe<'a>>> for VCL_PROBE {
-    fn into_rust(self) -> Option<Probe<'a>> {
+impl<'a> IntoRust<Option<COWProbe<'a>>> for VCL_PROBE {
+    fn into_rust(self) -> Option<COWProbe<'a>> {
+        let pr = unsafe { self.as_ref()? };
+        assert!((pr.url.is_null() && !pr.request.is_null()) || pr.request.is_null() && !pr.url.is_null());
+        Some(COWProbe {
+            request: if !pr.url.is_null() {
+                crate::vcl::probe::COWRequest::URL(pr.url.into_rust())
+            } else {
+                crate::vcl::probe::COWRequest::Text(pr.request.into_rust())
+            },
+            timeout: pr.timeout.into_rust(),
+            interval: pr.interval.into_rust(),
+            exp_status: pr.exp_status,
+            window: pr.window,
+            threshold: pr.threshold,
+            initial: pr.initial,
+        })
+    }
+}
+
+impl<'a> IntoRust<Option<Probe>> for VCL_PROBE {
+    fn into_rust(self) -> Option<Probe> {
         let pr = unsafe { self.as_ref()? };
         assert!((pr.url.is_null() && !pr.request.is_null()) || pr.request.is_null() && !pr.url.is_null());
         Some(Probe {
             request: if !pr.url.is_null() {
-                crate::vcl::probe::Request::URL(pr.url.into_rust())
+                crate::vcl::probe::Request::URL(pr.url.into_rust().to_string())
             } else {
-                crate::vcl::probe::Request::Text(pr.request.into_rust())
+                crate::vcl::probe::Request::Text(pr.request.into_rust().to_string())
             },
             timeout: pr.timeout.into_rust(),
             interval: pr.interval.into_rust(),
