@@ -35,12 +35,12 @@
 //!
 //! ``` toml
 //! [build-dependencies]
-//! varnish = "0.0.13"
+//! varnish = "0.0.14"
 //!
 //! [dependencies]
-//! varnish = "0.0.13"
+//! varnish = "0.0.14"
 //! // and optionally:
-//! //varnish-sys = "0.0.13"
+//! //varnish-sys = "0.0.14"
 //! ```
 //!
 //! ## vmod.vcc
