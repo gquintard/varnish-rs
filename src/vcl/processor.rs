@@ -60,7 +60,7 @@ where
 {
     /// Create a new processor, possibly using knowledge from the pipeline, or from the current
     /// request.
-    fn new(vrt_ctx: &Ctx, vdp_ctx: &mut VDPCtx, oc: *mut varnish_sys::objcore) -> InitResult<Self>;
+    fn new(vrt_ctx: &mut Ctx, vdp_ctx: &mut VDPCtx, oc: *mut varnish_sys::objcore) -> InitResult<Self>;
     /// Handle the data buffer from the previous processor. This function generally uses
     /// [`VDPCtx::push`] to push data to the next processor.
     fn push(&mut self, ctx: &mut VDPCtx, act: PushAction, buf: &[u8]) -> PushResult;
@@ -78,7 +78,7 @@ pub unsafe extern "C" fn gen_vdp_init<T: VDP>(
 ) -> c_int {
     assert_ne!(priv_, ptr::null_mut());
     assert_eq!(*priv_, ptr::null_mut());
-    match T::new(&Ctx::new(vrt_ctx as *mut varnish_sys::vrt_ctx), &mut VDPCtx::new(ctx_raw), oc) {
+    match T::new(&mut Ctx::new(vrt_ctx as *mut varnish_sys::vrt_ctx), &mut VDPCtx::new(ctx_raw), oc) {
         InitResult::Ok(proc) => {
             *priv_ = Box::into_raw(Box::new(proc)) as *mut c_void;
             0
@@ -174,7 +174,7 @@ where
     Self: Sized,
 {
     /// Create a new processor, possibly using knowledge from the pipeline
-    fn new(_vrt_ctx: &Ctx, _vfp_ctx: &mut VFPCtx) -> InitResult<Self> { unimplemented!() }
+    fn new(_vrt_ctx: &mut Ctx, _vfp_ctx: &mut VFPCtx) -> InitResult<Self> { unimplemented!() }
     /// Write data into `buf`, generally using `VFP_Suck` to collect data from the previous
     /// processor.
     fn pull(&mut self, ctx: &mut VFPCtx, buf: &mut [u8]) -> PullResult;
@@ -195,7 +195,7 @@ unsafe extern "C" fn wrap_vfp_init<T: VFP>(
     let vfe = vfep.as_mut().unwrap();
     assert_eq!(vfe.magic, varnish_sys::VFP_ENTRY_MAGIC);
 
-    match T::new(&Ctx::new(vrt_ctx as *mut varnish_sys::vrt_ctx), &mut VFPCtx::new(ctx)) {
+    match T::new(&mut Ctx::new(vrt_ctx as *mut varnish_sys::vrt_ctx), &mut VFPCtx::new(ctx)) {
         InitResult::Ok(proc) => {
             vfe.priv1 = Box::into_raw(Box::new(proc)) as *mut c_void;
             0
