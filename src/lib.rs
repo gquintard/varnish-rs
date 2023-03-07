@@ -99,11 +99,9 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 pub mod vcl {
-    pub mod backend;
     pub mod convert;
     pub mod ctx;
     pub mod http;
-    pub mod processor;
     pub mod probe;
     pub mod vpriv;
     pub mod vsb;
@@ -267,8 +265,6 @@ pub fn generate_boilerplate() -> Result<(), vcl::Error> {
         .arg("vmod.vcc")
         .arg("-w")
         .arg(env::var("OUT_DIR").unwrap())
-        .arg("-a")
-        .arg(std::str::from_utf8(varnish_sys::VMOD_ABI_Version).unwrap().trim_matches('\0'))
         .env(
             "PYTHONPATH",
             join_paths([env::var("OUT_DIR").unwrap_or_default(), vmodtool_dir]).unwrap(),

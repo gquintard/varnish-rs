@@ -13,9 +13,6 @@ $Function BOOL out_bool()
 $Function BOOL out_res_bool()
 $Function DURATION out_duration()
 $Function DURATION out_res_duration()
-$Function IP build_ip4()
-$Function IP build_ip6()
-$Function STRING print_ip(IP)
 
 $Function STRING req_body()
 

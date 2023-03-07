@@ -112,7 +112,7 @@ unsafe extern "C" fn vmod_c__event(vrt_ctx: * mut varnish::vcl::boilerplate::vrt
 }
 ''')
 
-def runmain(inputvcc, rstdir, abi):
+def runmain(inputvcc, rstdir):
     v = vmodtool.vcc(inputvcc, rstdir, None)
     v.parse()
 
@@ -120,7 +120,6 @@ def runmain(inputvcc, rstdir, abi):
 
     buf = io.StringIO()
 
-    v.mkdefs(buf);
     for i in v.contents:
         if isinstance(i, vmodtool.ObjectStanza):
             i.cstuff(buf, 'o')
@@ -130,14 +129,10 @@ def runmain(inputvcc, rstdir, abi):
         if isinstance(i, vmodtool.FunctionStanza):
             i.cstuff(buf, 'o')
 
-    v.cstruct(buf)
+    csn = "Vmod_%s_Func" % v.modname
+    scsn = "struct " + csn
 
-    buf.write('#undef VPFX\n')
-    buf.write('#undef VARGS\n')
-    buf.write('#undef VENUM\n')
-
-    proto = buf.getvalue() + "static struct {csn} {csn};".format(csn = v.csn)
-    buf.close()
+    v.cstruct(buf, scsn)
 
     print("""
 use std::ptr;
@@ -145,7 +140,12 @@ use std::os::raw::*;
 use std::boxed::Box;
 use varnish::vcl::ctx::{{ Ctx, Event }};
 use varnish::vcl::convert::{{IntoRust, IntoVCL, IntoResult, VCLDefault}};
-""".format(modname = v.modname))
+
+const PROTO: *const c_char = b"
+{buf}
+static struct {csn} {csn};\\0".as_ptr() as *const c_char;
+""".format(buf = buf.getvalue(), csn = csn, modname = v.modname))
+    buf.close()
 
     # C stuff is done, get comfortable with our own types
     for i in vmodtool.CTYPES:
@@ -169,7 +169,7 @@ use varnish::vcl::convert::{{IntoRust, IntoVCL, IntoResult, VCLDefault}};
 
     print("""
 #[repr(C)]
-pub struct {csn} {{""".format(csn = v.csn))
+pub struct {csn} {{""".format(csn = csn))
     for i in v.contents:
         def rustMemberDeclare(name, func, t):
             print("\t{0}:\tOption<unsafe extern \"C\" fn{1}>,".format(name, rustFuncSig(func, v, t)))
@@ -186,7 +186,7 @@ pub struct {csn} {{""".format(csn = v.csn))
 
     print("""
 #[no_mangle]
-pub static {csn}: {csn} = {csn} {{""".format(csn = v.csn))
+pub static {csn}: {csn} = {csn} {{""".format(csn = csn))
     for i in v.contents:
         def rustMemberAssign(name):
             print("\t{0}: Some(vmod_c_{0}),".format(name))
@@ -208,8 +208,7 @@ pub static {csn}: {csn} = {csn} {{""".format(csn = v.csn))
         major = "varnish::vcl::boilerplate::VRT_MAJOR_VERSION"
         minor = "varnish::vcl::boilerplate::VRT_MINOR_VERSION"
 
-    jl = [["$VMOD", "1.0", v.modname, v.csn, v.file_id, abi, major, minor]]
-    jl.append(["$CPROTO", proto])
+    jl = [["$VMOD", "1.0"]]
     for j in v.contents:
             j.json(jl)
 
@@ -220,7 +219,6 @@ pub struct vmod_data {{
 	vrt_minor: c_uint,
 	file_id: *const c_char,
 	name: *const c_char,
-	func_name: *const c_char,
 	func: *const c_void,
 	func_len: c_int,
 	proto: *const c_char,
@@ -235,20 +233,19 @@ pub static Vmod_{name}_Data: vmod_data = vmod_data {{
 	vrt_minor: {minor},
 	file_id: "{file_id}\\0".as_ptr() as *const c_char,
 	name: "{name}\\0".as_ptr() as *const c_char,
-	func_name: "{csn}\\0".as_ptr() as *const c_char,
 	func_len: ::std::mem::size_of::<{csn}>() as c_int,
 	func: &{csn} as *const _ as *const c_void,
 	abi: varnish::vcl::boilerplate::VMOD_ABI_Version.as_ptr() as *const c_char,
 	json: JSON,
-    proto: std::ptr::null(),
+    proto: PROTO,
 }};
 
 const JSON: *const c_char =
-    b"VMOD_JSON_SPEC\x02\\n{json}\\n\x03\\0".as_ptr() as *const c_char;
+    b"{json}\\n\\0".as_ptr() as *const c_char;
 """.format(
         file_id = v.file_id,
         name = v.modname,
-        csn = v.csn,
+        csn = csn,
         major = major,
         minor = minor,
         json = escape_json(json.dumps(jl, indent=4))
@@ -271,8 +268,6 @@ if __name__ == "__main__":
     oparser.add_option('-w', '--rstdir', metavar="directory", default='.',
                        help='Where to save the generated RST files ' +
                        '(default: ".")')
-    oparser.add_option('-a', '--abi',
-                       help='abi string (VMOD_ABI_Version in C)')
     (opts, args) = oparser.parse_args()
 
     i_vcc = None
@@ -287,4 +282,4 @@ if __name__ == "__main__":
         oparser.print_help()
         exit(-1)
 
-    runmain(i_vcc, opts.rstdir, opts.abi)
+    runmain(i_vcc, opts.rstdir)
