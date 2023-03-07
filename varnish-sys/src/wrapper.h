@@ -12,8 +12,8 @@ struct http_conn {
         unsigned                magic;
 #define HTTP_CONN_MAGIC         0x3e19edd1
         int                     *rfd;
-        stream_close_t          doclose;
-        body_status_t           body_status;
+        enum sess_close         doclose;
+        enum body_status        body_status;
         struct ws               *ws;
         char                    *rxbuf_b;
         char                    *rxbuf_e;
@@ -28,3 +28,5 @@ struct http_conn {
 };
 
 struct vfp_entry *VFP_Push(struct vfp_ctx *, const struct vfp *);
+
+ssize_t VRB_Iterate(struct req *req, objiterate_f *func, void *priv);

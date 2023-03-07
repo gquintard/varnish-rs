@@ -54,7 +54,7 @@ varnish v1 -vcl {
 		expect resp.http.cannot == 0
 	} -run
 
-# manual fail, we get <undef>, and a 503 response code
+# manual fail
 	# the error message should be in the logs, make sure it popped up
 	logexpect l1 -v v1 -d 1 -g raw {
 		expect * *   VCL_Error "manual_fail: couldn't read file into string"
@@ -62,12 +62,10 @@ varnish v1 -vcl {
 	
 	client c1 {
 		txreq -url ${tmpdir}/no_file -hdr "func: manual"
-		rxresp
-		expect resp.status == 500
-		expect resp.http.manual == <undef>
 	} -run
 
 	# wait until we actually see the line
+	logexpect l1 -wait
 
 	# same with the other error
 	logexpect l1 -v v1 -d 1 -g raw {
@@ -76,9 +74,6 @@ varnish v1 -vcl {
 
 	client c1 {
 		txreq -url ${tmpdir}/bad_file -hdr "func: manual"
-		rxresp
-		expect resp.status == 500
-		expect resp.http.manual == <undef>
 	} -run
 
 	logexpect l1 -wait
@@ -91,12 +86,10 @@ varnish v1 -vcl {
 	
 	client c1 {
 		txreq -url ${tmpdir}/no_file -hdr "func: result"
-		rxresp
-		expect resp.status == 500
-		expect resp.http.result == <undef>
 	} -run
 
 	# wait until we actually see the line
+	logexpect l1 -wait
 
 	# same with the other error
 	logexpect l1 -v v1 -d 1 -g raw {
@@ -105,9 +98,6 @@ varnish v1 -vcl {
 
 	client c1 {
 		txreq -url ${tmpdir}/bad_file -hdr "func: result"
-		rxresp
-		expect resp.status == 500
-		expect resp.http.result == <undef>
 	} -run
 
 	logexpect l1 -wait

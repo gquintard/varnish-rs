@@ -9,7 +9,15 @@ homepage = "https://github.com/gquintard/varnish-rs"
 repository = "https://github.com/gquintard/varnish-rs"
 readme = "README.md"
 keywords = ["varnish", "vmod", "cache", "http", "reverse-proxy"]
-categories = [ "api-bindings"]
+categories = ["api-bindings"]
+
+[features]
+default = []
+cache_req_body = []
+varnish_plus = []
+
+[build-dependencies]
+varnish-sys = { path = "varnish-sys", version = "0.0.14" }
 
 [dependencies]
 varnish-sys = { path = "varnish-sys", version = "0.0.14" }

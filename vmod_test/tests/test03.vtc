@@ -7,7 +7,7 @@ varnish v1 -vcl+backend {
 	import rustest from "${vmod}";
 
 	sub vcl_recv {
-		std.cache_req_body(50b);
+		std.cache_req_body(11B);
 		return (synth(200));
 	}
 	sub vcl_synth {

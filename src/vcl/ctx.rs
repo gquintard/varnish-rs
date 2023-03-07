@@ -125,10 +125,25 @@ impl<'a> Ctx<'a> {
         }
     }
 
+    #[cfg(feature = "cache_req_body")]
     pub fn cached_req_body(&mut self) -> Result<Vec<&'a [u8]>, crate::vcl::Error> {
+        #[cfg(not(feature = "varnish_plus"))]
         unsafe extern "C" fn chunk_collector<'a>(
             priv_: *mut c_void,
-            _flush: c_uint,
+            _flush: std::ffi::c_int,
+            ptr: *const c_void,
+            len: isize,
+        ) -> std::os::raw::c_int {
+            let v = (priv_ as *mut Vec<&'a [u8]>).as_mut().unwrap();
+            let buf = std::slice::from_raw_parts(ptr as *const u8, len as usize);
+            v.push(buf);
+            0
+        }
+        #[cfg(feature = "varnish_plus")]
+        unsafe extern "C" fn chunk_collector<'a>(
+            priv_: *mut c_void,
+            _flush: std::ffi::c_int,
+            _last: std::ffi::c_int,
             ptr: *const c_void,
             len: isize,
         ) -> std::os::raw::c_int {
@@ -144,17 +159,15 @@ impl<'a> Ctx<'a> {
                 .as_mut()
                 .ok_or("req object isn't available")?
         };
-        unsafe {
-            if req.req_body_status != varnish_sys::BS_CACHED.as_ptr() {
-                return Err("request body hasn't been previously cached".into());
-            }
+
+        if req.req_body_status != varnish_sys::req_body_state_e_REQ_BODY_CACHED {
+            return Err("request body hasn't been previously cached".into());
         }
+
         let mut v: Box<Vec<&'a [u8]>> = Box::new(Vec::new());
         let p: *mut Vec<&'a [u8]> = &mut *v;
         match unsafe {
             varnish_sys::VRB_Iterate(
-                req.wrk,
-                req.vsl.as_mut_ptr(),
                 req,
                 Some(chunk_collector),
                 p as *mut c_void,
@@ -183,11 +196,12 @@ impl TestCtx {
                 magic: VRT_CTX_MAGIC,
                 syntax: 0,
                 method: 0,
+                handling: ptr::null::<c_uint>() as *mut c_uint,
                 vclver: 0,
                 msg: ptr::null::<vsb>() as *mut vsb,
                 vsl: ptr::null::<vsl_log>() as *mut vsl_log,
                 vcl: ptr::null::<VCL_VCL>() as VCL_VCL,
-                ws: std::ptr::null_mut::<ws>(),
+                ws: ptr::null_mut::<ws>(),
                 sp: ptr::null::<sess>() as *mut sess,
                 req: ptr::null::<req>() as *mut req,
                 http_req: ptr::null::<VCL_HTTP>() as VCL_HTTP,
@@ -198,8 +212,6 @@ impl TestCtx {
                 http_beresp: ptr::null::<VCL_HTTP>() as VCL_HTTP,
                 now: 0.0,
                 specific: ptr::null::<VCL_HTTP>() as *mut c_void,
-                called: ptr::null::<vsb>() as *mut c_void,
-                vpi: ptr::null::<vsb>() as *mut varnish_sys::wrk_vpi,
             },
             test_ws: TestWS::new(sz),
         };

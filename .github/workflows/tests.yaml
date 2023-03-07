@@ -20,8 +20,8 @@ jobs:
       - run: |
           set -x
           sudo apt-get install -y curl
-          curl -s https://packagecloud.io/install/repositories/varnishcache/varnish72/script.deb.sh | sudo bash
-          sudo apt-get install varnish-dev
+          curl -s https://packagecloud.io/install/repositories/varnishcache/varnish60lts/script.deb.sh | sudo bash
+          sudo apt-get install varnish=6.0.11-1~jammy varnish-dev=6.0.11-1~jammy
       - run: |
           set -x
           cargo doc

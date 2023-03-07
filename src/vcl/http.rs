@@ -180,7 +180,7 @@ impl<'a> HTTP<'a> {
 
     /// Set the response status, it will also set the reason
     pub fn set_status(&mut self, status: u16) {
-        unsafe { varnish_sys::http_SetStatus(self.raw, status, std::ptr::null()) }
+        unsafe { varnish_sys::http_SetStatus(self.raw, status) }
     }
 
     /// Response reason, `None` for a request

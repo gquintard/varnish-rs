@@ -28,10 +28,10 @@ client c1 {
 	rxresp
 	expect resp.http.value == ""
 
-	txreq -method "SET" -hdr "key: key1" -hdr "value: value1"
+	txreq -req "SET" -hdr "key: key1" -hdr "value: value1"
 	rxresp
 
-	txreq -method "SET" -hdr "key: key2" -hdr "value: value2"
+	txreq -req "SET" -hdr "key: key2" -hdr "value: value2"
 	rxresp
 
 	txreq -hdr "key: key1"
