@@ -189,7 +189,7 @@ pub trait Serve<T: Transfer> {
 
     /// Once a backend transaction is finished, the [`Backend`] has a chance to clean up, collect
     /// data and others in the finish methods.
-    fn finish(&self, _ctx: &mut Ctx) {}
+    fn finish(&self, _ctx: &mut Ctx) { }
 
     /// Is your backend healthy, and when did its health change for the last time.
     fn healthy(&self, _ctx: &mut Ctx) -> (bool, SystemTime) { (true, SystemTime::UNIX_EPOCH) }
@@ -484,8 +484,8 @@ unsafe extern "C" fn wrap_healthy<S: Serve<T>, T: Transfer>(
     assert!(!(*be).priv_.is_null());
 
     let mut ctx = Ctx::new(ctxp as *mut varnish_sys::vrt_ctx);
-    let backend = (*be).priv_ as *const Backend<S, T>;
-    let (healthy, when) = (*backend).inner.healthy(&mut ctx);
+    let backend = (*be).priv_ as *const S;
+    let (healthy, when) = (*backend).healthy(&mut ctx);
     if !changed.is_null() {
         *changed = when.duration_since(std::time::UNIX_EPOCH).unwrap().as_secs_f64();
     }
@@ -536,8 +536,8 @@ unsafe extern "C" fn wrap_finish<S: Serve<T>, T: Transfer> (
     }
     (*(*ctxp).bo).htc = ptr::null_mut();
 
-    let backend = (*be).priv_ as *const Backend<S, T>;
-    (*backend).inner.finish(&mut Ctx::new(ctxp as *mut varnish_sys::vrt_ctx));
+    let backend = (*be).priv_ as *const S;
+    (*backend).finish(&mut Ctx::new(ctxp as *mut varnish_sys::vrt_ctx));
 }
 
 impl<S: Serve<T>, T: Transfer> Drop for Backend<S, T> {

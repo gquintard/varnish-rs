@@ -1,3 +1,7 @@
+# 0.0.15 (unreleased)
+
+- Fix crash in `Backend` code due do wrong pointer cast
+
 # 0.0.14 (2023-02-20)
 
 - `Backend::new()` get an extra argument: `has_probe`
