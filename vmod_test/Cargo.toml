@@ -7,7 +7,7 @@ edition = "2021"
 varnish = { path = ".." }
 
 [dependencies]
-varnish = { path = "..", features = ["cache_req_body"] }
+varnish = { path = ".." }
 varnish-sys = { path = "../varnish-sys" }
 
 [lib]

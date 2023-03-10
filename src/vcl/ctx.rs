@@ -125,9 +125,8 @@ impl<'a> Ctx<'a> {
         }
     }
 
-    #[cfg(feature = "cache_req_body")]
     pub fn cached_req_body(&mut self) -> Result<Vec<&'a [u8]>, crate::vcl::Error> {
-        #[cfg(not(feature = "varnish_plus"))]
+        #[cfg(not(varnish_plus))]
         unsafe extern "C" fn chunk_collector<'a>(
             priv_: *mut c_void,
             _flush: std::ffi::c_int,
@@ -139,7 +138,7 @@ impl<'a> Ctx<'a> {
             v.push(buf);
             0
         }
-        #[cfg(feature = "varnish_plus")]
+        #[cfg(varnish_plus)]
         unsafe extern "C" fn chunk_collector<'a>(
             priv_: *mut c_void,
             _flush: std::ffi::c_int,
