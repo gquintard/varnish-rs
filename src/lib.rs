@@ -98,6 +98,8 @@ use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+pub mod vsc;
+
 pub mod vcl {
     pub mod backend;
     pub mod convert;

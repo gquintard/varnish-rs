@@ -245,6 +245,6 @@ impl Event {
 pub fn log(logtag: LogTag, msg: &str) {
     unsafe {
         let c_cstring = CString::new(msg).unwrap();
-        varnish_sys::VSL(logtag.into_u32(), 0, b"%s\0".as_ptr() as *const c_char, c_cstring.as_ptr() as *const u8);
+        varnish_sys::VSL(logtag.into_u32(), varnish_sys::vxids { vxid: 0 }, b"%s\0".as_ptr() as *const c_char, c_cstring.as_ptr() as *const u8);
     }
 }

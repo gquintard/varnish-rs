@@ -1,6 +1,9 @@
 # 0.0.15 (unreleased)
 
+- Varnish 7.3 support
 - Fix crash in `Backend` code due do wrong pointer cast
+- Add `varnish::vsc`
+- More docs
 
 # 0.0.14 (2023-02-20)
 

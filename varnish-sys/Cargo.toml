@@ -1,6 +1,6 @@
 [package]
 name = "varnish-sys"
-version = "0.0.14"
+version = "0.0.15"
 authors = ["Guillaume Quintard <guillaume.quintard@gmail.com>"]
 edition = "2021"
 license = "BSD-3-Clause"
@@ -12,7 +12,7 @@ keywords = ["varnish", "vmod", "cache", "http", "reverse-proxy"]
 categories = [ "api-bindings"]
 
 [package.metadata.libvarnishapi]
-version = "7.2"
+version = "7.3"
 
 [build-dependencies]
 pkg-config = "0.3.22"

@@ -139,6 +139,7 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
                 list: Some(wrap_list::<S, T>),
                 panic: Some(wrap_panic::<S, T>),
                 resolve: None,
+                release: None,
             });
 
         let bep = unsafe {
