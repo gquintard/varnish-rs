@@ -7,6 +7,8 @@
 #include "vmod_abi.h"
 #include "vsb.h"
 #include "vsa.h"
+#include "vapi/vsm.h"
+#include "vapi/vsc.h"
 
 struct http_conn {
         unsigned                magic;

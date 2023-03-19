@@ -2,9 +2,9 @@
 
 varnish::boilerplate!();
 
+use std::error::Error;
 use varnish::vcl::backend::{Backend, Serve, Transfer, VCLBackendPtr};
 use varnish::vcl::ctx::Ctx;
-use varnish::vcl::Result;
 
 varnish::vtc!(test01);
 
@@ -17,7 +17,7 @@ pub struct parrot {
 }
 
 impl parrot {
-    pub fn new(ctx: &mut Ctx, vcl_name: &str, to_repeat: &str) -> Result<Self> {
+    pub fn new(ctx: &mut Ctx, vcl_name: &str, to_repeat: &str) -> Result<Self, Box<dyn Error>> {
         // to create the backend, we need:
         // - the vcl context, that we just pass along
         // - the vcl_name (how the vcl writer named the object)
@@ -53,7 +53,7 @@ impl Serve<Body> for Sentence {
         "parrot"
     }
 
-    fn get_headers(&self, ctx: &mut Ctx) -> Result<Option<Body>> {
+    fn get_headers(&self, ctx: &mut Ctx) -> Result<Option<Body>, Box<dyn Error>> {
         let beresp = ctx.http_beresp.as_mut().unwrap();
         beresp.set_status(200);
         beresp.set_header("server", "parrot")?;
@@ -76,7 +76,7 @@ pub struct Body {
 impl Transfer for Body {
     // Varnish will call us over and over, asking us to fill buffers
     // we'll happily oblige by filling as much as we can every time
-    fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize, Box<dyn Error>> {
         // can't send more than what we have, or more than what the buffer can hold
         let l = std::cmp::min(self.left, buf.len());
 

@@ -90,6 +90,7 @@
 //! ```
 //!
 //! The various type translations are described in detail in [`crate::vcl::convert`].
+#![warn(missing_docs)]
 
 use std::env;
 use std::env::join_paths;
@@ -113,6 +114,10 @@ pub mod vcl {
 
     pub mod boilerplate;
 
+    /// custom vcl `Error` type
+    ///
+    /// The C errors aren't typed and are just C strings, so we just wrap them into a proper rust
+    /// `Error`
     pub struct Error {
         s: String,
     }
@@ -143,6 +148,7 @@ pub mod vcl {
         }
     }
 
+    /// Shorthand to `std::result::Result<T, Error>`
     pub type Result<T> = std::result::Result<T, Error>;
 }
 

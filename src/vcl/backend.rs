@@ -22,7 +22,6 @@
 //! number of times.
 //!
 //! ```
-//! use varnish::vcl::Result;
 //! use varnish::vcl::backend::{ Backend, Serve, Transfer };
 //! use varnish::vcl::ctx::Ctx;
 //!
@@ -32,7 +31,7 @@
 //! }
 //!
 //! impl Transfer for BodyResponse {
-//!     fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
+//!     fn read(&mut self, buf: &mut [u8]) -> Result<usize, Box<dyn std::error::Error>> {
 //!         let mut done = 0;
 //!         for p in buf {
 //!              if self.left == 0 {
@@ -69,6 +68,7 @@
 //!     let ptr = backend.vcl_ptr();
 //! }
 //! ```
+use std::error::Error;
 use std::ffi::CString;
 use std::ffi::c_char;
 use std::ptr;
@@ -78,7 +78,6 @@ use std::os::unix::io::FromRawFd;
 
 use std::os::raw::c_void;
 
-use crate::vcl::Result;
 use crate::vcl::convert::IntoVCL;
 use crate::vcl::ctx::{ Ctx, Event, LogTag };
 use crate::vcl::vsb::Vsb;
@@ -122,7 +121,7 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
     /// Create a new builder, wrapping the `inner` structure (that implements `Serve`),
     /// calling the backend `name`. If the backend has a probe attached to it, set `has_probe` to
     /// true.
-    pub fn new(ctx: &mut Ctx, name: &str, be: S, has_probe: bool) -> Result<Self> {
+    pub fn new(ctx: &mut Ctx, name: &str, be: S, has_probe: bool) -> crate::vcl::Result<Self> {
         let mut inner = Box::new(be);
         let cstring_name: CString = CString::new(name).map_err(|e| e.to_string())?;
         let type_: CString = CString::new(inner.get_type()).map_err(|e| e.to_string())?;
@@ -186,7 +185,7 @@ pub trait Serve<T: Transfer> {
     ///
     /// If this function returns a `Ok(_)` without having set the method and protocol of
     /// `ctx.http_beresp`, we'll default to `HTTP/1.1 200 OK`
-    fn get_headers(&self, _ctx: &mut Ctx) -> Result<Option<T>>;
+    fn get_headers(&self, _ctx: &mut Ctx) -> Result<Option<T>, Box<dyn Error>>;
 
     /// Once a backend transaction is finished, the [`Backend`] has a chance to clean up, collect
     /// data and others in the finish methods.
@@ -251,7 +250,7 @@ pub trait Transfer {
     ///
     /// `.read()` will never be called on an empty buffer, and the implementer must return the
     /// number of bytes written (which therefore must be less than the buffer size).
-    fn read(&mut self, buf: &mut [u8]) -> Result<usize>;
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize, Box<dyn Error>>;
 
     /// If returning `Some(_)`, we know the size of the body generated, and it'll be used to fill the
     /// `content-length` header of the response. Otherwise chunked encoding will be used, which is
@@ -260,11 +259,11 @@ pub trait Transfer {
 
     /// Potentially return the IP:port pair that the backend is using to transfer the body. It
     /// might not make sense for your implementation.
-    fn get_ip(&self) -> Result<Option<SocketAddr>> {Ok(None)}
+    fn get_ip(&self) -> Result<Option<SocketAddr>, Box<dyn Error>> {Ok(None)}
 }
 
 impl Transfer for () {
-    fn read(&mut self, _buf: &mut [u8]) -> Result<usize> {Ok(0)}
+    fn read(&mut self, _buf: &mut [u8]) -> Result<usize, Box<dyn Error>> {Ok(0)}
 }
 
 unsafe extern "C" fn vfp_pull<T: Transfer>(

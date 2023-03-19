@@ -22,6 +22,7 @@ use std::slice::from_raw_parts_mut;
 /// The workspace is usually a few tens of kilobytes large, don't be greedy. If you need more
 /// space, consider storing your data in a [`VPriv`](crate::vcl::vpriv::VPriv).
 pub struct WS<'a> {
+    /// Raw pointer to the C struct
     pub raw: *mut varnish_sys::ws,
     phantom_a: std::marker::PhantomData<&'a u8>,
 }
@@ -165,6 +166,7 @@ impl<'a> WS<'a> {
 /// assert_eq!(r3.buf.len(), 150);
 /// ```
 pub struct ReservedBuf<'a> {
+    /// The reserved buffer
     pub buf: &'a mut [u8],
     wsp: *mut varnish_sys::ws,
     b: *mut u8,
