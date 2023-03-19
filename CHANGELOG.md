@@ -4,6 +4,7 @@
 - Fix crash in `Backend` code due do wrong pointer cast
 - Add `varnish::vsc`
 - More docs
+- `VFP::new()` and `VDP::new()` now take a `mut` ref to the context
 
 # 0.0.14 (2023-02-20)
 
