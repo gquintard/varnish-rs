@@ -1,4 +1,8 @@
-# 0.0.15 (unreleased)
+# 0.0.16 (2023-03-19)
+
+- fix `vsc` assert
+
+# 0.0.15 (2023-03-19)
 
 - Varnish 7.3 support
 - Fix crash in `Backend` code due do wrong pointer cast

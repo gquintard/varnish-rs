@@ -77,7 +77,7 @@ impl<'a> VSCBuilder<'a> {
     pub fn work_dir(self, dir: &std::path::Path) -> std::result::Result<Self, std::ffi::NulError> {
         let c_dir = CString::new(dir.to_str().unwrap())?;
         let ret = unsafe { varnish_sys::VSM_Arg(self.vsm, 'n' as core::ffi::c_char , c_dir.as_ptr()) };
-        assert_eq!(ret, 0);
+        assert_eq!(ret, 1);
         Ok(self)
     }
 
