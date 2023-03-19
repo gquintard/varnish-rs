@@ -90,7 +90,6 @@
 //! ```
 //!
 //! The various type translations are described in detail in [`crate::vcl::convert`].
-#![warn(missing_docs)]
 
 use std::env;
 use std::env::join_paths;

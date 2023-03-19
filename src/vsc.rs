@@ -74,19 +74,11 @@ impl<'a> VSCBuilder<'a> {
     ///
     /// It's usually superfluous to call this function, unless `varnishd` itself was called with
     /// the `-n` argument (in which case, both arguments should match)
-    pub fn work_dir(self, dir: &std::path::Path) -> Result<Self> {
-        // TODO: don't unwrap here
-        let c_dir = CString::new(dir.to_str().unwrap()).unwrap();
+    pub fn work_dir(self, dir: &std::path::Path) -> std::result::Result<Self, std::ffi::NulError> {
+        let c_dir = CString::new(dir.to_str().unwrap())?;
         let ret = unsafe { varnish_sys::VSM_Arg(self.vsm, 'n' as core::ffi::c_char , c_dir.as_ptr()) };
-        if ret != 1 {
-            let err = vsm_error(self.vsm);
-            unsafe {
-                varnish_sys::VSM_ResetError(self.vsm);
-            }
-            Err(err)
-        } else {
-            Ok(self)
-        }
+        assert_eq!(ret, 0);
+        Ok(self)
     }
 
     /// How long to wait when attaching
@@ -107,9 +99,8 @@ impl<'a> VSCBuilder<'a> {
         Ok(self)
     }
 
-    fn vsc_arg(self, o: char, s: &str) -> Result<Self> {
-        // TODO: don't unwrap here  
-        let c_s = std::ffi::CString::new(s).unwrap();
+    fn vsc_arg(self, o: char, s: &str) -> std::result::Result<Self, std::ffi::NulError> {
+        let c_s = std::ffi::CString::new(s)?;
         unsafe {
             let ret = varnish_sys::VSC_Arg(self.vsc, o as core::ffi::c_char , c_s.as_ptr() as *const core::ffi::c_char);
             assert!(ret == 1);
@@ -120,20 +111,20 @@ impl<'a> VSCBuilder<'a> {
     /// Provide a globbing pattern of statistics names to include.
     ///
     /// May be called multiple times, interleaved with [`VSCBuilder::exclude()`], the order matters.
-    pub fn include(self, s: &str) -> Result<Self> {
+    pub fn include(self, s: &str) -> std::result::Result<Self, std::ffi::NulError> {
         self.vsc_arg('I', s)
     }
 
     /// Provide a globbing pattern of statistics names to exclude.
     ///
     /// May be called multiple times, interleaved with [`VSCBuilder::include()`], the order matters.
-    pub fn exclude(self, s: &str) -> Result<Self> {
+    pub fn exclude(self, s: &str) -> std::result::Result<Self, std::ffi::NulError> {
         self.vsc_arg('X', s)
     }
 
     /// Provide a globbing pattern of statistics names to keep around, protecting them from
     /// exclusion.
-    pub fn require(self, s: &str) -> Result<Self> {
+    pub fn require(self, s: &str) -> std::result::Result<Self, std::ffi::NulError> {
         self.vsc_arg('R', s)
     }
 
