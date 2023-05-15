@@ -237,6 +237,10 @@ pub unsafe extern "C" fn wrap_vfp_fini<T: VFP>(ctxp: *mut vfp_ctx, vfep: *mut vf
     let vfe = vfep.as_mut().unwrap();
     assert_eq!(vfe.magic, varnish_sys::VFP_ENTRY_MAGIC);
 
+    if vfe.priv1.is_null() {
+        return;
+    }
+
     drop(Box::from_raw(vfe.priv1 as *mut T));
     vfe.priv1 = ptr::null_mut();
 }
