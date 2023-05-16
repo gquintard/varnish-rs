@@ -19,8 +19,6 @@ varnish v1 -vcl+backend {
 	}
 } -start
 
-varnish v1 -cliok "param.set http_max_hdr 32"
-
 client c1 {
 	txreq -url "/"
 	rxresp
