@@ -4,9 +4,11 @@ use std::io::Write;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::time::Duration;
 
-use varnish::vcl::ctx::Ctx;
+use varnish::vcl::ctx::{Ctx, Event};
 use varnish::vcl::probe;
+use varnish::vcl::processor::{new_vfp, InitResult, PullResult, VFPCtx, VFP};
 use varnish::vcl::Result;
+use varnish::vcl::vpriv::VPriv;
 
 varnish::vtc!(test01);
 varnish::vtc!(test02);
@@ -14,6 +16,7 @@ varnish::vtc!(test03);
 varnish::vtc!(test04);
 varnish::vtc!(test05);
 varnish::vtc!(test06);
+varnish::vtc!(test07);
 
 pub fn set_hdr(ctx: &mut Ctx, name: &str, value: &str) -> Result<()> {
     if let Some(ref mut req) = ctx.http_req {
@@ -150,4 +153,43 @@ pub fn probe_prop<'b>(_ctx: &'b mut Ctx, probe: Option<probe::Probe>) -> String 
         ),
         None => "no probe".to_string(),
     }
+}
+
+// Test issue 20 - null pointer drop
+struct VFPTest {
+    _buffer: Vec<u8>
+}
+
+// Force a pass here to test to make sure that fini does not panic due to a null priv1 member
+impl VFP for VFPTest {
+    fn name() -> &'static str {
+        "vfptest\0"
+    }
+
+    fn new(_: &mut Ctx, _: &mut VFPCtx) -> InitResult<Self> {
+        InitResult::Pass
+    }
+
+    fn pull(&mut self, _: &mut VFPCtx, _: &mut [u8]) -> PullResult {
+        PullResult::Err
+    }
+}
+
+pub unsafe fn event(
+    ctx: &mut Ctx,
+    vp: &mut VPriv<varnish_sys::vfp>,
+    event: Event,
+) -> std::result::Result<(), &'static str> {
+    match event {
+        // on load, create the VFP C struct, save it into a priv, they register it
+        Event::Load => {
+            vp.store(new_vfp::<VFPTest>());
+            varnish_sys::VRT_AddVFP(ctx.raw, vp.as_ref().unwrap())
+        }
+        // on discard, deregister the VFP, but don't worry about cleaning it, it'll be done by
+        // Varnish automatically
+        Event::Discard => varnish_sys::VRT_RemoveVFP(ctx.raw, vp.as_ref().unwrap()),
+        _ => (),
+    }
+    Ok(())
 }
