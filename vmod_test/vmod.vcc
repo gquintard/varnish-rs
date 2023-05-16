@@ -23,3 +23,5 @@ $Function STRING default_arg(STRING s = "foo")
 
 $Function STRING probe_prop(PROBE)
 $Function STRING cowprobe_prop(PROBE)
+
+$Event event_function
