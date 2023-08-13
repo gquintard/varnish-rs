@@ -3,6 +3,7 @@ import optparse
 import json
 import io
 import os
+import sys
 
 import vmodtool
 
