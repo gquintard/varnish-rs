@@ -187,6 +187,9 @@ pub mod vcl {
 ///
 /// This will declare the test named `test01` and set up and run `varnishtest` alongside your unit
 /// tests when you run `cargo test`.
+///
+/// **Important note:** you need to first build your vmod (i.e. with `cargo build`) before the tests can be run,
+/// otherwise you'll get a panic.
 #[macro_export]
 macro_rules! vtc {
     ( $name:ident ) => {
@@ -206,7 +209,7 @@ macro_rules! vtc {
                 .filter(|p| p.exists())
                 .nth(0)
             {
-                None => panic!("couldn't find {} in {}", &vmod_filename, llp),
+                None => panic!("couldn't find {} in {}\nHave you built your vmod first?", &vmod_filename, llp),
                 Some(p) => p.to_str().unwrap().to_owned(),
             };
             let cmd = Command::new("varnishtest")
