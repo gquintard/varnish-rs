@@ -7,8 +7,8 @@ use std::time::Duration;
 use varnish::vcl::ctx::{Ctx, Event};
 use varnish::vcl::probe;
 use varnish::vcl::processor::{new_vfp, InitResult, PullResult, VFPCtx, VFP};
-use varnish::vcl::Result;
 use varnish::vcl::vpriv::VPriv;
+use varnish::vcl::Result;
 
 varnish::vtc!(test01);
 varnish::vtc!(test02);
@@ -157,7 +157,7 @@ pub fn probe_prop<'b>(_ctx: &'b mut Ctx, probe: Option<probe::Probe>) -> String 
 
 // Test issue 20 - null pointer drop
 struct VFPTest {
-    _buffer: Vec<u8>
+    _buffer: Vec<u8>,
 }
 
 // Force a pass here to test to make sure that fini does not panic due to a null priv1 member

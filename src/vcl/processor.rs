@@ -131,6 +131,7 @@ pub fn new_vdp<T: VDP>() -> varnish_sys::vdp {
         init: Some(gen_vdp_init::<T>),
         bytes: Some(gen_vdp_push::<T>),
         fini: Some(gen_vdp_fini::<T>),
+        priv1: ptr::null(),
     }
 }
 
