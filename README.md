@@ -12,7 +12,11 @@ varnish = "0.0.16"
 ```
 # varnish-rs
 
-Varnish bindings, notably to build vmods
+Varnish bindings, notably to build vmods, such as:
+
+- [vmod-reqwest](https://github.com/gquintard/vmod_reqwest): issue HTTP calls from VCL, use dynamic, HTTPS backends (support HTTP2)
+- [vmod-rers](https://github.com/gquintard/vmod_rers): support for dynamic regex, including respone body manipulation
+- [vmod-fileserver](https://github.com/gquintard/vmod_fileserver): serve files directly from disk, without the need for an HTTP backend
 
 Don't hesitate to open github issues if something is unclear or impractical. You can also join us on [discord](https://discord.com/invite/EuwdvbZR6d).
 
