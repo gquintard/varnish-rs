@@ -7,5 +7,8 @@ This is a small collection of vmods, written using the [varnish crate](https://c
 - [vmod_object](vmod_object): how to map a vmod object into a rust equivalent
 - [vmod_timestamp](vmod_timestamp): use of a `PRIV_TASK`
 - [vmod_infiniteloop](vmod_infiniteloop): access regular C structures
+- [vmod_be](vmod_be): define your own backend
+- [vmod_event](vmod_event): be notified when the vmod is loaded/discarded and store information
+- [vmod_vdp](vmod_vdp) and [vmod_vfp](vmod_vfp): inject Fetch/Delivery processor to modify response body content
 
 Note that you can also use [vmod-rs-template](https://github.com/gquintard/vmod_rs_template) for a stand-alone, out-of-tree vmod, with packaging framework.

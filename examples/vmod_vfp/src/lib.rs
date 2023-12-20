@@ -17,11 +17,11 @@ impl VFP for Lower {
         "lower\0"
     }
 
+    // `new` is called when the VCL specifies "lower" in `beresp.filters`
     fn new(_: &mut Ctx, _: &mut VFPCtx) -> InitResult<Self> {
         InitResult::Ok(Lower {})
     }
 
-    // `new` is called when the VCL specifies "lower" in `beresp.filters`
     fn pull(&mut self, ctx: &mut VFPCtx, buf: &mut [u8]) -> PullResult {
         let pull_res = ctx.pull(buf);
         let len = match pull_res {
