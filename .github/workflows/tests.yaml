@@ -20,7 +20,7 @@ jobs:
       - run: |
           set -x
           sudo apt-get install -y curl
-          curl -s https://packagecloud.io/install/repositories/varnishcache/varnish74/script.deb.sh | sudo bash
+          curl -s https://packagecloud.io/install/repositories/varnishcache/varnish75/script.deb.sh | sudo bash
           sudo apt-get install varnish-dev
       - run: |
           set -x

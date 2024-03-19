@@ -1,3 +1,7 @@
+# 0.0.18 (2024-03-19)
+
+- adjust to Varnish 7.5.0
+
 # 0.0.17 (2023-09-23)
 
 - adjust to Varnish 7.4.0

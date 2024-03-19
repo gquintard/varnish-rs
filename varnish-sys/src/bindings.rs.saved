@@ -136,6 +136,7 @@ pub const __USE_ATFILE: u32 = 1;
 pub const __USE_FORTIFY_LEVEL: u32 = 0;
 pub const __GLIBC_USE_DEPRECATED_GETS: u32 = 0;
 pub const __GLIBC_USE_DEPRECATED_SCANF: u32 = 0;
+pub const __GLIBC_USE_C2X_STRTOL: u32 = 0;
 pub const _STDC_PREDEF_H: u32 = 1;
 pub const __STDC_IEC_559__: u32 = 1;
 pub const __STDC_IEC_60559_BFP__: u32 = 201404;
@@ -144,7 +145,7 @@ pub const __STDC_IEC_60559_COMPLEX__: u32 = 201404;
 pub const __STDC_ISO_10646__: u32 = 201706;
 pub const __GNU_LIBRARY__: u32 = 6;
 pub const __GLIBC__: u32 = 2;
-pub const __GLIBC_MINOR__: u32 = 37;
+pub const __GLIBC_MINOR__: u32 = 39;
 pub const _SYS_CDEFS_H: u32 = 1;
 pub const __glibc_c99_flexarr_available: u32 = 1;
 pub const __LDOUBLE_REDIRECTS_TO_FLOAT128_ABI: u32 = 0;
@@ -418,6 +419,8 @@ pub const SO_BUF_LOCK: u32 = 72;
 pub const SO_RESERVE_MEM: u32 = 73;
 pub const SO_TXREHASH: u32 = 74;
 pub const SO_RCVMARK: u32 = 75;
+pub const SO_PASSPIDFD: u32 = 76;
+pub const SO_PEERPIDFD: u32 = 77;
 pub const SO_TIMESTAMP: u32 = 29;
 pub const SO_TIMESTAMPNS: u32 = 35;
 pub const SO_TIMESTAMPING: u32 = 37;
@@ -506,14 +509,14 @@ pub const __jmp_buf_tag_defined: u32 = 1;
 pub const PTHREAD_STACK_MIN: u32 = 16384;
 pub const PTHREAD_ONCE_INIT: u32 = 0;
 pub const PTHREAD_BARRIER_SERIAL_THREAD: i32 = -1;
-pub const __GNUC_VA_LIST: u32 = 1;
 pub const VRT_INTEGER_MAX: u64 = 999999999999999;
 pub const VRT_INTEGER_MIN: i64 = -999999999999999;
-pub const VRT_MAJOR_VERSION: u32 = 17;
+pub const VRT_MAJOR_VERSION: u32 = 19;
 pub const VRT_MINOR_VERSION: u32 = 0;
 pub const _STDINT_H: u32 = 1;
 pub const _BITS_WCHAR_H: u32 = 1;
 pub const _BITS_STDINT_UINTN_H: u32 = 1;
+pub const _BITS_STDINT_LEAST_H: u32 = 1;
 pub const INT8_MIN: i32 = -128;
 pub const INT16_MIN: i32 = -32768;
 pub const INT32_MIN: i32 = -2147483648;
@@ -754,7 +757,7 @@ pub const VFP_CTX_MAGIC: u32 = 1641665509;
 pub const VDP_ENTRY_MAGIC: u32 = 893302657;
 pub const VDP_CTX_MAGIC: u32 = 3998227959;
 pub const VMOD_ABI_Version: &[u8; 55usize] =
-    b"Varnish 7.3.0 84d79120b6d17b11819a663a93160743f293e63f\0";
+    b"Varnish 7.5.0 eef25264e5ca5f96a77129308edb83ccf84cb1b1\0";
 pub const VSB_MAGIC: u32 = 1250090378;
 pub const VSB_FIXEDLEN: u32 = 0;
 pub const VSB_AUTOEXTEND: u32 = 1;
@@ -5529,8 +5532,8 @@ extern "C" {
         __child: ::std::option::Option<unsafe extern "C" fn()>,
     ) -> ::std::os::raw::c_int;
 }
-pub type va_list = __builtin_va_list;
 pub type __gnuc_va_list = __builtin_va_list;
+pub type va_list = __builtin_va_list;
 pub type wchar_t = ::std::os::raw::c_int;
 #[repr(C)]
 #[repr(align(16))]
@@ -6898,6 +6901,9 @@ extern "C" {
     pub fn VRT_handled(ctx: *const vrt_ctx) -> ::std::os::raw::c_uint;
 }
 extern "C" {
+    pub fn VRT_trace(ctx: *const vrt_ctx, arg1: VCL_BOOL);
+}
+extern "C" {
     pub fn VRT_fail(ctx: *const vrt_ctx, fmt: *const ::std::os::raw::c_char, ...);
 }
 extern "C" {
@@ -7846,6 +7852,12 @@ extern "C" {
 }
 extern "C" {
     pub static SC_VCL_FAILURE: [stream_close; 1usize];
+}
+extern "C" {
+    pub static SC_RAPID_RESET: [stream_close; 1usize];
+}
+extern "C" {
+    pub static SC_BANKRUPT: [stream_close; 1usize];
 }
 pub const HTTP_HDR_METHOD: _bindgen_ty_15 = 0;
 pub const HTTP_HDR_URL: _bindgen_ty_15 = 1;
@@ -9389,6 +9401,7 @@ pub struct busyobj {
     pub connect_timeout: vtim_dur,
     pub first_byte_timeout: vtim_dur,
     pub between_bytes_timeout: vtim_dur,
+    pub task_deadline: vtim_dur,
     pub t_first: vtim_real,
     pub t_resp: vtim_real,
     pub t_prev: vtim_real,
@@ -9411,7 +9424,7 @@ fn bindgen_test_layout_busyobj() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<busyobj>(),
-        440usize,
+        448usize,
         concat!("Size of: ", stringify!(busyobj))
     );
     assert_eq!(
@@ -9640,8 +9653,18 @@ fn bindgen_test_layout_busyobj() {
         )
     );
     assert_eq!(
-        unsafe { ::std::ptr::addr_of!((*ptr).t_first) as usize - ptr as usize },
+        unsafe { ::std::ptr::addr_of!((*ptr).task_deadline) as usize - ptr as usize },
         240usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(busyobj),
+            "::",
+            stringify!(task_deadline)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).t_first) as usize - ptr as usize },
+        248usize,
         concat!(
             "Offset of field: ",
             stringify!(busyobj),
@@ -9651,7 +9674,7 @@ fn bindgen_test_layout_busyobj() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).t_resp) as usize - ptr as usize },
-        248usize,
+        256usize,
         concat!(
             "Offset of field: ",
             stringify!(busyobj),
@@ -9661,7 +9684,7 @@ fn bindgen_test_layout_busyobj() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).t_prev) as usize - ptr as usize },
-        256usize,
+        264usize,
         concat!(
             "Offset of field: ",
             stringify!(busyobj),
@@ -9671,7 +9694,7 @@ fn bindgen_test_layout_busyobj() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).acct) as usize - ptr as usize },
-        264usize,
+        272usize,
         concat!(
             "Offset of field: ",
             stringify!(busyobj),
@@ -9681,7 +9704,7 @@ fn bindgen_test_layout_busyobj() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).storage) as usize - ptr as usize },
-        296usize,
+        304usize,
         concat!(
             "Offset of field: ",
             stringify!(busyobj),
@@ -9691,7 +9714,7 @@ fn bindgen_test_layout_busyobj() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).director_req) as usize - ptr as usize },
-        304usize,
+        312usize,
         concat!(
             "Offset of field: ",
             stringify!(busyobj),
@@ -9701,7 +9724,7 @@ fn bindgen_test_layout_busyobj() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).director_resp) as usize - ptr as usize },
-        312usize,
+        320usize,
         concat!(
             "Offset of field: ",
             stringify!(busyobj),
@@ -9711,7 +9734,7 @@ fn bindgen_test_layout_busyobj() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).director_state) as usize - ptr as usize },
-        320usize,
+        328usize,
         concat!(
             "Offset of field: ",
             stringify!(busyobj),
@@ -9721,7 +9744,7 @@ fn bindgen_test_layout_busyobj() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).vcl) as usize - ptr as usize },
-        328usize,
+        336usize,
         concat!(
             "Offset of field: ",
             stringify!(busyobj),
@@ -9731,7 +9754,7 @@ fn bindgen_test_layout_busyobj() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).vsl) as usize - ptr as usize },
-        336usize,
+        344usize,
         concat!(
             "Offset of field: ",
             stringify!(busyobj),
@@ -9741,7 +9764,7 @@ fn bindgen_test_layout_busyobj() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).digest) as usize - ptr as usize },
-        376usize,
+        384usize,
         concat!(
             "Offset of field: ",
             stringify!(busyobj),
@@ -9751,7 +9774,7 @@ fn bindgen_test_layout_busyobj() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).privs) as usize - ptr as usize },
-        408usize,
+        416usize,
         concat!(
             "Offset of field: ",
             stringify!(busyobj),
@@ -9761,7 +9784,7 @@ fn bindgen_test_layout_busyobj() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).err_code) as usize - ptr as usize },
-        416usize,
+        424usize,
         concat!(
             "Offset of field: ",
             stringify!(busyobj),
@@ -9771,7 +9794,7 @@ fn bindgen_test_layout_busyobj() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).err_reason) as usize - ptr as usize },
-        424usize,
+        432usize,
         concat!(
             "Offset of field: ",
             stringify!(busyobj),
@@ -9781,7 +9804,7 @@ fn bindgen_test_layout_busyobj() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).client_identity) as usize - ptr as usize },
-        432usize,
+        440usize,
         concat!(
             "Offset of field: ",
             stringify!(busyobj),
@@ -9845,58 +9868,69 @@ impl busyobj {
         }
     }
     #[inline]
-    pub fn do_esi(&self) -> ::std::os::raw::c_uint {
+    pub fn trace(&self) -> ::std::os::raw::c_uint {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_do_esi(&mut self, val: ::std::os::raw::c_uint) {
+    pub fn set_trace(&mut self, val: ::std::os::raw::c_uint) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(4usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn do_gzip(&self) -> ::std::os::raw::c_uint {
+    pub fn do_esi(&self) -> ::std::os::raw::c_uint {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_do_gzip(&mut self, val: ::std::os::raw::c_uint) {
+    pub fn set_do_esi(&mut self, val: ::std::os::raw::c_uint) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(5usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn do_gunzip(&self) -> ::std::os::raw::c_uint {
+    pub fn do_gzip(&self) -> ::std::os::raw::c_uint {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(6usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_do_gunzip(&mut self, val: ::std::os::raw::c_uint) {
+    pub fn set_do_gzip(&mut self, val: ::std::os::raw::c_uint) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(6usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn do_stream(&self) -> ::std::os::raw::c_uint {
+    pub fn do_gunzip(&self) -> ::std::os::raw::c_uint {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_do_stream(&mut self, val: ::std::os::raw::c_uint) {
+    pub fn set_do_gunzip(&mut self, val: ::std::os::raw::c_uint) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(7usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn was_304(&self) -> ::std::os::raw::c_uint {
+    pub fn do_stream(&self) -> ::std::os::raw::c_uint {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(8usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_do_stream(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(8usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn was_304(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(9usize, 1u8) as u32) }
     }
     #[inline]
     pub fn set_was_304(&mut self, val: ::std::os::raw::c_uint) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(8usize, 1u8, val as u64)
+            self._bitfield_1.set(9usize, 1u8, val as u64)
         }
     }
     #[inline]
@@ -9905,6 +9939,7 @@ impl busyobj {
         is_bgfetch: ::std::os::raw::c_uint,
         is_hitmiss: ::std::os::raw::c_uint,
         is_hitpass: ::std::os::raw::c_uint,
+        trace: ::std::os::raw::c_uint,
         do_esi: ::std::os::raw::c_uint,
         do_gzip: ::std::os::raw::c_uint,
         do_gunzip: ::std::os::raw::c_uint,
@@ -9929,22 +9964,26 @@ impl busyobj {
             is_hitpass as u64
         });
         __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let trace: u32 = unsafe { ::std::mem::transmute(trace) };
+            trace as u64
+        });
+        __bindgen_bitfield_unit.set(5usize, 1u8, {
             let do_esi: u32 = unsafe { ::std::mem::transmute(do_esi) };
             do_esi as u64
         });
-        __bindgen_bitfield_unit.set(5usize, 1u8, {
+        __bindgen_bitfield_unit.set(6usize, 1u8, {
             let do_gzip: u32 = unsafe { ::std::mem::transmute(do_gzip) };
             do_gzip as u64
         });
-        __bindgen_bitfield_unit.set(6usize, 1u8, {
+        __bindgen_bitfield_unit.set(7usize, 1u8, {
             let do_gunzip: u32 = unsafe { ::std::mem::transmute(do_gunzip) };
             do_gunzip as u64
         });
-        __bindgen_bitfield_unit.set(7usize, 1u8, {
+        __bindgen_bitfield_unit.set(8usize, 1u8, {
             let do_stream: u32 = unsafe { ::std::mem::transmute(do_stream) };
             do_stream as u64
         });
-        __bindgen_bitfield_unit.set(8usize, 1u8, {
+        __bindgen_bitfield_unit.set(9usize, 1u8, {
             let was_304: u32 = unsafe { ::std::mem::transmute(was_304) };
             was_304 as u64
         });
@@ -10070,7 +10109,7 @@ pub struct req {
     pub objcore: *mut objcore,
     pub stale_oc: *mut objcore,
     pub vdc: *mut vdp_ctx,
-    pub filter_list: *const ::std::os::raw::c_char,
+    pub vdp_filter_list: *const ::std::os::raw::c_char,
     pub vsl: [vsl_log; 1usize],
     pub acct: acct_req,
     pub privs: [vrt_privs; 1usize],
@@ -10506,13 +10545,13 @@ fn bindgen_test_layout_req() {
         concat!("Offset of field: ", stringify!(req), "::", stringify!(vdc))
     );
     assert_eq!(
-        unsafe { ::std::ptr::addr_of!((*ptr).filter_list) as usize - ptr as usize },
+        unsafe { ::std::ptr::addr_of!((*ptr).vdp_filter_list) as usize - ptr as usize },
         416usize,
         concat!(
             "Offset of field: ",
             stringify!(req),
             "::",
-            stringify!(filter_list)
+            stringify!(vdp_filter_list)
         )
     );
     assert_eq!(
@@ -10640,25 +10679,47 @@ impl req {
         }
     }
     #[inline]
-    pub fn is_hitmiss(&self) -> ::std::os::raw::c_uint {
+    pub fn req_reset(&self) -> ::std::os::raw::c_uint {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(8usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_is_hitmiss(&mut self, val: ::std::os::raw::c_uint) {
+    pub fn set_req_reset(&mut self, val: ::std::os::raw::c_uint) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(8usize, 1u8, val as u64)
         }
     }
     #[inline]
-    pub fn is_hitpass(&self) -> ::std::os::raw::c_uint {
+    pub fn is_hitmiss(&self) -> ::std::os::raw::c_uint {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(9usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_is_hitmiss(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(9usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn is_hitpass(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(10usize, 1u8) as u32) }
     }
     #[inline]
     pub fn set_is_hitpass(&mut self, val: ::std::os::raw::c_uint) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(9usize, 1u8, val as u64)
+            self._bitfield_1.set(10usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn trace(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(11usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_trace(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(11usize, 1u8, val as u64)
         }
     }
     #[inline]
@@ -10671,8 +10732,10 @@ impl req {
         waitinglist: ::std::os::raw::c_uint,
         want100cont: ::std::os::raw::c_uint,
         late100cont: ::std::os::raw::c_uint,
+        req_reset: ::std::os::raw::c_uint,
         is_hitmiss: ::std::os::raw::c_uint,
         is_hitpass: ::std::os::raw::c_uint,
+        trace: ::std::os::raw::c_uint,
     ) -> __BindgenBitfieldUnit<[u8; 2usize]> {
         let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 2usize]> = Default::default();
         __bindgen_bitfield_unit.set(0usize, 1u8, {
@@ -10708,12 +10771,20 @@ impl req {
             late100cont as u64
         });
         __bindgen_bitfield_unit.set(8usize, 1u8, {
+            let req_reset: u32 = unsafe { ::std::mem::transmute(req_reset) };
+            req_reset as u64
+        });
+        __bindgen_bitfield_unit.set(9usize, 1u8, {
             let is_hitmiss: u32 = unsafe { ::std::mem::transmute(is_hitmiss) };
             is_hitmiss as u64
         });
-        __bindgen_bitfield_unit.set(9usize, 1u8, {
+        __bindgen_bitfield_unit.set(10usize, 1u8, {
             let is_hitpass: u32 = unsafe { ::std::mem::transmute(is_hitpass) };
             is_hitpass as u64
+        });
+        __bindgen_bitfield_unit.set(11usize, 1u8, {
+            let trace: u32 = unsafe { ::std::mem::transmute(trace) };
+            trace as u64
         });
         __bindgen_bitfield_unit
     }
@@ -11441,7 +11512,7 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn ObjGetXID(arg1: *mut worker, arg2: *mut objcore) -> ::std::os::raw::c_uint;
+    pub fn ObjGetXID(arg1: *mut worker, arg2: *mut objcore) -> vxid_t;
 }
 extern "C" {
     pub fn ObjGetLen(arg1: *mut worker, arg2: *mut objcore) -> u64;
@@ -11452,14 +11523,6 @@ extern "C" {
         arg2: *mut objcore,
         arg3: obj_attr,
         arg4: *mut f64,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn ObjGetU32(
-        arg1: *mut worker,
-        arg2: *mut objcore,
-        arg3: obj_attr,
-        arg4: *mut u32,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -11572,6 +11635,9 @@ extern "C" {
         arg3: isize,
         arg4: *const ::std::os::raw::c_void,
     );
+}
+extern "C" {
+    pub fn VSL_tag_is_masked(tag: VSL_tag_e) -> ::std::os::raw::c_int;
 }
 extern "C" {
     pub fn VCL_Name(arg1: *const vcl) -> *const ::std::os::raw::c_char;
@@ -12387,6 +12453,7 @@ pub struct vdp {
     pub init: vdp_init_f,
     pub bytes: vdp_bytes_f,
     pub fini: vdp_fini_f,
+    pub priv1: *const ::std::os::raw::c_void,
 }
 #[test]
 fn bindgen_test_layout_vdp() {
@@ -12394,7 +12461,7 @@ fn bindgen_test_layout_vdp() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<vdp>(),
-        32usize,
+        40usize,
         concat!("Size of: ", stringify!(vdp))
     );
     assert_eq!(
@@ -12426,6 +12493,16 @@ fn bindgen_test_layout_vdp() {
         unsafe { ::std::ptr::addr_of!((*ptr).fini) as usize - ptr as usize },
         24usize,
         concat!("Offset of field: ", stringify!(vdp), "::", stringify!(fini))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).priv1) as usize - ptr as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(vdp),
+            "::",
+            stringify!(priv1)
+        )
     );
 }
 impl Default for vdp {
@@ -13059,7 +13136,7 @@ pub struct vsm_fantom {
     pub priv2: usize,
     pub b: *mut ::std::os::raw::c_void,
     pub e: *mut ::std::os::raw::c_void,
-    pub class: *mut ::std::os::raw::c_char,
+    pub category: *mut ::std::os::raw::c_char,
     pub ident: *mut ::std::os::raw::c_char,
 }
 #[test]
@@ -13117,13 +13194,13 @@ fn bindgen_test_layout_vsm_fantom() {
         )
     );
     assert_eq!(
-        unsafe { ::std::ptr::addr_of!((*ptr).class) as usize - ptr as usize },
+        unsafe { ::std::ptr::addr_of!((*ptr).category) as usize - ptr as usize },
         32usize,
         concat!(
             "Offset of field: ",
             stringify!(vsm_fantom),
             "::",
-            stringify!(class)
+            stringify!(category)
         )
     );
     assert_eq!(
@@ -13235,14 +13312,14 @@ extern "C" {
     pub fn VSM_Get(
         arg1: *mut vsm,
         vf: *mut vsm_fantom,
-        class: *const ::std::os::raw::c_char,
+        category: *const ::std::os::raw::c_char,
         ident: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
     pub fn VSM_Dup(
         arg1: *mut vsm,
-        class: *const ::std::os::raw::c_char,
+        category: *const ::std::os::raw::c_char,
         ident: *const ::std::os::raw::c_char,
     ) -> *mut ::std::os::raw::c_char;
 }
