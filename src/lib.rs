@@ -212,16 +212,19 @@ macro_rules! vtc {
                 None => panic!("couldn't find {} in {}\nHave you built your vmod first?", &vmod_filename, llp),
                 Some(p) => p.to_str().unwrap().to_owned(),
             };
-            let cmd = Command::new("varnishtest")
-                .arg(concat!("tests/", stringify!($name), ".vtc"))
+            let mut cmd = Command::new("varnishtest");
+            cmd
                 .arg("-D")
                 .arg(format!("vmod={}", vmod_path))
+                .arg(concat!("tests/", stringify!($name), ".vtc"));
+
+            let output = cmd
                 .output()
                 .unwrap();
-            if !cmd.status.success() {
-                io::stdout().write_all(&cmd.stdout).unwrap();
-                io::stdout().write_all(&cmd.stderr).unwrap();
-                panic!(concat!("tests/", stringify!($name), ".vtc failed"));
+            if !output.status.success() {
+                io::stdout().write_all(&output.stdout).unwrap();
+                io::stdout().write_all(&output.stderr).unwrap();
+                panic!("{}", format!("tests/{}.vtc failed ({:?})", stringify!($name), cmd.get_args()));
             }
         }
     };
