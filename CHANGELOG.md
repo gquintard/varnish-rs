@@ -1,3 +1,9 @@
+# 0.0.19 (2024-03-24)
+
+- vsc::Error implements std::Error
+- improve vtc!() debuggability
+- use newer `bindgen`
+
 # 0.0.18 (2024-03-19)
 
 - adjust to Varnish 7.5.0

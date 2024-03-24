@@ -56,7 +56,7 @@ The `varnish-rs` and `varnish-sys` versions will work in tandem: to build versio
 
 | varnish-rs/varnish-sys (rust) | libvarnish (C) |
 | :----------------: | :------------: |
-| 0.0.18             | 7.5            |
+| 0.0.18 -> 0.0.19   | 7.5            |
 | 0.0.17             | 7.4            |
 | 0.0.15 -> 0.0.16   | 7.3            |
 | 0.0.12 -> 0.0.14   | 7.2            |
