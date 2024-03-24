@@ -30,7 +30,7 @@ fn main() {
     let bindings = bindgen::Builder::default()
         .header("src/wrapper.h")
         .blocklist_item("FP_.*")
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .clang_args(
             varnish_paths
                 .iter()
