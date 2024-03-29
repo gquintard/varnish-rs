@@ -1,13 +1,14 @@
 //! Expose the Varnish context (`struct vrt_ctx`) as a Rust object
+use std::ptr;
+
 use std::ffi::CString;
 use std::ffi::{c_char, c_uint, c_void};
 
 use crate::vcl::http::HTTP;
 use crate::vcl::ws::{TestWS, WS};
-use std::ptr;
 use varnish_sys::{
     busyobj, req, sess, vrt_ctx, vsb, vsl_log, ws, VSL_tag_e_SLT_Debug, VSL_tag_e_SLT_Error,
-    VSL_tag_e_SLT_VCL_Error, VSL_tag_e_SLT_Backend_health, VSL_tag_e_SLT_FetchError, VCL_HTTP, VCL_VCL, VRT_CTX_MAGIC,
+    VSL_tag_e_SLT_VCL_Error, VSL_tag_e_SLT_Backend_health, VSL_tag_e_SLT_FetchError, VSL_tag_e_SLT_VCL_Log, VCL_HTTP, VCL_VCL, VRT_CTX_MAGIC,
     VRT_fail,
 };
 
@@ -22,6 +23,7 @@ pub enum LogTag {
     VclError,
     FetchError,
     BackendHealth,
+    VclLog,
     Any(u32),
 }
 
@@ -33,6 +35,7 @@ impl LogTag {
             LogTag::VclError => VSL_tag_e_SLT_VCL_Error,
             LogTag::FetchError => VSL_tag_e_SLT_FetchError,
             LogTag::BackendHealth => VSL_tag_e_SLT_Backend_health,
+            LogTag::VclLog => VSL_tag_e_SLT_VCL_Log,
             LogTag::Any(n) => *n,
         }
     }
