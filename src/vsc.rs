@@ -98,7 +98,7 @@ impl<'a> VSCBuilder<'a> {
             let ret = varnish_sys::VSM_Arg(
                 self.vsm,
                 't' as core::ffi::c_char,
-                arg.as_ptr() as *const core::ffi::c_char,
+                arg.as_ptr().cast::<core::ffi::c_char>(),
             );
             assert!(ret == 1);
         }
@@ -111,7 +111,7 @@ impl<'a> VSCBuilder<'a> {
             let ret = varnish_sys::VSC_Arg(
                 self.vsc,
                 o as core::ffi::c_char,
-                c_s.as_ptr() as *const core::ffi::c_char,
+                c_s.as_ptr().cast::<core::ffi::c_char>(),
             );
             assert!(ret == 1);
         }
@@ -154,7 +154,7 @@ impl<'a> VSCBuilder<'a> {
                     self.vsc,
                     Some(add_point),
                     Some(del_point),
-                    &mut *internal as *mut VSCInternal as *mut std::ffi::c_void,
+                    (&mut *internal as *mut VSCInternal).cast::<std::ffi::c_void>(),
                 );
             }
             let vsm = self.vsm;
@@ -280,7 +280,7 @@ unsafe extern "C" fn add_point(
     ptr: *mut std::ffi::c_void,
     point: *const varnish_sys::VSC_point,
 ) -> *mut std::ffi::c_void {
-    let internal = ptr as *mut VSCInternal;
+    let internal = ptr.cast::<VSCInternal>();
     let k = point as usize;
 
     let stat = Stat {
@@ -297,7 +297,7 @@ unsafe extern "C" fn add_point(
 }
 
 unsafe extern "C" fn del_point(ptr: *mut std::ffi::c_void, point: *const varnish_sys::VSC_point) {
-    let internal = ptr as *mut VSCInternal;
+    let internal = ptr.cast::<VSCInternal>();
     let k = point as usize;
     assert!((*internal).points.contains_key(&k));
 
