@@ -146,7 +146,7 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
                 ctx.raw,
                 &*methods,
                 &mut *inner as *mut S as *mut std::ffi::c_void,
-                "%s\0".as_ptr() as *const c_char,
+                c"%s".as_ptr(),
                 cstring_name.as_ptr() as *const c_char,
             )
         };

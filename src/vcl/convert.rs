@@ -388,7 +388,7 @@ impl VCLDefault for () {
     fn vcl_default() -> Self::Item {}
 }
 
-const EMPTY_STRING: *const c_char = b"\0".as_ptr() as *const c_char;
+const EMPTY_STRING: *const c_char = c"".as_ptr();
 
 /// Convert a VCL type into a Rust one.
 ///
