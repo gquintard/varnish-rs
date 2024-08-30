@@ -54,9 +54,9 @@ impl<'a> HTTP<'a> {
         let hdr_buf = ws.copy_bytes_with_null(&value)?;
         unsafe {
             let hd = self.raw.hd.offset(idx as isize);
-            (*hd).b = hdr_buf.as_ptr() as *const c_char;
+            (*hd).b = hdr_buf.as_ptr().cast::<c_char>();
             /* -1 accounts for the null character */
-            (*hd).e = hdr_buf.as_ptr().add(hdr_buf.len() - 1) as *const c_char;
+            (*hd).e = hdr_buf.as_ptr().add(hdr_buf.len() - 1).cast::<c_char>();
             let hdf = self.raw.hdf.offset(idx as isize);
             *hdf = 0;
         }
@@ -136,7 +136,7 @@ impl<'a> HTTP<'a> {
                     None
                 } else {
                     let e = (*self.raw.hd.offset(idx as isize)).e;
-                    let buf = from_raw_parts(b as *const u8, e.offset_from(b) as usize);
+                    let buf = from_raw_parts(b.cast::<u8>(), e.offset_from(b) as usize);
                     Some(from_utf8(buf).unwrap())
                 }
             }
@@ -262,7 +262,7 @@ fn header_from_hd<'a>(txt: *const varnish_sys::txt) -> Option<(&'a str, &'a str)
             return None;
         }
         let e = (*txt).e;
-        let buf = from_raw_parts(b as *const u8, e.offset_from(b) as usize);
+        let buf = from_raw_parts(b.cast::<u8>(), e.offset_from(b) as usize);
 
         let colon = buf.iter().position(|x| *x == b':').unwrap();
 

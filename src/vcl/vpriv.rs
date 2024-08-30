@@ -36,7 +36,7 @@ impl<T> VPriv<T> {
     }
 
     fn get_inner(&mut self) -> Option<&mut InnerVPriv<T>> {
-        unsafe { (self.ptr.as_mut()?.priv_ as *mut InnerVPriv<T>).as_mut() }
+        unsafe { self.ptr.as_mut()?.priv_.cast::<InnerVPriv<T>>().as_mut() }
     }
 
     pub fn store(&mut self, obj: T) {
@@ -56,7 +56,7 @@ impl<T> VPriv<T> {
                     obj: None,
                 };
                 (*self.ptr).methods = methods_ptr;
-                (*self.ptr).priv_ = Box::into_raw(Box::new(inner_priv)) as *mut c_void;
+                (*self.ptr).priv_ = Box::into_raw(Box::new(inner_priv)).cast::<c_void>();
             }
         }
         let inner_priv = self.get_inner().unwrap();
@@ -64,7 +64,7 @@ impl<T> VPriv<T> {
     }
 
     pub fn as_ref(&self) -> Option<&T> {
-        let inner = unsafe { ((*self.ptr).priv_ as *mut InnerVPriv<T>).as_ref()? };
+        let inner = unsafe { (*self.ptr).priv_.cast::<InnerVPriv<T>>().as_ref()? };
         inner.obj.as_ref()
     }
 
@@ -85,7 +85,7 @@ impl<T> VPriv<T> {
 }
 
 unsafe extern "C" fn vpriv_free<T>(_: *const varnish_sys::vrt_ctx, ptr: *mut c_void) {
-    let inner_priv = Box::from_raw(ptr as *mut InnerVPriv<T>);
+    let inner_priv = Box::from_raw(ptr.cast::<InnerVPriv<T>>());
     drop(Box::from_raw(inner_priv.name));
     drop(Box::from_raw(inner_priv.methods));
 }

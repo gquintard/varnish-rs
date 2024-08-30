@@ -295,20 +295,20 @@ unsafe extern "C" fn vfp_pull<T: Transfer>(
     let vfe = vfep.as_mut().unwrap();
     assert_eq!(vfe.magic, varnish_sys::VFP_ENTRY_MAGIC);
 
-    let buf = std::slice::from_raw_parts_mut(ptr as *mut u8, *len as usize);
+    let buf = std::slice::from_raw_parts_mut(ptr.cast::<u8>(), *len as usize);
     if buf.is_empty() {
         *len = 0;
         return varnish_sys::vfp_status_VFP_OK;
     }
 
-    let reader = (vfe.priv1 as *mut T).as_mut().unwrap();
+    let reader = vfe.priv1.cast::<T>().as_mut().unwrap();
     match reader.read(buf) {
         Err(e) => {
             let msg = e.to_string();
             // TODO: we should grow a VSL object
             let t = varnish_sys::txt {
-                b: msg.as_ptr() as *const c_char,
-                e: msg.as_ptr().add(msg.len()) as *const c_char,
+                b: msg.as_ptr().cast::<c_char>(),
+                e: msg.as_ptr().add(msg.len()).cast::<c_char>(),
             };
             varnish_sys::VSLbt((*(*ctxp).req).vsl, varnish_sys::VSL_tag_e_SLT_Error, t);
 
@@ -344,7 +344,7 @@ unsafe extern "C" fn wrap_list<S: Serve<T>, T: Transfer>(
     detailed: i32,
     json: i32,
 ) {
-    let mut ctx = Ctx::new(ctxp as *mut varnish_sys::vrt_ctx);
+    let mut ctx = Ctx::new(ctxp.cast_mut());
     let mut vsb = Vsb::new(vsbp);
     assert!(!be.is_null());
     assert_eq!((*be).magic, varnish_sys::DIRECTOR_MAGIC);
@@ -372,7 +372,7 @@ unsafe extern "C" fn wrap_pipe<S: Serve<T>, T: Transfer>(
     ctxp: *const varnish_sys::vrt_ctx,
     be: VCLBackendPtr,
 ) -> varnish_sys::stream_close_t {
-    let mut ctx = Ctx::new(ctxp as *mut varnish_sys::vrt_ctx);
+    let mut ctx = Ctx::new(ctxp.cast_mut());
     assert!(!(*ctxp).req.is_null());
     assert_eq!((*(*ctxp).req).magic, varnish_sys::REQ_MAGIC);
     assert!(!(*(*ctxp).req).sp.is_null());
@@ -393,7 +393,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
     ctxp: *const varnish_sys::vrt_ctx,
     be: VCLBackendPtr,
 ) -> ::std::os::raw::c_int {
-    let mut ctx = Ctx::new(ctxp as *mut varnish_sys::vrt_ctx);
+    let mut ctx = Ctx::new(ctxp.cast_mut());
     assert!(!be.is_null());
     assert_eq!((*be).magic, varnish_sys::DIRECTOR_MAGIC);
     assert!(!(*be).vcl_name.is_null());
@@ -418,8 +418,9 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
 
             let htc = varnish_sys::WS_Alloc(
                 (*ctx.raw.bo).ws.as_mut_ptr(),
-                std::mem::size_of::<varnish_sys::http_conn>() as u32,
-            ) as *mut varnish_sys::http_conn;
+                size_of::<varnish_sys::http_conn>() as u32,
+            )
+            .cast::<varnish_sys::http_conn>();
             if htc.is_null() {
                 ctx.fail(&format!("{}: insuficient workspace", (*backend).get_type()));
                 return -1;
@@ -445,13 +446,14 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
                             (*htc).content_length = l as isize;
                         }
                     };
-                    (*htc).priv_ = Box::into_raw(Box::new(transfer)) as *mut std::ffi::c_void;
+                    (*htc).priv_ = Box::into_raw(Box::new(transfer)).cast::<std::ffi::c_void>();
                     // build a vfp to wrap the Transfer object if there's something to push
                     if (*htc).body_status != varnish_sys::BS_NONE.as_ptr() {
                         let vfp = varnish_sys::WS_Alloc(
                             (*ctx.raw.bo).ws.as_mut_ptr(),
-                            std::mem::size_of::<varnish_sys::vfp>() as u32,
-                        ) as *mut varnish_sys::vfp;
+                            size_of::<varnish_sys::vfp>() as u32,
+                        )
+                        .cast::<varnish_sys::vfp>();
                         if vfp.is_null() {
                             ctx.fail(&format!("{}: insuficient workspace", (*backend).get_type()));
                             return -1;
@@ -468,7 +470,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
                             }
                             Ok(s) => s,
                         };
-                        (*vfp).name = t.as_ptr() as *const c_char;
+                        (*vfp).name = t.as_ptr().cast::<c_char>();
                         (*vfp).init = None;
                         (*vfp).pull = Some(vfp_pull::<T>);
                         (*vfp).fini = None;
@@ -562,7 +564,7 @@ unsafe extern "C" fn wrap_finish<S: Serve<T>, T: Transfer>(
     // drop the Transfer
     let htc = (*(*ctxp).bo).htc;
     if !(*htc).priv_.is_null() {
-        drop(Box::from_raw((*htc).priv_ as *mut T));
+        drop(Box::from_raw((*htc).priv_.cast::<T>()));
     }
     (*(*ctxp).bo).htc = ptr::null_mut();
 

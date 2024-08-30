@@ -45,7 +45,7 @@ impl<'a> WS<'a> {
         let wsp = unsafe { self.raw.as_mut().unwrap() };
         assert_eq!(wsp.magic, varnish_sys::WS_MAGIC);
 
-        let p = unsafe { varnish_sys::WS_Alloc(wsp, sz as u32) as *mut u8 };
+        let p = unsafe { varnish_sys::WS_Alloc(wsp, sz as u32).cast::<u8>() };
         if p.is_null() {
             Err(format!("workspace allocation ({} bytes) failed", sz))
         } else {
@@ -67,7 +67,7 @@ impl<'a> WS<'a> {
                     aligned_sz, sz, wsp.f, wsp.e
                 ))
             } else {
-                let buf = from_raw_parts_mut(wsp.f as *mut u8, aligned_sz);
+                let buf = from_raw_parts_mut(wsp.f.cast::<u8>(), aligned_sz);
                 wsp.f = wsp.f.add(aligned_sz);
                 Ok(buf)
             }
@@ -119,11 +119,11 @@ impl<'a> WS<'a> {
         unsafe {
             let sz = varnish_sys::WS_ReserveAll(wsp) as usize;
 
-            let buf = from_raw_parts_mut(wsp.f as *mut u8, sz);
+            let buf = from_raw_parts_mut(wsp.f.cast::<u8>(), sz);
             ReservedBuf {
                 buf,
                 wsp: self.raw,
-                b: wsp.f as *mut u8,
+                b: wsp.f.cast::<u8>(),
                 len: 0,
             }
         }

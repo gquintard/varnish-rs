@@ -88,7 +88,7 @@ pub unsafe extern "C" fn gen_vdp_init<T: VDP>(
         oc,
     ) {
         InitResult::Ok(proc) => {
-            *priv_ = Box::into_raw(Box::new(proc)) as *mut c_void;
+            *priv_ = Box::into_raw(Box::new(proc)).cast::<c_void>();
             0
         }
         InitResult::Err(_) => -1, // TODO: log error
@@ -104,7 +104,7 @@ pub unsafe extern "C" fn gen_vdp_fini<T: VDP>(
         return 0;
     }
     assert_ne!(*priv_, ptr::null_mut());
-    drop(Box::from_raw(*priv_ as *mut T));
+    drop(Box::from_raw((*priv_).cast::<T>()));
     *priv_ = ptr::null_mut();
     0
 }
@@ -124,8 +124,8 @@ pub unsafe extern "C" fn gen_vdp_push<T: VDP>(
         varnish_sys::vdp_action_VDP_END => PushAction::End,
         _ => return 1, /* TODO: log */
     };
-    let buf = std::slice::from_raw_parts(ptr as *const u8, len as usize);
-    match (*(*priv_ as *mut T)).push(&mut VDPCtx::new(ctx_raw), out_action, buf) {
+    let buf = std::slice::from_raw_parts(ptr.cast::<u8>(), len as usize);
+    match (*(*priv_).cast::<T>()).push(&mut VDPCtx::new(ctx_raw), out_action, buf) {
         PushResult::Err => -1, // TODO: log error
         PushResult::Ok => 0,
         PushResult::End => 1,
@@ -135,7 +135,7 @@ pub unsafe extern "C" fn gen_vdp_push<T: VDP>(
 /// Create a `varnish_sys::vdp` that can be fed to `varnish_sys::VRT_AddVDP`
 pub fn new_vdp<T: VDP>() -> varnish_sys::vdp {
     varnish_sys::vdp {
-        name: T::name().as_ptr() as *const c_char,
+        name: T::name().as_ptr().cast::<c_char>(),
         init: Some(gen_vdp_init::<T>),
         bytes: Some(gen_vdp_push::<T>),
         fini: Some(gen_vdp_fini::<T>),
@@ -166,7 +166,7 @@ impl<'a> VDPCtx<'a> {
             varnish_sys::VDP_bytes(
                 self.raw,
                 act as std::os::raw::c_uint,
-                buf.as_ptr() as *const c_void,
+                buf.as_ptr().cast::<c_void>(),
                 buf.len() as isize,
             )
         } {
@@ -213,7 +213,7 @@ unsafe extern "C" fn wrap_vfp_init<T: VFP>(
         &mut VFPCtx::new(ctx),
     ) {
         InitResult::Ok(proc) => {
-            vfe.priv1 = Box::into_raw(Box::new(proc)) as *mut c_void;
+            vfe.priv1 = Box::into_raw(Box::new(proc)).cast::<c_void>();
             0
         }
         InitResult::Err(_) => -1, // TODO: log the error,
@@ -232,8 +232,8 @@ pub unsafe extern "C" fn wrap_vfp_pull<T: VFP>(
     let vfe = vfep.as_mut().unwrap();
     assert_eq!(vfe.magic, varnish_sys::VFP_ENTRY_MAGIC);
 
-    let buf = std::slice::from_raw_parts_mut(ptr as *mut u8, *len as usize);
-    let obj = (vfe.priv1 as *mut T).as_mut().unwrap();
+    let buf = std::slice::from_raw_parts_mut(ptr.cast::<u8>(), *len as usize);
+    let obj = vfe.priv1.cast::<T>().as_mut().unwrap();
     match obj.pull(&mut VFPCtx::new(ctx), buf) {
         PullResult::Err => varnish_sys::vfp_status_VFP_ERROR, // TODO: log error
         PullResult::Ok(l) => {
@@ -257,14 +257,14 @@ pub unsafe extern "C" fn wrap_vfp_fini<T: VFP>(ctxp: *mut vfp_ctx, vfep: *mut vf
         return;
     }
 
-    drop(Box::from_raw(vfe.priv1 as *mut T));
+    drop(Box::from_raw(vfe.priv1.cast::<T>()));
     vfe.priv1 = ptr::null_mut();
 }
 
 /// Create a `varnish_sys::vfp` that can be fed to `varnish_sys::VRT_AddVFP`
 pub fn new_vfp<T: VFP>() -> varnish_sys::vfp {
     varnish_sys::vfp {
-        name: T::name().as_ptr() as *const c_char,
+        name: T::name().as_ptr().cast::<c_char>(),
         init: Some(wrap_vfp_init::<T>),
         pull: Some(wrap_vfp_pull::<T>),
         fini: Some(wrap_vfp_fini::<T>),

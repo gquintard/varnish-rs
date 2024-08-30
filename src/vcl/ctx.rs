@@ -119,8 +119,8 @@ impl<'a> Ctx<'a> {
                 log(logtag, msg);
             } else {
                 let t = varnish_sys::txt {
-                    b: msg.as_ptr() as *const c_char,
-                    e: msg.as_ptr().add(msg.len()) as *const c_char,
+                    b: msg.as_ptr().cast::<c_char>(),
+                    e: msg.as_ptr().add(msg.len()).cast::<c_char>(),
                 };
                 varnish_sys::VSLbt(p.vsl, logtag.into_u32(), t);
             }
@@ -134,8 +134,8 @@ impl<'a> Ctx<'a> {
             ptr: *const c_void,
             len: isize,
         ) -> std::os::raw::c_int {
-            let v = (priv_ as *mut Vec<&'a [u8]>).as_mut().unwrap();
-            let buf = std::slice::from_raw_parts(ptr as *const u8, len as usize);
+            let v = priv_.cast::<Vec<&'a [u8]>>().as_mut().unwrap();
+            let buf = std::slice::from_raw_parts(ptr.cast::<u8>(), len as usize);
             v.push(buf);
             0
         }
@@ -154,7 +154,7 @@ impl<'a> Ctx<'a> {
                 req.vsl.as_mut_ptr(),
                 req,
                 Some(chunk_collector),
-                p as *mut c_void,
+                p.cast::<c_void>(),
             )
         } {
             0 => Ok(*v),
@@ -246,7 +246,7 @@ pub fn log(logtag: LogTag, msg: &str) {
             logtag.into_u32(),
             varnish_sys::vxids { vxid: 0 },
             c"%s".as_ptr(),
-            c_cstring.as_ptr() as *const u8,
+            c_cstring.as_ptr().cast::<u8>(),
         );
     }
 }
