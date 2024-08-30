@@ -152,7 +152,7 @@ impl<'a> Ctx<'a> {
                 return Err("request body hasn't been previously cached".into());
             }
         }
-        let mut v: Box<Vec<&'a [u8]>> = Box::new(Vec::new());
+        let mut v: Box<Vec<&'a [u8]>> = Box::default();
         let p: *mut Vec<&'a [u8]> = &mut *v;
         match unsafe {
             varnish_sys::VRB_Iterate(

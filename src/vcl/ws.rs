@@ -54,7 +54,7 @@ impl<'a> WS<'a> {
     }
     #[cfg(test)]
     pub fn alloc(&mut self, sz: usize) -> Result<&'a mut [u8], String> {
-        let mut wsp = unsafe { self.raw.as_mut().unwrap() };
+        let wsp = unsafe { self.raw.as_mut().unwrap() };
         assert_eq!(wsp.magic, varnish_sys::WS_MAGIC);
 
         let al = std::mem::align_of::<*const c_void>();

@@ -194,7 +194,7 @@ impl<'a> IntoVCL<VCL_PROBE> for COWProbe<'a> {
     }
 }
 
-impl<'a> IntoVCL<VCL_PROBE> for Probe {
+impl IntoVCL<VCL_PROBE> for Probe {
     fn into_vcl(self, ws: &mut WS) -> Result<VCL_PROBE, String> {
         let p = ws.alloc(std::mem::size_of::<varnish_sys::vrt_backend_probe>())?.as_mut_ptr() as *mut vrt_backend_probe;
         let probe = unsafe { p.as_mut().unwrap() };
@@ -212,7 +212,7 @@ impl<'a> IntoVCL<VCL_PROBE> for Probe {
     }
 }
 
-impl<'a> IntoVCL<VCL_IP> for SocketAddr {
+impl IntoVCL<VCL_IP> for SocketAddr {
     fn into_vcl(self, ws: &mut WS) -> Result<VCL_IP, String> {
         unsafe{
             let p = ws.alloc(varnish_sys::vsa_suckaddr_len)?.as_mut_ptr() as *mut varnish_sys::suckaddr;
@@ -243,7 +243,7 @@ impl<'a> IntoVCL<VCL_IP> for SocketAddr {
     }
 }
 
-impl<'a> IntoVCL<VCL_IP> for Option<SocketAddr> {
+impl IntoVCL<VCL_IP> for Option<SocketAddr> {
     fn into_vcl(self, ws: &mut WS) -> Result<VCL_IP, String> {
         match self {
             None => Ok(std::ptr::null()),
@@ -276,7 +276,7 @@ impl<'a> IntoResult<String> for COWProbe<'a> {
     }
 }
 
-impl<'a> IntoResult<String> for Probe {
+impl IntoResult<String> for Probe {
     type Item = Probe;
     fn into_result(self) -> Result<Self::Item, String> {
         Ok(self)
@@ -290,7 +290,7 @@ impl<'a, E: ToString> IntoResult<E> for Result<COWProbe<'a>, E> {
     }
 }
 
-impl<'a, E: ToString> IntoResult<E> for Result<Probe, E> {
+impl<E: ToString> IntoResult<E> for Result<Probe, E> {
     type Item = Probe;
     fn into_result(self) -> Result<Self::Item, String> {
         self.map_err(|x| x.to_string())
@@ -457,15 +457,15 @@ impl<'a> IntoRust<Option<COWProbe<'a>>> for VCL_PROBE {
     }
 }
 
-impl<'a> IntoRust<Option<Probe>> for VCL_PROBE {
+impl IntoRust<Option<Probe>> for VCL_PROBE {
     fn into_rust(self) -> Option<Probe> {
         let pr = unsafe { self.as_ref()? };
         assert!((pr.url.is_null() && !pr.request.is_null()) || pr.request.is_null() && !pr.url.is_null());
         Some(Probe {
             request: if !pr.url.is_null() {
-                crate::vcl::probe::Request::URL(pr.url.into_rust().to_string())
+                probe::Request::URL(pr.url.into_rust().to_string())
             } else {
-                crate::vcl::probe::Request::Text(pr.request.into_rust().to_string())
+                probe::Request::Text(pr.request.into_rust().to_string())
             },
             timeout: pr.timeout.into_rust(),
             interval: pr.interval.into_rust(),
