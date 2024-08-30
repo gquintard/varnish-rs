@@ -101,7 +101,7 @@ impl<'a> HTTP<'a> {
                     varnish_sys::VSLbt(
                         self.raw.vsl,
                         self.raw.logtag + HDR_UNSET as u32 - HDR_METHOD as u32,
-                        *self.raw.hd.add(HDR_FIRST as usize + idx as usize),
+                        *self.raw.hd.add(HDR_FIRST as usize + idx),
                     );
                 }
                 continue;

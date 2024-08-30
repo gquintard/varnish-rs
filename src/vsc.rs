@@ -280,7 +280,7 @@ unsafe extern "C" fn add_point(ptr: *mut std::ffi::c_void, point: *const varnish
 unsafe extern "C" fn del_point(ptr: *mut std::ffi::c_void, point: *const varnish_sys::VSC_point) {
     let internal = ptr as *mut VSCInternal;
     let k = point as usize;
-    assert!((*internal).points.get(&k).is_some());
+    assert!((*internal).points.contains_key(&k));
 
     (*internal).deleted.push(k);
     assert!((*internal).points.remove(&k).is_some());
