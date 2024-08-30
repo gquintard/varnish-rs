@@ -234,9 +234,9 @@ unsafe impl Sync for vmod_data {{}}
 pub static Vmod_{name}_Data: vmod_data = vmod_data {{
 	vrt_major: {major},
 	vrt_minor: {minor},
-	file_id: "{file_id}\\0".as_ptr() as *const c_char,
-	name: "{name}\\0".as_ptr() as *const c_char,
-	func_name: "{csn}\\0".as_ptr() as *const c_char,
+	file_id: c"{file_id}".as_ptr(),
+	name: c"{name}".as_ptr(),
+	func_name: c"{csn}".as_ptr(),
 	func_len: ::std::mem::size_of::<{csn}>() as c_int,
 	func: &{csn} as *const _ as *const c_void,
 	abi: varnish::vcl::boilerplate::VMOD_ABI_Version.as_ptr() as *const c_char,
@@ -245,7 +245,7 @@ pub static Vmod_{name}_Data: vmod_data = vmod_data {{
 }};
 
 const JSON: *const c_char =
-    b"VMOD_JSON_SPEC\x02\\n{json}\\n\x03\\0".as_ptr() as *const c_char;
+    c"VMOD_JSON_SPEC\x02\\n{json}\\n\x03".as_ptr();
 """.format(
         file_id = v.file_id,
         name = v.modname,

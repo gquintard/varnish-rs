@@ -106,7 +106,7 @@ impl<'a> Ctx<'a> {
         // not great, we have to copy the string to add a null character
         let c_cstring = CString::new(msg).unwrap();
         unsafe {
-            VRT_fail(self.raw, "%s\0".as_ptr() as *const c_char, c_cstring.as_ptr());
+            VRT_fail(self.raw, c"%s".as_ptr(), c_cstring.as_ptr());
         }
         0
     }
@@ -248,6 +248,6 @@ impl Event {
 pub fn log(logtag: LogTag, msg: &str) {
     unsafe {
         let c_cstring = CString::new(msg).unwrap();
-        varnish_sys::VSL(logtag.into_u32(), varnish_sys::vxids { vxid: 0 }, b"%s\0".as_ptr() as *const c_char, c_cstring.as_ptr() as *const u8);
+        varnish_sys::VSL(logtag.into_u32(), varnish_sys::vxids { vxid: 0 }, c"%s".as_ptr(), c_cstring.as_ptr() as *const u8);
     }
 }
