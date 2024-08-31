@@ -22,6 +22,8 @@
 //! number of times.
 //!
 //! ```
+//! use std::error::Error;
+//!
 //! use varnish::vcl::backend::{ Backend, Serve, Transfer };
 //! use varnish::vcl::ctx::Ctx;
 //!
@@ -54,7 +56,7 @@
 //! impl Serve<BodyResponse> for MyBe {
 //!      fn get_type(&self) -> &str { "example" }
 //!
-//!      fn get_headers(&self, ctx: &mut Ctx) -> Result<Option<BodyResponse>> {
+//!      fn get_headers(&self, ctx: &mut Ctx) -> Result<Option<BodyResponse>, Error> {
 //!          Ok(Some(
 //!            BodyResponse { left: self.n }, 
 //!          ))
