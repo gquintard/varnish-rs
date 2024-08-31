@@ -56,7 +56,7 @@
 //! impl Serve<BodyResponse> for MyBe {
 //!      fn get_type(&self) -> &str { "example" }
 //!
-//!      fn get_headers(&self, ctx: &mut Ctx) -> Result<Option<BodyResponse>, Error> {
+//!      fn get_headers(&self, ctx: &mut Ctx) -> Result<Option<BodyResponse>, Box<dyn Error>> {
 //!          Ok(Some(
 //!            BodyResponse { left: self.n }, 
 //!          ))
