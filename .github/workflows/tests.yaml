@@ -34,6 +34,8 @@ jobs:
         run: |
           cargo test --doc
           cargo doc --no-deps
+      - name: clippy
+        run: cargo clippy --workspace --all-targets
 
   # Ensure that the docs can be built at docs.rs without varnish dependencies
   test-docs-rs:

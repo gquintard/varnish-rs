@@ -256,13 +256,20 @@ macro_rules! vtc {
 #[macro_export]
 macro_rules! boilerplate {
     () => {
-        #[allow(non_upper_case_globals)]
-        #[allow(non_camel_case_types)]
-        #[allow(non_snake_case)]
-        #[allow(unused_imports)]
-        #[allow(dead_code)]
-        #[allow(clippy::unnecessary_mut_passed)]
-        #[allow(clippy::needless_borrow)]
+        #[allow(
+            non_upper_case_globals,
+            non_camel_case_types,
+            non_snake_case,
+            unused_imports,
+            dead_code
+        )]
+        #[allow(
+            clippy::unnecessary_mut_passed,
+            clippy::needless_borrow,
+            clippy::unit_arg,
+            clippy::explicit_auto_deref,
+            clippy::used_underscore_binding
+        )]
         mod generated {
             include!(concat!(env!("OUT_DIR"), "/generated.rs"));
         }

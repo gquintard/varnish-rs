@@ -63,8 +63,8 @@ impl<'a> WS<'a> {
         unsafe {
             if wsp.e.offset_from(wsp.f) < aligned_sz as isize {
                 Err(format!(
-                    "not enough room for {} (rounded up from {}). f: {:?}, e: {:?}",
-                    aligned_sz, sz, wsp.f, wsp.e
+                    "not enough room for {aligned_sz} (rounded up from {sz}). f: {:?}, e: {:?}",
+                    wsp.f, wsp.e
                 ))
             } else {
                 let buf = from_raw_parts_mut(wsp.f.cast::<u8>(), aligned_sz);

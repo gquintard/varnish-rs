@@ -127,13 +127,13 @@ impl<'a> Ctx<'a> {
     }
 
     pub fn cached_req_body(&mut self) -> Result<Vec<&'a [u8]>, crate::vcl::Error> {
-        unsafe extern "C" fn chunk_collector<'a>(
+        unsafe extern "C" fn chunk_collector(
             priv_: *mut c_void,
             _flush: c_uint,
             ptr: *const c_void,
             len: isize,
         ) -> std::os::raw::c_int {
-            let v = priv_.cast::<Vec<&'a [u8]>>().as_mut().unwrap();
+            let v = priv_.cast::<Vec<&[u8]>>().as_mut().unwrap();
             let buf = std::slice::from_raw_parts(ptr.cast::<u8>(), len as usize);
             v.push(buf);
             0

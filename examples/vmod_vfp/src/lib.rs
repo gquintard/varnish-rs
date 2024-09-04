@@ -24,14 +24,12 @@ impl VFP for Lower {
 
     fn pull(&mut self, ctx: &mut VFPCtx, buf: &mut [u8]) -> PullResult {
         let pull_res = ctx.pull(buf);
-        let len = match pull_res {
-            PullResult::Ok(len) => len,
-            PullResult::End(len) => len,
-            _ => return pull_res,
+        let (PullResult::End(len) | PullResult::Ok(len)) = pull_res else {
+            return pull_res;
         };
 
         // iterate over the written buffer, and lowercase each element
-        for e in buf[..len].iter_mut() {
+        for e in &mut buf[..len] {
             e.make_ascii_lowercase();
         }
         pull_res
@@ -47,7 +45,7 @@ pub unsafe fn event(
         // on load, create the VFP C struct, save it into a priv, they register it
         Event::Load => {
             vp.store(new_vfp::<Lower>());
-            ffi::VRT_AddVFP(ctx.raw, vp.as_ref().unwrap())
+            ffi::VRT_AddVFP(ctx.raw, vp.as_ref().unwrap());
         }
         // on discard, deregister the VFP, but don't worry about cleaning it, it'll be done by
         // Varnish automatically

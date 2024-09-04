@@ -23,7 +23,7 @@ impl VDP for Flipper {
     // `new` is called when the VCL specifies "flipper" in `resp.filters`
     // just return an default struct, thanks to the derive macro
     fn new(_: &mut Ctx, _: &mut VDPCtx, _oc: *mut ffi::objcore) -> InitResult<Self> {
-        InitResult::Ok(Default::default())
+        InitResult::Ok(Flipper::default())
     }
 
     // buffer everything, then reverse the buffer, and send it, easy
@@ -52,7 +52,7 @@ pub unsafe fn event(
         // on load, create the VDP C struct, save it into a priv, they register it
         Event::Load => {
             vp.store(new_vdp::<Flipper>());
-            ffi::VRT_AddVDP(ctx.raw, vp.as_ref().unwrap())
+            ffi::VRT_AddVDP(ctx.raw, vp.as_ref().unwrap());
         }
         // on discard, deregister the VDP, but don't worry about cleaning it, it'll be done by
         // Varnish automatically
