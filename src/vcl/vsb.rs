@@ -1,4 +1,7 @@
 //! VSB, growable buffer
+
+use crate::varnish_sys;
+
 pub struct Vsb<'a> {
     /// Raw pointer to the C struct
     pub raw: &'a mut varnish_sys::vsb,

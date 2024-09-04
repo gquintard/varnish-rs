@@ -8,8 +8,8 @@
 use std::ffi::{c_char, c_int, c_void};
 use std::ptr;
 
-use varnish_sys::{objcore, vdp_ctx, vfp_ctx, vfp_entry};
-
+use crate::varnish_sys;
+use crate::varnish_sys::{objcore, vdp_ctx, vfp_ctx, vfp_entry};
 use crate::vcl::ctx::Ctx;
 
 /// passed to [`VDP::push`] to describe special conditions occuring in the pipeline.
@@ -125,7 +125,7 @@ pub unsafe extern "C" fn gen_vdp_push<T: VDP>(
     let empty_buffer: [u8; 0] = [0; 0];
     let buf = if ptr.is_null() {
         &empty_buffer
-    }else {
+    } else {
         std::slice::from_raw_parts(ptr.cast::<u8>(), len as usize)
     };
 

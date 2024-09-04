@@ -14,6 +14,8 @@ use std::ffi::{c_char, c_void};
 use std::ptr;
 use std::slice::from_raw_parts_mut;
 
+use crate::varnish_sys;
+
 /// A workspace object
 ///
 /// Used to allocate memory in an efficient manner, data will live there until the end of the

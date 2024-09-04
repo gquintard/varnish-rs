@@ -16,6 +16,7 @@ use std::ffi::{c_char, c_uint};
 use std::slice::{from_raw_parts, from_raw_parts_mut};
 use std::str::from_utf8;
 
+use crate::varnish_sys;
 use crate::vcl::ws::WS;
 use crate::vcl::Result;
 

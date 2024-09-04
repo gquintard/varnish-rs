@@ -78,6 +78,7 @@ use std::os::unix::io::FromRawFd;
 use std::ptr;
 use std::time::SystemTime;
 
+use crate::varnish_sys;
 use crate::vcl::convert::IntoVCL;
 use crate::vcl::ctx::{Ctx, Event, LogTag};
 use crate::vcl::vsb::Vsb;

@@ -2,12 +2,12 @@
 use std::ffi::{c_char, c_uint, c_void, CString};
 use std::ptr;
 
-use varnish_sys::{
+use crate::varnish_sys;
+use crate::varnish_sys::{
     busyobj, req, sess, vrt_ctx, vsb, vsl_log, ws, VRT_fail, VSL_tag_e_SLT_Backend_health,
     VSL_tag_e_SLT_Debug, VSL_tag_e_SLT_Error, VSL_tag_e_SLT_FetchError, VSL_tag_e_SLT_VCL_Error,
     VSL_tag_e_SLT_VCL_Log, VCL_HTTP, VCL_VCL, VRT_CTX_MAGIC,
 };
-
 use crate::vcl::http::HTTP;
 use crate::vcl::ws::{TestWS, WS};
 
