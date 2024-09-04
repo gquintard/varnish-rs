@@ -10,9 +10,7 @@ impl<'a> Vsb<'a> {
     pub fn new(raw: *mut varnish_sys::vsb) -> Self {
         let raw = unsafe { raw.as_mut().unwrap() };
         assert_eq!(raw.magic, varnish_sys::VSB_MAGIC);
-        Vsb {
-            raw,
-        }
+        Vsb { raw }
     }
 
     /// Push a buffer into the `Vsb`
@@ -20,7 +18,7 @@ impl<'a> Vsb<'a> {
         let buf = src.as_ref().as_ptr() as *const std::ffi::c_void;
         let l = src.as_ref().len();
 
-        match unsafe {varnish_sys::VSB_bcat(self.raw, buf, l as isize) } {
+        match unsafe { varnish_sys::VSB_bcat(self.raw, buf, l as isize) } {
             0 => Ok(()),
             _ => Err(()),
         }

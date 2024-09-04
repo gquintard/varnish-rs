@@ -103,8 +103,8 @@ pub mod vcl {
     pub mod convert;
     pub mod ctx;
     pub mod http;
-    pub mod processor;
     pub mod probe;
+    pub mod processor;
     pub mod vpriv;
     pub mod vsb;
     pub mod ws;
@@ -131,17 +131,17 @@ pub mod vcl {
         }
     }
 
-    impl std::error::Error for Error{}
+    impl std::error::Error for Error {}
 
     impl std::convert::From<String> for Error {
         fn from(s: String) -> Self {
-            Error{s}
+            Error { s }
         }
     }
 
     impl std::convert::From<&str> for Error {
         fn from(s: &str) -> Self {
-            Error{s: s.into()}
+            Error { s: s.into() }
         }
     }
 
@@ -209,22 +209,29 @@ macro_rules! vtc {
                 .filter(|p| p.exists())
                 .nth(0)
             {
-                None => panic!("couldn't find {} in {}\nHave you built your vmod first?", &vmod_filename, llp),
+                None => panic!(
+                    "couldn't find {} in {}\nHave you built your vmod first?",
+                    &vmod_filename, llp
+                ),
                 Some(p) => p.to_str().unwrap().to_owned(),
             };
             let mut cmd = Command::new("varnishtest");
-            cmd
-                .arg("-D")
+            cmd.arg("-D")
                 .arg(format!("vmod={}", vmod_path))
                 .arg(concat!("tests/", stringify!($name), ".vtc"));
 
-            let output = cmd
-                .output()
-                .unwrap();
+            let output = cmd.output().unwrap();
             if !output.status.success() {
                 io::stdout().write_all(&output.stdout).unwrap();
                 io::stdout().write_all(&output.stderr).unwrap();
-                panic!("{}", format!("tests/{}.vtc failed ({:?})", stringify!($name), cmd.get_args()));
+                panic!(
+                    "{}",
+                    format!(
+                        "tests/{}.vtc failed ({:?})",
+                        stringify!($name),
+                        cmd.get_args()
+                    )
+                );
             }
         }
     };
@@ -279,7 +286,11 @@ pub fn generate_boilerplate() -> Result<(), vcl::Error> {
         .arg("-w")
         .arg(env::var("OUT_DIR").unwrap())
         .arg("-a")
-        .arg(std::str::from_utf8(varnish_sys::VMOD_ABI_Version).unwrap().trim_matches('\0'))
+        .arg(
+            std::str::from_utf8(varnish_sys::VMOD_ABI_Version)
+                .unwrap()
+                .trim_matches('\0'),
+        )
         .env(
             "PYTHONPATH",
             join_paths([env::var("OUT_DIR").unwrap_or_default(), vmodtool_dir]).unwrap(),

@@ -16,8 +16,8 @@ use std::ffi::{c_char, c_uint};
 use std::slice::{from_raw_parts, from_raw_parts_mut};
 use std::str::from_utf8;
 
-use crate::vcl::Result;
 use crate::vcl::ws::WS;
+use crate::vcl::Result;
 
 // C constants pop up as u32, but header indexing uses u16, redefine
 // some stuff to avoid casting all the time

@@ -45,15 +45,15 @@
 //! and will create a synthetic error object.
 use std::borrow::Cow;
 use std::ffi::CStr;
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::os::raw::*;
 use std::ptr;
 use std::time::Duration;
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 
+use crate::vcl::probe;
+use crate::vcl::probe::{COWProbe, Probe};
 use crate::vcl::vpriv::VPriv;
 use crate::vcl::ws::WS;
-use crate::vcl::probe;
-use crate::vcl::probe::{ COWProbe, Probe };
 use varnish_sys::*;
 
 /// Convert a Rust type into a VCL one
@@ -141,7 +141,14 @@ impl IntoVCL<VCL_STRING> for &[u8] {
     fn into_vcl(self, ws: &mut WS) -> Result<VCL_STRING, String> {
         // try to save some work if the buffer is already in the workspace
         // and if it's followed by a null byten
-        if unsafe { varnish_sys::WS_Allocated(ws.raw, self.as_ptr() as *const c_void, self.len() as isize + 1) == 1 && *self.as_ptr().add(self.len()) == b'\0' } {
+        if unsafe {
+            varnish_sys::WS_Allocated(
+                ws.raw,
+                self.as_ptr() as *const c_void,
+                self.len() as isize + 1,
+            ) == 1
+                && *self.as_ptr().add(self.len()) == b'\0'
+        } {
             Ok(self.as_ptr() as *const c_char)
         } else {
             Ok(ws.copy_bytes_with_null(&self)?.as_ptr() as *const c_char)
@@ -178,12 +185,18 @@ impl<T: IntoVCL<VCL_STRING> + AsRef<[u8]>> IntoVCL<VCL_STRING> for Option<T> {
 
 impl<'a> IntoVCL<VCL_PROBE> for COWProbe<'a> {
     fn into_vcl(self, ws: &mut WS) -> Result<VCL_PROBE, String> {
-        let p = ws.alloc(std::mem::size_of::<varnish_sys::vrt_backend_probe>())?.as_mut_ptr() as *mut vrt_backend_probe;
+        let p = ws
+            .alloc(std::mem::size_of::<varnish_sys::vrt_backend_probe>())?
+            .as_mut_ptr() as *mut vrt_backend_probe;
         let probe = unsafe { p.as_mut().unwrap() };
         probe.magic = varnish_sys::VRT_BACKEND_PROBE_MAGIC;
         match self.request {
-            probe::COWRequest::URL(ref s) => { probe.url = s.into_vcl(ws)?; },
-            probe::COWRequest::Text(ref s) => { probe.request = s.into_vcl(ws)?; },
+            probe::COWRequest::URL(ref s) => {
+                probe.url = s.into_vcl(ws)?;
+            }
+            probe::COWRequest::Text(ref s) => {
+                probe.request = s.into_vcl(ws)?;
+            }
         }
         probe.timeout = self.timeout.into_vcl(ws)?;
         probe.interval = self.interval.into_vcl(ws)?;
@@ -196,12 +209,18 @@ impl<'a> IntoVCL<VCL_PROBE> for COWProbe<'a> {
 
 impl IntoVCL<VCL_PROBE> for Probe {
     fn into_vcl(self, ws: &mut WS) -> Result<VCL_PROBE, String> {
-        let p = ws.alloc(std::mem::size_of::<varnish_sys::vrt_backend_probe>())?.as_mut_ptr() as *mut vrt_backend_probe;
+        let p = ws
+            .alloc(std::mem::size_of::<varnish_sys::vrt_backend_probe>())?
+            .as_mut_ptr() as *mut vrt_backend_probe;
         let probe = unsafe { p.as_mut().unwrap() };
         probe.magic = varnish_sys::VRT_BACKEND_PROBE_MAGIC;
         match self.request {
-            probe::Request::URL(ref s) => { probe.url = s.as_str().into_vcl(ws)?; },
-            probe::Request::Text(ref s) => { probe.request = s.as_str().into_vcl(ws)?; },
+            probe::Request::URL(ref s) => {
+                probe.url = s.as_str().into_vcl(ws)?;
+            }
+            probe::Request::Text(ref s) => {
+                probe.request = s.as_str().into_vcl(ws)?;
+            }
         }
         probe.timeout = self.timeout.into_vcl(ws)?;
         probe.interval = self.interval.into_vcl(ws)?;
@@ -214,29 +233,32 @@ impl IntoVCL<VCL_PROBE> for Probe {
 
 impl IntoVCL<VCL_IP> for SocketAddr {
     fn into_vcl(self, ws: &mut WS) -> Result<VCL_IP, String> {
-        unsafe{
-            let p = ws.alloc(varnish_sys::vsa_suckaddr_len)?.as_mut_ptr() as *mut varnish_sys::suckaddr;
+        unsafe {
+            let p =
+                ws.alloc(varnish_sys::vsa_suckaddr_len)?.as_mut_ptr() as *mut varnish_sys::suckaddr;
             match self {
                 std::net::SocketAddr::V4(sa) => {
                     assert!(!varnish_sys::VSA_BuildFAP(
-                            p as *mut std::ffi::c_void,
-                            varnish_sys::PF_INET as varnish_sys::sa_family_t,
-                            sa.ip().octets().as_slice().as_ptr() as *const std::os::raw::c_void,
-                            4,
-                            &sa.port().to_be() as *const u16 as *const std::os::raw::c_void,
-                            2
-                            ).is_null());
-                },
+                        p as *mut std::ffi::c_void,
+                        varnish_sys::PF_INET as varnish_sys::sa_family_t,
+                        sa.ip().octets().as_slice().as_ptr() as *const std::os::raw::c_void,
+                        4,
+                        &sa.port().to_be() as *const u16 as *const std::os::raw::c_void,
+                        2
+                    )
+                    .is_null());
+                }
                 std::net::SocketAddr::V6(sa) => {
                     assert!(!varnish_sys::VSA_BuildFAP(
-                            p as *mut std::ffi::c_void,
-                            varnish_sys::PF_INET6 as varnish_sys::sa_family_t,
-                            sa.ip().octets().as_slice().as_ptr() as *const std::os::raw::c_void,
-                            16,
-                            &sa.port().to_be() as *const u16 as *const std::os::raw::c_void,
-                            2
-                            ).is_null());
-                },
+                        p as *mut std::ffi::c_void,
+                        varnish_sys::PF_INET6 as varnish_sys::sa_family_t,
+                        sa.ip().octets().as_slice().as_ptr() as *const std::os::raw::c_void,
+                        16,
+                        &sa.port().to_be() as *const u16 as *const std::os::raw::c_void,
+                        2
+                    )
+                    .is_null());
+                }
             }
             Ok(p)
         }
@@ -346,7 +368,6 @@ impl<'a, E: ToString> IntoResult<E> for Result<Option<&'a [u8]>, E> {
     }
 }
 
-
 pub trait VCLDefault {
     type Item;
     fn vcl_default() -> Self::Item;
@@ -440,7 +461,10 @@ impl<T> IntoRust<VPriv<T>> for *mut vmod_priv {
 impl<'a> IntoRust<Option<COWProbe<'a>>> for VCL_PROBE {
     fn into_rust(self) -> Option<COWProbe<'a>> {
         let pr = unsafe { self.as_ref()? };
-        assert!((pr.url.is_null() && !pr.request.is_null()) || pr.request.is_null() && !pr.url.is_null());
+        assert!(
+            (pr.url.is_null() && !pr.request.is_null())
+                || pr.request.is_null() && !pr.url.is_null()
+        );
         Some(COWProbe {
             request: if !pr.url.is_null() {
                 crate::vcl::probe::COWRequest::URL(pr.url.into_rust())
@@ -460,7 +484,10 @@ impl<'a> IntoRust<Option<COWProbe<'a>>> for VCL_PROBE {
 impl IntoRust<Option<Probe>> for VCL_PROBE {
     fn into_rust(self) -> Option<Probe> {
         let pr = unsafe { self.as_ref()? };
-        assert!((pr.url.is_null() && !pr.request.is_null()) || pr.request.is_null() && !pr.url.is_null());
+        assert!(
+            (pr.url.is_null() && !pr.request.is_null())
+                || pr.request.is_null() && !pr.url.is_null()
+        );
         Some(Probe {
             request: if !pr.url.is_null() {
                 probe::Request::URL(pr.url.into_rust().to_string())
@@ -489,16 +516,18 @@ impl IntoRust<Option<SocketAddr>> for VCL_IP {
 
             match fam {
                 varnish_sys::PF_INET => {
-                    let buf: &[u8; 4] = std::slice::from_raw_parts(ptr as *const u8, 4).try_into().unwrap();
+                    let buf: &[u8; 4] = std::slice::from_raw_parts(ptr as *const u8, 4)
+                        .try_into()
+                        .unwrap();
                     Some(SocketAddr::new(IpAddr::V4(Ipv4Addr::from(*buf)), port))
-                },
+                }
                 varnish_sys::PF_INET6 => {
-                    let buf: &[u8; 16] = std::slice::from_raw_parts(ptr as *const u8, 16).try_into().unwrap();
+                    let buf: &[u8; 16] = std::slice::from_raw_parts(ptr as *const u8, 16)
+                        .try_into()
+                        .unwrap();
                     Some(SocketAddr::new(IpAddr::V6(Ipv6Addr::from(*buf)), port))
-                },
-                _ => {
-                    None
-                },
+                }
+                _ => None,
             }
         }
     }

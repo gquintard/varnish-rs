@@ -7,9 +7,9 @@ use std::ffi::{c_char, c_uint, c_void};
 use crate::vcl::http::HTTP;
 use crate::vcl::ws::{TestWS, WS};
 use varnish_sys::{
-    busyobj, req, sess, vrt_ctx, vsb, vsl_log, ws, VSL_tag_e_SLT_Debug, VSL_tag_e_SLT_Error,
-    VSL_tag_e_SLT_VCL_Error, VSL_tag_e_SLT_Backend_health, VSL_tag_e_SLT_FetchError, VSL_tag_e_SLT_VCL_Log, VCL_HTTP, VCL_VCL, VRT_CTX_MAGIC,
-    VRT_fail,
+    busyobj, req, sess, vrt_ctx, vsb, vsl_log, ws, VRT_fail, VSL_tag_e_SLT_Backend_health,
+    VSL_tag_e_SLT_Debug, VSL_tag_e_SLT_Error, VSL_tag_e_SLT_FetchError, VSL_tag_e_SLT_VCL_Error,
+    VSL_tag_e_SLT_VCL_Log, VCL_HTTP, VCL_VCL, VRT_CTX_MAGIC,
 };
 
 /// VSL logging tag
@@ -123,7 +123,6 @@ impl<'a> Ctx<'a> {
                     e: msg.as_ptr().add(msg.len()) as *const c_char,
                 };
                 varnish_sys::VSLbt(p.vsl, logtag.into_u32(), t);
-
             }
         }
     }
@@ -141,12 +140,7 @@ impl<'a> Ctx<'a> {
             0
         }
 
-        let req = unsafe {
-            self.raw
-                .req
-                .as_mut()
-                .ok_or("req object isn't available")?
-        };
+        let req = unsafe { self.raw.req.as_mut().ok_or("req object isn't available")? };
         unsafe {
             if req.req_body_status != varnish_sys::BS_CACHED.as_ptr() {
                 return Err("request body hasn't been previously cached".into());
@@ -248,6 +242,11 @@ impl Event {
 pub fn log(logtag: LogTag, msg: &str) {
     unsafe {
         let c_cstring = CString::new(msg).unwrap();
-        varnish_sys::VSL(logtag.into_u32(), varnish_sys::vxids { vxid: 0 }, c"%s".as_ptr(), c_cstring.as_ptr() as *const u8);
+        varnish_sys::VSL(
+            logtag.into_u32(),
+            varnish_sys::vxids { vxid: 0 },
+            c"%s".as_ptr(),
+            c_cstring.as_ptr() as *const u8,
+        );
     }
 }

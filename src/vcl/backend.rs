@@ -58,7 +58,7 @@
 //!
 //!      fn get_headers(&self, ctx: &mut Ctx) -> Result<Option<BodyResponse>, Box<dyn Error>> {
 //!          Ok(Some(
-//!            BodyResponse { left: self.n }, 
+//!            BodyResponse { left: self.n },
 //!          ))
 //!      }
 //! }
@@ -71,17 +71,17 @@
 //! }
 //! ```
 use std::error::Error;
-use std::ffi::CString;
 use std::ffi::c_char;
+use std::ffi::CString;
+use std::net::{SocketAddr, TcpStream};
+use std::os::unix::io::FromRawFd;
 use std::ptr;
 use std::time::SystemTime;
-use std::net::{TcpStream, SocketAddr};
-use std::os::unix::io::FromRawFd;
 
 use std::os::raw::c_void;
 
 use crate::vcl::convert::IntoVCL;
-use crate::vcl::ctx::{ Ctx, Event, LogTag };
+use crate::vcl::ctx::{Ctx, Event, LogTag};
 use crate::vcl::vsb::Vsb;
 use crate::vcl::ws::WS;
 
@@ -128,20 +128,24 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
         let cstring_name: CString = CString::new(name).map_err(|e| e.to_string())?;
         let type_: CString = CString::new(inner.get_type()).map_err(|e| e.to_string())?;
         let methods = Box::new(varnish_sys::vdi_methods {
-                type_: type_.as_ptr(),
-                magic: varnish_sys::VDI_METHODS_MAGIC,
-                destroy: None,
-                event: Some(wrap_event::<S, T>),
-                finish: Some(wrap_finish::<S, T>),
-                gethdrs: Some(wrap_gethdrs::<S, T>),
-                getip: Some(wrap_getip::<T>),
-                healthy: if has_probe { Some(wrap_healthy::<S, T>) } else { None },
-                http1pipe: Some(wrap_pipe::<S, T>),
-                list: Some(wrap_list::<S, T>),
-                panic: Some(wrap_panic::<S, T>),
-                resolve: None,
-                release: None,
-            });
+            type_: type_.as_ptr(),
+            magic: varnish_sys::VDI_METHODS_MAGIC,
+            destroy: None,
+            event: Some(wrap_event::<S, T>),
+            finish: Some(wrap_finish::<S, T>),
+            gethdrs: Some(wrap_gethdrs::<S, T>),
+            getip: Some(wrap_getip::<T>),
+            healthy: if has_probe {
+                Some(wrap_healthy::<S, T>)
+            } else {
+                None
+            },
+            http1pipe: Some(wrap_pipe::<S, T>),
+            list: Some(wrap_list::<S, T>),
+            panic: Some(wrap_panic::<S, T>),
+            resolve: None,
+            release: None,
+        });
 
         let bep = unsafe {
             varnish_sys::VRT_AddDirector(
@@ -167,7 +171,7 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
 }
 
 /// The trait to implement to "be" a backend
-/// 
+///
 /// `Serve` maps to the `vdi_methods` structure of the C api, but presented in a more
 /// "rusty" form. Apart from [Serve::get_type] and [Serve::get_headers] all methods are optional.
 ///
@@ -177,7 +181,7 @@ pub trait Serve<T: Transfer> {
     /// What kind of backend this is, for example, pick a descriptive name, possibly linked to the
     /// vmod which creates it. Pick an ASCII string, otherwise building the [`Backend`] via
     /// [Backend::new] will fail.
-   fn get_type(&self) -> &str;
+    fn get_type(&self) -> &str;
 
     /// If the VCL pick this backend (or a director ended up choosing it), this method gets called
     /// so that the `Serve` implementer can:
@@ -191,10 +195,12 @@ pub trait Serve<T: Transfer> {
 
     /// Once a backend transaction is finished, the [`Backend`] has a chance to clean up, collect
     /// data and others in the finish methods.
-    fn finish(&self, _ctx: &mut Ctx) { }
+    fn finish(&self, _ctx: &mut Ctx) {}
 
     /// Is your backend healthy, and when did its health change for the last time.
-    fn healthy(&self, _ctx: &mut Ctx) -> (bool, SystemTime) { (true, SystemTime::UNIX_EPOCH) }
+    fn healthy(&self, _ctx: &mut Ctx) -> (bool, SystemTime) {
+        (true, SystemTime::UNIX_EPOCH)
+    }
 
     /// If your backend is used inside `vcl_pipe`, this method is in charge of sending the request
     /// headers that Varnish already read, and then the body. The second argument, a `TcpStream` is
@@ -218,7 +224,11 @@ pub trait Serve<T: Transfer> {
         if detailed {
             return;
         }
-        let state = if self.healthy(ctx).0 { "healthy" } else { "sick" };
+        let state = if self.healthy(ctx).0 {
+            "healthy"
+        } else {
+            "sick"
+        };
         if json {
             vsb.cat(&"[0, 0, ").unwrap();
             vsb.cat(&state).unwrap();
@@ -232,7 +242,7 @@ pub trait Serve<T: Transfer> {
     /// Used to generate the output of `varnishadm backend.list`. `detailed` means the `-p`
     /// argument was passed and `json` means `-j` was passed.
     fn list(&self, ctx: &mut Ctx, vsb: &mut Vsb, detailed: bool, json: bool) {
-        self.list_without_probe(ctx, vsb,detailed, json)
+        self.list_without_probe(ctx, vsb, detailed, json)
     }
 }
 
@@ -257,15 +267,21 @@ pub trait Transfer {
     /// If returning `Some(_)`, we know the size of the body generated, and it'll be used to fill the
     /// `content-length` header of the response. Otherwise chunked encoding will be used, which is
     /// what's assumed by default.
-    fn len(&self) -> Option<usize> {None}
+    fn len(&self) -> Option<usize> {
+        None
+    }
 
     /// Potentially return the IP:port pair that the backend is using to transfer the body. It
     /// might not make sense for your implementation.
-    fn get_ip(&self) -> Result<Option<SocketAddr>, Box<dyn Error>> {Ok(None)}
+    fn get_ip(&self) -> Result<Option<SocketAddr>, Box<dyn Error>> {
+        Ok(None)
+    }
 }
 
 impl Transfer for () {
-    fn read(&mut self, _buf: &mut [u8]) -> Result<usize, Box<dyn Error>> {Ok(0)}
+    fn read(&mut self, _buf: &mut [u8]) -> Result<usize, Box<dyn Error>> {
+        Ok(0)
+    }
 }
 
 unsafe extern "C" fn vfp_pull<T: Transfer>(
@@ -281,8 +297,8 @@ unsafe extern "C" fn vfp_pull<T: Transfer>(
 
     let buf = std::slice::from_raw_parts_mut(ptr as *mut u8, *len as usize);
     if buf.is_empty() {
-            *len = 0;
-            return varnish_sys::vfp_status_VFP_OK;
+        *len = 0;
+        return varnish_sys::vfp_status_VFP_OK;
     }
 
     let reader = (vfe.priv1 as *mut T).as_mut().unwrap();
@@ -297,7 +313,7 @@ unsafe extern "C" fn vfp_pull<T: Transfer>(
             varnish_sys::VSLbt((*(*ctxp).req).vsl, varnish_sys::VSL_tag_e_SLT_Error, t);
 
             varnish_sys::vfp_status_VFP_ERROR
-        },
+        }
         Ok(0) => {
             *len = 0;
             varnish_sys::vfp_status_VFP_END
@@ -305,14 +321,14 @@ unsafe extern "C" fn vfp_pull<T: Transfer>(
         Ok(l) => {
             *len = l as isize;
             varnish_sys::vfp_status_VFP_OK
-        },
+        }
     }
 }
 
-unsafe extern "C" fn wrap_event<S: Serve<T>, T: Transfer> (
+unsafe extern "C" fn wrap_event<S: Serve<T>, T: Transfer>(
     be: VCLBackendPtr,
     ev: varnish_sys::vcl_event_e,
-    ) {
+) {
     assert!(!be.is_null());
     assert_eq!((*be).magic, varnish_sys::DIRECTOR_MAGIC);
     assert!(!(*be).priv_.is_null());
@@ -321,13 +337,13 @@ unsafe extern "C" fn wrap_event<S: Serve<T>, T: Transfer> (
     (*backend).event(Event::new(ev));
 }
 
-unsafe extern "C" fn wrap_list<S: Serve<T>, T: Transfer> (
+unsafe extern "C" fn wrap_list<S: Serve<T>, T: Transfer>(
     ctxp: *const varnish_sys::vrt_ctx,
     be: VCLBackendPtr,
     vsbp: *mut varnish_sys::vsb,
     detailed: i32,
     json: i32,
-    ) {
+) {
     let mut ctx = Ctx::new(ctxp as *mut varnish_sys::vrt_ctx);
     let mut vsb = Vsb::new(vsbp);
     assert!(!be.is_null());
@@ -338,10 +354,10 @@ unsafe extern "C" fn wrap_list<S: Serve<T>, T: Transfer> (
     (*backend).list(&mut ctx, &mut vsb, detailed != 0, json != 0);
 }
 
-unsafe extern "C" fn wrap_panic<S: Serve<T>, T: Transfer> (
+unsafe extern "C" fn wrap_panic<S: Serve<T>, T: Transfer>(
     be: VCLBackendPtr,
     vsbp: *mut varnish_sys::vsb,
-    ) {
+) {
     let mut vsb = Vsb::new(vsbp);
 
     assert!(!be.is_null());
@@ -352,10 +368,10 @@ unsafe extern "C" fn wrap_panic<S: Serve<T>, T: Transfer> (
     (*backend).panic(&mut vsb);
 }
 
-unsafe extern "C" fn wrap_pipe<S: Serve<T>, T: Transfer> (
+unsafe extern "C" fn wrap_pipe<S: Serve<T>, T: Transfer>(
     ctxp: *const varnish_sys::vrt_ctx,
     be: VCLBackendPtr,
-    ) -> varnish_sys::stream_close_t {
+) -> varnish_sys::stream_close_t {
     let mut ctx = Ctx::new(ctxp as *mut varnish_sys::vrt_ctx);
     assert!(!(*ctxp).req.is_null());
     assert_eq!((*(*ctxp).req).magic, varnish_sys::REQ_MAGIC);
@@ -373,7 +389,7 @@ unsafe extern "C" fn wrap_pipe<S: Serve<T>, T: Transfer> (
     sc_to_ptr((*backend).pipe(&mut ctx, tcp_stream))
 }
 
-unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer> (
+unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
     ctxp: *const varnish_sys::vrt_ctx,
     be: VCLBackendPtr,
 ) -> ::std::os::raw::c_int {
@@ -388,7 +404,6 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer> (
     let backend = (*be).priv_ as *const S;
     match (*backend).get_headers(&mut ctx) {
         Ok(res) => {
-
             // default to HTTP/1.1 200 if the backend didn't provide anything
             let beresp = ctx.http_beresp.as_mut().unwrap();
             if beresp.status().is_none() {
@@ -404,7 +419,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer> (
             let htc = varnish_sys::WS_Alloc(
                 (*ctx.raw.bo).ws.as_mut_ptr(),
                 std::mem::size_of::<varnish_sys::http_conn>() as u32,
-                ) as *mut varnish_sys::http_conn;
+            ) as *mut varnish_sys::http_conn;
             if htc.is_null() {
                 ctx.fail(&format!("{}: insuficient workspace", (*backend).get_type()));
                 return -1;
@@ -415,16 +430,16 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer> (
             match res {
                 None => {
                     (*htc).body_status = varnish_sys::BS_NONE.as_ptr();
-                },
+                }
                 Some(transfer) => {
                     match transfer.len() {
                         None => {
                             (*htc).body_status = varnish_sys::BS_CHUNKED.as_ptr();
                             (*htc).content_length = -1;
-                        },
+                        }
                         Some(0) => {
                             (*htc).body_status = varnish_sys::BS_NONE.as_ptr();
-                        },
+                        }
                         Some(l) => {
                             (*htc).body_status = varnish_sys::BS_LENGTH.as_ptr();
                             (*htc).content_length = l as isize;
@@ -436,16 +451,21 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer> (
                         let vfp = varnish_sys::WS_Alloc(
                             (*ctx.raw.bo).ws.as_mut_ptr(),
                             std::mem::size_of::<varnish_sys::vfp>() as u32,
-                            ) as *mut varnish_sys::vfp;
+                        ) as *mut varnish_sys::vfp;
                         if vfp.is_null() {
                             ctx.fail(&format!("{}: insuficient workspace", (*backend).get_type()));
                             return -1;
                         }
-                        let t = match WS::new((*ctx.raw.bo).ws.as_mut_ptr()).copy_bytes_with_null(&(*backend).get_type()) {
+                        let t = match WS::new((*ctx.raw.bo).ws.as_mut_ptr())
+                            .copy_bytes_with_null(&(*backend).get_type())
+                        {
                             Err(_) => {
-                                ctx.fail(&format!("{}: insuficient workspace", (*backend).get_type()));
+                                ctx.fail(&format!(
+                                    "{}: insuficient workspace",
+                                    (*backend).get_type()
+                                ));
                                 return -1;
-                            },
+                            }
                             Ok(s) => s,
                         };
                         (*vfp).name = t.as_ptr() as *const c_char;
@@ -460,19 +480,21 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer> (
                         }
                         // we don't need to clean (*vfe).priv1 at the vfp level, the backend will
                         // do it in wrap_finish
-                        (*vfe).priv1 = (*htc).priv_ ;
+                        (*vfe).priv1 = (*htc).priv_;
                     }
-
                 }
             }
 
             (*ctx.raw.bo).htc = htc;
             0
-        },
+        }
         Err(s) => {
-            ctx.log(LogTag::FetchError, &format!("{}: {}", (*backend).get_type(), &s.to_string()));
+            ctx.log(
+                LogTag::FetchError,
+                &format!("{}: {}", (*backend).get_type(), &s.to_string()),
+            );
             1
-        },
+        }
     }
 }
 
@@ -489,7 +511,10 @@ unsafe extern "C" fn wrap_healthy<S: Serve<T>, T: Transfer>(
     let backend = (*be).priv_ as *const S;
     let (healthy, when) = (*backend).healthy(&mut ctx);
     if !changed.is_null() {
-        *changed = when.duration_since(std::time::UNIX_EPOCH).unwrap().as_secs_f64();
+        *changed = when
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs_f64();
     }
     if healthy {
         1
@@ -498,7 +523,7 @@ unsafe extern "C" fn wrap_healthy<S: Serve<T>, T: Transfer>(
     }
 }
 
-unsafe extern "C" fn wrap_getip<T: Transfer> (
+unsafe extern "C" fn wrap_getip<T: Transfer>(
     ctxp: *const varnish_sys::vrt_ctx,
     _be: varnish_sys::VCL_BACKEND,
 ) -> varnish_sys::VCL_IP {
@@ -514,8 +539,11 @@ unsafe extern "C" fn wrap_getip<T: Transfer> (
     let mut ctx = Ctx::new(ctxp as *mut varnish_sys::vrt_ctx);
 
     let transfer = (*bo.htc).priv_ as *const T;
-    match (*transfer).get_ip().and_then(|ip| ip.into_vcl(&mut ctx.ws).map_err(|e| e.into())) {
-        Err(e) => { 
+    match (*transfer)
+        .get_ip()
+        .and_then(|ip| ip.into_vcl(&mut ctx.ws).map_err(|e| e.into()))
+    {
+        Err(e) => {
             ctx.fail(&format!("{}", e));
             std::ptr::null()
         }
@@ -523,10 +551,10 @@ unsafe extern "C" fn wrap_getip<T: Transfer> (
     }
 }
 
-unsafe extern "C" fn wrap_finish<S: Serve<T>, T: Transfer> (
+unsafe extern "C" fn wrap_finish<S: Serve<T>, T: Transfer>(
     ctxp: *const varnish_sys::vrt_ctx,
     be: VCLBackendPtr,
-    ) {
+) {
     assert!(!be.is_null());
     assert_eq!((*be).magic, varnish_sys::DIRECTOR_MAGIC);
     assert!(!(*be).priv_.is_null());
@@ -544,7 +572,7 @@ unsafe extern "C" fn wrap_finish<S: Serve<T>, T: Transfer> (
 
 impl<S: Serve<T>, T: Transfer> Drop for Backend<S, T> {
     fn drop(&mut self) {
-        unsafe { 
+        unsafe {
             varnish_sys::VRT_DelDirector(&mut self.bep);
         };
     }
@@ -577,25 +605,24 @@ pub enum StreamClose {
 fn sc_to_ptr(sc: StreamClose) -> varnish_sys::stream_close_t {
     unsafe {
         match sc {
-            StreamClose::RemClose      =>  &varnish_sys::SC_REM_CLOSE as *const _,
-            StreamClose::ReqClose      =>  &varnish_sys::SC_REQ_CLOSE as *const _,
-            StreamClose::ReqHttp10     =>  &varnish_sys::SC_REQ_HTTP10 as *const _,
-            StreamClose::RxBad         =>  &varnish_sys::SC_RX_BAD as *const _,
-            StreamClose::RxBody        =>  &varnish_sys::SC_RX_BODY as *const _,
-            StreamClose::RxJunk        =>  &varnish_sys::SC_RX_JUNK as *const _,
-            StreamClose::RxOverflow    =>  &varnish_sys::SC_RX_OVERFLOW as *const _,
-            StreamClose::RxTimeout     =>  &varnish_sys::SC_RX_TIMEOUT as *const _,
-            StreamClose::RxCloseIdle   =>  &varnish_sys::SC_RX_CLOSE_IDLE as *const _,
-            StreamClose::TxPipe        =>  &varnish_sys::SC_TX_PIPE as *const _,
-            StreamClose::TxError       =>  &varnish_sys::SC_TX_ERROR as *const _,
-            StreamClose::TxEof         =>  &varnish_sys::SC_TX_EOF as *const _,
-            StreamClose::RespClose     =>  &varnish_sys::SC_RESP_CLOSE as *const _,
-            StreamClose::Overload      =>  &varnish_sys::SC_OVERLOAD as *const _,
-            StreamClose::PipeOverflow  =>  &varnish_sys::SC_PIPE_OVERFLOW as *const _,
-            StreamClose::RangeShort    =>  &varnish_sys::SC_RANGE_SHORT as *const _,
-            StreamClose::ReqHttp20     =>  &varnish_sys::SC_REQ_HTTP20 as *const _,
-            StreamClose::VclFailure    =>  &varnish_sys::SC_VCL_FAILURE as *const _,
-
+            StreamClose::RemClose => &varnish_sys::SC_REM_CLOSE as *const _,
+            StreamClose::ReqClose => &varnish_sys::SC_REQ_CLOSE as *const _,
+            StreamClose::ReqHttp10 => &varnish_sys::SC_REQ_HTTP10 as *const _,
+            StreamClose::RxBad => &varnish_sys::SC_RX_BAD as *const _,
+            StreamClose::RxBody => &varnish_sys::SC_RX_BODY as *const _,
+            StreamClose::RxJunk => &varnish_sys::SC_RX_JUNK as *const _,
+            StreamClose::RxOverflow => &varnish_sys::SC_RX_OVERFLOW as *const _,
+            StreamClose::RxTimeout => &varnish_sys::SC_RX_TIMEOUT as *const _,
+            StreamClose::RxCloseIdle => &varnish_sys::SC_RX_CLOSE_IDLE as *const _,
+            StreamClose::TxPipe => &varnish_sys::SC_TX_PIPE as *const _,
+            StreamClose::TxError => &varnish_sys::SC_TX_ERROR as *const _,
+            StreamClose::TxEof => &varnish_sys::SC_TX_EOF as *const _,
+            StreamClose::RespClose => &varnish_sys::SC_RESP_CLOSE as *const _,
+            StreamClose::Overload => &varnish_sys::SC_OVERLOAD as *const _,
+            StreamClose::PipeOverflow => &varnish_sys::SC_PIPE_OVERFLOW as *const _,
+            StreamClose::RangeShort => &varnish_sys::SC_RANGE_SHORT as *const _,
+            StreamClose::ReqHttp20 => &varnish_sys::SC_REQ_HTTP20 as *const _,
+            StreamClose::VclFailure => &varnish_sys::SC_VCL_FAILURE as *const _,
         }
     }
 }
