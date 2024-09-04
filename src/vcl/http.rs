@@ -166,8 +166,8 @@ impl<'a> HTTP<'a> {
     pub fn set_proto(&mut self, value: &str) -> Result<()> {
         self.raw.protover = match value {
             "HTTP/0.9" => 9,
-            // FIXME: Is this a bug?
-            "HTTP/1.0" | "HTTP/1.1" => 10,
+            "HTTP/1.0" => 10,
+            "HTTP/1.1" => 11,
             "HTTP/2.0" => 20,
             _ => 0,
         };
