@@ -1,3 +1,5 @@
+lints.workspace = true
+
 [package]
 name = "vmod_vfp"
 version = "0.0.1"

@@ -35,9 +35,9 @@ pub fn unset_hdr(ctx: &mut Ctx, name: &str) -> Result<()> {
     }
 }
 
-pub fn ws_reserve<'a, 'b>(ctx: &'b mut Ctx<'a>, s: &str) -> Result<ffi::VCL_STRING> {
+pub fn ws_reserve(ctx: &mut Ctx<'_>, s: &str) -> Result<ffi::VCL_STRING> {
     let mut rbuf = ctx.ws.reserve();
-    match write!(rbuf.buf, "{} {} {}\0", s, s, s) {
+    match write!(rbuf.buf, "{s} {s} {s}\0") {
         Ok(()) => {
             let final_buf = rbuf.release(0);
             assert_eq!(final_buf.len(), 3 * s.len() + 3);
@@ -115,11 +115,11 @@ pub fn req_body(ctx: &mut Ctx) -> Result<ffi::VCL_STRING> {
     Ok(r.release(0).as_ptr() as *const i8)
 }
 
-pub fn default_arg<'a, 'b>(_ctx: &'b mut Ctx, foo: &'a str) -> &'a str {
-    foo
+pub fn default_arg<'a>(_ctx: &mut Ctx, arg: &'a str) -> &'a str {
+    arg
 }
 
-pub fn cowprobe_prop<'a, 'b>(_ctx: &'b mut Ctx, probe: Option<probe::COWProbe<'a>>) -> String {
+pub fn cowprobe_prop(_ctx: &mut Ctx, probe: Option<probe::COWProbe<'_>>) -> String {
     match probe {
         Some(probe) => format!(
             "{}-{}-{}-{}-{}-{}",
@@ -137,7 +137,7 @@ pub fn cowprobe_prop<'a, 'b>(_ctx: &'b mut Ctx, probe: Option<probe::COWProbe<'a
     }
 }
 
-pub fn probe_prop<'b>(_ctx: &'b mut Ctx, probe: Option<probe::Probe>) -> String {
+pub fn probe_prop(_ctx: &mut Ctx, probe: Option<probe::Probe>) -> String {
     match probe {
         Some(probe) => format!(
             "{}-{}-{}-{}-{}-{}",
@@ -184,7 +184,7 @@ pub unsafe fn event(
         // on load, create the VFP C struct, save it into a priv, they register it
         Event::Load => {
             vp.store(new_vfp::<VFPTest>());
-            ffi::VRT_AddVFP(ctx.raw, vp.as_ref().unwrap())
+            ffi::VRT_AddVFP(ctx.raw, vp.as_ref().unwrap());
         }
         // on discard, deregister the VFP, but don't worry about cleaning it, it'll be done by
         // Varnish automatically

@@ -7,12 +7,11 @@ use varnish::vcl::ctx::Ctx;
 #[cfg(test)]
 use varnish::vcl::ctx::TestCtx;
 
-// we now implement both functionis from vmod.vcc, but with rust types.
+// we now implement both functions from vmod.vcc, but with rust types.
 // Don't forget to make the function public with "pub" in front of them
 
-// we could skip the return, or even use n.is_even(), but let's pace ourselves
 pub fn is_even(_: &Ctx, n: i64) -> bool {
-    return n % 2 == 0;
+    n % 2 == 0
 }
 
 // in vmod.vcc, n was an optional INT, so here it translates into a Option<i64>
@@ -23,7 +22,7 @@ pub fn captain_obvious(_: &Ctx, opt: Option<i64>) -> String {
         // no need to return, we are the last expression of the function!
         None => String::from("I was called without an argument"),
         // pattern matching FTW!
-        Some(n) => format!("I was given {} as argument", n),
+        Some(n) => format!("I was given {n} as argument"),
     }
 }
 
@@ -39,7 +38,7 @@ fn obviousness() {
     );
     assert_eq!(
         "I was given 975322 as argument",
-        captain_obvious(&ctx, Some(975322))
+        captain_obvious(&ctx, Some(975_322))
     );
 }
 
@@ -50,9 +49,9 @@ fn even_test() {
     let mut test_ctx = TestCtx::new(100);
     let ctx = test_ctx.ctx();
 
-    assert_eq!(true, is_even(&ctx, 0));
-    assert_eq!(true, is_even(&ctx, 1024));
-    assert_eq!(false, is_even(&ctx, 421321));
+    assert!(is_even(&ctx, 0));
+    assert!(is_even(&ctx, 1024));
+    assert!(!is_even(&ctx, 421_321));
 }
 
 // we also want to run test/test01.vtc

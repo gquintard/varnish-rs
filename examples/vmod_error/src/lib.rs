@@ -45,10 +45,10 @@ pub fn manual_fail(ctx: &mut Ctx, fp: &str) -> i64 {
 // calling `ctx.fail() and return a dummy value
 pub fn result_fail(_: &mut Ctx, fp: &str) -> Result<i64, String> {
     read_to_string(fp) // read the file
-        .map_err(|e| format!("result_fail: {}", e))? // convert the error (if any!), into a string
+        .map_err(|e| format!("result_fail: {e}"))? // convert the error (if any!), into a string
         // the ? will automatically return in case
         // of an error
         .parse::<i64>() // convert
-        .map_err(|e| format!("result_fail: {}", e)) // map the type, and we are good to
-                                                    // automatically return
+        .map_err(|e| format!("result_fail: {e}")) // map the type, and we are good to
+                                                  // automatically return
 }

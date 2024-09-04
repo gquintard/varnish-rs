@@ -7,7 +7,7 @@ fn main() {
 
     println!("cargo:rerun-if-env-changed=VARNISH_INCLUDE_PATHS");
     let varnish_paths: Vec<PathBuf> = match env::var("VARNISH_INCLUDE_PATHS") {
-        Ok(s) => s.split(":").map(PathBuf::from).collect(),
+        Ok(s) => s.split(':').map(PathBuf::from).collect(),
         Err(_) => {
             match pkg_config::Config::new()
                 .atleast_version("7.5")
@@ -15,10 +15,7 @@ fn main() {
             {
                 Ok(l) => l.include_paths,
                 Err(e) => {
-                    println!(
-                        "no system libvarnish found, using the pre-generated bindings {}",
-                        e
-                    );
+                    println!("no system libvarnish found, using the pre-generated bindings {e}");
                     std::fs::copy("src/bindings.rs.saved", out_path).unwrap();
                     return;
                 }
