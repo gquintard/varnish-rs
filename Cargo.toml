@@ -57,4 +57,4 @@ pkg-config = "0.3.30"
 bindgen = "0.70.1"
 
 [workspace]
-members = ["varnish-sys", "vmod_test", "examples/vmod_*"]
+members = ["vmod_test", "examples/vmod_*"]
