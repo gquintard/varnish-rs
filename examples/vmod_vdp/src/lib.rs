@@ -1,5 +1,7 @@
 varnish::boilerplate!();
 
+use std::ffi::CStr;
+
 use varnish::ffi;
 use varnish::vcl::ctx::{Ctx, Event};
 use varnish::vcl::processor::{new_vdp, InitResult, PushAction, PushResult, VDPCtx, VDP};
@@ -15,11 +17,6 @@ struct Flipper {
 
 // implement the actual behavior of the VDP
 impl VDP for Flipper {
-    // return our id, adding the NULL character to avoid confusing the C layer
-    fn name() -> &'static str {
-        "flipper\0"
-    }
-
     // `new` is called when the VCL specifies "flipper" in `resp.filters`
     // just return an default struct, thanks to the derive macro
     fn new(_: &mut Ctx, _: &mut VDPCtx, _oc: *mut ffi::objcore) -> InitResult<Self> {
@@ -40,6 +37,11 @@ impl VDP for Flipper {
         self.body.reverse();
         // send
         ctx.push(act, &self.body)
+    }
+
+    // return our id
+    fn name() -> &'static CStr {
+        c"flipper"
     }
 }
 

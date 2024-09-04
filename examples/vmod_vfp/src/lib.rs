@@ -1,5 +1,7 @@
 varnish::boilerplate!();
 
+use std::ffi::CStr;
+
 use varnish::ffi;
 use varnish::vcl::ctx::{Ctx, Event};
 use varnish::vcl::processor::{new_vfp, InitResult, PullResult, VFPCtx, VFP};
@@ -12,11 +14,6 @@ struct Lower {}
 
 // implement the actual behavior of the VFP
 impl VFP for Lower {
-    // return our id, adding the NULL character to avoid confusing the C layer
-    fn name() -> &'static str {
-        "lower\0"
-    }
-
     // `new` is called when the VCL specifies "lower" in `beresp.filters`
     fn new(_: &mut Ctx, _: &mut VFPCtx) -> InitResult<Self> {
         InitResult::Ok(Lower {})
@@ -33,6 +30,11 @@ impl VFP for Lower {
             e.make_ascii_lowercase();
         }
         pull_res
+    }
+
+    // return our id, adding the NULL character to avoid confusing the C layer
+    fn name() -> &'static CStr {
+        c"lower"
     }
 }
 

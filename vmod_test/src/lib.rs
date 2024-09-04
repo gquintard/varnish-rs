@@ -1,5 +1,6 @@
 varnish::boilerplate!();
 
+use std::ffi::CStr;
 use std::io::Write;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::time::Duration;
@@ -162,16 +163,16 @@ struct VFPTest {
 
 // Force a pass here to test to make sure that fini does not panic due to a null priv1 member
 impl VFP for VFPTest {
-    fn name() -> &'static str {
-        "vfptest\0"
-    }
-
     fn new(_: &mut Ctx, _: &mut VFPCtx) -> InitResult<Self> {
         InitResult::Pass
     }
 
     fn pull(&mut self, _: &mut VFPCtx, _: &mut [u8]) -> PullResult {
         PullResult::Err
+    }
+
+    fn name() -> &'static CStr {
+        c"vfptest"
     }
 }
 

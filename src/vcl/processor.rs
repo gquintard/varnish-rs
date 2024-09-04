@@ -5,7 +5,7 @@
 //! *Note:* The rust wrapper here is pretty thin and the vmod writer will most probably need to have to
 //! deal with the raw Varnish internals.
 
-use std::ffi::{c_char, c_int, c_void};
+use std::ffi::{c_char, c_int, c_void, CStr};
 use std::ptr;
 
 use crate::ffi;
@@ -68,7 +68,7 @@ where
     /// The name of the processor.
     ///
     /// **Note:** it must be NULL-terminated as it will be used directly as a C string.
-    fn name() -> &'static str;
+    fn name() -> &'static CStr;
 }
 
 pub unsafe extern "C" fn gen_vdp_init<T: VDP>(
@@ -196,9 +196,7 @@ where
     /// The name of the processor.
     ///
     /// **Note:** it must be NULL-terminated as it will be used directly as a C string.
-    fn name() -> &'static str {
-        unimplemented!()
-    }
+    fn name() -> &'static CStr;
 }
 
 unsafe extern "C" fn wrap_vfp_init<T: VFP>(
