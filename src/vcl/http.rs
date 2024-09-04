@@ -16,28 +16,28 @@ use std::ffi::{c_char, c_uint};
 use std::slice::{from_raw_parts, from_raw_parts_mut};
 use std::str::from_utf8;
 
-use crate::varnish_sys;
+use crate::ffi;
 use crate::vcl::ws::WS;
 use crate::vcl::Result;
 
 // C constants pop up as u32, but header indexing uses u16, redefine
 // some stuff to avoid casting all the time
-const HDR_FIRST: u16 = varnish_sys::HTTP_HDR_FIRST as u16;
-const HDR_METHOD: u16 = varnish_sys::HTTP_HDR_METHOD as u16;
-const HDR_PROTO: u16 = varnish_sys::HTTP_HDR_PROTO as u16;
-const HDR_REASON: u16 = varnish_sys::HTTP_HDR_REASON as u16;
-const HDR_STATUS: u16 = varnish_sys::HTTP_HDR_STATUS as u16;
-const HDR_UNSET: u16 = varnish_sys::HTTP_HDR_UNSET as u16;
-const HDR_URL: u16 = varnish_sys::HTTP_HDR_URL as u16;
+const HDR_FIRST: u16 = ffi::HTTP_HDR_FIRST as u16;
+const HDR_METHOD: u16 = ffi::HTTP_HDR_METHOD as u16;
+const HDR_PROTO: u16 = ffi::HTTP_HDR_PROTO as u16;
+const HDR_REASON: u16 = ffi::HTTP_HDR_REASON as u16;
+const HDR_STATUS: u16 = ffi::HTTP_HDR_STATUS as u16;
+const HDR_UNSET: u16 = ffi::HTTP_HDR_UNSET as u16;
+const HDR_URL: u16 = ffi::HTTP_HDR_URL as u16;
 
 /// HTTP headers of an object
 pub struct HTTP<'a> {
-    pub raw: &'a mut varnish_sys::http,
+    pub raw: &'a mut ffi::http,
 }
 
 impl<'a> HTTP<'a> {
     /// Wrap a raw pointer into an object we can use.
-    pub fn new(p: *mut varnish_sys::http) -> Option<Self> {
+    pub fn new(p: *mut ffi::http) -> Option<Self> {
         if p.is_null() {
             None
         } else {
@@ -77,7 +77,7 @@ impl<'a> HTTP<'a> {
         let res = self.change_header(idx, &format!("{name}: {value}"));
         if res.is_ok() {
             unsafe {
-                varnish_sys::VSLbt(
+                ffi::VSLbt(
                     self.raw.vsl,
                     self.raw.logtag as c_uint + HDR_FIRST as c_uint,
                     *self.raw.hd.add(idx as usize),
@@ -99,7 +99,7 @@ impl<'a> HTTP<'a> {
             let (n, _) = header_from_hd(hd).unwrap();
             if name.eq_ignore_ascii_case(n) {
                 unsafe {
-                    varnish_sys::VSLbt(
+                    ffi::VSLbt(
                         self.raw.vsl,
                         self.raw.logtag + HDR_UNSET as u32 - HDR_METHOD as u32,
                         *self.raw.hd.add(HDR_FIRST as usize + idx),
@@ -181,7 +181,7 @@ impl<'a> HTTP<'a> {
 
     /// Set the response status, it will also set the reason
     pub fn set_status(&mut self, status: u16) {
-        unsafe { varnish_sys::http_SetStatus(self.raw, status, std::ptr::null()) }
+        unsafe { ffi::http_SetStatus(self.raw, status, std::ptr::null()) }
     }
 
     /// Response reason, `None` for a request
@@ -251,7 +251,7 @@ impl<'a> Iterator for HTTPIter<'a> {
     }
 }
 
-fn header_from_hd<'a>(txt: *const varnish_sys::txt) -> Option<(&'a str, &'a str)> {
+fn header_from_hd<'a>(txt: *const ffi::txt) -> Option<(&'a str, &'a str)> {
     let name;
     let value;
 

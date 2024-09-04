@@ -2,8 +2,8 @@
 use std::ffi::{c_char, c_uint, c_void, CString};
 use std::ptr;
 
-use crate::varnish_sys;
-use crate::varnish_sys::{
+use crate::ffi;
+use crate::ffi::{
     busyobj, req, sess, vrt_ctx, vsb, vsl_log, ws, VRT_fail, VSL_tag_e_SLT_Backend_health,
     VSL_tag_e_SLT_Debug, VSL_tag_e_SLT_Error, VSL_tag_e_SLT_FetchError, VSL_tag_e_SLT_VCL_Error,
     VSL_tag_e_SLT_VCL_Log, VCL_HTTP, VCL_VCL, VRT_CTX_MAGIC,
@@ -15,7 +15,7 @@ use crate::vcl::ws::{TestWS, WS};
 ///
 /// An `enum` wrapper around [VSL tags](https://varnish-cache.org/docs/trunk/reference/vsl.html#vsl-tags).
 /// Only the most current tags (for vmod writers) are mapped, and [`LogTag::Any`] will allow to
-/// directly pass a native tag code (`varnish_sys::VSL_tag_e_SLT_*`).
+/// directly pass a native tag code (`ffi::VSL_tag_e_SLT_*`).
 pub enum LogTag {
     Debug,
     Error,
@@ -117,11 +117,11 @@ impl<'a> Ctx<'a> {
             if p.vsl.is_null() {
                 log(logtag, msg);
             } else {
-                let t = varnish_sys::txt {
+                let t = ffi::txt {
                     b: msg.as_ptr().cast::<c_char>(),
                     e: msg.as_ptr().add(msg.len()).cast::<c_char>(),
                 };
-                varnish_sys::VSLbt(p.vsl, logtag.into_u32(), t);
+                ffi::VSLbt(p.vsl, logtag.into_u32(), t);
             }
         }
     }
@@ -141,14 +141,14 @@ impl<'a> Ctx<'a> {
 
         let req = unsafe { self.raw.req.as_mut().ok_or("req object isn't available")? };
         unsafe {
-            if req.req_body_status != varnish_sys::BS_CACHED.as_ptr() {
+            if req.req_body_status != ffi::BS_CACHED.as_ptr() {
                 return Err("request body hasn't been previously cached".into());
             }
         }
         let mut v: Box<Vec<&'a [u8]>> = Box::default();
         let p: *mut Vec<&'a [u8]> = &mut *v;
         match unsafe {
-            varnish_sys::VRB_Iterate(
+            ffi::VRB_Iterate(
                 req.wrk,
                 req.vsl.as_mut_ptr(),
                 req,
@@ -195,7 +195,7 @@ impl TestCtx {
                 now: 0.0,
                 specific: ptr::null::<VCL_HTTP>() as *mut c_void,
                 called: ptr::null::<vsb>() as *mut c_void,
-                vpi: ptr::null::<vsb>() as *mut varnish_sys::wrk_vpi,
+                vpi: ptr::null::<vsb>() as *mut ffi::wrk_vpi,
             },
             test_ws: TestWS::new(sz),
         };
@@ -224,14 +224,14 @@ pub enum Event {
 }
 
 impl Event {
-    /// Create a new event from a [`varnish_sys::vcl_event_e`]. Note that it *will panic* if
+    /// Create a new event from a [`ffi::vcl_event_e`]. Note that it *will panic* if
     /// provided with an invalid number.
-    pub fn new(event: varnish_sys::vcl_event_e) -> Self {
+    pub fn new(event: ffi::vcl_event_e) -> Self {
         match event {
-            varnish_sys::vcl_event_e_VCL_EVENT_LOAD => Event::Load,
-            varnish_sys::vcl_event_e_VCL_EVENT_WARM => Event::Warm,
-            varnish_sys::vcl_event_e_VCL_EVENT_COLD => Event::Cold,
-            varnish_sys::vcl_event_e_VCL_EVENT_DISCARD => Event::Discard,
+            ffi::vcl_event_e_VCL_EVENT_LOAD => Event::Load,
+            ffi::vcl_event_e_VCL_EVENT_WARM => Event::Warm,
+            ffi::vcl_event_e_VCL_EVENT_COLD => Event::Cold,
+            ffi::vcl_event_e_VCL_EVENT_DISCARD => Event::Discard,
             _ => panic!("invalid event number"),
         }
     }
@@ -241,9 +241,9 @@ impl Event {
 pub fn log(logtag: LogTag, msg: &str) {
     unsafe {
         let c_cstring = CString::new(msg).unwrap();
-        varnish_sys::VSL(
+        ffi::VSL(
             logtag.into_u32(),
-            varnish_sys::vxids { vxid: 0 },
+            ffi::vxids { vxid: 0 },
             c"%s".as_ptr(),
             c_cstring.as_ptr().cast::<u8>(),
         );

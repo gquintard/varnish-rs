@@ -1,13 +1,13 @@
 //! Facilities to create a VMOD backend
 //!
-//! [`varnish_sys::VCL_BACKEND`] can be a bit confusing to create and manipulate, notably as they
+//! [`ffi::VCL_BACKEND`] can be a bit confusing to create and manipulate, notably as they
 //! involves a bunch of structures with different lifetimes and quite a lot of casting. This
 //! module hopes to alleviate those issues by handling the most of them and by offering a more
 //! idiomatic interface centered around vmod objects.
 //!
 //! Here's what's in the toolbox:
-//! - [VCLBackendPtr] is just an alias for [`varnish_sys::VCL_BACKEND`] to avoid depending on
-//!   `varnish_sys`.
+//! - [VCLBackendPtr] is just an alias for [`ffi::VCL_BACKEND`] to avoid depending on
+//!   `ffi`.
 //! - the [Backend] type  wraps a `Serve` struct into a C backend
 //! - the [Serve] trait defines which methods to implement to act as a backend, and includes
 //!   default implementations for most methods.
@@ -78,16 +78,16 @@ use std::os::unix::io::FromRawFd;
 use std::ptr;
 use std::time::SystemTime;
 
-use crate::varnish_sys;
+use crate::ffi;
 use crate::vcl::convert::IntoVCL;
 use crate::vcl::ctx::{Ctx, Event, LogTag};
 use crate::vcl::vsb::Vsb;
 use crate::vcl::ws::WS;
 
-/// Alias for [`varnish_sys::VCL_BACKEND`]
-pub type VCLBackendPtr = varnish_sys::VCL_BACKEND;
+/// Alias for [`ffi::VCL_BACKEND`]
+pub type VCLBackendPtr = ffi::VCL_BACKEND;
 
-/// Fat wrapper around [`VCLBackendPtr`]/[`varnish_sys::VCL_BACKEND`].
+/// Fat wrapper around [`VCLBackendPtr`]/[`ffi::VCL_BACKEND`].
 ///
 /// It will handle almost all the necessary boilerplate needed to create a vmod. Most importantly, it destroys/deregisters the backend as part of it's `Drop` implementation, and
 /// will convert the C methods to something more idomatic.
@@ -97,9 +97,9 @@ pub type VCLBackendPtr = varnish_sys::VCL_BACKEND;
 /// is just to have the backend be part of a vmod object because the object won't be dropped until
 /// the VCL is discarded and that can only happen once all the backend fetches are done.
 pub struct Backend<S: Serve<T>, T: Transfer> {
-    bep: *const varnish_sys::director,
+    bep: *const ffi::director,
     #[allow(dead_code)]
-    methods: Box<varnish_sys::vdi_methods>,
+    methods: Box<ffi::vdi_methods>,
     inner: Box<S>,
     #[allow(dead_code)]
     type_: CString,
@@ -115,7 +115,7 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
 
     /// Return the C pointer wrapped by the [`Backend`]. Conventionally used by the `.backend()`
     /// methods of VCL objects.
-    pub fn vcl_ptr(&self) -> *const varnish_sys::director {
+    pub fn vcl_ptr(&self) -> *const ffi::director {
         self.bep
     }
 
@@ -126,9 +126,9 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
         let mut inner = Box::new(be);
         let cstring_name: CString = CString::new(name).map_err(|e| e.to_string())?;
         let type_: CString = CString::new(inner.get_type()).map_err(|e| e.to_string())?;
-        let methods = Box::new(varnish_sys::vdi_methods {
+        let methods = Box::new(ffi::vdi_methods {
             type_: type_.as_ptr(),
-            magic: varnish_sys::VDI_METHODS_MAGIC,
+            magic: ffi::VDI_METHODS_MAGIC,
             destroy: None,
             event: Some(wrap_event::<S, T>),
             finish: Some(wrap_finish::<S, T>),
@@ -147,7 +147,7 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
         });
 
         let bep = unsafe {
-            varnish_sys::VRT_AddDirector(
+            ffi::VRT_AddDirector(
                 ctx.raw,
                 &*methods,
                 &mut *inner as *mut S as *mut std::ffi::c_void,
@@ -284,20 +284,20 @@ impl Transfer for () {
 }
 
 unsafe extern "C" fn vfp_pull<T: Transfer>(
-    ctxp: *mut varnish_sys::vfp_ctx,
-    vfep: *mut varnish_sys::vfp_entry,
+    ctxp: *mut ffi::vfp_ctx,
+    vfep: *mut ffi::vfp_entry,
     ptr: *mut c_void,
     len: *mut isize,
-) -> varnish_sys::vfp_status {
+) -> ffi::vfp_status {
     let ctx = ctxp.as_mut().unwrap();
-    assert_eq!(ctx.magic, varnish_sys::VFP_CTX_MAGIC);
+    assert_eq!(ctx.magic, ffi::VFP_CTX_MAGIC);
     let vfe = vfep.as_mut().unwrap();
-    assert_eq!(vfe.magic, varnish_sys::VFP_ENTRY_MAGIC);
+    assert_eq!(vfe.magic, ffi::VFP_ENTRY_MAGIC);
 
     let buf = std::slice::from_raw_parts_mut(ptr.cast::<u8>(), *len as usize);
     if buf.is_empty() {
         *len = 0;
-        return varnish_sys::vfp_status_VFP_OK;
+        return ffi::vfp_status_VFP_OK;
     }
 
     let reader = vfe.priv1.cast::<T>().as_mut().unwrap();
@@ -305,31 +305,28 @@ unsafe extern "C" fn vfp_pull<T: Transfer>(
         Err(e) => {
             let msg = e.to_string();
             // TODO: we should grow a VSL object
-            let t = varnish_sys::txt {
+            let t = ffi::txt {
                 b: msg.as_ptr().cast::<c_char>(),
                 e: msg.as_ptr().add(msg.len()).cast::<c_char>(),
             };
-            varnish_sys::VSLbt((*(*ctxp).req).vsl, varnish_sys::VSL_tag_e_SLT_Error, t);
+            ffi::VSLbt((*(*ctxp).req).vsl, ffi::VSL_tag_e_SLT_Error, t);
 
-            varnish_sys::vfp_status_VFP_ERROR
+            ffi::vfp_status_VFP_ERROR
         }
         Ok(0) => {
             *len = 0;
-            varnish_sys::vfp_status_VFP_END
+            ffi::vfp_status_VFP_END
         }
         Ok(l) => {
             *len = l as isize;
-            varnish_sys::vfp_status_VFP_OK
+            ffi::vfp_status_VFP_OK
         }
     }
 }
 
-unsafe extern "C" fn wrap_event<S: Serve<T>, T: Transfer>(
-    be: VCLBackendPtr,
-    ev: varnish_sys::vcl_event_e,
-) {
+unsafe extern "C" fn wrap_event<S: Serve<T>, T: Transfer>(be: VCLBackendPtr, ev: ffi::vcl_event_e) {
     assert!(!be.is_null());
-    assert_eq!((*be).magic, varnish_sys::DIRECTOR_MAGIC);
+    assert_eq!((*be).magic, ffi::DIRECTOR_MAGIC);
     assert!(!(*be).priv_.is_null());
     let backend = (*be).priv_ as *const S;
 
@@ -337,30 +334,27 @@ unsafe extern "C" fn wrap_event<S: Serve<T>, T: Transfer>(
 }
 
 unsafe extern "C" fn wrap_list<S: Serve<T>, T: Transfer>(
-    ctxp: *const varnish_sys::vrt_ctx,
+    ctxp: *const ffi::vrt_ctx,
     be: VCLBackendPtr,
-    vsbp: *mut varnish_sys::vsb,
+    vsbp: *mut ffi::vsb,
     detailed: i32,
     json: i32,
 ) {
     let mut ctx = Ctx::new(ctxp.cast_mut());
     let mut vsb = Vsb::new(vsbp);
     assert!(!be.is_null());
-    assert_eq!((*be).magic, varnish_sys::DIRECTOR_MAGIC);
+    assert_eq!((*be).magic, ffi::DIRECTOR_MAGIC);
     assert!(!(*be).priv_.is_null());
     let backend = (*be).priv_ as *const S;
 
     (*backend).list(&mut ctx, &mut vsb, detailed != 0, json != 0);
 }
 
-unsafe extern "C" fn wrap_panic<S: Serve<T>, T: Transfer>(
-    be: VCLBackendPtr,
-    vsbp: *mut varnish_sys::vsb,
-) {
+unsafe extern "C" fn wrap_panic<S: Serve<T>, T: Transfer>(be: VCLBackendPtr, vsbp: *mut ffi::vsb) {
     let mut vsb = Vsb::new(vsbp);
 
     assert!(!be.is_null());
-    assert_eq!((*be).magic, varnish_sys::DIRECTOR_MAGIC);
+    assert_eq!((*be).magic, ffi::DIRECTOR_MAGIC);
     assert!(!(*be).priv_.is_null());
     let backend = (*be).priv_ as *const S;
 
@@ -368,20 +362,20 @@ unsafe extern "C" fn wrap_panic<S: Serve<T>, T: Transfer>(
 }
 
 unsafe extern "C" fn wrap_pipe<S: Serve<T>, T: Transfer>(
-    ctxp: *const varnish_sys::vrt_ctx,
+    ctxp: *const ffi::vrt_ctx,
     be: VCLBackendPtr,
-) -> varnish_sys::stream_close_t {
+) -> ffi::stream_close_t {
     let mut ctx = Ctx::new(ctxp.cast_mut());
     assert!(!(*ctxp).req.is_null());
-    assert_eq!((*(*ctxp).req).magic, varnish_sys::REQ_MAGIC);
+    assert_eq!((*(*ctxp).req).magic, ffi::REQ_MAGIC);
     assert!(!(*(*ctxp).req).sp.is_null());
-    assert_eq!((*(*(*ctxp).req).sp).magic, varnish_sys::SESS_MAGIC);
+    assert_eq!((*(*(*ctxp).req).sp).magic, ffi::SESS_MAGIC);
     let fd = (*(*(*ctxp).req).sp).fd;
     assert!(fd != 0);
     let tcp_stream = TcpStream::from_raw_fd(fd);
 
     assert!(!be.is_null());
-    assert_eq!((*be).magic, varnish_sys::DIRECTOR_MAGIC);
+    assert_eq!((*be).magic, ffi::DIRECTOR_MAGIC);
     assert!(!(*be).priv_.is_null());
     let backend = (*be).priv_ as *const S;
 
@@ -389,16 +383,16 @@ unsafe extern "C" fn wrap_pipe<S: Serve<T>, T: Transfer>(
 }
 
 unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
-    ctxp: *const varnish_sys::vrt_ctx,
+    ctxp: *const ffi::vrt_ctx,
     be: VCLBackendPtr,
 ) -> ::std::os::raw::c_int {
     let mut ctx = Ctx::new(ctxp.cast_mut());
     assert!(!be.is_null());
-    assert_eq!((*be).magic, varnish_sys::DIRECTOR_MAGIC);
+    assert_eq!((*be).magic, ffi::DIRECTOR_MAGIC);
     assert!(!(*be).vcl_name.is_null());
     assert!(!(*be).priv_.is_null());
     assert!(!(*be).vdir.is_null());
-    assert_eq!((*(*be).vdir).magic, varnish_sys::VCLDIR_MAGIC);
+    assert_eq!((*(*be).vdir).magic, ffi::VCLDIR_MAGIC);
 
     let backend = (*be).priv_ as *const S;
     match (*backend).get_headers(&mut ctx) {
@@ -415,44 +409,44 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
                 }
             }
 
-            let htc = varnish_sys::WS_Alloc(
+            let htc = ffi::WS_Alloc(
                 (*ctx.raw.bo).ws.as_mut_ptr(),
-                size_of::<varnish_sys::http_conn>() as u32,
+                size_of::<ffi::http_conn>() as u32,
             )
-            .cast::<varnish_sys::http_conn>();
+            .cast::<ffi::http_conn>();
             if htc.is_null() {
                 ctx.fail(&format!("{}: insuficient workspace", (*backend).get_type()));
                 return -1;
             }
-            (*htc).magic = varnish_sys::HTTP_CONN_MAGIC;
-            (*htc).doclose = &varnish_sys::SC_REM_CLOSE[0];
+            (*htc).magic = ffi::HTTP_CONN_MAGIC;
+            (*htc).doclose = &ffi::SC_REM_CLOSE[0];
             (*htc).content_length = 0;
             match res {
                 None => {
-                    (*htc).body_status = varnish_sys::BS_NONE.as_ptr();
+                    (*htc).body_status = ffi::BS_NONE.as_ptr();
                 }
                 Some(transfer) => {
                     match transfer.len() {
                         None => {
-                            (*htc).body_status = varnish_sys::BS_CHUNKED.as_ptr();
+                            (*htc).body_status = ffi::BS_CHUNKED.as_ptr();
                             (*htc).content_length = -1;
                         }
                         Some(0) => {
-                            (*htc).body_status = varnish_sys::BS_NONE.as_ptr();
+                            (*htc).body_status = ffi::BS_NONE.as_ptr();
                         }
                         Some(l) => {
-                            (*htc).body_status = varnish_sys::BS_LENGTH.as_ptr();
+                            (*htc).body_status = ffi::BS_LENGTH.as_ptr();
                             (*htc).content_length = l as isize;
                         }
                     };
                     (*htc).priv_ = Box::into_raw(Box::new(transfer)).cast::<std::ffi::c_void>();
                     // build a vfp to wrap the Transfer object if there's something to push
-                    if (*htc).body_status != varnish_sys::BS_NONE.as_ptr() {
-                        let vfp = varnish_sys::WS_Alloc(
+                    if (*htc).body_status != ffi::BS_NONE.as_ptr() {
+                        let vfp = ffi::WS_Alloc(
                             (*ctx.raw.bo).ws.as_mut_ptr(),
-                            size_of::<varnish_sys::vfp>() as u32,
+                            size_of::<ffi::vfp>() as u32,
                         )
-                        .cast::<varnish_sys::vfp>();
+                        .cast::<ffi::vfp>();
                         if vfp.is_null() {
                             ctx.fail(&format!("{}: insuficient workspace", (*backend).get_type()));
                             return -1;
@@ -474,7 +468,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
                         (*vfp).pull = Some(vfp_pull::<T>);
                         (*vfp).fini = None;
                         (*vfp).priv1 = ptr::null();
-                        let vfe = varnish_sys::VFP_Push((*ctx.raw.bo).vfc, vfp);
+                        let vfe = ffi::VFP_Push((*ctx.raw.bo).vfc, vfp);
                         if vfe.is_null() {
                             ctx.fail(&format!("{}: couldn't insert vfp", (*backend).get_type()));
                             return -1;
@@ -500,15 +494,15 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
 }
 
 unsafe extern "C" fn wrap_healthy<S: Serve<T>, T: Transfer>(
-    ctxp: *const varnish_sys::vrt_ctx,
-    be: varnish_sys::VCL_BACKEND,
-    changed: *mut varnish_sys::VCL_TIME,
-) -> varnish_sys::VCL_BOOL {
+    ctxp: *const ffi::vrt_ctx,
+    be: ffi::VCL_BACKEND,
+    changed: *mut ffi::VCL_TIME,
+) -> ffi::VCL_BOOL {
     assert!(!be.is_null());
-    assert_eq!((*be).magic, varnish_sys::DIRECTOR_MAGIC);
+    assert_eq!((*be).magic, ffi::DIRECTOR_MAGIC);
     assert!(!(*be).priv_.is_null());
 
-    let mut ctx = Ctx::new(ctxp as *mut varnish_sys::vrt_ctx);
+    let mut ctx = Ctx::new(ctxp as *mut ffi::vrt_ctx);
     let backend = (*be).priv_ as *const S;
     let (healthy, when) = (*backend).healthy(&mut ctx);
     if !changed.is_null() {
@@ -525,16 +519,16 @@ unsafe extern "C" fn wrap_healthy<S: Serve<T>, T: Transfer>(
 }
 
 unsafe extern "C" fn wrap_getip<T: Transfer>(
-    ctxp: *const varnish_sys::vrt_ctx,
-    _be: varnish_sys::VCL_BACKEND,
-) -> varnish_sys::VCL_IP {
+    ctxp: *const ffi::vrt_ctx,
+    _be: ffi::VCL_BACKEND,
+) -> ffi::VCL_IP {
     assert!(!ctxp.is_null());
-    assert_eq!((*ctxp).magic, varnish_sys::VRT_CTX_MAGIC);
+    assert_eq!((*ctxp).magic, ffi::VRT_CTX_MAGIC);
     assert!(!(*ctxp).bo.is_null());
-    assert_eq!((*(*ctxp).bo).magic, varnish_sys::BUSYOBJ_MAGIC);
+    assert_eq!((*(*ctxp).bo).magic, ffi::BUSYOBJ_MAGIC);
     let bo = *(*ctxp).bo;
     assert!(!bo.htc.is_null());
-    assert_eq!((*bo.htc).magic, varnish_sys::BUSYOBJ_MAGIC);
+    assert_eq!((*bo.htc).magic, ffi::BUSYOBJ_MAGIC);
     assert!(!(*bo.htc).priv_.is_null());
 
     let mut ctx = Ctx::new(ctxp.cast_mut());
@@ -553,11 +547,11 @@ unsafe extern "C" fn wrap_getip<T: Transfer>(
 }
 
 unsafe extern "C" fn wrap_finish<S: Serve<T>, T: Transfer>(
-    ctxp: *const varnish_sys::vrt_ctx,
+    ctxp: *const ffi::vrt_ctx,
     be: VCLBackendPtr,
 ) {
     assert!(!be.is_null());
-    assert_eq!((*be).magic, varnish_sys::DIRECTOR_MAGIC);
+    assert_eq!((*be).magic, ffi::DIRECTOR_MAGIC);
     assert!(!(*be).priv_.is_null());
 
     // drop the Transfer
@@ -574,7 +568,7 @@ unsafe extern "C" fn wrap_finish<S: Serve<T>, T: Transfer>(
 impl<S: Serve<T>, T: Transfer> Drop for Backend<S, T> {
     fn drop(&mut self) {
         unsafe {
-            varnish_sys::VRT_DelDirector(&mut self.bep);
+            ffi::VRT_DelDirector(&mut self.bep);
         };
     }
 }
@@ -603,27 +597,27 @@ pub enum StreamClose {
     VclFailure,
 }
 
-fn sc_to_ptr(sc: StreamClose) -> varnish_sys::stream_close_t {
+fn sc_to_ptr(sc: StreamClose) -> ffi::stream_close_t {
     unsafe {
         match sc {
-            StreamClose::RemClose => &varnish_sys::SC_REM_CLOSE as *const _,
-            StreamClose::ReqClose => &varnish_sys::SC_REQ_CLOSE as *const _,
-            StreamClose::ReqHttp10 => &varnish_sys::SC_REQ_HTTP10 as *const _,
-            StreamClose::RxBad => &varnish_sys::SC_RX_BAD as *const _,
-            StreamClose::RxBody => &varnish_sys::SC_RX_BODY as *const _,
-            StreamClose::RxJunk => &varnish_sys::SC_RX_JUNK as *const _,
-            StreamClose::RxOverflow => &varnish_sys::SC_RX_OVERFLOW as *const _,
-            StreamClose::RxTimeout => &varnish_sys::SC_RX_TIMEOUT as *const _,
-            StreamClose::RxCloseIdle => &varnish_sys::SC_RX_CLOSE_IDLE as *const _,
-            StreamClose::TxPipe => &varnish_sys::SC_TX_PIPE as *const _,
-            StreamClose::TxError => &varnish_sys::SC_TX_ERROR as *const _,
-            StreamClose::TxEof => &varnish_sys::SC_TX_EOF as *const _,
-            StreamClose::RespClose => &varnish_sys::SC_RESP_CLOSE as *const _,
-            StreamClose::Overload => &varnish_sys::SC_OVERLOAD as *const _,
-            StreamClose::PipeOverflow => &varnish_sys::SC_PIPE_OVERFLOW as *const _,
-            StreamClose::RangeShort => &varnish_sys::SC_RANGE_SHORT as *const _,
-            StreamClose::ReqHttp20 => &varnish_sys::SC_REQ_HTTP20 as *const _,
-            StreamClose::VclFailure => &varnish_sys::SC_VCL_FAILURE as *const _,
+            StreamClose::RemClose => &ffi::SC_REM_CLOSE as *const _,
+            StreamClose::ReqClose => &ffi::SC_REQ_CLOSE as *const _,
+            StreamClose::ReqHttp10 => &ffi::SC_REQ_HTTP10 as *const _,
+            StreamClose::RxBad => &ffi::SC_RX_BAD as *const _,
+            StreamClose::RxBody => &ffi::SC_RX_BODY as *const _,
+            StreamClose::RxJunk => &ffi::SC_RX_JUNK as *const _,
+            StreamClose::RxOverflow => &ffi::SC_RX_OVERFLOW as *const _,
+            StreamClose::RxTimeout => &ffi::SC_RX_TIMEOUT as *const _,
+            StreamClose::RxCloseIdle => &ffi::SC_RX_CLOSE_IDLE as *const _,
+            StreamClose::TxPipe => &ffi::SC_TX_PIPE as *const _,
+            StreamClose::TxError => &ffi::SC_TX_ERROR as *const _,
+            StreamClose::TxEof => &ffi::SC_TX_EOF as *const _,
+            StreamClose::RespClose => &ffi::SC_RESP_CLOSE as *const _,
+            StreamClose::Overload => &ffi::SC_OVERLOAD as *const _,
+            StreamClose::PipeOverflow => &ffi::SC_PIPE_OVERFLOW as *const _,
+            StreamClose::RangeShort => &ffi::SC_RANGE_SHORT as *const _,
+            StreamClose::ReqHttp20 => &ffi::SC_REQ_HTTP20 as *const _,
+            StreamClose::VclFailure => &ffi::SC_VCL_FAILURE as *const _,
         }
     }
 }

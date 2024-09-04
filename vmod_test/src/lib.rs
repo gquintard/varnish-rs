@@ -4,7 +4,7 @@ use std::io::Write;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::time::Duration;
 
-use varnish::varnish_sys;
+use varnish::ffi;
 use varnish::vcl::ctx::{Ctx, Event};
 use varnish::vcl::processor::{new_vfp, InitResult, PullResult, VFPCtx, VFP};
 use varnish::vcl::vpriv::VPriv;
@@ -35,7 +35,7 @@ pub fn unset_hdr(ctx: &mut Ctx, name: &str) -> Result<()> {
     }
 }
 
-pub fn ws_reserve<'a, 'b>(ctx: &'b mut Ctx<'a>, s: &str) -> Result<varnish_sys::VCL_STRING> {
+pub fn ws_reserve<'a, 'b>(ctx: &'b mut Ctx<'a>, s: &str) -> Result<ffi::VCL_STRING> {
     let mut rbuf = ctx.ws.reserve();
     match write!(rbuf.buf, "{} {} {}\0", s, s, s) {
         Ok(()) => {
@@ -101,7 +101,7 @@ pub fn print_ip(_: &mut Ctx, maybe_ip: Option<SocketAddr>) -> String {
 
 // this is a pretty terrible idea, the request body is probably big, and your workspace is tiny,
 // but hey, it's a test function
-pub fn req_body(ctx: &mut Ctx) -> Result<varnish_sys::VCL_STRING> {
+pub fn req_body(ctx: &mut Ctx) -> Result<ffi::VCL_STRING> {
     let mut body_chunks = ctx.cached_req_body()?;
     // make sure the body will be null-terminated
     body_chunks.push(b"\0");
@@ -177,18 +177,18 @@ impl VFP for VFPTest {
 
 pub unsafe fn event(
     ctx: &mut Ctx,
-    vp: &mut VPriv<varnish_sys::vfp>,
+    vp: &mut VPriv<ffi::vfp>,
     event: Event,
 ) -> std::result::Result<(), &'static str> {
     match event {
         // on load, create the VFP C struct, save it into a priv, they register it
         Event::Load => {
             vp.store(new_vfp::<VFPTest>());
-            varnish_sys::VRT_AddVFP(ctx.raw, vp.as_ref().unwrap())
+            ffi::VRT_AddVFP(ctx.raw, vp.as_ref().unwrap())
         }
         // on discard, deregister the VFP, but don't worry about cleaning it, it'll be done by
         // Varnish automatically
-        Event::Discard => varnish_sys::VRT_RemoveVFP(ctx.raw, vp.as_ref().unwrap()),
+        Event::Discard => ffi::VRT_RemoveVFP(ctx.raw, vp.as_ref().unwrap()),
         _ => (),
     }
     Ok(())
