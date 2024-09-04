@@ -124,7 +124,14 @@ pub unsafe extern "C" fn gen_vdp_push<T: VDP>(
         varnish_sys::vdp_action_VDP_END => PushAction::End,
         _ => return 1, /* TODO: log */
     };
-    let buf = std::slice::from_raw_parts(ptr.cast::<u8>(), len as usize);
+
+    let empty_buffer: [u8; 0] = [0; 0];
+    let buf = if ptr.is_null() {
+        &empty_buffer
+    }else {
+        std::slice::from_raw_parts(ptr.cast::<u8>(), len as usize)
+    };
+
     match (*(*priv_).cast::<T>()).push(&mut VDPCtx::new(ctx_raw), out_action, buf) {
         PushResult::Err => -1, // TODO: log error
         PushResult::Ok => 0,
@@ -232,7 +239,12 @@ pub unsafe extern "C" fn wrap_vfp_pull<T: VFP>(
     let vfe = vfep.as_mut().unwrap();
     assert_eq!(vfe.magic, varnish_sys::VFP_ENTRY_MAGIC);
 
-    let buf = std::slice::from_raw_parts_mut(ptr.cast::<u8>(), *len as usize);
+    let mut empty_buffer: [u8; 0] = [0; 0];
+    let buf = if ptr.is_null() {
+        empty_buffer.as_mut()
+    } else {
+        std::slice::from_raw_parts_mut(ptr.cast::<u8>(), *len as usize)
+    };
     let obj = vfe.priv1.cast::<T>().as_mut().unwrap();
     match obj.pull(&mut VFPCtx::new(ctx), buf) {
         PullResult::Err => varnish_sys::vfp_status_VFP_ERROR, // TODO: log error
