@@ -1,36 +1,50 @@
 name: Build
-on: [push]
-jobs:
-  no-libvarnish:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-      - run: |
-          cargo doc
-  with-libvarnish:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-      - run: |
-          set -x
-          sudo apt-get install -y curl
-          curl -s https://packagecloud.io/install/repositories/varnishcache/varnish75/script.deb.sh | sudo bash
-          sudo apt-get install varnish-dev
-      - run: |
-          set -x
-          cargo doc
-          export RUST_BACKTRACE=1
-          for dir in vmod_test $(ls -d examples/vmod_*); do
-            (
-              cd $dir
-              cargo build --all-targets
-              cargo test
-            )
-          done
 
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      RUST_BACKTRACE: 1
+    steps:
+      - uses: actions/checkout@v4
+      - name: rust-info
+        run: rustc --version && cargo --version
+      - uses: Swatinem/rust-cache@v2
+        if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
+      - name: install varnish-dev
+        run: |
+          curl -s https://packagecloud.io/install/repositories/varnishcache/varnish75/script.deb.sh | sudo bash
+          sudo apt-get install -y varnish-dev
+      - name: test-fmt
+        run: cargo fmt --all -- --check
+      - name: check
+        run: RUSTFLAGS='-D warnings' cargo check --workspace --all-targets
+      - name: build vmod
+        run: cargo build --all-targets
+      - name: test
+        run: cargo test --workspace --all-targets
+      - name: test-doc
+        run: |
+          cargo test --doc
+          RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
+
+  # Ensure that the docs can be built at docs.rs without varnish dependencies
+  test-docs-rs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: rust-info
+        run: rustc --version && cargo --version
+      - uses: Swatinem/rust-cache@v2
+        if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
+      - name: Ensure docs can be built at docs.rs without varnish dependencies
+        run: RUSTDOCFLAGS="-D warnings" cargo doc --no-deps

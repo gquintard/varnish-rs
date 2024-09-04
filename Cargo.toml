@@ -54,5 +54,4 @@ pkg-config = "0.3.22"
 serde = { version = "1", features = ["derive"] }
 
 [workspace]
-
-members = ["examples/vmod_*", "vmod_test"]
+members = ["varnish-sys", "vmod_test", "examples/vmod_*"]

@@ -1,6 +1,8 @@
-[![crates.io](https://img.shields.io/crates/v/varnish.svg)](https://crates.io/crates/varnish)
-[![tests](https://github.com/gquintard/varnish-rs/actions/workflows/tests.yaml/badge.svg)](https://github.com/gquintard/varnish-rs/actions)
-[![docs.rs](https://img.shields.io/badge/docs.rs-v0.0.8-brightgreen)](https://docs.rs/varnish/latest/varnish/)
+[![GitHub](https://img.shields.io/badge/github-varnish-8da0cb?logo=github)](https://github.com/gquintard/varnish-rs)
+[![crates.io version](https://img.shields.io/crates/v/varnish.svg)](https://crates.io/crates/varnish)
+[![docs.rs docs](https://docs.rs/varnish/badge.svg)](https://docs.rs/varnish)
+[![crates.io version](https://img.shields.io/crates/l/varnish.svg)](https://github.com/gquintard/varnish-rs/blob/main/LICENSE)
+[![CI build](https://github.com/gquintard/varnish-rs/actions/workflows/tests.yaml/badge.svg)](https://github.com/gquintard/varnish-rs/actions)
 
 [Documentation](https://docs.rs/varnish/)
 
@@ -10,6 +12,7 @@ In your `Cargo.toml`:
 [dependencies]
 varnish = "0.0.16"
 ```
+
 # varnish-rs
 
 Varnish bindings, notably to build vmods, such as:
