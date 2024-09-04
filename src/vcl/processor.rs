@@ -8,19 +8,19 @@
 use std::ffi::{c_char, c_int, c_void};
 use std::ptr;
 
-use crate::varnish_sys;
-use crate::varnish_sys::{objcore, vdp_ctx, vfp_ctx, vfp_entry};
+use crate::ffi;
+use crate::ffi::{objcore, vdp_ctx, vfp_ctx, vfp_entry};
 use crate::vcl::ctx::Ctx;
 
 /// passed to [`VDP::push`] to describe special conditions occuring in the pipeline.
 #[derive(Debug, Copy, Clone)]
 pub enum PushAction {
     /// Nothing special
-    None = varnish_sys::vdp_action_VDP_NULL as isize,
+    None = ffi::vdp_action_VDP_NULL as isize,
     /// The accompanying buffer will be invalidated
-    Flush = varnish_sys::vdp_action_VDP_FLUSH as isize,
+    Flush = ffi::vdp_action_VDP_FLUSH as isize,
     /// Last call, and last chance to push bytes, implies `Flush`
-    End = varnish_sys::vdp_action_VDP_END as isize,
+    End = ffi::vdp_action_VDP_END as isize,
 }
 
 /// The return type for [`VDP::push`]
@@ -72,7 +72,7 @@ where
 }
 
 pub unsafe extern "C" fn gen_vdp_init<T: VDP>(
-    vrt_ctx: *const varnish_sys::vrt_ctx,
+    vrt_ctx: *const ffi::vrt_ctx,
     ctx_raw: *mut vdp_ctx,
     priv_: *mut *mut c_void,
     oc: *mut objcore,
@@ -80,7 +80,7 @@ pub unsafe extern "C" fn gen_vdp_init<T: VDP>(
     assert_ne!(priv_, ptr::null_mut());
     assert_eq!(*priv_, ptr::null_mut());
     match T::new(
-        &mut Ctx::new(vrt_ctx as *mut varnish_sys::vrt_ctx),
+        &mut Ctx::new(vrt_ctx as *mut ffi::vrt_ctx),
         &mut VDPCtx::new(ctx_raw),
         oc,
     ) {
@@ -108,7 +108,7 @@ pub unsafe extern "C" fn gen_vdp_fini<T: VDP>(
 
 pub unsafe extern "C" fn gen_vdp_push<T: VDP>(
     ctx_raw: *mut vdp_ctx,
-    act: varnish_sys::vdp_action,
+    act: ffi::vdp_action,
     priv_: *mut *mut c_void,
     ptr: *const c_void,
     len: isize,
@@ -116,9 +116,9 @@ pub unsafe extern "C" fn gen_vdp_push<T: VDP>(
     assert_ne!(priv_, ptr::null_mut());
     assert_ne!(*priv_, ptr::null_mut());
     let out_action = match act {
-        varnish_sys::vdp_action_VDP_NULL => PushAction::None,
-        varnish_sys::vdp_action_VDP_FLUSH => PushAction::Flush,
-        varnish_sys::vdp_action_VDP_END => PushAction::End,
+        ffi::vdp_action_VDP_NULL => PushAction::None,
+        ffi::vdp_action_VDP_FLUSH => PushAction::Flush,
+        ffi::vdp_action_VDP_END => PushAction::End,
         _ => return 1, /* TODO: log */
     };
 
@@ -136,9 +136,9 @@ pub unsafe extern "C" fn gen_vdp_push<T: VDP>(
     }
 }
 
-/// Create a `varnish_sys::vdp` that can be fed to `varnish_sys::VRT_AddVDP`
-pub fn new_vdp<T: VDP>() -> varnish_sys::vdp {
-    varnish_sys::vdp {
+/// Create a `ffi::vdp` that can be fed to `ffi::VRT_AddVDP`
+pub fn new_vdp<T: VDP>() -> ffi::vdp {
+    ffi::vdp {
         name: T::name().as_ptr().cast::<c_char>(),
         init: Some(gen_vdp_init::<T>),
         bytes: Some(gen_vdp_push::<T>),
@@ -147,7 +147,7 @@ pub fn new_vdp<T: VDP>() -> varnish_sys::vdp {
     }
 }
 
-/// A thin wrapper around a `*mut varnish_sys::vdp_ctx`
+/// A thin wrapper around a `*mut ffi::vdp_ctx`
 pub struct VDPCtx<'a> {
     pub raw: &'a mut vdp_ctx,
 }
@@ -160,14 +160,14 @@ impl<'a> VDPCtx<'a> {
     /// The caller is in charge of making sure the structure doesn't outlive the pointer.
     pub unsafe fn new(raw: *mut vdp_ctx) -> Self {
         let raw = raw.as_mut().unwrap();
-        assert_eq!(raw.magic, varnish_sys::VDP_CTX_MAGIC);
+        assert_eq!(raw.magic, ffi::VDP_CTX_MAGIC);
         VDPCtx { raw }
     }
 
     /// Send buffer down the pipeline
     pub fn push(&mut self, act: PushAction, buf: &[u8]) -> PushResult {
         match unsafe {
-            varnish_sys::VDP_bytes(
+            ffi::VDP_bytes(
                 self.raw,
                 act as std::os::raw::c_uint,
                 buf.as_ptr().cast::<c_void>(),
@@ -202,18 +202,18 @@ where
 }
 
 unsafe extern "C" fn wrap_vfp_init<T: VFP>(
-    vrt_ctx: *const varnish_sys::vrt_ctx,
+    vrt_ctx: *const ffi::vrt_ctx,
     ctxp: *mut vfp_ctx,
     vfep: *mut vfp_entry,
-) -> varnish_sys::vfp_status {
+) -> ffi::vfp_status {
     let ctx = ctxp.as_mut().unwrap();
-    assert_eq!(ctx.magic, varnish_sys::VFP_CTX_MAGIC);
+    assert_eq!(ctx.magic, ffi::VFP_CTX_MAGIC);
 
     let vfe = vfep.as_mut().unwrap();
-    assert_eq!(vfe.magic, varnish_sys::VFP_ENTRY_MAGIC);
+    assert_eq!(vfe.magic, ffi::VFP_ENTRY_MAGIC);
 
     match T::new(
-        &mut Ctx::new(vrt_ctx as *mut varnish_sys::vrt_ctx),
+        &mut Ctx::new(vrt_ctx as *mut ffi::vrt_ctx),
         &mut VFPCtx::new(ctx),
     ) {
         InitResult::Ok(proc) => {
@@ -230,11 +230,11 @@ pub unsafe extern "C" fn wrap_vfp_pull<T: VFP>(
     vfep: *mut vfp_entry,
     ptr: *mut c_void,
     len: *mut isize,
-) -> varnish_sys::vfp_status {
+) -> ffi::vfp_status {
     let ctx = ctxp.as_mut().unwrap();
-    assert_eq!(ctx.magic, varnish_sys::VFP_CTX_MAGIC);
+    assert_eq!(ctx.magic, ffi::VFP_CTX_MAGIC);
     let vfe = vfep.as_mut().unwrap();
-    assert_eq!(vfe.magic, varnish_sys::VFP_ENTRY_MAGIC);
+    assert_eq!(vfe.magic, ffi::VFP_ENTRY_MAGIC);
 
     let mut empty_buffer: [u8; 0] = [0; 0];
     let buf = if ptr.is_null() {
@@ -244,23 +244,23 @@ pub unsafe extern "C" fn wrap_vfp_pull<T: VFP>(
     };
     let obj = vfe.priv1.cast::<T>().as_mut().unwrap();
     match obj.pull(&mut VFPCtx::new(ctx), buf) {
-        PullResult::Err => varnish_sys::vfp_status_VFP_ERROR, // TODO: log error
+        PullResult::Err => ffi::vfp_status_VFP_ERROR, // TODO: log error
         PullResult::Ok(l) => {
             *len = l as isize;
-            varnish_sys::vfp_status_VFP_OK
+            ffi::vfp_status_VFP_OK
         }
         PullResult::End(l) => {
             *len = l as isize;
-            varnish_sys::vfp_status_VFP_END
+            ffi::vfp_status_VFP_END
         }
     }
 }
 
 pub unsafe extern "C" fn wrap_vfp_fini<T: VFP>(ctxp: *mut vfp_ctx, vfep: *mut vfp_entry) {
     let ctx = ctxp.as_mut().unwrap();
-    assert_eq!(ctx.magic, varnish_sys::VFP_CTX_MAGIC);
+    assert_eq!(ctx.magic, ffi::VFP_CTX_MAGIC);
     let vfe = vfep.as_mut().unwrap();
-    assert_eq!(vfe.magic, varnish_sys::VFP_ENTRY_MAGIC);
+    assert_eq!(vfe.magic, ffi::VFP_ENTRY_MAGIC);
 
     if vfe.priv1.is_null() {
         return;
@@ -270,9 +270,9 @@ pub unsafe extern "C" fn wrap_vfp_fini<T: VFP>(ctxp: *mut vfp_ctx, vfep: *mut vf
     vfe.priv1 = ptr::null_mut();
 }
 
-/// Create a `varnish_sys::vfp` that can be fed to `varnish_sys::VRT_AddVFP`
-pub fn new_vfp<T: VFP>() -> varnish_sys::vfp {
-    varnish_sys::vfp {
+/// Create a `ffi::vfp` that can be fed to `ffi::VRT_AddVFP`
+pub fn new_vfp<T: VFP>() -> ffi::vfp {
+    ffi::vfp {
         name: T::name().as_ptr().cast::<c_char>(),
         init: Some(wrap_vfp_init::<T>),
         pull: Some(wrap_vfp_pull::<T>),
@@ -281,7 +281,7 @@ pub fn new_vfp<T: VFP>() -> varnish_sys::vfp {
     }
 }
 
-/// A thin wrapper around a `*mut varnish_sys::vfp_ctx`
+/// A thin wrapper around a `*mut ffi::vfp_ctx`
 pub struct VFPCtx<'a> {
     pub raw: &'a mut vfp_ctx,
 }
@@ -294,7 +294,7 @@ impl<'a> VFPCtx<'a> {
     /// The caller is in charge of making sure the structure doesn't outlive the pointer.
     pub unsafe fn new(raw: *mut vfp_ctx) -> Self {
         let raw = raw.as_mut().unwrap();
-        assert_eq!(raw.magic, varnish_sys::VFP_CTX_MAGIC);
+        assert_eq!(raw.magic, ffi::VFP_CTX_MAGIC);
         VFPCtx { raw }
     }
 
@@ -303,18 +303,18 @@ impl<'a> VFPCtx<'a> {
         let mut len = buf.len() as isize;
         let max_len = len;
 
-        match unsafe { varnish_sys::VFP_Suck(self.raw, buf.as_ptr() as *mut c_void, &mut len) } {
-            varnish_sys::vfp_status_VFP_OK => {
+        match unsafe { ffi::VFP_Suck(self.raw, buf.as_ptr() as *mut c_void, &mut len) } {
+            ffi::vfp_status_VFP_OK => {
                 assert!(len <= max_len);
                 assert!(len >= 0);
                 PullResult::Ok(len as usize)
             }
-            varnish_sys::vfp_status_VFP_END => {
+            ffi::vfp_status_VFP_END => {
                 assert!(len <= max_len);
                 assert!(len >= 0);
                 PullResult::End(len as usize)
             }
-            varnish_sys::vfp_status_VFP_ERROR => PullResult::Err,
+            ffi::vfp_status_VFP_ERROR => PullResult::Err,
             n => panic!("unknown vfp_status: {n}"),
         }
     }

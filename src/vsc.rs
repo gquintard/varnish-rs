@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use std::ffi::{CStr, CString};
 use std::ptr;
 
-use crate::varnish_sys;
+use crate::ffi;
 
 /// Error wrapping the VSM/VSC error reported by the C api
 pub struct Error {
@@ -36,8 +36,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// A statistics set, created using a [`VSCBuilder`]
 #[derive(Debug)]
 pub struct VSC<'a> {
-    vsm: *mut varnish_sys::vsm,
-    vsc: *mut varnish_sys::vsc,
+    vsm: *mut ffi::vsm,
+    vsc: *mut ffi::vsc,
     internal: Box<VSCInternal<'a>>,
 }
 
@@ -50,8 +50,8 @@ struct VSCInternal<'a> {
 
 /// Initialize and configure a [`VSC`] but do not attach it to a running `varnishd` instance
 pub struct VSCBuilder<'a> {
-    vsm: *mut varnish_sys::vsm,
-    vsc: *mut varnish_sys::vsc,
+    vsm: *mut ffi::vsm,
+    vsc: *mut ffi::vsc,
     phantom: std::marker::PhantomData<&'a ()>,
 }
 
@@ -59,12 +59,12 @@ impl<'a> VSCBuilder<'a> {
     /// Create a new `VSCBuilder`
     pub fn new() -> Self {
         unsafe {
-            let vsm = varnish_sys::VSM_New();
+            let vsm = ffi::VSM_New();
             assert!(!vsm.is_null());
-            let vsc = varnish_sys::VSC_New();
+            let vsc = ffi::VSC_New();
             assert!(!vsc.is_null());
             // get raw value, we can always clamp them later
-            varnish_sys::VSC_Arg(vsc, 'r' as core::ffi::c_char, ptr::null());
+            ffi::VSC_Arg(vsc, 'r' as core::ffi::c_char, ptr::null());
             VSCBuilder {
                 vsm,
                 vsc,
@@ -79,8 +79,7 @@ impl<'a> VSCBuilder<'a> {
     /// the `-n` argument (in which case, both arguments should match)
     pub fn work_dir(self, dir: &std::path::Path) -> std::result::Result<Self, std::ffi::NulError> {
         let c_dir = CString::new(dir.to_str().unwrap())?;
-        let ret =
-            unsafe { varnish_sys::VSM_Arg(self.vsm, 'n' as core::ffi::c_char, c_dir.as_ptr()) };
+        let ret = unsafe { ffi::VSM_Arg(self.vsm, 'n' as core::ffi::c_char, c_dir.as_ptr()) };
         assert_eq!(ret, 1);
         Ok(self)
     }
@@ -97,7 +96,7 @@ impl<'a> VSCBuilder<'a> {
             Some(t) => format!("{}\0", t.as_secs_f64()),
         };
         unsafe {
-            let ret = varnish_sys::VSM_Arg(
+            let ret = ffi::VSM_Arg(
                 self.vsm,
                 't' as core::ffi::c_char,
                 arg.as_ptr().cast::<core::ffi::c_char>(),
@@ -110,7 +109,7 @@ impl<'a> VSCBuilder<'a> {
     fn vsc_arg(self, o: char, s: &str) -> std::result::Result<Self, std::ffi::NulError> {
         let c_s = CString::new(s)?;
         unsafe {
-            let ret = varnish_sys::VSC_Arg(
+            let ret = ffi::VSC_Arg(
                 self.vsc,
                 o as core::ffi::c_char,
                 c_s.as_ptr().cast::<core::ffi::c_char>(),
@@ -142,17 +141,17 @@ impl<'a> VSCBuilder<'a> {
 
     /// Build the [`VSC`], attaching to a running `varnishd` instance
     pub fn build(mut self) -> Result<VSC<'a>> {
-        let ret = unsafe { varnish_sys::VSM_Attach(self.vsm, 0) };
+        let ret = unsafe { ffi::VSM_Attach(self.vsm, 0) };
         if ret != 0 {
             let err = vsm_error(self.vsm);
             unsafe {
-                varnish_sys::VSM_ResetError(self.vsm);
+                ffi::VSM_ResetError(self.vsm);
             }
             Err(err)
         } else {
             let mut internal = Box::new(VSCInternal::default());
             unsafe {
-                varnish_sys::VSC_State(
+                ffi::VSC_State(
                     self.vsc,
                     Some(add_point),
                     Some(del_point),
@@ -169,10 +168,10 @@ impl<'a> VSCBuilder<'a> {
     }
 }
 
-fn vsm_error(p: *const varnish_sys::vsm) -> Error {
+fn vsm_error(p: *const ffi::vsm) -> Error {
     unsafe {
         Error {
-            s: CStr::from_ptr(varnish_sys::VSM_Error(p))
+            s: CStr::from_ptr(ffi::VSM_Error(p))
                 .to_str()
                 .unwrap()
                 .to_string(),
@@ -188,7 +187,7 @@ impl<'a> Drop for VSCBuilder<'a> {
         );
         if !self.vsc.is_null() {
             unsafe {
-                varnish_sys::VSC_Destroy(&mut self.vsc, self.vsm);
+                ffi::VSC_Destroy(&mut self.vsc, self.vsm);
             }
         }
     }
@@ -197,7 +196,7 @@ impl<'a> Drop for VSCBuilder<'a> {
 impl<'a> Drop for VSC<'a> {
     fn drop(&mut self) {
         unsafe {
-            varnish_sys::VSC_Destroy(&mut self.vsc, self.vsm);
+            ffi::VSC_Destroy(&mut self.vsc, self.vsm);
         }
     }
 }
@@ -280,7 +279,7 @@ impl From<Format> for char {
 
 unsafe extern "C" fn add_point(
     ptr: *mut std::ffi::c_void,
-    point: *const varnish_sys::VSC_point,
+    point: *const ffi::VSC_point,
 ) -> *mut std::ffi::c_void {
     let internal = ptr.cast::<VSCInternal>();
     let k = point as usize;
@@ -298,7 +297,7 @@ unsafe extern "C" fn add_point(
     ptr::null_mut()
 }
 
-unsafe extern "C" fn del_point(ptr: *mut std::ffi::c_void, point: *const varnish_sys::VSC_point) {
+unsafe extern "C" fn del_point(ptr: *mut std::ffi::c_void, point: *const ffi::VSC_point) {
     let internal = ptr.cast::<VSCInternal>();
     let k = point as usize;
     assert!((*internal).points.contains_key(&k));
@@ -369,7 +368,7 @@ impl<'a> VSC<'a> {
     /// (if a key appears in both `Vec`s, the statistic got replaced).
     pub fn update(&mut self) -> (Vec<usize>, Vec<usize>) {
         unsafe {
-            varnish_sys::VSC_Iter(self.vsc, self.vsm, None, ptr::null_mut());
+            ffi::VSC_Iter(self.vsc, self.vsm, None, ptr::null_mut());
         }
         let added = std::mem::take(&mut self.internal.added);
         let deleted = std::mem::take(&mut self.internal.deleted);

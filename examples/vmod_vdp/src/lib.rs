@@ -1,6 +1,6 @@
 varnish::boilerplate!();
 
-use varnish::varnish_sys;
+use varnish::ffi;
 use varnish::vcl::ctx::{Ctx, Event};
 use varnish::vcl::processor::{new_vdp, InitResult, PushAction, PushResult, VDPCtx, VDP};
 use varnish::vcl::vpriv::VPriv;
@@ -22,7 +22,7 @@ impl VDP for Flipper {
 
     // `new` is called when the VCL specifies "flipper" in `resp.filters`
     // just return an default struct, thanks to the derive macro
-    fn new(_: &mut Ctx, _: &mut VDPCtx, _oc: *mut varnish_sys::objcore) -> InitResult<Self> {
+    fn new(_: &mut Ctx, _: &mut VDPCtx, _oc: *mut ffi::objcore) -> InitResult<Self> {
         InitResult::Ok(Default::default())
     }
 
@@ -45,18 +45,18 @@ impl VDP for Flipper {
 
 pub unsafe fn event(
     ctx: &mut Ctx,
-    vp: &mut VPriv<varnish_sys::vdp>,
+    vp: &mut VPriv<ffi::vdp>,
     event: Event,
 ) -> Result<(), &'static str> {
     match event {
         // on load, create the VDP C struct, save it into a priv, they register it
         Event::Load => {
             vp.store(new_vdp::<Flipper>());
-            varnish_sys::VRT_AddVDP(ctx.raw, vp.as_ref().unwrap())
+            ffi::VRT_AddVDP(ctx.raw, vp.as_ref().unwrap())
         }
         // on discard, deregister the VDP, but don't worry about cleaning it, it'll be done by
         // Varnish automatically
-        Event::Discard => varnish_sys::VRT_RemoveVDP(ctx.raw, vp.as_ref().unwrap()),
+        Event::Discard => ffi::VRT_RemoveVDP(ctx.raw, vp.as_ref().unwrap()),
         _ => (),
     }
     Ok(())

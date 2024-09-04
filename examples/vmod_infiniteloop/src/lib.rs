@@ -1,6 +1,6 @@
 varnish::boilerplate!();
 
-use varnish::varnish_sys::{BUSYOBJ_MAGIC, REQ_MAGIC};
+use varnish::ffi::{BUSYOBJ_MAGIC, REQ_MAGIC};
 use varnish::vcl::ctx::Ctx;
 
 varnish::vtc!(test01);

@@ -14,7 +14,7 @@ use std::ffi::{c_char, c_void};
 use std::ptr;
 use std::slice::from_raw_parts_mut;
 
-use crate::varnish_sys;
+use crate::ffi;
 
 /// A workspace object
 ///
@@ -25,13 +25,13 @@ use crate::varnish_sys;
 /// space, consider storing your data in a [`VPriv`](crate::vcl::vpriv::VPriv).
 pub struct WS<'a> {
     /// Raw pointer to the C struct
-    pub raw: *mut varnish_sys::ws,
+    pub raw: *mut ffi::ws,
     phantom_a: std::marker::PhantomData<&'a u8>,
 }
 
 impl<'a> WS<'a> {
     /// Wrap a raw pointer into an object we can use.
-    pub fn new(raw: *mut varnish_sys::ws) -> Self {
+    pub fn new(raw: *mut ffi::ws) -> Self {
         assert!(!raw.is_null(), "raw pointer was null");
         WS {
             raw,
@@ -43,9 +43,9 @@ impl<'a> WS<'a> {
     #[cfg(not(test))]
     pub fn alloc(&mut self, sz: usize) -> Result<&'a mut [u8], String> {
         let wsp = unsafe { self.raw.as_mut().unwrap() };
-        assert_eq!(wsp.magic, varnish_sys::WS_MAGIC);
+        assert_eq!(wsp.magic, ffi::WS_MAGIC);
 
-        let p = unsafe { varnish_sys::WS_Alloc(wsp, sz as u32).cast::<u8>() };
+        let p = unsafe { ffi::WS_Alloc(wsp, sz as u32).cast::<u8>() };
         if p.is_null() {
             Err(format!("workspace allocation ({sz} bytes) failed"))
         } else {
@@ -55,7 +55,7 @@ impl<'a> WS<'a> {
     #[cfg(test)]
     pub fn alloc(&mut self, sz: usize) -> Result<&'a mut [u8], String> {
         let wsp = unsafe { self.raw.as_mut().unwrap() };
-        assert_eq!(wsp.magic, varnish_sys::WS_MAGIC);
+        assert_eq!(wsp.magic, ffi::WS_MAGIC);
 
         let al = align_of::<*const c_void>();
         let aligned_sz = ((sz + al - 1) / al) * al;
@@ -114,10 +114,10 @@ impl<'a> WS<'a> {
     /// [`ReservedBuf::release()`] for more information.
     pub fn reserve(&mut self) -> ReservedBuf<'a> {
         let wsp = unsafe { self.raw.as_mut().unwrap() };
-        assert_eq!(wsp.magic, varnish_sys::WS_MAGIC);
+        assert_eq!(wsp.magic, ffi::WS_MAGIC);
 
         unsafe {
-            let sz = varnish_sys::WS_ReserveAll(wsp) as usize;
+            let sz = ffi::WS_ReserveAll(wsp) as usize;
 
             let buf = from_raw_parts_mut(wsp.f.cast::<u8>(), sz);
             ReservedBuf {
@@ -168,7 +168,7 @@ impl<'a> WS<'a> {
 pub struct ReservedBuf<'a> {
     /// The reserved buffer
     pub buf: &'a mut [u8],
-    wsp: *mut varnish_sys::ws,
+    wsp: *mut ffi::ws,
     b: *mut u8,
     len: usize,
 }
@@ -205,8 +205,8 @@ impl<'a> Drop for ReservedBuf<'a> {
     fn drop(&mut self) {
         unsafe {
             let wsp = self.wsp.as_mut().unwrap();
-            assert_eq!(wsp.magic, varnish_sys::WS_MAGIC);
-            varnish_sys::WS_Release(wsp, self.len as u32);
+            assert_eq!(wsp.magic, ffi::WS_MAGIC);
+            ffi::WS_Release(wsp, self.len as u32);
         }
     }
 }
@@ -216,7 +216,7 @@ impl<'a> Drop for ReservedBuf<'a> {
 /// As the name implies, this struct mainly exist to facilitate testing and should probably not be
 /// used elsewhere.
 pub struct TestWS {
-    c_ws: varnish_sys::ws,
+    c_ws: ffi::ws,
     #[allow(dead_code)]
     space: Vec<c_char>,
 }
@@ -231,8 +231,8 @@ impl TestWS {
 
         let s = v.as_mut_ptr();
         TestWS {
-            c_ws: varnish_sys::ws {
-                magic: varnish_sys::WS_MAGIC,
+            c_ws: ffi::ws {
+                magic: ffi::WS_MAGIC,
                 id: ['t' as c_char, 's' as c_char, 't' as c_char, '\0' as c_char],
                 s,
                 f: s,
@@ -245,8 +245,8 @@ impl TestWS {
 
     /// Return a pointer to the underlying C ws struct. As usual, the caller needs to ensure that
     /// self doesn't outlive the returned pointer.
-    pub fn as_ptr(&mut self) -> *mut varnish_sys::ws {
-        &mut self.c_ws as *mut varnish_sys::ws
+    pub fn as_ptr(&mut self) -> *mut ffi::ws {
+        &mut self.c_ws as *mut ffi::ws
     }
 
     /// build a `WS`

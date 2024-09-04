@@ -92,7 +92,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{env, fs};
 
-pub mod varnish_sys {
+pub mod ffi {
     #![allow(
         improper_ctypes,
         non_upper_case_globals,
@@ -299,7 +299,7 @@ pub fn generate_boilerplate() -> Result<(), vcl::Error> {
         .arg(env::var("OUT_DIR").unwrap())
         .arg("-a")
         .arg(
-            std::str::from_utf8(varnish_sys::VMOD_ABI_Version)
+            std::str::from_utf8(ffi::VMOD_ABI_Version)
                 .unwrap()
                 .trim_matches('\0'),
         )

@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 use std::os::raw::c_void;
 use std::ptr;
 
-use crate::varnish_sys;
+use crate::ffi;
 
 // This is annoying. `vmod_priv` contains a pointer to `vmod_priv_methods`
 // that we need to use to free our object, however, we need to piggy-back
@@ -16,18 +16,18 @@ use crate::varnish_sys;
 // - vmod_priv_methods would have a method to free itself
 // - we would be able to create vmod_priv_methods from a const fn
 pub struct VPriv<T> {
-    ptr: *mut varnish_sys::vmod_priv,
+    ptr: *mut ffi::vmod_priv,
     phantom: PhantomData<T>,
 }
 
 struct InnerVPriv<T> {
-    methods: *mut varnish_sys::vmod_priv_methods,
+    methods: *mut ffi::vmod_priv_methods,
     name: *mut CString,
     obj: Option<T>,
 }
 
 impl<T> VPriv<T> {
-    pub fn new(vp: *mut varnish_sys::vmod_priv) -> Self {
+    pub fn new(vp: *mut ffi::vmod_priv) -> Self {
         assert_ne!(vp, ptr::null_mut());
         VPriv::<T> {
             ptr: vp,
@@ -43,8 +43,8 @@ impl<T> VPriv<T> {
         unsafe {
             if self.get_inner().is_none() {
                 let name = Box::into_raw(Box::new(CString::new(type_name::<T>()).unwrap()));
-                let methods = varnish_sys::vmod_priv_methods {
-                    magic: varnish_sys::VMOD_PRIV_METHODS_MAGIC,
+                let methods = ffi::vmod_priv_methods {
+                    magic: ffi::VMOD_PRIV_METHODS_MAGIC,
                     type_: (*name).as_ptr(),
                     fini: Some(vpriv_free::<T>),
                 };
@@ -84,7 +84,7 @@ impl<T> VPriv<T> {
     }
 }
 
-unsafe extern "C" fn vpriv_free<T>(_: *const varnish_sys::vrt_ctx, ptr: *mut c_void) {
+unsafe extern "C" fn vpriv_free<T>(_: *const ffi::vrt_ctx, ptr: *mut c_void) {
     let inner_priv = Box::from_raw(ptr.cast::<InnerVPriv<T>>());
     drop(Box::from_raw(inner_priv.name));
     drop(Box::from_raw(inner_priv.methods));
@@ -92,11 +92,10 @@ unsafe extern "C" fn vpriv_free<T>(_: *const varnish_sys::vrt_ctx, ptr: *mut c_v
 
 #[test]
 fn exploration() {
-    let mut vp = varnish_sys::vmod_priv {
+    let mut vp = ffi::vmod_priv {
         priv_: ptr::null::<c_void>() as *mut c_void,
         len: 0,
-        methods: ptr::null::<varnish_sys::vmod_priv_methods>()
-            as *mut varnish_sys::vmod_priv_methods,
+        methods: ptr::null::<ffi::vmod_priv_methods>() as *mut ffi::vmod_priv_methods,
     };
 
     let mut vpriv_int = VPriv::new(&mut vp);
@@ -112,6 +111,6 @@ fn exploration() {
     unsafe {
         assert_eq!(CStr::from_ptr((*vp.methods).type_).to_str().unwrap(), "i32");
 
-        vpriv_free::<i32>(ptr::null::<varnish_sys::vrt_ctx>(), vp.priv_);
+        vpriv_free::<i32>(ptr::null::<ffi::vrt_ctx>(), vp.priv_);
     }
 }

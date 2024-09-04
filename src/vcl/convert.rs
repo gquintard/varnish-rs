@@ -50,7 +50,7 @@ use std::os::raw::{c_char, c_void};
 use std::ptr;
 use std::time::Duration;
 
-use crate::varnish_sys::*;
+use crate::ffi::*;
 use crate::vcl::probe;
 use crate::vcl::probe::{COWProbe, Probe};
 use crate::vcl::vpriv::VPriv;

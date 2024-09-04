@@ -1,6 +1,6 @@
 varnish::boilerplate!();
 
-use varnish::varnish_sys;
+use varnish::ffi;
 use varnish::vcl::ctx::{Ctx, Event};
 use varnish::vcl::processor::{new_vfp, InitResult, PullResult, VFPCtx, VFP};
 use varnish::vcl::vpriv::VPriv;
@@ -40,18 +40,18 @@ impl VFP for Lower {
 
 pub unsafe fn event(
     ctx: &mut Ctx,
-    vp: &mut VPriv<varnish_sys::vfp>,
+    vp: &mut VPriv<ffi::vfp>,
     event: Event,
 ) -> Result<(), &'static str> {
     match event {
         // on load, create the VFP C struct, save it into a priv, they register it
         Event::Load => {
             vp.store(new_vfp::<Lower>());
-            varnish_sys::VRT_AddVFP(ctx.raw, vp.as_ref().unwrap())
+            ffi::VRT_AddVFP(ctx.raw, vp.as_ref().unwrap())
         }
         // on discard, deregister the VFP, but don't worry about cleaning it, it'll be done by
         // Varnish automatically
-        Event::Discard => varnish_sys::VRT_RemoveVFP(ctx.raw, vp.as_ref().unwrap()),
+        Event::Discard => ffi::VRT_RemoveVFP(ctx.raw, vp.as_ref().unwrap()),
         _ => (),
     }
     Ok(())
