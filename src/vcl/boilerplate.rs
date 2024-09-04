@@ -5,7 +5,7 @@
 //! From a vmod point of view, you'll probably never only need those. You'll be
 //! able to ignore them completely and use the `rust` equivalents, or you'll
 //! need to tap into `varnish_sys` directly.
-pub use varnish_sys::{
+pub use crate::varnish_sys::{
     vcl_event_e, vmod_priv, vrt_ctx, VMOD_ABI_Version, VCL_ACL, VCL_BACKEND, VCL_BLOB, VCL_BODY,
     VCL_BOOL, VCL_BYTES, VCL_DURATION, VCL_ENUM, VCL_HEADER, VCL_HTTP, VCL_INT, VCL_IP, VCL_PROBE,
     VCL_REAL, VCL_REGEX, VCL_STEVEDORE, VCL_STRANDS, VCL_STRING, VCL_SUB, VCL_TIME, VCL_VOID,

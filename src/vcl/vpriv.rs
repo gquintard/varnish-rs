@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 use std::os::raw::c_void;
 use std::ptr;
 
-use varnish_sys;
+use crate::varnish_sys;
 
 // This is annoying. `vmod_priv` contains a pointer to `vmod_priv_methods`
 // that we need to use to free our object, however, we need to piggy-back

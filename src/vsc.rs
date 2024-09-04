@@ -9,6 +9,8 @@ use std::collections::HashMap;
 use std::ffi::{CStr, CString};
 use std::ptr;
 
+use crate::varnish_sys;
+
 /// Error wrapping the VSM/VSC error reported by the C api
 pub struct Error {
     s: String,

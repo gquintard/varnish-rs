@@ -30,9 +30,6 @@
 //! ```
 //! ## Cargo.toml
 //!
-//! You will need at least `varnish-rs` (this crate), and maybe
-//! [`varnish-sys`](https://crates.io/crates/varnish-sys) if you use Varnish internals directly.
-//!
 //! ``` toml
 //! [build-dependencies]
 //! varnish = "0.0.19"
@@ -94,6 +91,22 @@ use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{env, fs};
+
+pub mod varnish_sys {
+    #![allow(
+        improper_ctypes,
+        non_upper_case_globals,
+        non_camel_case_types,
+        non_snake_case
+    )]
+    #![allow(
+        clippy::pedantic,
+        clippy::approx_constant,
+        clippy::useless_transmute,
+        clippy::too_many_arguments
+    )]
+    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+}
 
 pub mod vsc;
 

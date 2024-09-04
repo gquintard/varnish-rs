@@ -1,5 +1,6 @@
 varnish::boilerplate!();
 
+use varnish::varnish_sys;
 use varnish::vcl::ctx::{Ctx, Event};
 use varnish::vcl::processor::{new_vfp, InitResult, PullResult, VFPCtx, VFP};
 use varnish::vcl::vpriv::VPriv;

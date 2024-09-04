@@ -4,6 +4,7 @@ use std::io::Write;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::time::Duration;
 
+use varnish::varnish_sys;
 use varnish::vcl::ctx::{Ctx, Event};
 use varnish::vcl::processor::{new_vfp, InitResult, PullResult, VFPCtx, VFP};
 use varnish::vcl::vpriv::VPriv;

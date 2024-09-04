@@ -49,9 +49,12 @@ similar_names = "allow"
 wildcard_imports = "allow"
 
 [dependencies]
-varnish-sys = { path = "varnish-sys", version = "0.0.19" }
 pkg-config = "0.3.22"
 serde = { version = "1", features = ["derive"] }
+
+[build-dependencies]
+pkg-config = "0.3.30"
+bindgen = "0.70.1"
 
 [workspace]
 
