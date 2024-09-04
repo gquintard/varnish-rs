@@ -27,13 +27,13 @@ jobs:
       - name: test-fmt
         run: cargo fmt --all -- --check
       - name: build
-        run: RUSTFLAGS='-D warnings' cargo build --workspace --all-targets
+        run: cargo build --workspace --all-targets
       - name: test
         run: cargo test --workspace --all-targets
       - name: test-doc
         run: |
           cargo test --doc
-          RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
+          cargo doc --no-deps
 
   # Ensure that the docs can be built at docs.rs without varnish dependencies
   test-docs-rs:
@@ -45,4 +45,4 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
       - name: Ensure docs can be built at docs.rs without varnish dependencies
-        run: RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
+        run: cargo doc --no-deps

@@ -1,0 +1,3 @@
+[build]
+rustflags = "-D warnings"
+rustdocflags = "-D warnings"
