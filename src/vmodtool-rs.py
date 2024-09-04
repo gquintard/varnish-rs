@@ -1,4 +1,3 @@
-
 import optparse
 import json
 import io
@@ -7,18 +6,20 @@ import sys
 
 import vmodtool
 
+
 #######################################################################
 
 def conv(vt):
     s = ""
     if vt.startswith("PRIV_"):
         return "&mut " + s
-    #if vt.startswith("PROBE"):
+    # if vt.startswith("PROBE"):
     #    return "&" + s
     elif vt == "STRING":
         return "&*" + s
     else:
         return s
+
 
 def rustFuncSig(self, vcc, t):
     buf = io.StringIO()
@@ -42,6 +43,7 @@ def rustFuncSig(self, vcc, t):
         buf.write(" -> {0}".format(self.retval.ct))
     return buf.getvalue()
 
+
 def rustFuncArgs(self, t):
     args = []
     args.append("\t\t&mut _ctx")
@@ -50,12 +52,15 @@ def rustFuncArgs(self, t):
     for a in self.args:
         if self.argstruct:
             if a.opt:
-                args.append("\t\tif (*args).valid_{nm} == 0 {{ None }} else {{ Some({conv}arg_{nm}) }}".format(conv = conv(a.vt), nm = a.nm2))
+                args.append(
+                    "\t\tif (*args).valid_{nm} == 0 {{ None }} else {{ Some({conv}arg_{nm}) }}".format(conv=conv(a.vt),
+                                                                                                       nm=a.nm2))
             else:
-                args.append("\t\t{conv}arg_{nm}".format(conv = conv(a.vt), nm = a.nm2))
+                args.append("\t\t{conv}arg_{nm}".format(conv=conv(a.vt), nm=a.nm2))
         else:
-            args.append("\t\t{conv}arg_{nm}".format(conv = conv(a.vt), nm = a.nm2))
+            args.append("\t\t{conv}arg_{nm}".format(conv=conv(a.vt), nm=a.nm2))
     print(",\n".join(args))
+
 
 def rustfuncBody(self, vcc, t):
     if self.argstruct:
@@ -74,9 +79,9 @@ def rustfuncBody(self, vcc, t):
         print("\tlet mut _ctx = Ctx::new(vrt_ctx);");
     for a in self.args:
         if self.argstruct:
-            print("\tlet mut arg_{nm} = (*args).{nm}.into_rust();".format(nm = a.nm2))
+            print("\tlet mut arg_{nm} = (*args).{nm}.into_rust();".format(nm=a.nm2))
         else:
-            print("\tlet mut arg_{nm} = {nm}.into_rust();".format(nm = a.nm2))
+            print("\tlet mut arg_{nm} = {nm}.into_rust();".format(nm=a.nm2))
     if t == "ini":
         print("\tmatch crate::{0}::new(".format(self.obj[1:]))
         rustFuncArgs(self, t)
@@ -84,19 +89,20 @@ def rustfuncBody(self, vcc, t):
 \t\tOk(o) => { *objp = Box::into_raw(Box::new(o)); },
 \t\tErr(e) => { _ctx.fail(&e.to_string()); },
 \t}''')
-    elif  t== "fini":
+    elif t == "fini":
         print("\tdrop(Box::from_raw(*objp));")
     else:
         if t == "meth":
-            print("\tmatch (*obj){name}(".format(name = self.bname))
+            print("\tmatch (*obj){name}(".format(name=self.bname))
         else:
-            print("\tmatch crate::{name}(".format(name = self.cname()))
+            print("\tmatch crate::{name}(".format(name=self.cname()))
         rustFuncArgs(self, t)
         print('''\t).into_result().and_then(|v| v.into_vcl(&mut _ctx.ws)) {{
             Ok(v) => v,
             Err(ref e) => {{ _ctx.fail(e); <{0}>::vcl_default() }},
         }}'''.format(self.retval.ct if self.retval.vt != "VOID" else "()"))
     print("}")
+
 
 def rustEventFunc():
     print('''
@@ -112,6 +118,7 @@ unsafe extern "C" fn vmod_c__event(vrt_ctx: * mut varnish::vcl::boilerplate::vrt
     }
 }
 ''')
+
 
 def runmain(inputvcc, rstdir, abi):
     v = vmodtool.vcc(inputvcc, rstdir, None)
@@ -137,7 +144,7 @@ def runmain(inputvcc, rstdir, abi):
     buf.write('#undef VARGS\n')
     buf.write('#undef VENUM\n')
 
-    proto = buf.getvalue() + "static struct {csn} {csn};".format(csn = v.csn)
+    proto = buf.getvalue() + "static struct {csn} {csn};".format(csn=v.csn)
     buf.close()
 
     print("""
@@ -146,7 +153,7 @@ use std::os::raw::*;
 use std::boxed::Box;
 use varnish::vcl::ctx::{{ Ctx, Event }};
 use varnish::vcl::convert::{{IntoRust, IntoVCL, IntoResult, VCLDefault}};
-""".format(modname = v.modname))
+""".format(modname=v.modname))
 
     # C stuff is done, get comfortable with our own types
     for i in vmodtool.CTYPES:
@@ -170,27 +177,30 @@ use varnish::vcl::convert::{{IntoRust, IntoVCL, IntoResult, VCLDefault}};
 
     print("""
 #[repr(C)]
-pub struct {csn} {{""".format(csn = v.csn))
+pub struct {csn} {{""".format(csn=v.csn))
     for i in v.contents:
         def rustMemberDeclare(name, func, t):
             print("\t{0}:\tOption<unsafe extern \"C\" fn{1}>,".format(name, rustFuncSig(func, v, t)))
+
         if isinstance(i, vmodtool.EventStanza):
-            print('''\t_event: Option<unsafe extern "C" fn(vrt_ctx: * mut varnish::vcl::boilerplate::vrt_ctx, vp: *mut varnish::vcl::boilerplate::vmod_priv, ev: varnish::vcl::boilerplate::vcl_event_e) -> varnish::vcl::boilerplate::VCL_INT>,''')
+            print(
+                '''\t_event: Option<unsafe extern "C" fn(vrt_ctx: * mut varnish::vcl::boilerplate::vrt_ctx, vp: *mut varnish::vcl::boilerplate::vmod_priv, ev: varnish::vcl::boilerplate::vcl_event_e) -> varnish::vcl::boilerplate::VCL_INT>,''')
         elif isinstance(i, vmodtool.FunctionStanza):
             rustMemberDeclare(i.proto.cname(), i.proto, "func")
         elif isinstance(i, vmodtool.ObjectStanza):
             rustMemberDeclare(i.init.cname(), i.init, "ini")
             rustMemberDeclare(i.fini.cname(), i.fini, "fini")
-            for m in i.methods: 
+            for m in i.methods:
                 rustMemberDeclare(m.proto.cname(), m.proto, "meth")
     print("}")
 
     print("""
 #[no_mangle]
-pub static {csn}: {csn} = {csn} {{""".format(csn = v.csn))
+pub static {csn}: {csn} = {csn} {{""".format(csn=v.csn))
     for i in v.contents:
         def rustMemberAssign(name):
             print("\t{0}: Some(vmod_c_{0}),".format(name))
+
         if isinstance(i, vmodtool.EventStanza):
             print("\t_event: Some(vmod_c__event),")
         elif isinstance(i, vmodtool.FunctionStanza):
@@ -198,7 +208,7 @@ pub static {csn}: {csn} = {csn} {{""".format(csn = v.csn))
         elif isinstance(i, vmodtool.ObjectStanza):
             rustMemberAssign(i.init.cname())
             rustMemberAssign(i.fini.cname())
-            for m in i.methods: 
+            for m in i.methods:
                 rustMemberAssign(m.proto.cname())
     print("};")
 
@@ -212,7 +222,7 @@ pub static {csn}: {csn} = {csn} {{""".format(csn = v.csn))
     jl = [["$VMOD", "1.0", v.modname, v.csn, v.file_id, abi, major, minor]]
     jl.append(["$CPROTO", proto])
     for j in v.contents:
-            j.json(jl)
+        j.json(jl)
 
     print("""
 #[repr(C)]
@@ -247,13 +257,14 @@ pub static Vmod_{name}_Data: vmod_data = vmod_data {{
 const JSON: *const c_char =
     c"VMOD_JSON_SPEC\x02\\n{json}\\n\x03".as_ptr();
 """.format(
-        file_id = v.file_id,
-        name = v.modname,
-        csn = v.csn,
-        major = major,
-        minor = minor,
-        json = escape_json(json.dumps(jl, indent=4))
+        file_id=v.file_id,
+        name=v.modname,
+        csn=v.csn,
+        major=major,
+        minor=minor,
+        json=escape_json(json.dumps(jl, indent=4))
     ))
+
 
 def escape_json(s):
     n = ""
@@ -263,6 +274,7 @@ def escape_json(s):
         n += i
     return n
 
+
 if __name__ == "__main__":
     usagetext = "Usage: %prog [options] <vmod.vcc>"
     oparser = optparse.OptionParser(usage=usagetext)
@@ -271,7 +283,7 @@ if __name__ == "__main__":
                        help="Be strict when parsing the input file")
     oparser.add_option('-w', '--rstdir', metavar="directory", default='.',
                        help='Where to save the generated RST files ' +
-                       '(default: ".")')
+                            '(default: ".")')
     oparser.add_option('-a', '--abi',
                        help='abi string (VMOD_ABI_Version in C)')
     (opts, args) = oparser.parse_args()
