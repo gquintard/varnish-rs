@@ -5,6 +5,7 @@ varnish::boilerplate!();
 
 use std::collections::HashMap;
 use std::sync::Mutex;
+
 use varnish::vcl::convert::IntoVCL;
 use varnish::vcl::ctx::Ctx;
 use varnish_sys::VCL_STRING;

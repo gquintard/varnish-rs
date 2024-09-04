@@ -3,6 +3,7 @@
 varnish::boilerplate!();
 
 use std::error::Error;
+
 use varnish::vcl::backend::{Backend, Serve, Transfer, VCLBackendPtr};
 use varnish::vcl::ctx::Ctx;
 

@@ -73,7 +73,7 @@ impl<'a> HTTP<'a> {
 
         let idx = self.raw.nhd;
         self.raw.nhd += 1;
-        let res = self.change_header(idx, &format!("{}: {}", name, value));
+        let res = self.change_header(idx, &format!("{name}: {value}"));
         if res.is_ok() {
             unsafe {
                 varnish_sys::VSLbt(
@@ -165,8 +165,8 @@ impl<'a> HTTP<'a> {
     pub fn set_proto(&mut self, value: &str) -> Result<()> {
         self.raw.protover = match value {
             "HTTP/0.9" => 9,
-            "HTTP/1.0" => 10,
-            "HTTP/1.1" => 10,
+            // FIXME: Is this a bug?
+            "HTTP/1.0" | "HTTP/1.1" => 10,
             "HTTP/2.0" => 20,
             _ => 0,
         };
@@ -240,13 +240,11 @@ impl<'a> Iterator for HTTPIter<'a> {
             let nhd = self.http.raw.nhd;
             if self.cursor >= nhd as isize {
                 return None;
-            } else {
-                let hd = unsafe { self.http.raw.hd.offset(self.cursor) };
-                self.cursor += 1;
-                match header_from_hd(hd) {
-                    None => continue,
-                    Some(hdr) => return Some(hdr),
-                }
+            }
+            let hd = unsafe { self.http.raw.hd.offset(self.cursor) };
+            self.cursor += 1;
+            if let Some(hdr) = header_from_hd(hd) {
+                return Some(hdr);
             }
         }
     }

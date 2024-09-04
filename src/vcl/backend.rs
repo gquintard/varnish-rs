@@ -71,14 +71,12 @@
 //! }
 //! ```
 use std::error::Error;
-use std::ffi::c_char;
-use std::ffi::CString;
+use std::ffi::{c_char, CString};
 use std::net::{SocketAddr, TcpStream};
+use std::os::raw::c_void;
 use std::os::unix::io::FromRawFd;
 use std::ptr;
 use std::time::SystemTime;
-
-use std::os::raw::c_void;
 
 use crate::vcl::convert::IntoVCL;
 use crate::vcl::ctx::{Ctx, Event, LogTag};
@@ -242,7 +240,7 @@ pub trait Serve<T: Transfer> {
     /// Used to generate the output of `varnishadm backend.list`. `detailed` means the `-p`
     /// argument was passed and `json` means `-j` was passed.
     fn list(&self, ctx: &mut Ctx, vsb: &mut Vsb, detailed: bool, json: bool) {
-        self.list_without_probe(ctx, vsb, detailed, json)
+        self.list_without_probe(ctx, vsb, detailed, json);
     }
 }
 
@@ -411,7 +409,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
             }
             if beresp.proto().is_none() {
                 if let Err(e) = beresp.set_proto("HTTP/1.1") {
-                    ctx.fail(&format!("{}: {}", (*backend).get_type(), e));
+                    ctx.fail(&format!("{}: {e}", (*backend).get_type()));
                     return 1;
                 }
             }
@@ -538,7 +536,7 @@ unsafe extern "C" fn wrap_getip<T: Transfer>(
     assert_eq!((*bo.htc).magic, varnish_sys::BUSYOBJ_MAGIC);
     assert!(!(*bo.htc).priv_.is_null());
 
-    let mut ctx = Ctx::new(ctxp as *mut varnish_sys::vrt_ctx);
+    let mut ctx = Ctx::new(ctxp.cast_mut());
 
     let transfer = (*bo.htc).priv_ as *const T;
     match (*transfer)
@@ -546,8 +544,8 @@ unsafe extern "C" fn wrap_getip<T: Transfer>(
         .and_then(|ip| ip.into_vcl(&mut ctx.ws).map_err(|e| e.into()))
     {
         Err(e) => {
-            ctx.fail(&format!("{}", e));
-            std::ptr::null()
+            ctx.fail(&format!("{e}"));
+            ptr::null()
         }
         Ok(p) => p,
     }
@@ -569,7 +567,7 @@ unsafe extern "C" fn wrap_finish<S: Serve<T>, T: Transfer>(
     (*(*ctxp).bo).htc = ptr::null_mut();
 
     let backend = (*be).priv_ as *const S;
-    (*backend).finish(&mut Ctx::new(ctxp as *mut varnish_sys::vrt_ctx));
+    (*backend).finish(&mut Ctx::new(ctxp.cast_mut()));
 }
 
 impl<S: Serve<T>, T: Transfer> Drop for Backend<S, T> {

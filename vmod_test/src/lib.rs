@@ -5,10 +5,9 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::time::Duration;
 
 use varnish::vcl::ctx::{Ctx, Event};
-use varnish::vcl::probe;
 use varnish::vcl::processor::{new_vfp, InitResult, PullResult, VFPCtx, VFP};
 use varnish::vcl::vpriv::VPriv;
-use varnish::vcl::Result;
+use varnish::vcl::{probe, Result};
 
 varnish::vtc!(test01);
 varnish::vtc!(test02);

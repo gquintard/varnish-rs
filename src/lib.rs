@@ -89,12 +89,11 @@
 //!
 //! The various type translations are described in detail in [`crate::vcl::convert`].
 
-use std::env;
 use std::env::join_paths;
-use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::{env, fs};
 
 pub mod vsc;
 
@@ -133,13 +132,13 @@ pub mod vcl {
 
     impl std::error::Error for Error {}
 
-    impl std::convert::From<String> for Error {
+    impl From<String> for Error {
         fn from(s: String) -> Self {
             Error { s }
         }
     }
 
-    impl std::convert::From<&str> for Error {
+    impl From<&str> for Error {
         fn from(s: &str) -> Self {
             Error { s: s.into() }
         }

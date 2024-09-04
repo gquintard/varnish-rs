@@ -62,7 +62,7 @@ impl<'a> VSCBuilder<'a> {
             let vsc = varnish_sys::VSC_New();
             assert!(!vsc.is_null());
             // get raw value, we can always clamp them later
-            varnish_sys::VSC_Arg(vsc, 'r' as core::ffi::c_char, std::ptr::null());
+            varnish_sys::VSC_Arg(vsc, 'r' as core::ffi::c_char, ptr::null());
             VSCBuilder {
                 vsm,
                 vsc,
@@ -106,7 +106,7 @@ impl<'a> VSCBuilder<'a> {
     }
 
     fn vsc_arg(self, o: char, s: &str) -> std::result::Result<Self, std::ffi::NulError> {
-        let c_s = std::ffi::CString::new(s)?;
+        let c_s = CString::new(s)?;
         unsafe {
             let ret = varnish_sys::VSC_Arg(
                 self.vsc,
@@ -293,7 +293,7 @@ unsafe extern "C" fn add_point(
     };
     assert_eq!((*internal).points.insert(k, stat), None);
     (*internal).added.push(k);
-    std::ptr::null_mut()
+    ptr::null_mut()
 }
 
 unsafe extern "C" fn del_point(ptr: *mut std::ffi::c_void, point: *const varnish_sys::VSC_point) {
@@ -367,7 +367,7 @@ impl<'a> VSC<'a> {
     /// (if a key appears in both `Vec`s, the statistic got replaced).
     pub fn update(&mut self) -> (Vec<usize>, Vec<usize>) {
         unsafe {
-            varnish_sys::VSC_Iter(self.vsc, self.vsm, None, std::ptr::null_mut());
+            varnish_sys::VSC_Iter(self.vsc, self.vsm, None, ptr::null_mut());
         }
         let added = std::mem::take(&mut self.internal.added);
         let deleted = std::mem::take(&mut self.internal.deleted);
