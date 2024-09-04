@@ -57,7 +57,7 @@ impl<'a> WS<'a> {
         let wsp = unsafe { self.raw.as_mut().unwrap() };
         assert_eq!(wsp.magic, varnish_sys::WS_MAGIC);
 
-        let al = std::mem::align_of::<*const c_void>();
+        let al = align_of::<*const c_void>();
         let aligned_sz = ((sz + al - 1) / al) * al;
 
         unsafe {
