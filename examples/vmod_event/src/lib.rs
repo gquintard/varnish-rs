@@ -1,8 +1,6 @@
 varnish::boilerplate!();
 
-use varnish::vcl::ctx::Ctx;
-use varnish::vcl::ctx::Event;
-use varnish::vcl::ctx::LogTag;
+use varnish::vcl::ctx::{Ctx, Event, LogTag};
 use varnish::vcl::vpriv::VPriv;
 
 varnish::vtc!(test01);

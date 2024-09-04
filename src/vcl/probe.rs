@@ -1,7 +1,8 @@
-use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::os::raw::c_uint;
 use std::time::Duration;
+
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum COWRequest<'a> {

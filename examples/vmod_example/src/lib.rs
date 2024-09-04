@@ -3,7 +3,6 @@ varnish::boilerplate!();
 
 // even though we won't use it here, we still need to know what the context type is
 use varnish::vcl::ctx::Ctx;
-
 // this import is only needed for tests
 #[cfg(test)]
 use varnish::vcl::ctx::TestCtx;

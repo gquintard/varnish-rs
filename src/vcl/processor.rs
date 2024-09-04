@@ -8,8 +8,9 @@
 use std::ffi::{c_char, c_int, c_void};
 use std::ptr;
 
-use crate::vcl::ctx::Ctx;
 use varnish_sys::{objcore, vdp_ctx, vfp_ctx, vfp_entry};
+
+use crate::vcl::ctx::Ctx;
 
 /// passed to [`VDP::push`] to describe special conditions occuring in the pipeline.
 #[derive(Debug, Copy, Clone)]
@@ -60,11 +61,7 @@ where
 {
     /// Create a new processor, possibly using knowledge from the pipeline, or from the current
     /// request.
-    fn new(
-        vrt_ctx: &mut Ctx,
-        vdp_ctx: &mut VDPCtx,
-        oc: *mut varnish_sys::objcore,
-    ) -> InitResult<Self>;
+    fn new(vrt_ctx: &mut Ctx, vdp_ctx: &mut VDPCtx, oc: *mut objcore) -> InitResult<Self>;
     /// Handle the data buffer from the previous processor. This function generally uses
     /// [`VDPCtx::push`] to push data to the next processor.
     fn push(&mut self, ctx: &mut VDPCtx, act: PushAction, buf: &[u8]) -> PushResult;
@@ -152,7 +149,7 @@ pub fn new_vdp<T: VDP>() -> varnish_sys::vdp {
 
 /// A thin wrapper around a `*mut varnish_sys::vdp_ctx`
 pub struct VDPCtx<'a> {
-    pub raw: &'a mut varnish_sys::vdp_ctx,
+    pub raw: &'a mut vdp_ctx,
 }
 
 impl<'a> VDPCtx<'a> {
@@ -161,7 +158,7 @@ impl<'a> VDPCtx<'a> {
     /// # Safety
     ///
     /// The caller is in charge of making sure the structure doesn't outlive the pointer.
-    pub unsafe fn new(raw: *mut varnish_sys::vdp_ctx) -> Self {
+    pub unsafe fn new(raw: *mut vdp_ctx) -> Self {
         let raw = raw.as_mut().unwrap();
         assert_eq!(raw.magic, varnish_sys::VDP_CTX_MAGIC);
         VDPCtx { raw }
@@ -206,7 +203,7 @@ where
 
 unsafe extern "C" fn wrap_vfp_init<T: VFP>(
     vrt_ctx: *const varnish_sys::vrt_ctx,
-    ctxp: *mut varnish_sys::vfp_ctx,
+    ctxp: *mut vfp_ctx,
     vfep: *mut vfp_entry,
 ) -> varnish_sys::vfp_status {
     let ctx = ctxp.as_mut().unwrap();
@@ -229,8 +226,8 @@ unsafe extern "C" fn wrap_vfp_init<T: VFP>(
 }
 
 pub unsafe extern "C" fn wrap_vfp_pull<T: VFP>(
-    ctxp: *mut varnish_sys::vfp_ctx,
-    vfep: *mut varnish_sys::vfp_entry,
+    ctxp: *mut vfp_ctx,
+    vfep: *mut vfp_entry,
     ptr: *mut c_void,
     len: *mut isize,
 ) -> varnish_sys::vfp_status {
@@ -286,7 +283,7 @@ pub fn new_vfp<T: VFP>() -> varnish_sys::vfp {
 
 /// A thin wrapper around a `*mut varnish_sys::vfp_ctx`
 pub struct VFPCtx<'a> {
-    pub raw: &'a mut varnish_sys::vfp_ctx,
+    pub raw: &'a mut vfp_ctx,
 }
 
 impl<'a> VFPCtx<'a> {
@@ -295,7 +292,7 @@ impl<'a> VFPCtx<'a> {
     /// # Safety
     ///
     /// The caller is in charge of making sure the structure doesn't outlive the pointer.
-    pub unsafe fn new(raw: *mut varnish_sys::vfp_ctx) -> Self {
+    pub unsafe fn new(raw: *mut vfp_ctx) -> Self {
         let raw = raw.as_mut().unwrap();
         assert_eq!(raw.magic, varnish_sys::VFP_CTX_MAGIC);
         VFPCtx { raw }
@@ -318,7 +315,7 @@ impl<'a> VFPCtx<'a> {
                 PullResult::End(len as usize)
             }
             varnish_sys::vfp_status_VFP_ERROR => PullResult::Err,
-            n => panic!("unknown vfp_status: {}", n),
+            n => panic!("unknown vfp_status: {n}"),
         }
     }
 }

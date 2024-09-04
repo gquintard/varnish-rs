@@ -1,16 +1,15 @@
 //! Expose the Varnish context (`struct vrt_ctx`) as a Rust object
+use std::ffi::{c_char, c_uint, c_void, CString};
 use std::ptr;
 
-use std::ffi::CString;
-use std::ffi::{c_char, c_uint, c_void};
-
-use crate::vcl::http::HTTP;
-use crate::vcl::ws::{TestWS, WS};
 use varnish_sys::{
     busyobj, req, sess, vrt_ctx, vsb, vsl_log, ws, VRT_fail, VSL_tag_e_SLT_Backend_health,
     VSL_tag_e_SLT_Debug, VSL_tag_e_SLT_Error, VSL_tag_e_SLT_FetchError, VSL_tag_e_SLT_VCL_Error,
     VSL_tag_e_SLT_VCL_Log, VCL_HTTP, VCL_VCL, VRT_CTX_MAGIC,
 };
+
+use crate::vcl::http::HTTP;
+use crate::vcl::ws::{TestWS, WS};
 
 /// VSL logging tag
 ///
@@ -64,7 +63,7 @@ impl LogTag {
 /// }
 /// ```
 pub struct Ctx<'a> {
-    pub raw: &'a mut varnish_sys::vrt_ctx,
+    pub raw: &'a mut vrt_ctx,
     pub http_req: Option<HTTP<'a>>,
     pub http_req_top: Option<HTTP<'a>>,
     pub http_resp: Option<HTTP<'a>>,
@@ -78,9 +77,9 @@ impl<'a> Ctx<'a> {
     ///
     /// The pointer must be non-null, and the magic must match
     #[allow(clippy::not_unsafe_ptr_arg_deref)]
-    pub fn new(raw: *mut varnish_sys::vrt_ctx) -> Self {
+    pub fn new(raw: *mut vrt_ctx) -> Self {
         let raw = unsafe { raw.as_mut().unwrap() };
-        assert_eq!(raw.magic, varnish_sys::VRT_CTX_MAGIC);
+        assert_eq!(raw.magic, VRT_CTX_MAGIC);
         let http_req = HTTP::new(raw.http_req);
         let http_req_top = HTTP::new(raw.http_req_top);
         let http_resp = HTTP::new(raw.http_resp);
@@ -184,7 +183,7 @@ impl TestCtx {
                 msg: ptr::null::<vsb>() as *mut vsb,
                 vsl: ptr::null::<vsl_log>() as *mut vsl_log,
                 vcl: ptr::null::<VCL_VCL>() as VCL_VCL,
-                ws: std::ptr::null_mut::<ws>(),
+                ws: ptr::null_mut::<ws>(),
                 sp: ptr::null::<sess>() as *mut sess,
                 req: ptr::null::<req>() as *mut req,
                 http_req: ptr::null::<VCL_HTTP>() as VCL_HTTP,

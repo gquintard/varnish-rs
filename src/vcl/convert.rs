@@ -46,15 +46,16 @@
 use std::borrow::Cow;
 use std::ffi::CStr;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
-use std::os::raw::*;
+use std::os::raw::{c_char, c_void};
 use std::ptr;
 use std::time::Duration;
+
+use varnish_sys::*;
 
 use crate::vcl::probe;
 use crate::vcl::probe::{COWProbe, Probe};
 use crate::vcl::vpriv::VPriv;
 use crate::vcl::ws::WS;
-use varnish_sys::*;
 
 /// Convert a Rust type into a VCL one
 ///
@@ -190,7 +191,7 @@ impl<'a> IntoVCL<VCL_PROBE> for COWProbe<'a> {
             .as_mut_ptr()
             .cast::<vrt_backend_probe>();
         let probe = unsafe { p.as_mut().unwrap() };
-        probe.magic = varnish_sys::VRT_BACKEND_PROBE_MAGIC;
+        probe.magic = VRT_BACKEND_PROBE_MAGIC;
         match self.request {
             probe::COWRequest::URL(ref s) => {
                 probe.url = s.into_vcl(ws)?;
@@ -215,7 +216,7 @@ impl IntoVCL<VCL_PROBE> for Probe {
             .as_mut_ptr()
             .cast::<vrt_backend_probe>();
         let probe = unsafe { p.as_mut().unwrap() };
-        probe.magic = varnish_sys::VRT_BACKEND_PROBE_MAGIC;
+        probe.magic = VRT_BACKEND_PROBE_MAGIC;
         match self.request {
             probe::Request::URL(ref s) => {
                 probe.url = s.as_str().into_vcl(ws)?;
@@ -236,8 +237,7 @@ impl IntoVCL<VCL_PROBE> for Probe {
 impl IntoVCL<VCL_IP> for SocketAddr {
     fn into_vcl(self, ws: &mut WS) -> Result<VCL_IP, String> {
         unsafe {
-            let p =
-                ws.alloc(vsa_suckaddr_len)?.as_mut_ptr().cast::<suckaddr>();
+            let p = ws.alloc(vsa_suckaddr_len)?.as_mut_ptr().cast::<suckaddr>();
             match self {
                 SocketAddr::V4(sa) => {
                     assert!(!VSA_BuildFAP(
@@ -270,7 +270,7 @@ impl IntoVCL<VCL_IP> for SocketAddr {
 impl IntoVCL<VCL_IP> for Option<SocketAddr> {
     fn into_vcl(self, ws: &mut WS) -> Result<VCL_IP, String> {
         match self {
-            None => Ok(std::ptr::null()),
+            None => Ok(ptr::null()),
             Some(ip) => ip.into_vcl(ws),
         }
     }
@@ -425,13 +425,13 @@ pub trait IntoRust<T> {
 
 impl IntoRust<f64> for VCL_REAL {
     fn into_rust(self) -> f64 {
-        self as f64
+        self
     }
 }
 
 impl IntoRust<i64> for VCL_INT {
     fn into_rust(self) -> i64 {
-        self as i64
+        self
     }
 }
 
@@ -450,7 +450,7 @@ impl<'a> IntoRust<Cow<'a, str>> for VCL_STRING {
 
 impl IntoRust<Duration> for VCL_DURATION {
     fn into_rust(self) -> Duration {
-        Duration::from_secs_f64(self as f64)
+        Duration::from_secs_f64(self)
     }
 }
 
@@ -468,10 +468,10 @@ impl<'a> IntoRust<Option<COWProbe<'a>>> for VCL_PROBE {
                 || pr.request.is_null() && !pr.url.is_null()
         );
         Some(COWProbe {
-            request: if !pr.url.is_null() {
-                crate::vcl::probe::COWRequest::URL(pr.url.into_rust())
+            request: if pr.url.is_null() {
+                probe::COWRequest::Text(pr.request.into_rust())
             } else {
-                crate::vcl::probe::COWRequest::Text(pr.request.into_rust())
+                probe::COWRequest::URL(pr.url.into_rust())
             },
             timeout: pr.timeout.into_rust(),
             interval: pr.interval.into_rust(),
@@ -491,10 +491,10 @@ impl IntoRust<Option<Probe>> for VCL_PROBE {
                 || pr.request.is_null() && !pr.url.is_null()
         );
         Some(Probe {
-            request: if !pr.url.is_null() {
-                probe::Request::URL(pr.url.into_rust().to_string())
-            } else {
+            request: if pr.url.is_null() {
                 probe::Request::Text(pr.request.into_rust().to_string())
+            } else {
+                probe::Request::URL(pr.url.into_rust().to_string())
             },
             timeout: pr.timeout.into_rust(),
             interval: pr.interval.into_rust(),
@@ -512,8 +512,8 @@ impl IntoRust<Option<SocketAddr>> for VCL_IP {
             if self.is_null() {
                 return None;
             }
-            let mut ptr = std::ptr::null();
-            let fam = varnish_sys::VSA_GetPtr(self, &mut ptr) as u32;
+            let mut ptr = ptr::null();
+            let fam = VSA_GetPtr(self, &mut ptr) as u32;
             let port = VSA_Port(self) as u16;
 
             match fam {

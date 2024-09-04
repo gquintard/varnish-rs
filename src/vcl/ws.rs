@@ -30,9 +30,7 @@ pub struct WS<'a> {
 impl<'a> WS<'a> {
     /// Wrap a raw pointer into an object we can use.
     pub fn new(raw: *mut varnish_sys::ws) -> Self {
-        if raw.is_null() {
-            panic!("raw pointer was null");
-        }
+        assert!(!raw.is_null(), "raw pointer was null");
         WS {
             raw,
             phantom_a: std::marker::PhantomData,
@@ -47,7 +45,7 @@ impl<'a> WS<'a> {
 
         let p = unsafe { varnish_sys::WS_Alloc(wsp, sz as u32).cast::<u8>() };
         if p.is_null() {
-            Err(format!("workspace allocation ({} bytes) failed", sz))
+            Err(format!("workspace allocation ({sz} bytes) failed"))
         } else {
             unsafe { Ok(from_raw_parts_mut(p, sz)) }
         }
@@ -224,7 +222,7 @@ pub struct TestWS {
 impl TestWS {
     /// Instantiate a `C` ws struct and the required space of size `sz`.
     pub fn new(sz: usize) -> Self {
-        let al = std::mem::align_of::<*const c_void>();
+        let al = align_of::<*const c_void>();
         let aligned_sz = (sz / al) * al;
 
         let mut v: Vec<c_char> = vec![0; sz];
