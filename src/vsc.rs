@@ -9,29 +9,8 @@ use std::collections::HashMap;
 use std::ffi::{CStr, CString};
 use std::ptr;
 
+pub use crate::error::{Error, Result};
 use crate::ffi;
-
-/// Error wrapping the VSM/VSC error reported by the C api
-pub struct Error {
-    s: String,
-}
-
-impl std::fmt::Debug for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(&self.s, f)
-    }
-}
-
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(&self.s, f)
-    }
-}
-
-impl std::error::Error for Error {}
-
-/// Shorthand to `std::result::Result<T, Error>`
-pub type Result<T> = std::result::Result<T, Error>;
 
 /// A statistics set, created using a [`VSCBuilder`]
 #[derive(Debug)]
@@ -170,12 +149,12 @@ impl<'a> VSCBuilder<'a> {
 
 fn vsm_error(p: *const ffi::vsm) -> Error {
     unsafe {
-        Error {
-            s: CStr::from_ptr(ffi::VSM_Error(p))
+        Error::new(
+            CStr::from_ptr(ffi::VSM_Error(p))
                 .to_str()
                 .unwrap()
                 .to_string(),
-        }
+        )
     }
 }
 
