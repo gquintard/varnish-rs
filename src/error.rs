@@ -39,5 +39,5 @@ impl From<&str> for Error {
     }
 }
 
-/// Shorthand to `std::result::Result<T, Error>`
+/// Shorthand to [`std::result::Result<T, Error>`]
 pub type Result<T> = std::result::Result<T, Error>;

@@ -5,7 +5,7 @@
 //! *Note:* The rust wrapper here is pretty thin and the vmod writer will most probably need to have to
 //! deal with the raw Varnish internals.
 
-use std::ffi::{c_char, c_int, c_void, CStr};
+use std::ffi::{c_char, c_int, c_uint, c_void, CStr};
 use std::ptr;
 
 use crate::ffi;
@@ -93,10 +93,7 @@ pub unsafe extern "C" fn gen_vdp_init<T: VDP>(
     }
 }
 
-pub unsafe extern "C" fn gen_vdp_fini<T: VDP>(
-    _: *mut vdp_ctx,
-    priv_: *mut *mut c_void,
-) -> std::os::raw::c_int {
+pub unsafe extern "C" fn gen_vdp_fini<T: VDP>(_: *mut vdp_ctx, priv_: *mut *mut c_void) -> c_int {
     if priv_.is_null() {
         return 0;
     }
@@ -169,7 +166,7 @@ impl<'a> VDPCtx<'a> {
         match unsafe {
             ffi::VDP_bytes(
                 self.raw,
-                act as std::os::raw::c_uint,
+                act as c_uint,
                 buf.as_ptr().cast::<c_void>(),
                 buf.len() as isize,
             )

@@ -149,7 +149,7 @@ def runmain(inputvcc, rstdir, abi):
 
     print("""
 use std::ptr;
-use std::os::raw::*;
+use std::ffi::*;
 use std::boxed::Box;
 use varnish::vcl::ctx::{{ Ctx, Event }};
 use varnish::vcl::convert::{{IntoRust, IntoVCL, IntoResult, VCLDefault}};

@@ -33,7 +33,7 @@
 //! }
 //!
 //! impl Transfer for BodyResponse {
-//!     fn read(&mut self, buf: &mut [u8]) -> Result<usize, Box<dyn std::error::Error>> {
+//!     fn read(&mut self, buf: &mut [u8]) -> Result<usize, Box<dyn Error>> {
 //!         let mut done = 0;
 //!         for p in buf {
 //!              if self.left == 0 {
@@ -71,12 +71,12 @@
 //! }
 //! ```
 use std::error::Error;
-use std::ffi::{c_char, CString};
+use std::ffi::{c_char, c_int, c_void, CString};
+use std::marker::PhantomData;
 use std::net::{SocketAddr, TcpStream};
-use std::os::raw::c_void;
 use std::os::unix::io::FromRawFd;
 use std::ptr;
-use std::time::SystemTime;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::ffi;
 use crate::vcl::convert::IntoVCL;
@@ -103,7 +103,7 @@ pub struct Backend<S: Serve<T>, T: Transfer> {
     inner: Box<S>,
     #[allow(dead_code)]
     type_: CString,
-    phantom: std::marker::PhantomData<T>,
+    phantom: PhantomData<T>,
 }
 
 impl<S: Serve<T>, T: Transfer> Backend<S, T> {
@@ -150,7 +150,7 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
             ffi::VRT_AddDirector(
                 ctx.raw,
                 &*methods,
-                &mut *inner as *mut S as *mut std::ffi::c_void,
+                &mut *inner as *mut S as *mut c_void,
                 c"%s".as_ptr(),
                 cstring_name.as_ptr() as *const c_char,
             )
@@ -164,7 +164,7 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
             type_,
             inner,
             methods,
-            phantom: std::marker::PhantomData,
+            phantom: PhantomData,
         })
     }
 }
@@ -371,7 +371,7 @@ unsafe extern "C" fn wrap_pipe<S: Serve<T>, T: Transfer>(
     assert!(!(*(*ctxp).req).sp.is_null());
     assert_eq!((*(*(*ctxp).req).sp).magic, ffi::SESS_MAGIC);
     let fd = (*(*(*ctxp).req).sp).fd;
-    assert!(fd != 0);
+    assert_ne!(fd, 0);
     let tcp_stream = TcpStream::from_raw_fd(fd);
 
     assert!(!be.is_null());
@@ -382,10 +382,11 @@ unsafe extern "C" fn wrap_pipe<S: Serve<T>, T: Transfer>(
     sc_to_ptr((*backend).pipe(&mut ctx, tcp_stream))
 }
 
+#[allow(clippy::too_many_lines)] // fixme
 unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
     ctxp: *const ffi::vrt_ctx,
     be: VCLBackendPtr,
-) -> ::std::os::raw::c_int {
+) -> c_int {
     let mut ctx = Ctx::new(ctxp.cast_mut());
     assert!(!be.is_null());
     assert_eq!((*be).magic, ffi::DIRECTOR_MAGIC);
@@ -439,7 +440,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
                             (*htc).content_length = l as isize;
                         }
                     };
-                    (*htc).priv_ = Box::into_raw(Box::new(transfer)).cast::<std::ffi::c_void>();
+                    (*htc).priv_ = Box::into_raw(Box::new(transfer)).cast::<c_void>();
                     // build a vfp to wrap the Transfer object if there's something to push
                     if (*htc).body_status != ffi::BS_NONE.as_ptr() {
                         let vfp = ffi::WS_Alloc(
@@ -506,10 +507,7 @@ unsafe extern "C" fn wrap_healthy<S: Serve<T>, T: Transfer>(
     let backend = (*be).priv_ as *const S;
     let (healthy, when) = (*backend).healthy(&mut ctx);
     if !changed.is_null() {
-        *changed = when
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_secs_f64();
+        *changed = when.duration_since(UNIX_EPOCH).unwrap().as_secs_f64();
     }
     if healthy {
         1

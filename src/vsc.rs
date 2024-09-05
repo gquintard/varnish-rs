@@ -6,8 +6,11 @@
 //! (and vmods) are exposing.
 
 use std::collections::HashMap;
-use std::ffi::{CStr, CString};
+use std::ffi::{c_char, c_int, c_void, CStr, CString, NulError};
+use std::marker::PhantomData;
+use std::path::Path;
 use std::ptr;
+use std::time::Duration;
 
 pub use crate::error::{Error, Result};
 use crate::ffi;
@@ -31,7 +34,7 @@ struct VSCInternal<'a> {
 pub struct VSCBuilder<'a> {
     vsm: *mut ffi::vsm,
     vsc: *mut ffi::vsc,
-    phantom: std::marker::PhantomData<&'a ()>,
+    phantom: PhantomData<&'a ()>,
 }
 
 impl<'a> VSCBuilder<'a> {
@@ -43,11 +46,11 @@ impl<'a> VSCBuilder<'a> {
             let vsc = ffi::VSC_New();
             assert!(!vsc.is_null());
             // get raw value, we can always clamp them later
-            ffi::VSC_Arg(vsc, 'r' as core::ffi::c_char, ptr::null());
+            ffi::VSC_Arg(vsc, 'r' as c_char, ptr::null());
             VSCBuilder {
                 vsm,
                 vsc,
-                phantom: std::marker::PhantomData,
+                phantom: PhantomData,
             }
         }
     }
@@ -56,9 +59,9 @@ impl<'a> VSCBuilder<'a> {
     ///
     /// It's usually superfluous to call this function, unless `varnishd` itself was called with
     /// the `-n` argument (in which case, both arguments should match)
-    pub fn work_dir(self, dir: &std::path::Path) -> std::result::Result<Self, std::ffi::NulError> {
+    pub fn work_dir(self, dir: &Path) -> std::result::Result<Self, NulError> {
         let c_dir = CString::new(dir.to_str().unwrap())?;
-        let ret = unsafe { ffi::VSM_Arg(self.vsm, 'n' as core::ffi::c_char, c_dir.as_ptr()) };
+        let ret = unsafe { ffi::VSM_Arg(self.vsm, 'n' as c_char, c_dir.as_ptr()) };
         assert_eq!(ret, 1);
         Ok(self)
     }
@@ -68,32 +71,24 @@ impl<'a> VSCBuilder<'a> {
     /// When [`VSCBuilder::build()`] is called, it'll internally call `VSM_Attach`, hoping to find a running
     /// `varnishd` instance. If `None`, the function will not return until it connects, otherwise
     /// it specifies the timeout to use.
-    pub fn patience(self, t: Option<std::time::Duration>) -> Result<Self> {
+    pub fn patience(self, t: Option<Duration>) -> Result<Self> {
         // the things we do for love...
         let arg = match t {
             None => "off".to_string(),
             Some(t) => format!("{}\0", t.as_secs_f64()),
         };
         unsafe {
-            let ret = ffi::VSM_Arg(
-                self.vsm,
-                't' as core::ffi::c_char,
-                arg.as_ptr().cast::<core::ffi::c_char>(),
-            );
-            assert!(ret == 1);
+            let ret = ffi::VSM_Arg(self.vsm, 't' as c_char, arg.as_ptr().cast::<c_char>());
+            assert_eq!(ret, 1);
         }
         Ok(self)
     }
 
-    fn vsc_arg(self, o: char, s: &str) -> std::result::Result<Self, std::ffi::NulError> {
+    fn vsc_arg(self, o: char, s: &str) -> std::result::Result<Self, NulError> {
         let c_s = CString::new(s)?;
         unsafe {
-            let ret = ffi::VSC_Arg(
-                self.vsc,
-                o as core::ffi::c_char,
-                c_s.as_ptr().cast::<core::ffi::c_char>(),
-            );
-            assert!(ret == 1);
+            let ret = ffi::VSC_Arg(self.vsc, o as c_char, c_s.as_ptr().cast::<c_char>());
+            assert_eq!(ret, 1);
         }
         Ok(self)
     }
@@ -101,20 +96,20 @@ impl<'a> VSCBuilder<'a> {
     /// Provide a globbing pattern of statistics names to include.
     ///
     /// May be called multiple times, interleaved with [`VSCBuilder::exclude()`], the order matters.
-    pub fn include(self, s: &str) -> std::result::Result<Self, std::ffi::NulError> {
+    pub fn include(self, s: &str) -> std::result::Result<Self, NulError> {
         self.vsc_arg('I', s)
     }
 
     /// Provide a globbing pattern of statistics names to exclude.
     ///
     /// May be called multiple times, interleaved with [`VSCBuilder::include()`], the order matters.
-    pub fn exclude(self, s: &str) -> std::result::Result<Self, std::ffi::NulError> {
+    pub fn exclude(self, s: &str) -> std::result::Result<Self, NulError> {
         self.vsc_arg('X', s)
     }
 
     /// Provide a globbing pattern of statistics names to keep around, protecting them from
     /// exclusion.
-    pub fn require(self, s: &str) -> std::result::Result<Self, std::ffi::NulError> {
+    pub fn require(self, s: &str) -> std::result::Result<Self, NulError> {
         self.vsc_arg('R', s)
     }
 
@@ -134,7 +129,7 @@ impl<'a> VSCBuilder<'a> {
                     self.vsc,
                     Some(add_point),
                     Some(del_point),
-                    (&mut *internal as *mut VSCInternal).cast::<std::ffi::c_void>(),
+                    (&mut *internal as *mut VSCInternal).cast::<c_void>(),
                 );
             }
             let vsm = self.vsm;
@@ -193,8 +188,8 @@ pub enum Semantics {
     Unknown,
 }
 
-impl From<std::os::raw::c_int> for Semantics {
-    fn from(value: std::os::raw::c_int) -> Self {
+impl From<c_int> for Semantics {
+    fn from(value: c_int) -> Self {
         let c = char::from_u32(value as u32).unwrap();
         match c {
             'c' => Semantics::Counter,
@@ -231,8 +226,8 @@ pub enum Format {
     Unknown,
 }
 
-impl From<std::os::raw::c_int> for Format {
-    fn from(value: std::os::raw::c_int) -> Self {
+impl From<c_int> for Format {
+    fn from(value: c_int) -> Self {
         let c = char::from_u32(value as u32).unwrap();
         match c {
             'i' => Format::Integer,
@@ -256,10 +251,7 @@ impl From<Format> for char {
     }
 }
 
-unsafe extern "C" fn add_point(
-    ptr: *mut std::ffi::c_void,
-    point: *const ffi::VSC_point,
-) -> *mut std::ffi::c_void {
+unsafe extern "C" fn add_point(ptr: *mut c_void, point: *const ffi::VSC_point) -> *mut c_void {
     let internal = ptr.cast::<VSCInternal>();
     let k = point as usize;
 
@@ -276,7 +268,7 @@ unsafe extern "C" fn add_point(
     ptr::null_mut()
 }
 
-unsafe extern "C" fn del_point(ptr: *mut std::ffi::c_void, point: *const ffi::VSC_point) {
+unsafe extern "C" fn del_point(ptr: *mut c_void, point: *const ffi::VSC_point) {
     let internal = ptr.cast::<VSCInternal>();
     let k = point as usize;
     assert!((*internal).points.contains_key(&k));

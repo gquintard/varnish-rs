@@ -84,12 +84,13 @@
 //! }
 //! ```
 //!
-//! The various type translations are described in detail in [`crate::vcl::convert`].
+//! The various type translations are described in detail in [`vcl::convert`].
 
 use std::env::join_paths;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::str::from_utf8;
 use std::{env, fs};
 
 pub mod ffi {
@@ -271,11 +272,7 @@ pub fn generate_boilerplate() -> Result<(), vcl::Error> {
         .arg("-w")
         .arg(env::var("OUT_DIR").unwrap())
         .arg("-a")
-        .arg(
-            std::str::from_utf8(ffi::VMOD_ABI_Version)
-                .unwrap()
-                .trim_matches('\0'),
-        )
+        .arg(from_utf8(ffi::VMOD_ABI_Version).unwrap().trim_matches('\0'))
         .env(
             "PYTHONPATH",
             join_paths([env::var("OUT_DIR").unwrap_or_default(), vmodtool_dir]).unwrap(),

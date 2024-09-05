@@ -1,5 +1,7 @@
 //! VSB, growable buffer
 
+use std::ffi::c_void;
+
 use crate::ffi;
 
 pub struct Vsb<'a> {
@@ -18,7 +20,7 @@ impl<'a> Vsb<'a> {
 
     /// Push a buffer into the `Vsb`
     pub fn cat<T: AsRef<[u8]>>(&mut self, src: &T) -> Result<(), ()> {
-        let buf = src.as_ref().as_ptr().cast::<std::ffi::c_void>();
+        let buf = src.as_ref().as_ptr().cast::<c_void>();
         let l = src.as_ref().len();
 
         match unsafe { ffi::VSB_bcat(self.raw, buf, l as isize) } {

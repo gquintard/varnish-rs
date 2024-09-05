@@ -38,13 +38,9 @@ pub struct HTTP<'a> {
 impl<'a> HTTP<'a> {
     /// Wrap a raw pointer into an object we can use.
     pub fn new(p: *mut ffi::http) -> Option<Self> {
-        if p.is_null() {
-            None
-        } else {
-            Some(HTTP {
-                raw: unsafe { p.as_mut().unwrap() },
-            })
-        }
+        Some(HTTP {
+            raw: unsafe { p.as_mut()? },
+        })
     }
 
     fn change_header(&mut self, idx: u16, value: &str) -> Result<()> {
@@ -262,7 +258,8 @@ fn header_from_hd<'a>(txt: *const ffi::txt) -> Option<(&'a str, &'a str)> {
         }
         let e = (*txt).e;
         let buf = from_raw_parts(b.cast::<u8>(), e.offset_from(b) as usize);
-
+        // We expect varnishd to always given us a string with a ':' in it
+        // If it's not the case, blow up as it might be a sign of a bigger problem.
         let colon = buf.iter().position(|x| *x == b':').unwrap();
 
         name = from_utf8(&buf[..colon]).unwrap();

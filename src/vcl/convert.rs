@@ -7,7 +7,7 @@
 //! opposite conversion when it is time to send the return value to Varnish.
 //!
 //! The two traits `IntoVCL` and `IntoRust` take care of this, with `IntoVCL` being notable in
-//! that it requires a `&mut `[`crate::vcl::ws::WS`] to possibly store the returned value into the task
+//! that it requires a `&mut `[`WS`] to possibly store the returned value into the task
 //! request. This allows vmod writes to just return easy-to-work-with `Strings` and let the
 //! boilerplate handle the allocation, copy and error handling.
 //!
@@ -44,9 +44,8 @@
 //! failed and will return a default value to the VCL. In turn, the VCL will stop its processing
 //! and will create a synthetic error object.
 use std::borrow::Cow;
-use std::ffi::CStr;
+use std::ffi::{c_char, c_void, CStr};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
-use std::os::raw::{c_char, c_void};
 use std::ptr;
 use std::time::Duration;
 
@@ -58,7 +57,7 @@ use crate::vcl::ws::WS;
 
 /// Convert a Rust type into a VCL one
 ///
-/// It will use the `WS` to persist the data during the VCL task if necessary
+/// It will use the [`WS`] to persist the data during the VCL task if necessary
 pub trait IntoVCL<T> {
     fn into_vcl(self, ws: &mut WS) -> Result<T, String>;
 }
@@ -240,7 +239,7 @@ impl IntoVCL<VCL_IP> for SocketAddr {
             match self {
                 SocketAddr::V4(sa) => {
                     assert!(!VSA_BuildFAP(
-                        p.cast::<std::ffi::c_void>(),
+                        p.cast::<c_void>(),
                         PF_INET as sa_family_t,
                         sa.ip().octets().as_slice().as_ptr().cast::<c_void>(),
                         4,
@@ -251,7 +250,7 @@ impl IntoVCL<VCL_IP> for SocketAddr {
                 }
                 SocketAddr::V6(sa) => {
                     assert!(!VSA_BuildFAP(
-                        p.cast::<std::ffi::c_void>(),
+                        p.cast::<c_void>(),
                         PF_INET6 as sa_family_t,
                         sa.ip().octets().as_slice().as_ptr().cast::<c_void>(),
                         16,
@@ -376,7 +375,7 @@ pub trait VCLDefault {
 
 /// Generate a default value to return.
 ///
-/// `Default` isn't implemented for `std::ptr`, so we roll out our own.
+/// [`Default`] isn't implemented for [`ptr`], so we roll out our own.
 impl<T> VCLDefault for *const T {
     type Item = *const T;
     fn vcl_default() -> Self::Item {

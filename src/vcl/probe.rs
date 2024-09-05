@@ -1,5 +1,5 @@
 use std::borrow::Cow;
-use std::os::raw::c_uint;
+use std::ffi::c_uint;
 use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
