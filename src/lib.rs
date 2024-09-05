@@ -168,6 +168,8 @@ pub mod vcl {
 ///
 /// **Important note:** you need to first build your vmod (i.e. with `cargo build`) before the tests can be run,
 /// otherwise you'll get a panic.
+///
+/// Tests will automatically timeout after 5s. To override, set `VARNISHTEST_DURATION` env var.
 #[macro_export]
 macro_rules! vtc {
     ( $name:ident ) => {
@@ -176,6 +178,9 @@ macro_rules! vtc {
             use std::io::{self, Write};
             use std::path::Path;
             use std::process::Command;
+
+            let test_duration = std::env::var("VARNISHTEST_DURATION");
+            let test_duration = test_duration.as_deref().unwrap_or("5s");
 
             // find the vmod so file
             let llp = std::env::var("LD_LIBRARY_PATH").unwrap();
@@ -196,7 +201,8 @@ macro_rules! vtc {
             let mut cmd = Command::new("varnishtest");
             cmd.arg("-D")
                 .arg(format!("vmod={}", vmod_path))
-                .arg(concat!("tests/", stringify!($name), ".vtc"));
+                .arg(concat!("tests/", stringify!($name), ".vtc"))
+                .env("VARNISHTEST_DURATION", test_duration);
 
             let output = cmd.output().unwrap();
             if !output.status.success() {

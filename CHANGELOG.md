@@ -1,3 +1,7 @@
+# Unpublished
+
+- `vtc!` macro now supports `VARNISHTEST_DURATION` env var, defaulting to "5s"
+
 # 0.0.19 (2024-03-24)
 
 - vsc::Error implements std::Error
