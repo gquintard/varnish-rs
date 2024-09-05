@@ -11,8 +11,10 @@
 //! conversion provided by [`crate::vcl::convert`], or store things in
 //! [`crate::vcl::vpriv::VPriv`].
 use std::ffi::{c_char, c_void};
+use std::marker::PhantomData;
 use std::ptr;
 use std::slice::from_raw_parts_mut;
+use std::str::from_utf8;
 
 use crate::ffi;
 
@@ -26,7 +28,7 @@ use crate::ffi;
 pub struct WS<'a> {
     /// Raw pointer to the C struct
     pub raw: *mut ffi::ws,
-    phantom_a: std::marker::PhantomData<&'a u8>,
+    phantom_a: PhantomData<&'a u8>,
 }
 
 impl<'a> WS<'a> {
@@ -35,7 +37,7 @@ impl<'a> WS<'a> {
         assert!(!raw.is_null(), "raw pointer was null");
         WS {
             raw,
-            phantom_a: std::marker::PhantomData,
+            phantom_a: PhantomData,
         }
     }
 
@@ -104,7 +106,7 @@ impl<'a> WS<'a> {
 
         let dest = self.alloc(l)?;
         dest.copy_from_slice(buf);
-        Ok(std::str::from_utf8(dest).unwrap())
+        Ok(from_utf8(dest).unwrap())
     }
 
     /// Allocate all the free space in the workspace in a buffer that can be reclaimed or truncated

@@ -1,5 +1,5 @@
 //! Expose the Varnish context (`struct vrt_ctx`) as a Rust object
-use std::ffi::{c_char, c_uint, c_void, CString};
+use std::ffi::{c_char, c_int, c_uint, c_void, CString};
 use std::ptr;
 
 use crate::ffi;
@@ -132,7 +132,7 @@ impl<'a> Ctx<'a> {
             _flush: c_uint,
             ptr: *const c_void,
             len: isize,
-        ) -> std::os::raw::c_int {
+        ) -> c_int {
             let v = priv_.cast::<Vec<&[u8]>>().as_mut().unwrap();
             let buf = std::slice::from_raw_parts(ptr.cast::<u8>(), len as usize);
             v.push(buf);

@@ -1,9 +1,8 @@
 use std::any::type_name;
 #[cfg(test)]
 use std::ffi::CStr;
-use std::ffi::CString;
+use std::ffi::{c_void, CString};
 use std::marker::PhantomData;
-use std::os::raw::c_void;
 use std::ptr;
 
 use crate::ffi;
