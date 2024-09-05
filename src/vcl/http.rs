@@ -12,7 +12,7 @@
 //! this [issue](https://github.com/gquintard/varnish-rs/issues/4).
 
 #![allow(clippy::not_unsafe_ptr_arg_deref)]
-use std::ffi::{c_char, c_uint};
+use std::ffi::c_uint;
 use std::slice::{from_raw_parts, from_raw_parts_mut};
 use std::str::from_utf8;
 
@@ -48,12 +48,12 @@ impl<'a> HTTP<'a> {
 
         /* XXX: aliasing warning, it's the same pointer as the one in Ctx */
         let mut ws = WS::new(self.raw.ws);
-        let hdr_buf = ws.copy_bytes_with_null(&value)?;
         unsafe {
+            let hdr_buf = ws.copy_bytes_with_null(&value)?;
             let hd = self.raw.hd.offset(idx as isize);
-            (*hd).b = hdr_buf.as_ptr().cast::<c_char>();
-            /* -1 accounts for the null character */
-            (*hd).e = hdr_buf.as_ptr().add(hdr_buf.len() - 1).cast::<c_char>();
+            (*hd).b = hdr_buf.as_ptr();
+            // .e points to the NULL byte at the end of the string
+            (*hd).e = hdr_buf.as_ptr().add(hdr_buf.count_bytes());
             let hdf = self.raw.hdf.offset(idx as isize);
             *hdf = 0;
         }

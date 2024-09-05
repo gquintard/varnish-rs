@@ -32,7 +32,7 @@ impl VFP for Lower {
         pull_res
     }
 
-    // return our id, adding the NULL character to avoid confusing the C layer
+    // return our id
     fn name() -> &'static CStr {
         c"lower"
     }
