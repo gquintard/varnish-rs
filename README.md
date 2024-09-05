@@ -18,10 +18,10 @@ varnish = "0.0.16"
 Varnish bindings, notably to build vmods, such as:
 
 - [vmod-reqwest](https://github.com/gquintard/vmod_reqwest): issue HTTP calls from VCL, use dynamic, HTTPS backends (support HTTP2)
-- [vmod-rers](https://github.com/gquintard/vmod_rers): support for dynamic regex, including respone body manipulation
+- [vmod-rers](https://github.com/gquintard/vmod_rers): support for dynamic regex, including response body manipulation
 - [vmod-fileserver](https://github.com/gquintard/vmod_fileserver): serve files directly from disk, without the need for an HTTP backend
 
-Don't hesitate to open github issues if something is unclear or impractical. You can also join us on [discord](https://discord.com/invite/EuwdvbZR6d).
+Don't hesitate to open GitHub issues if something is unclear or impractical. You can also join us on [discord](https://discord.com/invite/EuwdvbZR6d).
 
 ## Requirements
 
@@ -58,13 +58,13 @@ VARNISH_INCLUDE_PATHS=/my/custom/libpath:/my/other/custom/libpath cargo build
 The `varnish-rs` and `varnish-sys` versions will work in tandem: to build version X of `varnish`, you need version X of `varnish-rs` and of `varnish-sys`, in turn `varnish-sys` will depend on a specific Varnish C library version:
 
 | varnish-rs/varnish-sys (rust) | libvarnish (C) |
-| :----------------: | :------------: |
-| 0.0.18 -> 0.0.19   | 7.5            |
-| 0.0.17             | 7.4            |
-| 0.0.15 -> 0.0.16   | 7.3            |
-| 0.0.12 -> 0.0.14   | 7.2            |
-| 0.0.9 -> 0.0.11    | 7.1            |
-| 0.0.*              | 7.0            |
+|:-----------------------------:|:--------------:|
+|       0.0.18 -> 0.0.19        |      7.5       |
+|            0.0.17             |      7.4       |
+|       0.0.15 -> 0.0.16        |      7.3       |
+|       0.0.12 -> 0.0.14        |      7.2       |
+|        0.0.9 -> 0.0.11        |      7.1       |
+|             0.0.*             |      7.0       |
 
 You can check which Varnish version is required using the `libvarnish` metadata field of `varnish-sys`:
 

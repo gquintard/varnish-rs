@@ -12,7 +12,7 @@ use crate::ffi;
 use crate::ffi::{objcore, vdp_ctx, vfp_ctx, vfp_entry};
 use crate::vcl::ctx::Ctx;
 
-/// passed to [`VDP::push`] to describe special conditions occuring in the pipeline.
+/// passed to [`VDP::push`] to describe special conditions occurring in the pipeline.
 #[derive(Debug, Copy, Clone)]
 pub enum PushAction {
     /// Nothing special

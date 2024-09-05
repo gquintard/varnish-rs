@@ -183,7 +183,7 @@ impl<'a> Drop for VSC<'a> {
 /// Kind of data
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Semantics {
-    /// Value only goes up (e.g. amount of bytes transfered)
+    /// Value only goes up (e.g. amount of bytes transferred)
     Counter,
     /// Value can go up and down (e.g. amount of current connections)
     Gauge,

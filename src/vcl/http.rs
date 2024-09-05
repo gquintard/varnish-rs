@@ -1,4 +1,4 @@
-//! Headers and top line of an http object
+//! Headers and top line of an HTTP object
 //!
 //! Depending on the VCL subroutine, the `Ctx` will give access to various [`HTTP`] object which
 //! expose the request line (`req`, `req_top` and `bereq`), response line (`resp`, `beresp`) and
@@ -7,7 +7,7 @@
 //! `HTTP` implements `IntoIterator` that will expose the headers only (not the `method`, `status`,
 //! etc.)
 //!
-//! **Note:** at this stage, headers are asumed to be utf8, and you will get a panic if it's not
+//! **Note:** at this stage, headers are assumed to be utf8, and you will get a panic if it's not
 //! the case. Future work needs to sanitize the headers to make this safer to use. It is tracked in
 //! this [issue](https://github.com/gquintard/varnish-rs/issues/4).
 

@@ -22,7 +22,7 @@ impl parrot {
         // to create the backend, we need:
         // - the vcl context, that we just pass along
         // - the vcl_name (how the vcl writer named the object)
-        // - an struct that implements the Serve trait
+        // - a struct that implements the Serve trait
         let be = Backend::new(
             ctx,
             vcl_name,

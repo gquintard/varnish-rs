@@ -8,13 +8,13 @@ varnish::vtc!(test01);
 
 // no error, just return 0 if anything goes wrong
 pub fn cannot_fail(_: &Ctx, fp: &str) -> i64 {
-    // try to read the path at fp into a string, but return if there was and error
+    // try to read the path at fp into a string, but return if there was an error
     let content = match read_to_string(fp) {
         Err(_) => return 0,
         Ok(s) => s,
     };
 
-    // try to convert the string into a i64, if parsing fails, force 0
+    // try to convert the string into an i64, if parsing fails, force 0
     // no need to return as the last expression is automatically returned
     content.parse::<i64>().unwrap_or(0)
 }
@@ -23,7 +23,7 @@ pub fn cannot_fail(_: &Ctx, fp: &str) -> i64 {
 // be discarded), so we just convert the 0_u8 returned into an i64 (.into() is
 // smart enough to infer the type)
 pub fn manual_fail(ctx: &mut Ctx, fp: &str) -> i64 {
-    // try to read the path at fp into a string, but return if there was and error
+    // try to read the path at fp into a string, but return if there was an error
     let content = match read_to_string(fp) {
         Err(_) => {
             return ctx
@@ -33,7 +33,7 @@ pub fn manual_fail(ctx: &mut Ctx, fp: &str) -> i64 {
         Ok(s) => s,
     };
 
-    // try to convert the string into a i64
+    // try to convert the string into an i64
     // no need to return as the last expression is automatically returned
     match content.parse::<i64>() {
         Err(_) => ctx.fail("manual_fail: conversion failed").into(),

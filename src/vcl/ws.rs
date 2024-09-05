@@ -211,7 +211,7 @@ impl<'a> Drop for ReservedBuf<'a> {
     }
 }
 
-/// A struct holding both a native ws struct, as well as the space it points to.
+/// A struct holding both a native ws struct and the space it points to.
 ///
 /// As the name implies, this struct mainly exist to facilitate testing and should probably not be
 /// used elsewhere.
