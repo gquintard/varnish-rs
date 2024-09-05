@@ -45,7 +45,7 @@
 //! from VCL.
 //!
 //! The good news is that the syntax is exactly the same as for a C vmod. The bad news is that we
-//! don't support all types and niceties just yet. Check out the [`crate::vcl::convert`] page for
+//! don't support all types and niceties just yet. Check out the [`vcl::convert`] page for
 //! more information.
 //!
 //! ``` text
@@ -58,9 +58,9 @@
 //! ## build.rs
 //!
 //! The `vmod.vcc`  file needs to be processed into rust-code so the module is loadable by
-//! Varnish. This steps is currently done via a `python` script triggered by the `build.rs` file
+//! Varnish. These steps are currently done via a `python` script triggered by the `build.rs` file
 //! (also alongside `Cargo.toml`).
-//! The nitty-gritty details have been hidden away and you can have a fairly simple file:
+//! The nitty-gritty details have been hidden away, and you can have a fairly simple file:
 //!
 //! ``` ignore
 //! fn main() {
@@ -72,7 +72,7 @@
 //!
 //! Here's the actual code that you can write to implement your API. Basically, you need to
 //! implement public functions that mirror what you described in `vmod.vcc`, and the first
-//! argument needs to be a reference to [`crate::vcl::ctx::Ctx`]:
+//! argument needs to be a reference to [`vcl::ctx::Ctx`]:
 //!
 //! ``` ignore
 //! varnish::boilerplate!();

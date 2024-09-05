@@ -162,7 +162,7 @@ impl<'a> Ctx<'a> {
     }
 }
 
-/// A struct holding both a native vrt_ctx struct, as well as the space it points to.
+/// A struct holding both a native vrt_ctx struct and the space it points to.
 ///
 /// As the name implies, this struct mainly exist to facilitate testing and should probably not be
 /// used elsewhere.

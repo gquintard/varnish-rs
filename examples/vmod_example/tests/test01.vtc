@@ -1,5 +1,5 @@
 # first thing to do: give a title to the test
-varnishtest "testing .is_even() and .captain_ovious()"
+varnishtest "testing .is_even() and .captain_obvious()"
 
 # describe what the server should receive and send back
 # "man vtc" is your friend here

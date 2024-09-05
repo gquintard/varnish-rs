@@ -14,7 +14,7 @@ pub fn is_even(_: &Ctx, n: i64) -> bool {
     n % 2 == 0
 }
 
-// in vmod.vcc, n was an optional INT, so here it translates into a Option<i64>
+// in vmod.vcc, n was an optional INT, so here it translates into an Option<i64>
 pub fn captain_obvious(_: &Ctx, opt: Option<i64>) -> String {
     // we need to first "match" to know if a number was provided, if not,
     // return a default message, otherwise, build a custom one

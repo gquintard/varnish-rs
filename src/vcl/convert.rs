@@ -40,7 +40,7 @@
 //! It's possible for a vmod writer to return a bare value, or a `Result<_, E: AsRef<str>>` to
 //! potentially abort VCL processing in case the vmod hit an unrecoverable error.
 //!
-//! If a vmod function returns `Err(msg)`, the boilerplat will log `msg`, marke the current task as
+//! If a vmod function returns `Err(msg)`, the boilerplate will log `msg`, mark the current task as
 //! failed and will return a default value to the VCL. In turn, the VCL will stop its processing
 //! and will create a synthetic error object.
 use std::borrow::Cow;
@@ -140,7 +140,7 @@ impl IntoVCL<VCL_DURATION> for Duration {
 impl IntoVCL<VCL_STRING> for &[u8] {
     fn into_vcl(self, ws: &mut WS) -> Result<VCL_STRING, String> {
         // try to save some work if the buffer is already in the workspace
-        // and if it's followed by a null byten
+        // and if it's followed by a null byte
         if unsafe {
             WS_Allocated(
                 ws.raw,

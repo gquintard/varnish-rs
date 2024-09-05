@@ -71,7 +71,7 @@
 - C types now derive `Copy`, `Debug` and `Default`
 - silence `clippy` for generated code
 - expose `http_conn`
-- introdude `HTTP::set_status()`, `HTTP::set_prototype()` and `HTTP::set_reason()`
+- introduce `HTTP::set_status()`, `HTTP::set_prototype()` and `HTTP::set_reason()`
 
 # 0.0.7 (2021-12-26)
 
@@ -103,7 +103,7 @@
 # 0.0.4 (2021-12-05)
 
 - documentation starts getting a bit serious
-- CI with github actions
+- CI with GitHub actions
 - simplify the vmod structure, `src/vmod.rs` disappears
 - `example/vmod_timestamp`
 - `example/vmod_infiniteloop`

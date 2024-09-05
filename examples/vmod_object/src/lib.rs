@@ -46,7 +46,7 @@ impl kv {
             .unwrap() // panic if unlocking went wrong
             .get(key) // look for key
             .unwrap_or(&EMPTY_STRING) // used EMPTY_STRING if key isn't found
-            .as_str() // make it an &str
+            .as_str() // make it a &str
             .into_vcl(&mut ctx.ws) // copy the key before returning it
     }
 
