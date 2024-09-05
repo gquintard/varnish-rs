@@ -470,7 +470,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
                             }
                             Ok(s) => s,
                         };
-                        (*vfp).name = t.as_ptr().cast::<c_char>();
+                        (*vfp).name = t.as_ptr();
                         (*vfp).init = None;
                         (*vfp).pull = Some(vfp_pull::<T>);
                         (*vfp).fini = None;

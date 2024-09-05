@@ -5,7 +5,7 @@
 //! *Note:* The rust wrapper here is pretty thin and the vmod writer will most probably need to have to
 //! deal with the raw Varnish internals.
 
-use std::ffi::{c_char, c_int, c_uint, c_void, CStr};
+use std::ffi::{c_int, c_uint, c_void, CStr};
 use std::ptr;
 
 use crate::ffi;
@@ -66,8 +66,6 @@ where
     /// [`VDPCtx::push`] to push data to the next processor.
     fn push(&mut self, ctx: &mut VDPCtx, act: PushAction, buf: &[u8]) -> PushResult;
     /// The name of the processor.
-    ///
-    /// **Note:** it must be NULL-terminated as it will be used directly as a C string.
     fn name() -> &'static CStr;
 }
 
@@ -136,7 +134,7 @@ pub unsafe extern "C" fn gen_vdp_push<T: VDP>(
 /// Create a `ffi::vdp` that can be fed to `ffi::VRT_AddVDP`
 pub fn new_vdp<T: VDP>() -> ffi::vdp {
     ffi::vdp {
-        name: T::name().as_ptr().cast::<c_char>(),
+        name: T::name().as_ptr(),
         init: Some(gen_vdp_init::<T>),
         bytes: Some(gen_vdp_push::<T>),
         fini: Some(gen_vdp_fini::<T>),
@@ -191,8 +189,6 @@ where
     /// processor.
     fn pull(&mut self, ctx: &mut VFPCtx, buf: &mut [u8]) -> PullResult;
     /// The name of the processor.
-    ///
-    /// **Note:** it must be NULL-terminated as it will be used directly as a C string.
     fn name() -> &'static CStr;
 }
 
@@ -268,7 +264,7 @@ pub unsafe extern "C" fn wrap_vfp_fini<T: VFP>(ctxp: *mut vfp_ctx, vfep: *mut vf
 /// Create a `ffi::vfp` that can be fed to `ffi::VRT_AddVFP`
 pub fn new_vfp<T: VFP>() -> ffi::vfp {
     ffi::vfp {
-        name: T::name().as_ptr().cast::<c_char>(),
+        name: T::name().as_ptr(),
         init: Some(wrap_vfp_init::<T>),
         pull: Some(wrap_vfp_pull::<T>),
         fini: Some(wrap_vfp_fini::<T>),

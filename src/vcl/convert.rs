@@ -150,7 +150,7 @@ impl IntoVCL<VCL_STRING> for &[u8] {
         } {
             Ok(self.as_ptr().cast::<c_char>())
         } else {
-            Ok(ws.copy_bytes_with_null(&self)?.as_ptr().cast::<c_char>())
+            Ok(ws.copy_bytes_with_null(&self)?.as_ptr())
         }
     }
 }

@@ -10,7 +10,7 @@
 //! **Note:** unless you know what you are doing, you should probably just use the automatic type
 //! conversion provided by [`crate::vcl::convert`], or store things in
 //! [`crate::vcl::vpriv::VPriv`].
-use std::ffi::{c_char, c_void};
+use std::ffi::{c_char, c_void, CStr};
 use std::marker::PhantomData;
 use std::ptr;
 use std::slice::from_raw_parts_mut;
@@ -54,6 +54,7 @@ impl<'a> WS<'a> {
             unsafe { Ok(from_raw_parts_mut(p, sz)) }
         }
     }
+
     #[cfg(test)]
     pub fn alloc(&mut self, sz: usize) -> Result<&'a mut [u8], String> {
         let wsp = unsafe { self.raw.as_mut().unwrap() };
@@ -87,15 +88,18 @@ impl<'a> WS<'a> {
     }
 
     /// Same as [`WS::copy_bytes`] but adds NULL character at the end to help converts buffers into
-    /// `VCL_STRING`s
-    pub fn copy_bytes_with_null<T: AsRef<[u8]>>(&mut self, src: &T) -> Result<&'a [u8], String> {
+    /// `VCL_STRING`s. Returns an error if `src` contain NULL characters.
+    pub fn copy_bytes_with_null<T: AsRef<[u8]>>(&mut self, src: &T) -> Result<&'a CStr, String> {
         let buf = src.as_ref();
+        if buf.contains(&0) {
+            return Err("source buffer contains NULL character".into());
+        }
         let l = buf.len();
-
         let dest = self.alloc(l + 1)?;
         dest[..l].copy_from_slice(buf);
         dest[l] = b'\0';
-        Ok(dest)
+        // Safe because there are no NULLs in the source, and we just added a NULL
+        Ok(unsafe { CStr::from_bytes_with_nul_unchecked(dest) })
     }
 
     /// Copy any "`str`-like" struct into the workspace
