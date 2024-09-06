@@ -1,6 +1,4 @@
 use std::any::type_name;
-#[cfg(test)]
-use std::ffi::CStr;
 use std::ffi::{c_void, CString};
 use std::marker::PhantomData;
 use std::ptr;
@@ -89,27 +87,34 @@ unsafe extern "C" fn vpriv_free<T>(_: *const ffi::vrt_ctx, ptr: *mut c_void) {
     drop(Box::from_raw(inner_priv.methods));
 }
 
-#[test]
-fn exploration() {
-    let mut vp = ffi::vmod_priv {
-        priv_: ptr::null::<c_void>() as *mut c_void,
-        len: 0,
-        methods: ptr::null::<ffi::vmod_priv_methods>() as *mut ffi::vmod_priv_methods,
-    };
+#[cfg(test)]
+mod tests {
+    use std::ffi::CStr;
 
-    let mut vpriv_int = VPriv::new(&mut vp);
-    assert_eq!(None, vpriv_int.as_ref());
+    use super::*;
 
-    let x_in = 5;
-    vpriv_int.store(x_in);
-    assert_eq!(x_in, *vpriv_int.as_ref().unwrap());
+    #[test]
+    fn exploration() {
+        let mut vp = ffi::vmod_priv {
+            priv_: ptr::null::<c_void>() as *mut c_void,
+            len: 0,
+            methods: ptr::null::<ffi::vmod_priv_methods>() as *mut ffi::vmod_priv_methods,
+        };
 
-    vpriv_int.store(7);
-    assert_eq!(7, *vpriv_int.as_ref().unwrap());
+        let mut vpriv_int = VPriv::new(&mut vp);
+        assert_eq!(None, vpriv_int.as_ref());
 
-    unsafe {
-        assert_eq!(CStr::from_ptr((*vp.methods).type_).to_str().unwrap(), "i32");
+        let x_in = 5;
+        vpriv_int.store(x_in);
+        assert_eq!(x_in, *vpriv_int.as_ref().unwrap());
 
-        vpriv_free::<i32>(ptr::null::<ffi::vrt_ctx>(), vp.priv_);
+        vpriv_int.store(7);
+        assert_eq!(7, *vpriv_int.as_ref().unwrap());
+
+        unsafe {
+            assert_eq!(CStr::from_ptr((*vp.methods).type_).to_str().unwrap(), "i32");
+
+            vpriv_free::<i32>(ptr::null::<ffi::vrt_ctx>(), vp.priv_);
+        }
     }
 }
