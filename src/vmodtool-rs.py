@@ -75,7 +75,7 @@ def rustfuncBody(self, vcc, t):
 
     print("unsafe extern \"C\" fn vmod_c_{0}{1} {{".format(self.cname(), rustFuncSig(self, vcc, t)))
     if (t != "fini"):
-        print("\tlet mut _ctx = Ctx::new(vrt_ctx);");
+        print("\tlet mut _ctx = Ctx::from_ptr(vrt_ctx);");
     for a in self.args:
         if self.argstruct:
             print("\tlet mut arg_{nm} = (*args).{nm}.into_rust();".format(nm=a.nm2))
@@ -103,7 +103,7 @@ def rustfuncBody(self, vcc, t):
 def rustEventFunc():
     print('''
 unsafe extern "C" fn vmod_c__event(vrt_ctx: * mut varnish::vcl::boilerplate::vrt_ctx, vp: *mut varnish::vcl::boilerplate::vmod_priv, ev: varnish::vcl::boilerplate::vcl_event_e) -> varnish::vcl::boilerplate::VCL_INT {
-    let mut ctx = Ctx::new(vrt_ctx);
+    let mut ctx = Ctx::from_ptr(vrt_ctx);
     let event = Event::new(ev);
     match crate::event(
         &mut ctx,

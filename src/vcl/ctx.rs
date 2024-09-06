@@ -1,13 +1,12 @@
 //! Expose the Varnish context [`vrt_ctx`] as a Rust object
 //!
 use std::ffi::{c_char, c_int, c_uint, c_void, CString};
-use std::ptr;
+use std::ptr::null_mut;
 
 use crate::ffi;
 use crate::ffi::{
-    busyobj, req, sess, vrt_ctx, vsb, vsl_log, ws, VRT_fail, VSL_tag_e_SLT_Backend_health,
-    VSL_tag_e_SLT_Debug, VSL_tag_e_SLT_Error, VSL_tag_e_SLT_FetchError, VSL_tag_e_SLT_VCL_Error,
-    VSL_tag_e_SLT_VCL_Log, VCL_HTTP, VCL_VCL, VRT_CTX_MAGIC,
+    vrt_ctx, VRT_fail, VSL_tag_e_SLT_Backend_health, VSL_tag_e_SLT_Debug, VSL_tag_e_SLT_Error,
+    VSL_tag_e_SLT_FetchError, VSL_tag_e_SLT_VCL_Error, VSL_tag_e_SLT_VCL_Log, VRT_CTX_MAGIC,
 };
 use crate::vcl::http::HTTP;
 use crate::vcl::ws::{TestWS, WS};
@@ -79,9 +78,12 @@ impl<'a> Ctx<'a> {
     /// Wrap a raw pointer into an object we can use.
     ///
     /// The pointer must be non-null, and the magic must match
-    #[allow(clippy::not_unsafe_ptr_arg_deref)]
-    pub fn new(raw: *mut vrt_ctx) -> Self {
-        let raw = unsafe { raw.as_mut().unwrap() };
+    pub unsafe fn from_ptr(ptr: *const vrt_ctx) -> Self {
+        Self::from_ref(ptr.cast_mut().as_mut().unwrap())
+    }
+
+    /// Instantiate from a mutable reference to a [`vrt_ctx`].
+    pub fn from_ref(raw: &'a mut vrt_ctx) -> Self {
         assert_eq!(raw.magic, VRT_CTX_MAGIC);
         let http_req = HTTP::new(raw.http_req);
         let http_req_top = HTTP::new(raw.http_req_top);
@@ -89,7 +91,7 @@ impl<'a> Ctx<'a> {
         let http_bereq = HTTP::new(raw.http_bereq);
         let http_beresp = HTTP::new(raw.http_beresp);
         let ws = WS::new(raw.ws);
-        Ctx {
+        Self {
             raw,
             http_req,
             http_req_top,
@@ -116,15 +118,15 @@ impl<'a> Ctx<'a> {
     /// Log a message, attached to the current context
     pub fn log(&mut self, logtag: LogTag, msg: &str) {
         unsafe {
-            let p = *self.raw;
-            if p.vsl.is_null() {
+            let vsl = self.raw.vsl;
+            if vsl.is_null() {
                 log(logtag, msg);
             } else {
                 let t = ffi::txt {
                     b: msg.as_ptr().cast::<c_char>(),
                     e: msg.as_ptr().add(msg.len()).cast::<c_char>(),
                 };
-                ffi::VSLbt(p.vsl, logtag.into_u32(), t);
+                ffi::VSLbt(vsl, logtag.into_u32(), t);
             }
         }
     }
@@ -184,22 +186,22 @@ impl TestCtx {
                 syntax: 0,
                 method: 0,
                 vclver: 0,
-                msg: ptr::null_mut::<vsb>(),
-                vsl: ptr::null_mut::<vsl_log>(),
-                vcl: ptr::null::<VCL_VCL>() as VCL_VCL,
-                ws: ptr::null_mut::<ws>(),
-                sp: ptr::null_mut::<sess>(),
-                req: ptr::null_mut::<req>(),
-                http_req: ptr::null::<VCL_HTTP>() as VCL_HTTP,
-                http_req_top: ptr::null::<VCL_HTTP>() as VCL_HTTP,
-                http_resp: ptr::null::<VCL_HTTP>() as VCL_HTTP,
-                bo: ptr::null::<VCL_HTTP>() as *mut busyobj,
-                http_bereq: ptr::null::<VCL_HTTP>() as VCL_HTTP,
-                http_beresp: ptr::null::<VCL_HTTP>() as VCL_HTTP,
+                msg: null_mut(),
+                vsl: null_mut(),
+                vcl: null_mut(),
+                ws: null_mut(),
+                sp: null_mut(),
+                req: null_mut(),
+                http_req: null_mut(),
+                http_req_top: null_mut(),
+                http_resp: null_mut(),
+                bo: null_mut(),
+                http_bereq: null_mut(),
+                http_beresp: null_mut(),
                 now: 0.0,
-                specific: ptr::null::<VCL_HTTP>() as *mut c_void,
-                called: ptr::null::<vsb>() as *mut c_void,
-                vpi: ptr::null::<vsb>() as *mut ffi::wrk_vpi,
+                specific: null_mut(),
+                called: null_mut(),
+                vpi: null_mut(),
             },
             test_ws: TestWS::new(sz),
         };
@@ -208,7 +210,7 @@ impl TestCtx {
     }
 
     pub fn ctx(&mut self) -> Ctx {
-        Ctx::new(&mut self.vrt_ctx)
+        Ctx::from_ref(&mut self.vrt_ctx)
     }
 }
 
