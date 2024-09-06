@@ -230,17 +230,19 @@ macro_rules! vtc {
 macro_rules! boilerplate {
     () => {
         #[allow(
-            non_upper_case_globals,
+            dead_code,
             non_camel_case_types,
             non_snake_case,
+            non_upper_case_globals,
             unused_imports,
-            dead_code
+            unused_mut
         )]
         #[allow(
-            clippy::unnecessary_mut_passed,
-            clippy::needless_borrow,
-            clippy::unit_arg,
             clippy::explicit_auto_deref,
+            clippy::needless_borrow,
+            clippy::semicolon_if_nothing_returned,
+            clippy::unit_arg,
+            clippy::unnecessary_mut_passed,
             clippy::used_underscore_binding
         )]
         mod generated {

@@ -73,7 +73,6 @@ def rustfuncBody(self, vcc, t):
             print("\t{0}: {1},".format(a.nm2, a.ct))
         print("}\n")
 
-    print("#[allow(unused_mut)]")
     print("unsafe extern \"C\" fn vmod_c_{0}{1} {{".format(self.cname(), rustFuncSig(self, vcc, t)))
     if (t != "fini"):
         print("\tlet mut _ctx = Ctx::new(vrt_ctx);");
@@ -93,14 +92,11 @@ def rustfuncBody(self, vcc, t):
         print("\tdrop(Box::from_raw(*objp));")
     else:
         if t == "meth":
-            print("\tmatch (*obj){name}(".format(name=self.bname))
+            print("\t(*obj){name}(".format(name=self.bname))
         else:
-            print("\tmatch crate::{name}(".format(name=self.cname()))
+            print("\tcrate::{name}(".format(name=self.cname()))
         rustFuncArgs(self, t)
-        print('''\t).into_result().and_then(|v| v.into_vcl(&mut _ctx.ws)) {{
-            Ok(v) => v,
-            Err(ref e) => {{ _ctx.fail(e); <{0}>::vcl_default() }},
-        }}'''.format(self.retval.ct if self.retval.vt != "VOID" else "()"))
+        print("\t).into_result().and_then(|v| v.into_vcl(&mut _ctx.ws)).unwrap_or_else(|e| {{ _ctx.fail(&e); <{0}>::vcl_default() }})".format(self.retval.ct if self.retval.vt != "VOID" else "()"))
     print("}")
 
 
