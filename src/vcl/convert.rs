@@ -97,7 +97,7 @@ vcl_types! {
     VCL_BACKEND,
     VCL_BLOB,
     VCL_BODY,
-    VCL_BOOL,
+    // VCL_BOOL,  // need?
     VCL_BYTES,
     VCL_DURATION,
 //    VCL_ENUM, // same as VCL_BODY
@@ -121,12 +121,6 @@ vcl_types! {
 impl IntoVCL<()> for () {
     fn into_vcl(self, _: &mut WS) -> Result<(), String> {
         Ok(())
-    }
-}
-
-impl IntoVCL<VCL_BOOL> for bool {
-    fn into_vcl(self, _: &mut WS) -> Result<VCL_BOOL, String> {
-        Ok(self as VCL_BOOL)
     }
 }
 
@@ -193,9 +187,11 @@ impl<'a> IntoVCL<VCL_PROBE> for COWProbe<'a> {
         }
         probe.timeout = self.timeout.into_vcl(ws)?;
         probe.interval = self.interval.into_vcl(ws)?;
-        probe.exp_status = self.exp_status.into_vcl(ws)?;
-        probe.window = self.window.into_vcl(ws)?;
-        probe.initial = self.initial.into_vcl(ws)?;
+
+        // FIXME: these were auto-type-casted via VCL_BOOL(?)
+        probe.exp_status = self.exp_status;
+        probe.window = self.window;
+        probe.initial = self.initial;
         Ok(probe)
     }
 }
@@ -218,9 +214,9 @@ impl IntoVCL<VCL_PROBE> for Probe {
         }
         probe.timeout = self.timeout.into_vcl(ws)?;
         probe.interval = self.interval.into_vcl(ws)?;
-        probe.exp_status = self.exp_status.into_vcl(ws)?;
-        probe.window = self.window.into_vcl(ws)?;
-        probe.initial = self.initial.into_vcl(ws)?;
+        probe.exp_status = self.exp_status;
+        probe.window = self.window;
+        probe.initial = self.initial;
         Ok(probe)
     }
 }
@@ -426,12 +422,6 @@ impl IntoRust<i64> for VCL_INT {
     }
 }
 
-impl IntoRust<bool> for VCL_BOOL {
-    fn into_rust(self) -> bool {
-        self != 0
-    }
-}
-
 impl<'a> IntoRust<Cow<'a, str>> for VCL_STRING {
     fn into_rust(self) -> Cow<'a, str> {
         let s = if self.is_null() { EMPTY_STRING } else { self };
@@ -523,5 +513,44 @@ impl IntoRust<Option<SocketAddr>> for VCL_IP {
                 _ => None,
             }
         }
+    }
+}
+
+macro_rules! impl_type_cast {
+    ($ident:ident, $typ:ty) => {
+        impl From<$typ> for $ident {
+            fn from(b: $typ) -> Self {
+                Self(b.into())
+            }
+        }
+        impl IntoVCL<$ident> for $typ {
+            fn into_vcl(self, _: &mut WS) -> Result<$ident, String> {
+                Ok(self.into())
+            }
+        }
+        impl IntoRust<$typ> for $ident {
+            fn into_rust(self) -> $typ {
+                self.into()
+            }
+        }
+        impl IntoResult<$typ> for $ident {
+            type Item = Self;
+            fn into_result(self) -> Result<Self::Item, String> {
+                Ok(self)
+            }
+        }
+        impl VCLDefault for $ident {
+            type Item = Self;
+            fn vcl_default() -> Self::Item {
+                <$typ>::default().into()
+            }
+        }
+    };
+}
+
+impl_type_cast!(VCL_BOOL, bool);
+impl From<VCL_BOOL> for bool {
+    fn from(b: VCL_BOOL) -> Self {
+        b.0 != 0
     }
 }

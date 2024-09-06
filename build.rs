@@ -38,6 +38,32 @@ fn main() {
         .derive_debug(true)
         .derive_default(true)
         .generate_cstr(true)
+        //
+        // VCL_ACL = *const vrt_acl
+        // VCL_BACKEND = *const director
+        // VCL_BLOB = *const vrt_blob
+        // VCL_BODY = *const ::std::os::raw::c_void
+        // VCL_BOOL = ::std::os::raw::c_uint
+        .new_type_alias_deref("VCL_BOOL")
+        // VCL_BYTES = i64
+        // VCL_DURATION = vtim_dur
+        // VCL_ENUM = *const ::std::os::raw::c_char
+        // VCL_HEADER = *const gethdr_s
+        // VCL_HTTP = *mut http
+        // VCL_INSTANCE = ::std::os::raw::c_void
+        // VCL_INT = i64
+        // VCL_IP = *const suckaddr
+        // VCL_PROBE = *const vrt_backend_probe
+        // VCL_REAL = f64
+        // VCL_REGEX = *const vre
+        // VCL_STEVEDORE = *const stevedore
+        // VCL_STRANDS = *const strands
+        // VCL_STRING = *const ::std::os::raw::c_char
+        // VCL_SUB = *const vcl_sub
+        // VCL_TIME = vtim_real
+        // VCL_VCL = *mut vcl
+        // VCL_VOID = ::std::os::raw::c_void
+        //
         .generate()
         .expect("Unable to generate bindings");
 
