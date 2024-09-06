@@ -341,7 +341,7 @@ unsafe extern "C" fn wrap_list<S: Serve<T>, T: Transfer>(
     detailed: i32,
     json: i32,
 ) {
-    let mut ctx = Ctx::new(ctxp.cast_mut());
+    let mut ctx = Ctx::from_ptr(ctxp);
     let mut vsb = Vsb::new(vsbp);
     assert!(!be.is_null());
     assert_eq!((*be).magic, ffi::DIRECTOR_MAGIC);
@@ -366,7 +366,7 @@ unsafe extern "C" fn wrap_pipe<S: Serve<T>, T: Transfer>(
     ctxp: *const ffi::vrt_ctx,
     be: VCLBackendPtr,
 ) -> ffi::stream_close_t {
-    let mut ctx = Ctx::new(ctxp.cast_mut());
+    let mut ctx = Ctx::from_ptr(ctxp);
     assert!(!(*ctxp).req.is_null());
     assert_eq!((*(*ctxp).req).magic, ffi::REQ_MAGIC);
     assert!(!(*(*ctxp).req).sp.is_null());
@@ -388,7 +388,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
     ctxp: *const ffi::vrt_ctx,
     be: VCLBackendPtr,
 ) -> c_int {
-    let mut ctx = Ctx::new(ctxp.cast_mut());
+    let mut ctx = Ctx::from_ptr(ctxp);
     assert!(!be.is_null());
     assert_eq!((*be).magic, ffi::DIRECTOR_MAGIC);
     assert!(!(*be).vcl_name.is_null());
@@ -507,7 +507,7 @@ unsafe extern "C" fn wrap_healthy<S: Serve<T>, T: Transfer>(
     assert_eq!((*be).magic, ffi::DIRECTOR_MAGIC);
     assert!(!(*be).priv_.is_null());
 
-    let mut ctx = Ctx::new(ctxp as *mut ffi::vrt_ctx);
+    let mut ctx = Ctx::from_ptr(ctxp);
     let backend = (*be).priv_ as *const S;
     let (healthy, when) = (*backend).healthy(&mut ctx);
     if !changed.is_null() {
@@ -533,7 +533,7 @@ unsafe extern "C" fn wrap_getip<T: Transfer>(
     assert_eq!((*bo.htc).magic, ffi::BUSYOBJ_MAGIC);
     assert!(!(*bo.htc).priv_.is_null());
 
-    let mut ctx = Ctx::new(ctxp.cast_mut());
+    let mut ctx = Ctx::from_ptr(ctxp);
 
     let transfer = (*bo.htc).priv_ as *const T;
     (*transfer)
@@ -561,7 +561,7 @@ unsafe extern "C" fn wrap_finish<S: Serve<T>, T: Transfer>(
     (*(*ctxp).bo).htc = ptr::null_mut();
 
     let backend = (*be).priv_ as *const S;
-    (*backend).finish(&mut Ctx::new(ctxp.cast_mut()));
+    (*backend).finish(&mut Ctx::from_ptr(ctxp));
 }
 
 impl<S: Serve<T>, T: Transfer> Drop for Backend<S, T> {

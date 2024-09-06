@@ -77,11 +77,7 @@ pub unsafe extern "C" fn gen_vdp_init<T: VDP>(
 ) -> c_int {
     assert_ne!(priv_, ptr::null_mut());
     assert_eq!(*priv_, ptr::null_mut());
-    match T::new(
-        &mut Ctx::new(vrt_ctx as *mut ffi::vrt_ctx),
-        &mut VDPCtx::new(ctx_raw),
-        oc,
-    ) {
+    match T::new(&mut Ctx::from_ptr(vrt_ctx), &mut VDPCtx::new(ctx_raw), oc) {
         InitResult::Ok(proc) => {
             *priv_ = Box::into_raw(Box::new(proc)).cast::<c_void>();
             0
@@ -204,10 +200,7 @@ unsafe extern "C" fn wrap_vfp_init<T: VFP>(
     let vfe = vfep.as_mut().unwrap();
     assert_eq!(vfe.magic, ffi::VFP_ENTRY_MAGIC);
 
-    match T::new(
-        &mut Ctx::new(vrt_ctx as *mut ffi::vrt_ctx),
-        &mut VFPCtx::new(ctx),
-    ) {
+    match T::new(&mut Ctx::from_ptr(vrt_ctx), &mut VFPCtx::new(ctx)) {
         InitResult::Ok(proc) => {
             vfe.priv1 = Box::into_raw(Box::new(proc)).cast::<c_void>();
             0
