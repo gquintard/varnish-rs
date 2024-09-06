@@ -4,6 +4,7 @@ use std::ffi::c_void;
 
 use crate::ffi;
 
+#[derive(Debug)]
 pub struct Vsb<'a> {
     /// Raw pointer to the C struct
     pub raw: &'a mut ffi::vsb,

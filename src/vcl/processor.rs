@@ -143,6 +143,7 @@ pub fn new_vdp<T: VDP>() -> ffi::vdp {
 }
 
 /// A thin wrapper around a `*mut ffi::vdp_ctx`
+#[derive(Debug)]
 pub struct VDPCtx<'a> {
     pub raw: &'a mut vdp_ctx,
 }
@@ -273,6 +274,7 @@ pub fn new_vfp<T: VFP>() -> ffi::vfp {
 }
 
 /// A thin wrapper around a `*mut ffi::vfp_ctx`
+#[derive(Debug)]
 pub struct VFPCtx<'a> {
     pub raw: &'a mut vfp_ctx,
 }
