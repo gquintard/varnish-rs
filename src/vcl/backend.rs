@@ -75,12 +75,15 @@ use std::ffi::{c_char, c_int, c_void, CString};
 use std::marker::PhantomData;
 use std::net::{SocketAddr, TcpStream};
 use std::os::unix::io::FromRawFd;
-use std::ptr;
+use std::ptr::{null, null_mut};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::ffi;
 use crate::vcl::convert::IntoVCL;
 use crate::vcl::ctx::{Ctx, Event, LogTag};
+use crate::vcl::utils::{
+    validate_director, validate_vfp_ctx, validate_vfp_entry, validate_vrt_ctx,
+};
 use crate::vcl::vsb::Vsb;
 use crate::vcl::ws::WS;
 
@@ -290,10 +293,8 @@ unsafe extern "C" fn vfp_pull<T: Transfer>(
     ptr: *mut c_void,
     len: *mut isize,
 ) -> ffi::vfp_status {
-    let ctx = ctxp.as_mut().unwrap();
-    assert_eq!(ctx.magic, ffi::VFP_CTX_MAGIC);
-    let vfe = vfep.as_mut().unwrap();
-    assert_eq!(vfe.magic, ffi::VFP_ENTRY_MAGIC);
+    let ctx = validate_vfp_ctx(ctxp);
+    let vfe = validate_vfp_entry(vfep);
 
     let buf = std::slice::from_raw_parts_mut(ptr.cast::<u8>(), *len as usize);
     if buf.is_empty() {
@@ -310,7 +311,7 @@ unsafe extern "C" fn vfp_pull<T: Transfer>(
                 b: msg.as_ptr().cast::<c_char>(),
                 e: msg.as_ptr().add(msg.len()).cast::<c_char>(),
             };
-            ffi::VSLbt((*(*ctxp).req).vsl, ffi::VSL_tag_e_SLT_Error, t);
+            ffi::VSLbt(ctx.req.as_ref().unwrap().vsl, ffi::VSL_tag_e_SLT_Error, t);
 
             ffi::vfp_status_VFP_ERROR
         }
@@ -326,10 +327,9 @@ unsafe extern "C" fn vfp_pull<T: Transfer>(
 }
 
 unsafe extern "C" fn wrap_event<S: Serve<T>, T: Transfer>(be: VCLBackendPtr, ev: ffi::vcl_event_e) {
-    assert!(!be.is_null());
-    assert_eq!((*be).magic, ffi::DIRECTOR_MAGIC);
-    assert!(!(*be).priv_.is_null());
-    let backend = (*be).priv_ as *const S;
+    let be = validate_director(be);
+    assert!(!be.priv_.is_null());
+    let backend = be.priv_ as *const S;
 
     (*backend).event(Event::new(ev));
 }
@@ -343,21 +343,18 @@ unsafe extern "C" fn wrap_list<S: Serve<T>, T: Transfer>(
 ) {
     let mut ctx = Ctx::from_ptr(ctxp);
     let mut vsb = Vsb::new(vsbp);
-    assert!(!be.is_null());
-    assert_eq!((*be).magic, ffi::DIRECTOR_MAGIC);
-    assert!(!(*be).priv_.is_null());
-    let backend = (*be).priv_ as *const S;
+    let be = validate_director(be);
+    assert!(!be.priv_.is_null());
+    let backend = be.priv_ as *const S;
 
     (*backend).list(&mut ctx, &mut vsb, detailed != 0, json != 0);
 }
 
 unsafe extern "C" fn wrap_panic<S: Serve<T>, T: Transfer>(be: VCLBackendPtr, vsbp: *mut ffi::vsb) {
     let mut vsb = Vsb::new(vsbp);
-
-    assert!(!be.is_null());
-    assert_eq!((*be).magic, ffi::DIRECTOR_MAGIC);
-    assert!(!(*be).priv_.is_null());
-    let backend = (*be).priv_ as *const S;
+    let be = validate_director(be);
+    assert!(!be.priv_.is_null());
+    let backend = be.priv_ as *const S;
 
     (*backend).panic(&mut vsb);
 }
@@ -375,10 +372,9 @@ unsafe extern "C" fn wrap_pipe<S: Serve<T>, T: Transfer>(
     assert_ne!(fd, 0);
     let tcp_stream = TcpStream::from_raw_fd(fd);
 
-    assert!(!be.is_null());
-    assert_eq!((*be).magic, ffi::DIRECTOR_MAGIC);
-    assert!(!(*be).priv_.is_null());
-    let backend = (*be).priv_ as *const S;
+    let be = validate_director(be);
+    assert!(!be.priv_.is_null());
+    let backend = be.priv_ as *const S;
 
     sc_to_ptr((*backend).pipe(&mut ctx, tcp_stream))
 }
@@ -389,14 +385,13 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
     be: VCLBackendPtr,
 ) -> c_int {
     let mut ctx = Ctx::from_ptr(ctxp);
-    assert!(!be.is_null());
-    assert_eq!((*be).magic, ffi::DIRECTOR_MAGIC);
-    assert!(!(*be).vcl_name.is_null());
-    assert!(!(*be).priv_.is_null());
-    assert!(!(*be).vdir.is_null());
-    assert_eq!((*(*be).vdir).magic, ffi::VCLDIR_MAGIC);
+    let be = validate_director(be);
+    assert!(!be.vcl_name.is_null());
+    assert!(!be.priv_.is_null());
+    assert!(!be.vdir.is_null());
+    assert_eq!((*be.vdir).magic, ffi::VCLDIR_MAGIC);
 
-    let backend = (*be).priv_ as *const S;
+    let backend = be.priv_ as *const S;
     match (*backend).get_headers(&mut ctx) {
         Ok(res) => {
             // default to HTTP/1.1 200 if the backend didn't provide anything
@@ -472,7 +467,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
                         (*vfp).init = None;
                         (*vfp).pull = Some(vfp_pull::<T>);
                         (*vfp).fini = None;
-                        (*vfp).priv1 = ptr::null();
+                        (*vfp).priv1 = null();
                         let vfe = ffi::VFP_Push((*ctx.raw.bo).vfc, vfp);
                         if vfe.is_null() {
                             ctx.fail(&format!("{}: couldn't insert vfp", (*backend).get_type()));
@@ -503,12 +498,11 @@ unsafe extern "C" fn wrap_healthy<S: Serve<T>, T: Transfer>(
     be: ffi::VCL_BACKEND,
     changed: *mut ffi::VCL_TIME,
 ) -> ffi::VCL_BOOL {
-    assert!(!be.is_null());
-    assert_eq!((*be).magic, ffi::DIRECTOR_MAGIC);
-    assert!(!(*be).priv_.is_null());
+    let be = validate_director(be);
+    assert!(!be.priv_.is_null());
 
     let mut ctx = Ctx::from_ptr(ctxp);
-    let backend = (*be).priv_ as *const S;
+    let backend = be.priv_ as *const S;
     let (healthy, when) = (*backend).healthy(&mut ctx);
     if !changed.is_null() {
         *changed = when.duration_since(UNIX_EPOCH).unwrap().as_secs_f64();
@@ -524,24 +518,21 @@ unsafe extern "C" fn wrap_getip<T: Transfer>(
     ctxp: *const ffi::vrt_ctx,
     _be: ffi::VCL_BACKEND,
 ) -> ffi::VCL_IP {
-    assert!(!ctxp.is_null());
-    assert_eq!((*ctxp).magic, ffi::VRT_CTX_MAGIC);
-    assert!(!(*ctxp).bo.is_null());
-    assert_eq!((*(*ctxp).bo).magic, ffi::BUSYOBJ_MAGIC);
-    let bo = *(*ctxp).bo;
-    assert!(!bo.htc.is_null());
-    assert_eq!((*bo.htc).magic, ffi::BUSYOBJ_MAGIC);
-    assert!(!(*bo.htc).priv_.is_null());
+    let ctxp = validate_vrt_ctx(ctxp);
+    let bo = ctxp.bo.as_ref().unwrap();
+    assert_eq!(bo.magic, ffi::BUSYOBJ_MAGIC);
+    let htc = bo.htc.as_ref().unwrap();
+    assert_eq!(htc.magic, ffi::BUSYOBJ_MAGIC);
+    let transfer = htc.priv_.cast::<T>().as_ref().unwrap();
 
     let mut ctx = Ctx::from_ptr(ctxp);
 
-    let transfer = (*bo.htc).priv_ as *const T;
-    (*transfer)
+    transfer
         .get_ip()
         .and_then(|ip| ip.into_vcl(&mut ctx.ws).map_err(|e| e.into()))
         .unwrap_or_else(|e| {
             ctx.fail(&format!("{e}"));
-            ptr::null()
+            null()
         })
 }
 
@@ -549,19 +540,22 @@ unsafe extern "C" fn wrap_finish<S: Serve<T>, T: Transfer>(
     ctxp: *const ffi::vrt_ctx,
     be: VCLBackendPtr,
 ) {
-    assert!(!be.is_null());
-    assert_eq!((*be).magic, ffi::DIRECTOR_MAGIC);
-    assert!(!(*be).priv_.is_null());
+    let be = validate_director(be);
+    let prev_backend = be.priv_.cast::<S>().as_ref().unwrap();
+
+    let ctxp = ctxp.as_ref().unwrap();
+    let bo = ctxp.bo.as_mut().unwrap();
 
     // drop the Transfer
-    let htc = (*(*ctxp).bo).htc;
-    if !(*htc).priv_.is_null() {
-        drop(Box::from_raw((*htc).priv_.cast::<T>()));
+    // FIXME: can htc be null? We do set it to null later...
+    let htc = bo.htc.as_ref().unwrap();
+    if let Some(old) = htc.priv_.cast::<T>().as_mut().take() {
+        drop(Box::from_raw(old));
     }
-    (*(*ctxp).bo).htc = ptr::null_mut();
+    bo.htc = null_mut();
 
-    let backend = (*be).priv_ as *const S;
-    (*backend).finish(&mut Ctx::from_ptr(ctxp));
+    // FIXME?: should _prev be set to NULL?
+    prev_backend.finish(&mut Ctx::from_ptr(ctxp));
 }
 
 impl<S: Serve<T>, T: Transfer> Drop for Backend<S, T> {

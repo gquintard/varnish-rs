@@ -17,6 +17,7 @@ use std::slice::from_raw_parts_mut;
 use std::str::from_utf8;
 
 use crate::ffi;
+use crate::vcl::utils::validate_ws;
 
 /// A workspace object
 ///
@@ -45,10 +46,8 @@ impl<'a> WS<'a> {
     /// Allocate a `[u8; sz]` and return a reference to it.
     #[cfg(not(test))]
     pub fn alloc(&mut self, sz: usize) -> Result<&'a mut [u8], String> {
-        let wsp = unsafe { self.raw.as_mut().unwrap() };
-        assert_eq!(wsp.magic, ffi::WS_MAGIC);
-
-        let p = unsafe { ffi::WS_Alloc(wsp, sz as u32).cast::<u8>() };
+        let ws = unsafe { validate_ws(self.raw) };
+        let p = unsafe { ffi::WS_Alloc(ws, sz as u32).cast::<u8>() };
         if p.is_null() {
             Err(format!("workspace allocation ({sz} bytes) failed"))
         } else {
@@ -58,21 +57,19 @@ impl<'a> WS<'a> {
 
     #[cfg(test)]
     pub fn alloc(&mut self, sz: usize) -> Result<&'a mut [u8], String> {
-        let wsp = unsafe { self.raw.as_mut().unwrap() };
-        assert_eq!(wsp.magic, ffi::WS_MAGIC);
-
+        let ws = unsafe { validate_ws(self.raw) };
         let al = align_of::<*const c_void>();
         let aligned_sz = ((sz + al - 1) / al) * al;
 
         unsafe {
-            if wsp.e.offset_from(wsp.f) < aligned_sz as isize {
+            if ws.e.offset_from(ws.f) < aligned_sz as isize {
                 Err(format!(
                     "not enough room for {aligned_sz} (rounded up from {sz}). f: {:?}, e: {:?}",
-                    wsp.f, wsp.e
+                    ws.f, ws.e
                 ))
             } else {
-                let buf = from_raw_parts_mut(wsp.f.cast::<u8>(), aligned_sz);
-                wsp.f = wsp.f.add(aligned_sz);
+                let buf = from_raw_parts_mut(ws.f.cast::<u8>(), aligned_sz);
+                ws.f = ws.f.add(aligned_sz);
                 Ok(buf)
             }
         }
@@ -120,17 +117,16 @@ impl<'a> WS<'a> {
     /// Note: don't assume the slice has been zeroed when it is returned to you, see
     /// [`ReservedBuf::release()`] for more information.
     pub fn reserve(&mut self) -> ReservedBuf<'a> {
-        let wsp = unsafe { self.raw.as_mut().unwrap() };
-        assert_eq!(wsp.magic, ffi::WS_MAGIC);
+        let ws = unsafe { validate_ws(self.raw) };
 
         unsafe {
-            let sz = ffi::WS_ReserveAll(wsp) as usize;
+            let sz = ffi::WS_ReserveAll(ws) as usize;
 
-            let buf = from_raw_parts_mut(wsp.f.cast::<u8>(), sz);
+            let buf = from_raw_parts_mut(ws.f.cast::<u8>(), sz);
             ReservedBuf {
                 buf,
                 wsp: self.raw,
-                b: wsp.f.cast::<u8>(),
+                b: ws.f.cast::<u8>(),
                 len: 0,
             }
         }
@@ -212,9 +208,7 @@ impl<'a> ReservedBuf<'a> {
 impl<'a> Drop for ReservedBuf<'a> {
     fn drop(&mut self) {
         unsafe {
-            let wsp = self.wsp.as_mut().unwrap();
-            assert_eq!(wsp.magic, ffi::WS_MAGIC);
-            ffi::WS_Release(wsp, self.len as u32);
+            ffi::WS_Release(validate_ws(self.wsp), self.len as u32);
         }
     }
 }
