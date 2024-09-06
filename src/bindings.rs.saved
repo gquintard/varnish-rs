@@ -4295,7 +4295,22 @@ pub type VCL_ACL = *const vrt_acl;
 pub type VCL_BACKEND = *const director;
 pub type VCL_BLOB = *const vrt_blob;
 pub type VCL_BODY = *const ::std::ffi::c_void;
-pub type VCL_BOOL = ::std::ffi::c_uint;
+#[repr(transparent)]
+#[derive(Debug, Default, Copy, Clone)]
+pub struct VCL_BOOL(pub ::std::ffi::c_uint);
+impl ::std::ops::Deref for VCL_BOOL {
+    type Target = ::std::ffi::c_uint;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl ::std::ops::DerefMut for VCL_BOOL {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 pub type VCL_BYTES = i64;
 pub type VCL_DURATION = vtim_dur;
 pub type VCL_ENUM = *const ::std::ffi::c_char;
