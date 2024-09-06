@@ -109,8 +109,8 @@ unsafe extern "C" fn vmod_c__event(vrt_ctx: *mut varnish::vcl::boilerplate::vrt_
         &mut ctx,
         &mut vp.into_rust(),
         event).into_result() {
-            Ok(()) => 0,
-            Err(ref e) => {{ ctx.fail(e); 1 }},
+            Ok(()) => 0.into(),
+            Err(ref e) => {{ ctx.fail(e); 1.into() }},
     }
 }
 ''')

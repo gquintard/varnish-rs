@@ -4298,29 +4298,20 @@ pub type VCL_BODY = *const ::std::ffi::c_void;
 #[repr(transparent)]
 #[derive(Debug, Default, Copy, Clone)]
 pub struct VCL_BOOL(pub ::std::ffi::c_uint);
-impl ::std::ops::Deref for VCL_BOOL {
-    type Target = ::std::ffi::c_uint;
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-impl ::std::ops::DerefMut for VCL_BOOL {
-    #[inline]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
 pub type VCL_BYTES = i64;
 pub type VCL_DURATION = vtim_dur;
 pub type VCL_ENUM = *const ::std::ffi::c_char;
 pub type VCL_HEADER = *const gethdr_s;
 pub type VCL_HTTP = *mut http;
 pub type VCL_INSTANCE = ::std::ffi::c_void;
-pub type VCL_INT = i64;
+#[repr(transparent)]
+#[derive(Debug, Default, Copy, Clone)]
+pub struct VCL_INT(pub i64);
 pub type VCL_IP = *const suckaddr;
 pub type VCL_PROBE = *const vrt_backend_probe;
-pub type VCL_REAL = f64;
+#[repr(transparent)]
+#[derive(Debug, Default, Copy, Clone)]
+pub struct VCL_REAL(pub f64);
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct vre {
