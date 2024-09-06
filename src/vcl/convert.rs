@@ -97,25 +97,25 @@ vcl_types! {
     VCL_BACKEND,
     VCL_BLOB,
     VCL_BODY,
-    // VCL_BOOL,  // need?
+//  VCL_BOOL,  // need?
     VCL_BYTES,
     VCL_DURATION,
-//    VCL_ENUM, // same as VCL_BODY
+//  VCL_ENUM, // same as VCL_BODY
     VCL_HEADER,
     VCL_HTTP,
     VCL_INSTANCE,
-//    VCL_INT, // same as VCL_BYTES
+//  VCL_INT, // same as VCL_BYTES
     VCL_IP,
     VCL_PROBE,
-//    VCL_REAL, // same as VCL_DURATION
+//  VCL_REAL, // same as VCL_DURATION
     VCL_REGEX,
     VCL_STEVEDORE,
     VCL_STRANDS,
     VCL_STRING,
     VCL_SUB,
-//    VCL_TIME, // same as VCL_DURATION
+//  VCL_TIME, // same as VCL_DURATION
     VCL_VCL,
-//    VCL_VOID, // same as VCL_INSTANCE
+//  VCL_VOID, // same as VCL_INSTANCE
 }
 
 impl IntoVCL<()> for () {
@@ -410,18 +410,6 @@ pub trait IntoRust<T> {
     fn into_rust(self) -> T;
 }
 
-impl IntoRust<f64> for VCL_REAL {
-    fn into_rust(self) -> f64 {
-        self
-    }
-}
-
-impl IntoRust<i64> for VCL_INT {
-    fn into_rust(self) -> i64 {
-        self
-    }
-}
-
 impl<'a> IntoRust<Cow<'a, str>> for VCL_STRING {
     fn into_rust(self) -> Cow<'a, str> {
         let s = if self.is_null() { EMPTY_STRING } else { self };
@@ -554,3 +542,19 @@ impl From<VCL_BOOL> for bool {
         b.0 != 0
     }
 }
+
+macro_rules! impl_type_cast_from {
+    ($ident:ident, $typ:ty) => {
+        impl From<$ident> for $typ {
+            fn from(b: $ident) -> Self {
+                <Self>::from(b.0)
+            }
+        }
+    };
+}
+
+impl_type_cast!(VCL_REAL, f64);
+impl_type_cast_from!(VCL_REAL, f64);
+
+impl_type_cast!(VCL_INT, i64);
+impl_type_cast_from!(VCL_INT, i64);
