@@ -33,9 +33,11 @@ fn main() {
                 .iter()
                 .map(|i| format!("-I{}", i.to_str().unwrap())),
         )
+        .ctypes_prefix("::std::ffi")
         .derive_copy(true)
         .derive_debug(true)
         .derive_default(true)
+        .generate_cstr(true)
         .generate()
         .expect("Unable to generate bindings");
 

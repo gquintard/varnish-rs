@@ -90,7 +90,6 @@ use std::env::join_paths;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::str::from_utf8;
 use std::{env, fs};
 
 pub mod ffi {
@@ -281,7 +280,7 @@ pub fn generate_boilerplate() -> Result<(), vcl::Error> {
         .arg("-w")
         .arg(env::var("OUT_DIR").unwrap())
         .arg("-a")
-        .arg(from_utf8(ffi::VMOD_ABI_Version).unwrap().trim_matches('\0'))
+        .arg(ffi::VMOD_ABI_Version.to_str().unwrap())
         .env(
             "PYTHONPATH",
             join_paths([env::var("OUT_DIR").unwrap_or_default(), vmodtool_dir]).unwrap(),

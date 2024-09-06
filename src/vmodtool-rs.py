@@ -245,7 +245,7 @@ pub static Vmod_{name}_Data: vmod_data = vmod_data {{
 	func_name: c"{csn}".as_ptr(),
 	func_len: ::std::mem::size_of::<{csn}>() as c_int,
 	func: &{csn} as *const _ as *const c_void,
-	abi: varnish::vcl::boilerplate::VMOD_ABI_Version.as_ptr() as *const c_char,
+	abi: varnish::vcl::boilerplate::VMOD_ABI_Version.as_ptr(),
 	json: JSON,
     proto: std::ptr::null(),
 }};
