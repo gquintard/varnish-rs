@@ -458,17 +458,14 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
                             ));
                             return -1;
                         }
-                        let t = match WS::new((*ctx.raw.bo).ws.as_mut_ptr())
+                        let Ok(t) = WS::new((*ctx.raw.bo).ws.as_mut_ptr())
                             .copy_bytes_with_null(&(*backend).get_type())
-                        {
-                            Err(_) => {
-                                ctx.fail(&format!(
-                                    "{}: insufficient workspace",
-                                    (*backend).get_type()
-                                ));
-                                return -1;
-                            }
-                            Ok(s) => s,
+                        else {
+                            ctx.fail(&format!(
+                                "{}: insufficient workspace",
+                                (*backend).get_type()
+                            ));
+                            return -1;
                         };
                         (*vfp).name = t.as_ptr().cast::<c_char>();
                         (*vfp).init = None;
@@ -538,16 +535,13 @@ unsafe extern "C" fn wrap_getip<T: Transfer>(
     let mut ctx = Ctx::new(ctxp.cast_mut());
 
     let transfer = (*bo.htc).priv_ as *const T;
-    match (*transfer)
+    (*transfer)
         .get_ip()
         .and_then(|ip| ip.into_vcl(&mut ctx.ws).map_err(|e| e.into()))
-    {
-        Err(e) => {
+        .unwrap_or_else(|e| {
             ctx.fail(&format!("{e}"));
             ptr::null()
-        }
-        Ok(p) => p,
-    }
+        })
 }
 
 unsafe extern "C" fn wrap_finish<S: Serve<T>, T: Transfer>(

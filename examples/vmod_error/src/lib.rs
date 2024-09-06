@@ -9,9 +9,8 @@ varnish::vtc!(test01);
 // no error, just return 0 if anything goes wrong
 pub fn cannot_fail(_: &Ctx, fp: &str) -> i64 {
     // try to read the path at fp into a string, but return if there was an error
-    let content = match read_to_string(fp) {
-        Err(_) => return 0,
-        Ok(s) => s,
+    let Ok(content) = read_to_string(fp) else {
+        return 0;
     };
 
     // try to convert the string into an i64, if parsing fails, force 0
@@ -24,21 +23,17 @@ pub fn cannot_fail(_: &Ctx, fp: &str) -> i64 {
 // smart enough to infer the type)
 pub fn manual_fail(ctx: &mut Ctx, fp: &str) -> i64 {
     // try to read the path at fp into a string, but return if there was an error
-    let content = match read_to_string(fp) {
-        Err(_) => {
-            return ctx
-                .fail("manual_fail: couldn't read file into string")
-                .into()
-        }
-        Ok(s) => s,
+    let Ok(content) = read_to_string(fp) else {
+        return ctx
+            .fail("manual_fail: couldn't read file into string")
+            .into();
     };
 
     // try to convert the string into an i64
     // no need to return as the last expression is automatically returned
-    match content.parse::<i64>() {
-        Err(_) => ctx.fail("manual_fail: conversion failed").into(),
-        Ok(i) => i,
-    }
+    content
+        .parse::<i64>()
+        .unwrap_or_else(|_| ctx.fail("manual_fail: conversion failed").into())
 }
 
 // more idiomatic, we return a Result, and the generated boilerplate will be in charge of
