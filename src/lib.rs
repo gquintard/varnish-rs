@@ -170,10 +170,11 @@ pub mod vcl {
 /// **Important note:** you need to first build your vmod (i.e. with `cargo build`) before the tests can be run,
 /// otherwise you'll get a panic.
 ///
-/// Tests will automatically timeout after 5s. To override, set `VARNISHTEST_DURATION` env var.
+/// Tests will automatically time out after 5s. To override, set `VARNISHTEST_DURATION` env var.
 #[macro_export]
 macro_rules! vtc {
     ( $name:ident ) => {
+        #[cfg(test)]
         #[test]
         fn $name() {
             use std::io::{self, Write};

@@ -3,9 +3,6 @@ varnish::boilerplate!();
 
 // even though we won't use it here, we still need to know what the context type is
 use varnish::vcl::ctx::Ctx;
-// this import is only needed for tests
-#[cfg(test)]
-use varnish::vcl::ctx::TestCtx;
 
 // we now implement both functions from vmod.vcc, but with rust types.
 // Don't forget to make the function public with "pub" in front of them
@@ -26,33 +23,38 @@ pub fn captain_obvious(_: &Ctx, opt: Option<i64>) -> String {
     }
 }
 
-// Write some more unit tests
-#[test]
-fn obviousness() {
-    let mut test_ctx = TestCtx::new(100);
-    let ctx = test_ctx.ctx();
+#[cfg(test)]
+mod tests {
+    use varnish::vcl::ctx::TestCtx;
 
-    assert_eq!(
-        "I was called without an argument",
-        captain_obvious(&ctx, None)
-    );
-    assert_eq!(
-        "I was given 975322 as argument",
-        captain_obvious(&ctx, Some(975_322))
-    );
+    use super::*;
+
+    #[test]
+    fn obviousness() {
+        let mut test_ctx = TestCtx::new(100);
+        let ctx = test_ctx.ctx();
+
+        assert_eq!(
+            "I was called without an argument",
+            captain_obvious(&ctx, None)
+        );
+        assert_eq!(
+            "I was given 975322 as argument",
+            captain_obvious(&ctx, Some(975_322))
+        );
+    }
+
+    #[test]
+    fn even_test() {
+        // we don't use it, but we still need one
+        let mut test_ctx = TestCtx::new(100);
+        let ctx = test_ctx.ctx();
+
+        assert!(is_even(&ctx, 0));
+        assert!(is_even(&ctx, 1024));
+        assert!(!is_even(&ctx, 421_321));
+    }
+
+    // we also want to run test/test01.vtc
+    varnish::vtc!(test01);
 }
-
-// Write some more unit tests
-#[test]
-fn even_test() {
-    // we don't use it, but we still need one
-    let mut test_ctx = TestCtx::new(100);
-    let ctx = test_ctx.ctx();
-
-    assert!(is_even(&ctx, 0));
-    assert!(is_even(&ctx, 1024));
-    assert!(!is_even(&ctx, 421_321));
-}
-
-// we also want to run test/test01.vtc
-varnish::vtc!(test01);
