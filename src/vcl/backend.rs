@@ -96,6 +96,7 @@ pub type VCLBackendPtr = ffi::VCL_BACKEND;
 /// result, you don't want to drop it until after all the transfers are done. The most common way
 /// is just to have the backend be part of a vmod object because the object won't be dropped until
 /// the VCL is discarded and that can only happen once all the backend fetches are done.
+#[derive(Debug)]
 pub struct Backend<S: Serve<T>, T: Transfer> {
     bep: *const ffi::director,
     #[allow(dead_code)]
@@ -574,6 +575,7 @@ impl<S: Serve<T>, T: Transfer> Drop for Backend<S, T> {
 ///
 /// When piping a response, the backend is in charge of closing the file descriptor (which is done
 /// automatically by the rust layer), but also to provide how/why it got closed.
+#[derive(Debug)]
 pub enum StreamClose {
     RemClose,
     ReqClose,

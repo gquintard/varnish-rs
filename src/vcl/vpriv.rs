@@ -12,6 +12,7 @@ use crate::ffi;
 // Ideally:
 // - vmod_priv_methods would have a method to free itself
 // - we would be able to create vmod_priv_methods from a const fn
+#[derive(Debug)]
 pub struct VPriv<T> {
     ptr: *mut ffi::vmod_priv,
     phantom: PhantomData<T>,

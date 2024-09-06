@@ -1,4 +1,5 @@
-//! Expose the Varnish context (`struct vrt_ctx`) as a Rust object
+//! Expose the Varnish context [`vrt_ctx`] as a Rust object
+//!
 use std::ffi::{c_char, c_int, c_uint, c_void, CString};
 use std::ptr;
 
@@ -16,6 +17,7 @@ use crate::vcl::ws::{TestWS, WS};
 /// An `enum` wrapper around [VSL tags](https://varnish-cache.org/docs/trunk/reference/vsl.html#vsl-tags).
 /// Only the most current tags (for vmod writers) are mapped, and [`LogTag::Any`] will allow to
 /// directly pass a native tag code (`ffi::VSL_tag_e_SLT_*`).
+#[derive(Debug)]
 pub enum LogTag {
     Debug,
     Error,
@@ -62,6 +64,7 @@ impl LogTag {
 ///     }
 /// }
 /// ```
+#[derive(Debug)]
 pub struct Ctx<'a> {
     pub raw: &'a mut vrt_ctx,
     pub http_req: Option<HTTP<'a>>,
@@ -162,17 +165,18 @@ impl<'a> Ctx<'a> {
     }
 }
 
-/// A struct holding both a native vrt_ctx struct and the space it points to.
+/// A struct holding both a native [`vrt_ctx`] struct and the space it points to.
 ///
 /// As the name implies, this struct mainly exist to facilitate testing and should probably not be
 /// used elsewhere.
+#[derive(Debug)]
 pub struct TestCtx {
     vrt_ctx: vrt_ctx,
     test_ws: TestWS,
 }
 
 impl TestCtx {
-    /// Instantiate a vrt_ctx, as well as the workspace (of size `sz`) it links to.
+    /// Instantiate a [`vrt_ctx`], as well as the workspace (of size `sz`) it links to.
     pub fn new(sz: usize) -> Self {
         let mut test_ctx = TestCtx {
             vrt_ctx: vrt_ctx {
@@ -180,12 +184,12 @@ impl TestCtx {
                 syntax: 0,
                 method: 0,
                 vclver: 0,
-                msg: ptr::null::<vsb>() as *mut vsb,
-                vsl: ptr::null::<vsl_log>() as *mut vsl_log,
+                msg: ptr::null_mut::<vsb>(),
+                vsl: ptr::null_mut::<vsl_log>(),
                 vcl: ptr::null::<VCL_VCL>() as VCL_VCL,
                 ws: ptr::null_mut::<ws>(),
-                sp: ptr::null::<sess>() as *mut sess,
-                req: ptr::null::<req>() as *mut req,
+                sp: ptr::null_mut::<sess>(),
+                req: ptr::null_mut::<req>(),
                 http_req: ptr::null::<VCL_HTTP>() as VCL_HTTP,
                 http_req_top: ptr::null::<VCL_HTTP>() as VCL_HTTP,
                 http_resp: ptr::null::<VCL_HTTP>() as VCL_HTTP,

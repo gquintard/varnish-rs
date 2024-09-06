@@ -31,6 +31,7 @@ const HDR_UNSET: u16 = ffi::HTTP_HDR_UNSET as u16;
 const HDR_URL: u16 = ffi::HTTP_HDR_URL as u16;
 
 /// HTTP headers of an object
+#[derive(Debug)]
 pub struct HTTP<'a> {
     pub raw: &'a mut ffi::http,
 }
@@ -224,6 +225,7 @@ impl<'a> IntoIterator for &'a mut HTTP<'a> {
     }
 }
 
+#[derive(Debug)]
 pub struct HTTPIter<'a> {
     http: &'a HTTP<'a>,
     cursor: isize,

@@ -25,6 +25,7 @@ use crate::ffi;
 ///
 /// The workspace is usually a few tens of kilobytes large, don't be greedy. If you need more
 /// space, consider storing your data in a [`VPriv`](crate::vcl::vpriv::VPriv).
+#[derive(Debug)]
 pub struct WS<'a> {
     /// Raw pointer to the C struct
     pub raw: *mut ffi::ws,
@@ -171,6 +172,7 @@ impl<'a> WS<'a> {
 /// let r3 = ws.reserve();
 /// assert_eq!(r3.buf.len(), 150);
 /// ```
+#[derive(Debug)]
 pub struct ReservedBuf<'a> {
     /// The reserved buffer
     pub buf: &'a mut [u8],
@@ -221,6 +223,7 @@ impl<'a> Drop for ReservedBuf<'a> {
 ///
 /// As the name implies, this struct mainly exist to facilitate testing and should probably not be
 /// used elsewhere.
+#[derive(Debug)]
 pub struct TestWS {
     c_ws: ffi::ws,
     #[allow(dead_code)]
