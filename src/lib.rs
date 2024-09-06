@@ -125,6 +125,7 @@ pub mod vcl {
     pub use super::error::{Error, Result};
 
     pub mod boilerplate;
+    mod utils;
 }
 
 /// Automate VTC testing

@@ -11,6 +11,7 @@ use std::ptr;
 use crate::ffi;
 use crate::ffi::{objcore, vdp_ctx, vfp_ctx, vfp_entry};
 use crate::vcl::ctx::Ctx;
+use crate::vcl::utils::{validate_vfp_ctx, validate_vfp_entry};
 
 /// passed to [`VDP::push`] to describe special conditions occurring in the pipeline.
 #[derive(Debug, Copy, Clone)]
@@ -194,12 +195,8 @@ unsafe extern "C" fn wrap_vfp_init<T: VFP>(
     ctxp: *mut vfp_ctx,
     vfep: *mut vfp_entry,
 ) -> ffi::vfp_status {
-    let ctx = ctxp.as_mut().unwrap();
-    assert_eq!(ctx.magic, ffi::VFP_CTX_MAGIC);
-
-    let vfe = vfep.as_mut().unwrap();
-    assert_eq!(vfe.magic, ffi::VFP_ENTRY_MAGIC);
-
+    let ctx = validate_vfp_ctx(ctxp);
+    let vfe = validate_vfp_entry(vfep);
     match T::new(&mut Ctx::from_ptr(vrt_ctx), &mut VFPCtx::new(ctx)) {
         InitResult::Ok(proc) => {
             vfe.priv1 = Box::into_raw(Box::new(proc)).cast::<c_void>();
@@ -216,11 +213,8 @@ pub unsafe extern "C" fn wrap_vfp_pull<T: VFP>(
     ptr: *mut c_void,
     len: *mut isize,
 ) -> ffi::vfp_status {
-    let ctx = ctxp.as_mut().unwrap();
-    assert_eq!(ctx.magic, ffi::VFP_CTX_MAGIC);
-    let vfe = vfep.as_mut().unwrap();
-    assert_eq!(vfe.magic, ffi::VFP_ENTRY_MAGIC);
-
+    let ctx = validate_vfp_ctx(ctxp);
+    let vfe = validate_vfp_entry(vfep);
     let mut empty_buffer: [u8; 0] = [0; 0];
     let buf = if ptr.is_null() {
         empty_buffer.as_mut()
@@ -242,11 +236,8 @@ pub unsafe extern "C" fn wrap_vfp_pull<T: VFP>(
 }
 
 pub unsafe extern "C" fn wrap_vfp_fini<T: VFP>(ctxp: *mut vfp_ctx, vfep: *mut vfp_entry) {
-    let ctx = ctxp.as_mut().unwrap();
-    assert_eq!(ctx.magic, ffi::VFP_CTX_MAGIC);
-    let vfe = vfep.as_mut().unwrap();
-    assert_eq!(vfe.magic, ffi::VFP_ENTRY_MAGIC);
-
+    validate_vfp_ctx(ctxp);
+    let vfe = validate_vfp_entry(vfep);
     if vfe.priv1.is_null() {
         return;
     }
@@ -279,9 +270,9 @@ impl<'a> VFPCtx<'a> {
     ///
     /// The caller is in charge of making sure the structure doesn't outlive the pointer.
     pub unsafe fn new(raw: *mut vfp_ctx) -> Self {
-        let raw = raw.as_mut().unwrap();
-        assert_eq!(raw.magic, ffi::VFP_CTX_MAGIC);
-        VFPCtx { raw }
+        VFPCtx {
+            raw: validate_vfp_ctx(raw),
+        }
     }
 
     /// Pull data from the pipeline
