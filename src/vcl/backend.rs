@@ -307,12 +307,12 @@ unsafe extern "C" fn vfp_pull<T: Transfer>(
         Err(e) => {
             let msg = e.to_string();
             // TODO: we should grow a VSL object
-            let t = ffi::txt {
-                b: msg.as_ptr().cast::<c_char>(),
-                e: msg.as_ptr().add(msg.len()).cast::<c_char>(),
-            };
-            ffi::VSLbt(ctx.req.as_ref().unwrap().vsl, ffi::VSL_tag_e_SLT_Error, t);
-
+            ffi::VSLbt(
+                ctx.req.as_ref().unwrap().vsl,
+                ffi::VSL_tag_e_SLT_Error,
+                // SAFETY: we assume ffi::VSLbt() will not store the pointer to the string's content
+                ffi::txt::from_str(msg.as_str()),
+            );
             ffi::vfp_status_VFP_ERROR
         }
         Ok(0) => {

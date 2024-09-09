@@ -1,7 +1,6 @@
 //! Expose the Varnish context [`vrt_ctx`] as a Rust object
 //!
-use std::ffi::{c_char, c_int, c_uint, c_void, CString};
-use std::ptr::null_mut;
+use std::ffi::{c_int, c_uint, c_void, CString};
 
 use crate::ffi;
 use crate::ffi::{
@@ -122,11 +121,7 @@ impl<'a> Ctx<'a> {
             if vsl.is_null() {
                 log(logtag, msg);
             } else {
-                let t = ffi::txt {
-                    b: msg.as_ptr().cast::<c_char>(),
-                    e: msg.as_ptr().add(msg.len()).cast::<c_char>(),
-                };
-                ffi::VSLbt(vsl, logtag.into_u32(), t);
+                ffi::VSLbt(vsl, logtag.into_u32(), ffi::txt::from_str(msg));
             }
         }
     }
@@ -183,25 +178,7 @@ impl TestCtx {
         let mut test_ctx = TestCtx {
             vrt_ctx: vrt_ctx {
                 magic: VRT_CTX_MAGIC,
-                syntax: 0,
-                method: 0,
-                vclver: 0,
-                msg: null_mut(),
-                vsl: null_mut(),
-                vcl: null_mut(),
-                ws: null_mut(),
-                sp: null_mut(),
-                req: null_mut(),
-                http_req: null_mut(),
-                http_req_top: null_mut(),
-                http_resp: null_mut(),
-                bo: null_mut(),
-                http_bereq: null_mut(),
-                http_beresp: null_mut(),
-                now: 0.0,
-                specific: null_mut(),
-                called: null_mut(),
-                vpi: null_mut(),
+                ..vrt_ctx::default()
             },
             test_ws: TestWS::new(sz),
         };
