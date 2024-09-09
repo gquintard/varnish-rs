@@ -17,6 +17,7 @@ use std::slice::from_raw_parts_mut;
 use std::str::from_utf8;
 
 use crate::ffi;
+use crate::ffi::WS_Allocated;
 use crate::vcl::utils::validate_ws;
 
 /// A workspace object
@@ -72,6 +73,17 @@ impl<'a> WS<'a> {
                 ws.f = ws.f.add(aligned_sz);
                 Ok(buf)
             }
+        }
+    }
+
+    /// Check if a byte slice is allocated in the workspace
+    pub fn is_slice_allocated(&self, slice: &[u8]) -> bool {
+        unsafe {
+            WS_Allocated(
+                self.raw,
+                slice.as_ptr().cast::<c_void>(),
+                slice.len() as isize + 1,
+            ) == 1
         }
     }
 
