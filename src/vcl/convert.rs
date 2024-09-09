@@ -423,9 +423,11 @@ impl IntoRust<Duration> for VCL_DURATION {
     }
 }
 
-impl<T> IntoRust<VPriv<T>> for *mut vmod_priv {
-    fn into_rust(self) -> VPriv<T> {
-        VPriv::<T>::new(self)
+impl<'a, T> IntoRust<VPriv<'a, T>> for *mut vmod_priv {
+    fn into_rust(self) -> VPriv<'a, T> {
+        // FIXME: this is not a good pattern for sure,
+        // but we assume that vmod_priv will live longer than VPriv
+        unsafe { VPriv::from_ptr(self) }
     }
 }
 
