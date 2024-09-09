@@ -1,7 +1,6 @@
 use std::any::type_name;
-use std::ffi::{c_void, CString};
+use std::ffi::{c_char, c_void, CString};
 use std::marker::PhantomData;
-use std::ptr;
 
 use crate::ffi;
 
@@ -13,56 +12,52 @@ use crate::ffi;
 // - vmod_priv_methods would have a method to free itself
 // - we would be able to create vmod_priv_methods from a const fn
 #[derive(Debug)]
-pub struct VPriv<T> {
-    ptr: *mut ffi::vmod_priv,
+pub struct VPriv<'a, T> {
+    ptr: &'a mut ffi::vmod_priv,
     phantom: PhantomData<T>,
 }
 
 struct InnerVPriv<T> {
     methods: *mut ffi::vmod_priv_methods,
-    name: *mut CString,
+    name: *mut c_char,
     obj: Option<T>,
 }
 
-impl<T> VPriv<T> {
-    pub fn new(vp: *mut ffi::vmod_priv) -> Self {
-        assert_ne!(vp, ptr::null_mut());
-        VPriv::<T> {
-            ptr: vp,
+impl<T> VPriv<'_, T> {
+    pub unsafe fn from_ptr(vp: *mut ffi::vmod_priv) -> Self {
+        Self {
+            ptr: vp.as_mut().unwrap(),
             phantom: PhantomData,
         }
     }
 
     fn get_inner(&mut self) -> Option<&mut InnerVPriv<T>> {
-        unsafe { self.ptr.as_mut()?.priv_.cast::<InnerVPriv<T>>().as_mut() }
+        unsafe { self.ptr.priv_.cast::<InnerVPriv<T>>().as_mut() }
     }
 
     pub fn store(&mut self, obj: T) {
-        unsafe {
-            if self.get_inner().is_none() {
-                let name = Box::into_raw(Box::new(CString::new(type_name::<T>()).unwrap()));
-                let methods = ffi::vmod_priv_methods {
-                    magic: ffi::VMOD_PRIV_METHODS_MAGIC,
-                    type_: (*name).as_ptr(),
-                    fini: Some(vpriv_free::<T>),
-                };
-
-                let methods_ptr = Box::into_raw(Box::new(methods));
-                let inner_priv: InnerVPriv<T> = InnerVPriv {
-                    methods: methods_ptr,
-                    name,
-                    obj: None,
-                };
-                (*self.ptr).methods = methods_ptr;
-                (*self.ptr).priv_ = Box::into_raw(Box::new(inner_priv)).cast::<c_void>();
-            }
+        if let Some(inner_priv) = self.get_inner() {
+            inner_priv.obj = Some(obj);
+        } else {
+            let name = CString::new(type_name::<T>()).unwrap().into_raw();
+            let methods = ffi::vmod_priv_methods {
+                magic: ffi::VMOD_PRIV_METHODS_MAGIC,
+                type_: name,
+                fini: Some(vpriv_free::<T>),
+            };
+            let methods = Box::into_raw(Box::new(methods));
+            let inner_priv = InnerVPriv::<T> {
+                methods,
+                name,
+                obj: Some(obj),
+            };
+            self.ptr.methods = methods;
+            self.ptr.priv_ = Box::into_raw(Box::new(inner_priv)).cast::<c_void>();
         }
-        let inner_priv = self.get_inner().unwrap();
-        inner_priv.obj = Some(obj);
     }
 
     pub fn as_ref(&self) -> Option<&T> {
-        let inner = unsafe { (*self.ptr).priv_.cast::<InnerVPriv<T>>().as_ref()? };
+        let inner = unsafe { self.ptr.priv_.cast::<InnerVPriv<T>>().as_ref()? };
         inner.obj.as_ref()
     }
 
@@ -84,25 +79,21 @@ impl<T> VPriv<T> {
 
 unsafe extern "C" fn vpriv_free<T>(_: *const ffi::vrt_ctx, ptr: *mut c_void) {
     let inner_priv = Box::from_raw(ptr.cast::<InnerVPriv<T>>());
-    drop(Box::from_raw(inner_priv.name));
+    drop(CString::from_raw(inner_priv.name));
     drop(Box::from_raw(inner_priv.methods));
 }
 
 #[cfg(test)]
 mod tests {
     use std::ffi::CStr;
+    use std::ptr::null;
 
     use super::*;
 
     #[test]
     fn exploration() {
-        let mut vp = ffi::vmod_priv {
-            priv_: ptr::null::<c_void>() as *mut c_void,
-            len: 0,
-            methods: ptr::null::<ffi::vmod_priv_methods>() as *mut ffi::vmod_priv_methods,
-        };
-
-        let mut vpriv_int = VPriv::new(&mut vp);
+        let mut vp = ffi::vmod_priv::default();
+        let mut vpriv_int = unsafe { VPriv::from_ptr(&mut vp) };
         assert_eq!(None, vpriv_int.as_ref());
 
         let x_in = 5;
@@ -114,8 +105,7 @@ mod tests {
 
         unsafe {
             assert_eq!(CStr::from_ptr((*vp.methods).type_).to_str().unwrap(), "i32");
-
-            vpriv_free::<i32>(ptr::null::<ffi::vrt_ctx>(), vp.priv_);
+            vpriv_free::<i32>(null(), vp.priv_);
         }
     }
 }
