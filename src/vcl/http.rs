@@ -13,8 +13,7 @@
 
 #![allow(clippy::not_unsafe_ptr_arg_deref)]
 use std::ffi::c_uint;
-use std::slice::{from_raw_parts, from_raw_parts_mut};
-use std::str::from_utf8;
+use std::slice::from_raw_parts_mut;
 
 use crate::ffi;
 use crate::vcl::ws::WS;
@@ -50,12 +49,9 @@ impl<'a> HTTP<'a> {
         /* XXX: aliasing warning, it's the same pointer as the one in Ctx */
         let mut ws = WS::new(self.raw.ws);
         unsafe {
-            let hdr_buf = ws.copy_bytes_with_null(&value)?;
-            let hd = self.raw.hd.offset(idx as isize);
-            (*hd).b = hdr_buf.as_ptr();
-            // .e points to the NULL byte at the end of the string
-            (*hd).e = hdr_buf.as_ptr().add(hdr_buf.count_bytes());
-            let hdf = self.raw.hdf.offset(idx as isize);
+            let hd = self.raw.hd.offset(idx as isize).as_mut().unwrap();
+            *hd = ffi::txt::from_cstr(ws.copy_bytes_with_null(&value)?);
+            let hdf = self.raw.hdf.offset(idx as isize).as_mut().unwrap();
             *hdf = 0;
         }
         Ok(())
@@ -93,7 +89,7 @@ impl<'a> HTTP<'a> {
 
         let mut idx_empty = 0;
         for (idx, hd) in hdrs.iter().enumerate() {
-            let (n, _) = header_from_hd(hd).unwrap();
+            let (n, _) = hd.parse_header().unwrap();
             if name.eq_ignore_ascii_case(n) {
                 unsafe {
                     ffi::VSLbt(
@@ -129,14 +125,7 @@ impl<'a> HTTP<'a> {
             if idx >= self.raw.nhd {
                 None
             } else {
-                let b = (*self.raw.hd.offset(idx as isize)).b;
-                if b.is_null() {
-                    None
-                } else {
-                    let e = (*self.raw.hd.offset(idx as isize)).e;
-                    let buf = from_raw_parts(b.cast::<u8>(), e.offset_from(b) as usize);
-                    Some(from_utf8(buf).unwrap())
-                }
+                self.raw.hd.offset(idx as isize).as_ref().unwrap().to_str()
             }
         }
     }
@@ -240,41 +229,11 @@ impl<'a> Iterator for HTTPIter<'a> {
             if self.cursor >= nhd as isize {
                 return None;
             }
-            let hd = unsafe { self.http.raw.hd.offset(self.cursor) };
+            let hd = unsafe { self.http.raw.hd.offset(self.cursor).as_ref().unwrap() };
             self.cursor += 1;
-            if let Some(hdr) = header_from_hd(hd) {
+            if let Some(hdr) = hd.parse_header() {
                 return Some(hdr);
             }
         }
     }
-}
-
-fn header_from_hd<'a>(txt: *const ffi::txt) -> Option<(&'a str, &'a str)> {
-    let name;
-    let value;
-
-    unsafe {
-        let b = (*txt).b;
-        if b.is_null() {
-            return None;
-        }
-        let e = (*txt).e;
-        let buf = from_raw_parts(b.cast::<u8>(), e.offset_from(b) as usize);
-        // We expect varnishd to always given us a string with a ':' in it
-        // If it's not the case, blow up as it might be a sign of a bigger problem.
-        let colon = buf.iter().position(|x| *x == b':').unwrap();
-
-        name = from_utf8(&buf[..colon]).unwrap();
-
-        if colon == buf.len() - 1 {
-            value = "";
-        } else {
-            let start = &buf[colon + 1..]
-                .iter()
-                .position(|x| !char::is_whitespace(*x as char))
-                .unwrap_or(0);
-            value = from_utf8(&buf[(colon + start + 1)..]).unwrap();
-        }
-    }
-    Some((name, value))
 }
