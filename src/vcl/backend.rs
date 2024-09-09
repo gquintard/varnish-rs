@@ -507,11 +507,7 @@ unsafe extern "C" fn wrap_healthy<S: Serve<T>, T: Transfer>(
     if !changed.is_null() {
         *changed = when.duration_since(UNIX_EPOCH).unwrap().as_secs_f64();
     }
-    if healthy {
-        1
-    } else {
-        0
-    }
+    healthy.into()
 }
 
 unsafe extern "C" fn wrap_getip<T: Transfer>(
@@ -522,6 +518,7 @@ unsafe extern "C" fn wrap_getip<T: Transfer>(
     let bo = ctxp.bo.as_ref().unwrap();
     assert_eq!(bo.magic, ffi::BUSYOBJ_MAGIC);
     let htc = bo.htc.as_ref().unwrap();
+    // FIXME: document why htc does not use a different magic number
     assert_eq!(htc.magic, ffi::BUSYOBJ_MAGIC);
     let transfer = htc.priv_.cast::<T>().as_ref().unwrap();
 
@@ -565,6 +562,7 @@ impl<S: Serve<T>, T: Transfer> Drop for Backend<S, T> {
         };
     }
 }
+
 /// Return type for [Serve::pipe]
 ///
 /// When piping a response, the backend is in charge of closing the file descriptor (which is done
@@ -594,24 +592,24 @@ pub enum StreamClose {
 fn sc_to_ptr(sc: StreamClose) -> ffi::stream_close_t {
     unsafe {
         match sc {
-            StreamClose::RemClose => &ffi::SC_REM_CLOSE as *const _,
-            StreamClose::ReqClose => &ffi::SC_REQ_CLOSE as *const _,
-            StreamClose::ReqHttp10 => &ffi::SC_REQ_HTTP10 as *const _,
-            StreamClose::RxBad => &ffi::SC_RX_BAD as *const _,
-            StreamClose::RxBody => &ffi::SC_RX_BODY as *const _,
-            StreamClose::RxJunk => &ffi::SC_RX_JUNK as *const _,
-            StreamClose::RxOverflow => &ffi::SC_RX_OVERFLOW as *const _,
-            StreamClose::RxTimeout => &ffi::SC_RX_TIMEOUT as *const _,
-            StreamClose::RxCloseIdle => &ffi::SC_RX_CLOSE_IDLE as *const _,
-            StreamClose::TxPipe => &ffi::SC_TX_PIPE as *const _,
-            StreamClose::TxError => &ffi::SC_TX_ERROR as *const _,
-            StreamClose::TxEof => &ffi::SC_TX_EOF as *const _,
-            StreamClose::RespClose => &ffi::SC_RESP_CLOSE as *const _,
-            StreamClose::Overload => &ffi::SC_OVERLOAD as *const _,
-            StreamClose::PipeOverflow => &ffi::SC_PIPE_OVERFLOW as *const _,
-            StreamClose::RangeShort => &ffi::SC_RANGE_SHORT as *const _,
-            StreamClose::ReqHttp20 => &ffi::SC_REQ_HTTP20 as *const _,
-            StreamClose::VclFailure => &ffi::SC_VCL_FAILURE as *const _,
+            StreamClose::RemClose => ffi::SC_REM_CLOSE.as_ptr(),
+            StreamClose::ReqClose => ffi::SC_REQ_CLOSE.as_ptr(),
+            StreamClose::ReqHttp10 => ffi::SC_REQ_HTTP10.as_ptr(),
+            StreamClose::RxBad => ffi::SC_RX_BAD.as_ptr(),
+            StreamClose::RxBody => ffi::SC_RX_BODY.as_ptr(),
+            StreamClose::RxJunk => ffi::SC_RX_JUNK.as_ptr(),
+            StreamClose::RxOverflow => ffi::SC_RX_OVERFLOW.as_ptr(),
+            StreamClose::RxTimeout => ffi::SC_RX_TIMEOUT.as_ptr(),
+            StreamClose::RxCloseIdle => ffi::SC_RX_CLOSE_IDLE.as_ptr(),
+            StreamClose::TxPipe => ffi::SC_TX_PIPE.as_ptr(),
+            StreamClose::TxError => ffi::SC_TX_ERROR.as_ptr(),
+            StreamClose::TxEof => ffi::SC_TX_EOF.as_ptr(),
+            StreamClose::RespClose => ffi::SC_RESP_CLOSE.as_ptr(),
+            StreamClose::Overload => ffi::SC_OVERLOAD.as_ptr(),
+            StreamClose::PipeOverflow => ffi::SC_PIPE_OVERFLOW.as_ptr(),
+            StreamClose::RangeShort => ffi::SC_RANGE_SHORT.as_ptr(),
+            StreamClose::ReqHttp20 => ffi::SC_REQ_HTTP20.as_ptr(),
+            StreamClose::VclFailure => ffi::SC_VCL_FAILURE.as_ptr(),
         }
     }
 }
