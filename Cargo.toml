@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 default-members = ["varnish"]
-members = ["varnish", "varnish-sys", "vmod_test", "examples/vmod_*"]
+members = ["varnish", "varnish-macros", "varnish-sys", "vmod_test", "examples/vmod_*"]
 
 [workspace.package]
 # These fields are used by multiple crates, so it's defined here.
@@ -14,13 +14,29 @@ license = "BSD-3-Clause"
 [workspace.dependencies]
 # These versions must match the one in the [workspace.package] section above
 varnish = { path = "./varnish", version = "=0.0.19" }
+varnish-macros = { path = "./varnish-macros", version = "=0.0.19" }
 varnish-sys = { path = "./varnish-sys", version = "=0.0.19" }
 #
 # These dependencies are used by one or more crates, and easier to maintain in one place.
 bindgen = "0.70.1"
+darling = "0.20.10"
 glob = "0.3.1"
+insta = "1"
 pkg-config = "0.3.30"
+prettyplease = "0.2.22"
+proc-macro2 = "1.0.86"
+quote = "1.0.37"
+regex = "1.10.6"
 serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10.8"
+syn = "2.0.77"
+trybuild = "1.0"
+
+[profile.dev.package]
+# Optimize build speed -- https://docs.rs/insta/latest/insta/#optional-faster-runs
+insta.opt-level = 3
+similar.opt-level = 3
 
 [workspace.lints.rust]
 unused_qualifications = "warn"

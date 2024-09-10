@@ -1,0 +1,31 @@
+[package]
+name = "varnish-macros"
+description = "Varnish VMOD support - macros"
+authors = ["Yuri Astrakhan <YuriAstrakhan@gmail.com>", "Guillaume Quintard <guillaume.quintard@gmail.com>"]
+# FIXME: need categories and keywords
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+darling.workspace = true
+prettyplease.workspace = true
+proc-macro2.workspace = true
+quote.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+syn.workspace = true
+varnish-sys.workspace = true
+
+[dev-dependencies]
+glob.workspace = true
+insta.workspace = true
+regex.workspace = true
+trybuild.workspace = true
+varnish.workspace = true
+
+[lints]
+workspace = true
