@@ -4,9 +4,6 @@ version = "0.0.0"
 publish = false
 edition.workspace = true
 
-[build-dependencies]
-varnish.workspace = true
-
 [dependencies]
 varnish.workspace = true
 

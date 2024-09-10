@@ -1,6 +1,0 @@
-#-
-$Module timestamp 3 "Measure time in VCL"
-
-$Function DURATION timestamp(PRIV_TASK)
-
-Returns the duration since the same function was called for the last time (in the same task). If it's the first time it's been called, return 0.
