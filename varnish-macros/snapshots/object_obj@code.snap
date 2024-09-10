@@ -1,0 +1,231 @@
+---
+source: varnish-macros/src/tests.rs
+---
+mod obj {
+    #[allow(non_snake_case, unused_imports, unused_qualifications, unused_variables)]
+    mod varnish_generated {
+        use std::ffi::{c_char, c_int, c_uint, c_void, CStr};
+        use std::ptr::null;
+        use varnish::ffi::{
+            VCL_BACKEND, VCL_BOOL, VCL_DURATION, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL,
+            VCL_STRING, VCL_VOID, VMOD_ABI_Version, VMOD_PRIV_METHODS_MAGIC, vcl_event_e,
+            vmod_priv, vmod_priv_methods, vrt_ctx,
+        };
+        use varnish::vcl::{Ctx, IntoRust, IntoVCL};
+        use super::*;
+        #[repr(C)]
+        struct arg_vmod_obj_kv1__init {
+            valid_cap: c_char,
+            cap: VCL_INT,
+        }
+        unsafe extern "C" fn vmod_c_kv1__init(
+            __ctx: *mut vrt_ctx,
+            __objp: *mut *mut kv1,
+            __vcl_name: *const c_char,
+            __args: *const arg_vmod_obj_kv1__init,
+        ) {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __args = __args.as_ref().unwrap();
+            let __var0 = (__args.valid_cap != 0).then(|| __args.cap.into_rust());
+            let __result = super::kv1::new(__var0);
+            let __result = Box::new(__result);
+            *__objp = Box::into_raw(__result);
+        }
+        unsafe extern "C" fn vmod_c_kv1__fini(__objp: *mut *mut kv1) {
+            drop(Box::from_raw(*__objp));
+            *__objp = ::std::ptr::null_mut();
+        }
+        unsafe extern "C" fn vmod_c_kv1_set(
+            __ctx: *mut vrt_ctx,
+            __obj: *const super::kv1,
+            key: VCL_STRING,
+            value: VCL_STRING,
+        ) {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __obj = __obj.as_ref().unwrap();
+            let __var1 = key.into_rust();
+            let __var1 = __var1.as_ref();
+            let __var2 = value.into_rust();
+            let __var2 = __var2.as_ref();
+            let __result = __obj.set(__var1, __var2);
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_kv1_get(
+            __ctx: *mut vrt_ctx,
+            __obj: *const super::kv1,
+            key: VCL_STRING,
+        ) -> VCL_STRING {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __obj = __obj.as_ref().unwrap();
+            let __var1 = key.into_rust();
+            let __var1 = __var1.as_ref();
+            let __result = __obj.get(__var1);
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    std::ptr::null()
+                }
+            }
+        }
+        #[repr(C)]
+        struct arg_vmod_obj_kv2__init {
+            valid_cap: c_char,
+            cap: VCL_INT,
+        }
+        unsafe extern "C" fn vmod_c_kv2__init(
+            __ctx: *mut vrt_ctx,
+            __objp: *mut *mut kv2,
+            __vcl_name: *const c_char,
+            __args: *const arg_vmod_obj_kv2__init,
+        ) {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __args = __args.as_ref().unwrap();
+            let __var0 = (__args.valid_cap != 0).then(|| __args.cap.into_rust());
+            let __var1 = &*__vcl_name.into_rust();
+            let __result = super::kv2::new(__var0, &__var1);
+            let __result = Box::new(__result);
+            *__objp = Box::into_raw(__result);
+        }
+        unsafe extern "C" fn vmod_c_kv2__fini(__objp: *mut *mut kv2) {
+            drop(Box::from_raw(*__objp));
+            *__objp = ::std::ptr::null_mut();
+        }
+        #[repr(C)]
+        struct arg_vmod_obj_kv2_set {
+            key: VCL_STRING,
+            valid_value: c_char,
+            value: VCL_STRING,
+        }
+        unsafe extern "C" fn vmod_c_kv2_set(
+            __ctx: *mut vrt_ctx,
+            __obj: *const super::kv2,
+            __args: *const arg_vmod_obj_kv2_set,
+        ) {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __args = __args.as_ref().unwrap();
+            let __obj = __obj.as_ref().unwrap();
+            let __var1 = __args.key.into_rust();
+            let __var1 = __var1.as_ref();
+            let __var2 = (__args.valid_value != 0).then(|| __args.value.into_rust());
+            let __var2 = __var2.as_deref();
+            let __result = __obj.set(__var1, __var2);
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        #[repr(C)]
+        pub struct VmodExports {
+            vmod_c_kv1__init: Option<
+                unsafe extern "C" fn(
+                    __ctx: *mut vrt_ctx,
+                    __objp: *mut *mut kv1,
+                    __vcl_name: *const c_char,
+                    __args: *const arg_vmod_obj_kv1__init,
+                ),
+            >,
+            vmod_c_kv1__fini: Option<unsafe extern "C" fn(__objp: *mut *mut kv1)>,
+            vmod_c_kv1_set: Option<
+                unsafe extern "C" fn(
+                    __ctx: *mut vrt_ctx,
+                    __obj: *const super::kv1,
+                    key: VCL_STRING,
+                    value: VCL_STRING,
+                ),
+            >,
+            vmod_c_kv1_get: Option<
+                unsafe extern "C" fn(
+                    __ctx: *mut vrt_ctx,
+                    __obj: *const super::kv1,
+                    key: VCL_STRING,
+                ) -> VCL_STRING,
+            >,
+            vmod_c_kv2__init: Option<
+                unsafe extern "C" fn(
+                    __ctx: *mut vrt_ctx,
+                    __objp: *mut *mut kv2,
+                    __vcl_name: *const c_char,
+                    __args: *const arg_vmod_obj_kv2__init,
+                ),
+            >,
+            vmod_c_kv2__fini: Option<unsafe extern "C" fn(__objp: *mut *mut kv2)>,
+            vmod_c_kv2_set: Option<
+                unsafe extern "C" fn(
+                    __ctx: *mut vrt_ctx,
+                    __obj: *const super::kv2,
+                    __args: *const arg_vmod_obj_kv2_set,
+                ),
+            >,
+        }
+        pub static VMOD_EXPORTS: VmodExports = VmodExports {
+            vmod_c_kv1__init: Some(vmod_c_kv1__init),
+            vmod_c_kv1__fini: Some(vmod_c_kv1__fini),
+            vmod_c_kv1_set: Some(vmod_c_kv1_set),
+            vmod_c_kv1_get: Some(vmod_c_kv1_get),
+            vmod_c_kv2__init: Some(vmod_c_kv2__init),
+            vmod_c_kv2__fini: Some(vmod_c_kv2__fini),
+            vmod_c_kv2_set: Some(vmod_c_kv2_set),
+        };
+        #[repr(C)]
+        pub struct VmodData {
+            vrt_major: c_uint,
+            vrt_minor: c_uint,
+            file_id: *const c_char,
+            name: *const c_char,
+            func_name: *const c_char,
+            func: *const c_void,
+            func_len: c_int,
+            proto: *const c_char,
+            json: *const c_char,
+            abi: *const c_char,
+        }
+        unsafe impl Sync for VmodData {}
+        #[allow(non_upper_case_globals)]
+        #[no_mangle]
+        pub static Vmod_obj_Data: VmodData = VmodData {
+            vrt_major: 0,
+            vrt_minor: 0,
+            file_id: c"ad56b7746c45988d398c1b56aee2393937bb251a20c647e4740befc1dd021ede"
+                .as_ptr(),
+            name: c"obj".as_ptr(),
+            func_name: c"Vmod_vmod_obj_Func".as_ptr(),
+            func_len: size_of::<VmodExports>() as c_int,
+            func: &VMOD_EXPORTS as *const _ as *const c_void,
+            abi: VMOD_ABI_Version.as_ptr(),
+            json: JSON.as_ptr(),
+            proto: null(),
+        };
+        const JSON: &CStr = c"VMOD_JSON_SPEC\u{2}\n[\n  [\n    \"$VMOD\",\n    \"1.0\",\n    \"obj\",\n    \"Vmod_vmod_obj_Func\",\n    \"ad56b7746c45988d398c1b56aee2393937bb251a20c647e4740befc1dd021ede\",\n    \"Varnish (version) (hash)\",\n    \"0\",\n    \"0\"\n  ],\n  [\n    \"$CPROTO\",\n    \"\\nstruct vmod_obj_kv1;\\n\\nstruct vmod_obj_kv2;\\n\\nstruct arg_vmod_obj_kv1__init {\\n  char valid_cap;\\n  VCL_INT cap;\\n};\\n\\ntypedef VCL_VOID td_vmod_obj_kv1__init(\\n    VRT_CTX,\\n    struct vmod_obj_kv1 **,\\n    const char *,\\n    struct arg_vmod_obj_kv1__init *\\n);\\n\\ntypedef VCL_VOID td_vmod_obj_kv1__fini(\\n    struct vmod_obj_kv1 **\\n);\\n\\ntypedef VCL_VOID td_vmod_obj_kv1_set(\\n    VRT_CTX,\\n    struct vmod_obj_kv1 *,\\n    VCL_STRING,\\n    VCL_STRING\\n);\\n\\ntypedef VCL_STRING td_vmod_obj_kv1_get(\\n    VRT_CTX,\\n    struct vmod_obj_kv1 *,\\n    VCL_STRING\\n);\\n\\nstruct arg_vmod_obj_kv2__init {\\n  char valid_cap;\\n  VCL_INT cap;\\n};\\n\\ntypedef VCL_VOID td_vmod_obj_kv2__init(\\n    VRT_CTX,\\n    struct vmod_obj_kv2 **,\\n    const char *,\\n    struct arg_vmod_obj_kv2__init *\\n);\\n\\ntypedef VCL_VOID td_vmod_obj_kv2__fini(\\n    struct vmod_obj_kv2 **\\n);\\n\\nstruct arg_vmod_obj_kv2_set {\\n  VCL_STRING key;\\n  char valid_value;\\n  VCL_STRING value;\\n};\\n\\ntypedef VCL_VOID td_vmod_obj_kv2_set(\\n    VRT_CTX,\\n    struct vmod_obj_kv2 *,\\n    struct arg_vmod_obj_kv2_set *\\n);\\n\\nstruct Vmod_vmod_obj_Func {\\n  td_vmod_obj_kv1__init *f_kv1__init;\\n  td_vmod_obj_kv1__fini *f_kv1__fini;\\n  td_vmod_obj_kv1_set *f_kv1_set;\\n  td_vmod_obj_kv1_get *f_kv1_get;\\n  td_vmod_obj_kv2__init *f_kv2__init;\\n  td_vmod_obj_kv2__fini *f_kv2__fini;\\n  td_vmod_obj_kv2_set *f_kv2_set;\\n};\\n\\nstatic struct Vmod_vmod_obj_Func Vmod_vmod_obj_Func;\"\n  ],\n  [\n    \"$OBJ\",\n    \"kv1\",\n    {\n      \"NULL_OK\": false\n    },\n    \"struct vmod_obj_kv1\",\n    [\n      \"$INIT\",\n      [\n        [\n          \"VOID\"\n        ],\n        \"Vmod_vmod_obj_Func.f_kv1__init\",\n        \"struct arg_vmod_obj_kv1__init\",\n        [\n          \"INT\",\n          \"cap\",\n          null,\n          null,\n          true\n        ]\n      ]\n    ],\n    [\n      \"$FINI\",\n      [\n        [\n          \"VOID\"\n        ],\n        \"Vmod_vmod_obj_Func.f_kv1__fini\",\n        \"\"\n      ]\n    ],\n    [\n      \"$METHOD\",\n      \"set\",\n      [\n        [\n          \"VOID\"\n        ],\n        \"Vmod_vmod_obj_Func.f_kv1_set\",\n        \"\",\n        [\n          \"STRING\",\n          \"key\"\n        ],\n        [\n          \"STRING\",\n          \"value\"\n        ]\n      ]\n    ],\n    [\n      \"$METHOD\",\n      \"get\",\n      [\n        [\n          \"STRING\"\n        ],\n        \"Vmod_vmod_obj_Func.f_kv1_get\",\n        \"\",\n        [\n          \"STRING\",\n          \"key\"\n        ]\n      ]\n    ]\n  ],\n  [\n    \"$OBJ\",\n    \"kv2\",\n    {\n      \"NULL_OK\": false\n    },\n    \"struct vmod_obj_kv2\",\n    [\n      \"$INIT\",\n      [\n        [\n          \"VOID\"\n        ],\n        \"Vmod_vmod_obj_Func.f_kv2__init\",\n        \"struct arg_vmod_obj_kv2__init\",\n        [\n          \"INT\",\n          \"cap\",\n          null,\n          null,\n          true\n        ]\n      ]\n    ],\n    [\n      \"$FINI\",\n      [\n        [\n          \"VOID\"\n        ],\n        \"Vmod_vmod_obj_Func.f_kv2__fini\",\n        \"\"\n      ]\n    ],\n    [\n      \"$METHOD\",\n      \"set\",\n      [\n        [\n          \"VOID\"\n        ],\n        \"Vmod_vmod_obj_Func.f_kv2_set\",\n        \"struct arg_vmod_obj_kv2_set\",\n        [\n          \"STRING\",\n          \"key\"\n        ],\n        [\n          \"STRING\",\n          \"value\",\n          null,\n          null,\n          true\n        ]\n      ]\n    ]\n  ]\n]\n\u{3}";
+    }
+    pub struct kv1;
+    impl kv1 {
+        pub fn new(cap: Option<i64>) -> Self {
+            panic!()
+        }
+        pub fn set(&self, key: &str, value: &str) {
+            panic!()
+        }
+        pub fn get(&self, key: &str) -> String {
+            panic!()
+        }
+    }
+    pub struct kv2;
+    impl kv2 {
+        pub fn new(cap: Option<i64>, name: &str) -> Self {
+            panic!()
+        }
+        pub fn set(&self, key: &str, value: Option<&str>) {
+            panic!()
+        }
+    }
+}
