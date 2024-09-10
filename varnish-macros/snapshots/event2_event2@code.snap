@@ -1,0 +1,80 @@
+---
+source: varnish-macros/src/tests.rs
+---
+mod event2 {
+    #[allow(non_snake_case, unused_imports, unused_qualifications, unused_variables)]
+    mod varnish_generated {
+        use std::ffi::{c_char, c_int, c_uint, c_void, CStr};
+        use std::ptr::null;
+        use varnish::ffi::{
+            VCL_BACKEND, VCL_BOOL, VCL_DURATION, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL,
+            VCL_STRING, VCL_VOID, VMOD_ABI_Version, VMOD_PRIV_METHODS_MAGIC, vcl_event_e,
+            vmod_priv, vmod_priv_methods, vrt_ctx,
+        };
+        use varnish::vcl::{Ctx, IntoRust, IntoVCL};
+        use super::*;
+        unsafe extern "C" fn vmod_c_on_event(
+            __ctx: *mut vrt_ctx,
+            __vp: *mut vmod_priv,
+            __ev: vcl_event_e,
+        ) -> VCL_INT {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __var1 = Event::from_raw(__ev);
+            let __result = super::on_event(&__ctx, __var1);
+            match __result {
+                Ok(_) => VCL_INT(0),
+                Err(err) => {
+                    __ctx.fail(err);
+                    VCL_INT(1)
+                }
+            }
+        }
+        #[repr(C)]
+        pub struct VmodExports {
+            vmod_c_on_event: Option<
+                unsafe extern "C" fn(
+                    __ctx: *mut vrt_ctx,
+                    __vp: *mut vmod_priv,
+                    __ev: vcl_event_e,
+                ) -> VCL_INT,
+            >,
+        }
+        pub static VMOD_EXPORTS: VmodExports = VmodExports {
+            vmod_c_on_event: Some(vmod_c_on_event),
+        };
+        #[repr(C)]
+        pub struct VmodData {
+            vrt_major: c_uint,
+            vrt_minor: c_uint,
+            file_id: *const c_char,
+            name: *const c_char,
+            func_name: *const c_char,
+            func: *const c_void,
+            func_len: c_int,
+            proto: *const c_char,
+            json: *const c_char,
+            abi: *const c_char,
+        }
+        unsafe impl Sync for VmodData {}
+        #[allow(non_upper_case_globals)]
+        #[no_mangle]
+        pub static Vmod_event2_Data: VmodData = VmodData {
+            vrt_major: 0,
+            vrt_minor: 0,
+            file_id: c"7e4617ffdee96ba9863f7c711b2e34741946422529dcde535da4a34be82a7b1f"
+                .as_ptr(),
+            name: c"event2".as_ptr(),
+            func_name: c"Vmod_vmod_event2_Func".as_ptr(),
+            func_len: size_of::<VmodExports>() as c_int,
+            func: &VMOD_EXPORTS as *const _ as *const c_void,
+            abi: VMOD_ABI_Version.as_ptr(),
+            json: JSON.as_ptr(),
+            proto: null(),
+        };
+        const JSON: &CStr = c"VMOD_JSON_SPEC\u{2}\n[\n  [\n    \"$VMOD\",\n    \"1.0\",\n    \"event2\",\n    \"Vmod_vmod_event2_Func\",\n    \"7e4617ffdee96ba9863f7c711b2e34741946422529dcde535da4a34be82a7b1f\",\n    \"Varnish (version) (hash)\",\n    \"0\",\n    \"0\"\n  ],\n  [\n    \"$CPROTO\",\n    \"\\nstruct Vmod_vmod_event2_Func {\\n  vmod_event_f *f_on_event;\\n};\\n\\nstatic struct Vmod_vmod_event2_Func Vmod_vmod_event2_Func;\"\n  ],\n  [\n    \"$EVENT\",\n    \"Vmod_vmod_event2_Func.f_on_event\"\n  ]\n]\n\u{3}";
+    }
+    use varnish::vcl::{Ctx, Event};
+    pub fn on_event(ctx: &Ctx, event: Event) -> Result<(), &'static str> {
+        panic!()
+    }
+}

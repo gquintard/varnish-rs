@@ -16,6 +16,7 @@ default = []
 [dependencies]
 glob.workspace = true
 pkg-config.workspace = true
+varnish-macros.workspace = true
 varnish-sys.workspace = true
 
 [lints]

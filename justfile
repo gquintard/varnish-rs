@@ -41,6 +41,11 @@ build:
 test: build
     cargo test --workspace --all-targets
 
+# Run tests, and accept their results. Requires insta to be installed.
+bless:
+    rm -rf varnish-macros/snapshots
+    TRYBUILD=overwrite cargo insta test -p varnish-macros --accept
+
 test-all-features: test
     cargo build --workspace --all-targets --all-features
     cargo test --workspace --all-targets --all-features

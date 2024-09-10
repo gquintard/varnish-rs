@@ -1,0 +1,30 @@
+---
+source: varnish-macros/src/tests.rs
+---
+VMOD_JSON_SPEC
+[
+  [
+    "$VMOD",
+    "1.0",
+    "event2",
+    "Vmod_vmod_event2_Func",
+    "7e4617ffdee96ba9863f7c711b2e34741946422529dcde535da4a34be82a7b1f",
+    "Varnish (version) (hash)",
+    "0",
+    "0"
+  ],
+  [
+    "$CPROTO",
+    "
+struct Vmod_vmod_event2_Func {
+  vmod_event_f *f_on_event;
+};
+
+static struct Vmod_vmod_event2_Func Vmod_vmod_event2_Func;"
+  ],
+  [
+    "$EVENT",
+    "Vmod_vmod_event2_Func.f_on_event"
+  ]
+]
+

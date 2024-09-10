@@ -106,6 +106,8 @@ use varnish_sys::vcl::VclError;
 pub mod varnishtest;
 pub mod vsc;
 
+pub use varnish_macros::vmod;
+
 /// Automate VTC testing
 ///
 /// Varnish provides a very handy tool for end-to-end testing:

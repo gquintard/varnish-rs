@@ -83,6 +83,7 @@ use crate::{
     ffi, validate_director, validate_vdir, validate_vfp_ctx, validate_vfp_entry, validate_vrt_ctx,
 };
 
+// FIXME: this should not be an alias, but instead we can simply re-export using `pub use ffi::VCL_BACKEND` to have a more consistent type API
 /// Alias for [`ffi::VCL_BACKEND`]
 pub type VCLBackendPtr = ffi::VCL_BACKEND;
 

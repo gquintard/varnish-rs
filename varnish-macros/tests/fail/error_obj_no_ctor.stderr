@@ -1,0 +1,11 @@
+error: Object must have a constructor called `new`
+ --> tests/fail/error_obj_no_ctor.rs:6:10
+  |
+6 |     impl ObjNoCtor {
+  |          ^^^^^^^^^
+
+error: No functions or objects found in this module
+ --> tests/fail/error_obj_no_ctor.rs:4:5
+  |
+4 | mod err {
+  |     ^^^

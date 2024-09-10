@@ -1,0 +1,29 @@
+error: No functions or objects found in this module
+ --> tests/fail/error_fn.rs:2:5
+  |
+2 | mod empty {}
+  |     ^^^^^
+
+error: Only public functions and impl blocks are allowed inside a `mod` tagged with `#[varnish::vmod]`. Add `pub` or move this function outside of this mod.
+ --> tests/fail/error_fn.rs:6:5
+  |
+6 |     fn non_public() {}
+  |     ^^
+
+error: async functions are not supported
+ --> tests/fail/error_fn.rs:7:9
+  |
+7 |     pub async fn async_fn() {}
+  |         ^^^^^
+
+error: unsafe functions are not supported
+ --> tests/fail/error_fn.rs:8:9
+  |
+8 |     pub unsafe fn unsafe_fn() {}
+  |         ^^^^^^
+
+error: No functions or objects found in this module
+ --> tests/fail/error_fn.rs:5:5
+  |
+5 | mod err_fn {
+  |     ^^^^^^

@@ -1,0 +1,289 @@
+---
+source: varnish-macros/src/tests.rs
+---
+VmodInfo {
+    params: VmodParams {
+        docs: None,
+    },
+    ident: "task",
+    docs: "",
+    funcs: [
+        FuncInfo {
+            func_type: Event,
+            ident: "on_event",
+            docs: "",
+            has_optional_args: false,
+            args: [
+                ParamTypeInfo {
+                    ident: "evt",
+                    docs: "",
+                    idx: 0,
+                    ty: Event,
+                },
+                ParamTypeInfo {
+                    ident: "ctx",
+                    docs: "",
+                    idx: 1,
+                    ty: Context {
+                        is_mut: true,
+                    },
+                },
+                ParamTypeInfo {
+                    ident: "vcl",
+                    docs: "",
+                    idx: 2,
+                    ty: SharedPerVclMut,
+                },
+            ],
+            returns: Value(
+                Default,
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "per_vcl_val",
+            docs: "",
+            has_optional_args: false,
+            args: [
+                ParamTypeInfo {
+                    ident: "vcl",
+                    docs: "",
+                    idx: 0,
+                    ty: SharedPerVclRef,
+                },
+            ],
+            returns: Value(
+                Default,
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "per_vcl_opt",
+            docs: "",
+            has_optional_args: true,
+            args: [
+                ParamTypeInfo {
+                    ident: "vcl",
+                    docs: "",
+                    idx: 0,
+                    ty: SharedPerVclRef,
+                },
+                ParamTypeInfo {
+                    ident: "op",
+                    docs: "",
+                    idx: 1,
+                    ty: Value(
+                        ParamInfo {
+                            is_optional: true,
+                            default: Null,
+                            ty_info: I64,
+                        },
+                    ),
+                },
+            ],
+            returns: Value(
+                Default,
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "per_tsk_val",
+            docs: "",
+            has_optional_args: false,
+            args: [
+                ParamTypeInfo {
+                    ident: "tsk",
+                    docs: "",
+                    idx: 0,
+                    ty: SharedPerTask,
+                },
+            ],
+            returns: Value(
+                Default,
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "per_tsk_opt",
+            docs: "",
+            has_optional_args: true,
+            args: [
+                ParamTypeInfo {
+                    ident: "tsk",
+                    docs: "",
+                    idx: 0,
+                    ty: SharedPerTask,
+                },
+                ParamTypeInfo {
+                    ident: "op",
+                    docs: "",
+                    idx: 1,
+                    ty: Value(
+                        ParamInfo {
+                            is_optional: true,
+                            default: Null,
+                            ty_info: I64,
+                        },
+                    ),
+                },
+            ],
+            returns: Value(
+                Default,
+            ),
+        },
+    ],
+    objects: [
+        ObjInfo {
+            ident: "PerVcl",
+            docs: "",
+            constructor: FuncInfo {
+                func_type: Constructor,
+                ident: "new",
+                docs: "",
+                has_optional_args: false,
+                args: [
+                    ParamTypeInfo {
+                        ident: "vcl",
+                        docs: "",
+                        idx: 0,
+                        ty: SharedPerVclMut,
+                    },
+                ],
+                returns: Value(
+                    SelfType,
+                ),
+            },
+            destructor: FuncInfo {
+                func_type: Destructor,
+                ident: "_fini",
+                docs: "",
+                has_optional_args: false,
+                args: [],
+                returns: Value(
+                    Default,
+                ),
+            },
+            funcs: [
+                FuncInfo {
+                    func_type: Method,
+                    ident: "both",
+                    docs: "",
+                    has_optional_args: false,
+                    args: [
+                        ParamTypeInfo {
+                            ident: "self",
+                            docs: "",
+                            idx: 0,
+                            ty: SelfType,
+                        },
+                        ParamTypeInfo {
+                            ident: "tsk",
+                            docs: "",
+                            idx: 1,
+                            ty: SharedPerTask,
+                        },
+                        ParamTypeInfo {
+                            ident: "vcl",
+                            docs: "",
+                            idx: 2,
+                            ty: SharedPerVclRef,
+                        },
+                    ],
+                    returns: Value(
+                        Default,
+                    ),
+                },
+                FuncInfo {
+                    func_type: Method,
+                    ident: "both_pos",
+                    docs: "",
+                    has_optional_args: false,
+                    args: [
+                        ParamTypeInfo {
+                            ident: "self",
+                            docs: "",
+                            idx: 0,
+                            ty: SelfType,
+                        },
+                        ParamTypeInfo {
+                            ident: "tsk",
+                            docs: "",
+                            idx: 1,
+                            ty: SharedPerTask,
+                        },
+                        ParamTypeInfo {
+                            ident: "vcl",
+                            docs: "",
+                            idx: 2,
+                            ty: SharedPerVclRef,
+                        },
+                        ParamTypeInfo {
+                            ident: "val",
+                            docs: "",
+                            idx: 3,
+                            ty: Value(
+                                ParamInfo {
+                                    is_optional: false,
+                                    default: Null,
+                                    ty_info: I64,
+                                },
+                            ),
+                        },
+                    ],
+                    returns: Value(
+                        Default,
+                    ),
+                },
+                FuncInfo {
+                    func_type: Method,
+                    ident: "both_opt",
+                    docs: "",
+                    has_optional_args: true,
+                    args: [
+                        ParamTypeInfo {
+                            ident: "self",
+                            docs: "",
+                            idx: 0,
+                            ty: SelfType,
+                        },
+                        ParamTypeInfo {
+                            ident: "tsk",
+                            docs: "",
+                            idx: 1,
+                            ty: SharedPerTask,
+                        },
+                        ParamTypeInfo {
+                            ident: "vcl",
+                            docs: "",
+                            idx: 2,
+                            ty: SharedPerVclRef,
+                        },
+                        ParamTypeInfo {
+                            ident: "opt",
+                            docs: "",
+                            idx: 3,
+                            ty: Value(
+                                ParamInfo {
+                                    is_optional: true,
+                                    default: Null,
+                                    ty_info: I64,
+                                },
+                            ),
+                        },
+                    ],
+                    returns: Value(
+                        Default,
+                    ),
+                },
+            ],
+        },
+    ],
+    shared_types: SharedTypes {
+        shared_per_task_ty: Some(
+            "PerTask",
+        ),
+        shared_per_vcl_ty: Some(
+            "PerVcl",
+        ),
+    },
+}

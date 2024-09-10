@@ -1,0 +1,916 @@
+---
+source: varnish-macros/src/tests.rs
+---
+mod types {
+    #[allow(non_snake_case, unused_imports, unused_qualifications, unused_variables)]
+    mod varnish_generated {
+        use std::ffi::{c_char, c_int, c_uint, c_void, CStr};
+        use std::ptr::null;
+        use varnish::ffi::{
+            VCL_BACKEND, VCL_BOOL, VCL_DURATION, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL,
+            VCL_STRING, VCL_VOID, VMOD_ABI_Version, VMOD_PRIV_METHODS_MAGIC, vcl_event_e,
+            vmod_priv, vmod_priv_methods, vrt_ctx,
+        };
+        use varnish::vcl::{Ctx, IntoRust, IntoVCL};
+        use super::*;
+        unsafe extern "C" fn vmod_c_to_void(__ctx: *mut vrt_ctx) {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_void();
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_to_res_void_err(__ctx: *mut vrt_ctx) {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_res_void_err();
+            let __result = match __result {
+                Ok(v) => v,
+                Err(err) => {
+                    __ctx.fail(&err.to_string());
+                    return Default::default();
+                }
+            };
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_to_res_str_err(__ctx: *mut vrt_ctx) {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_res_str_err();
+            let __result = match __result {
+                Ok(v) => v,
+                Err(err) => {
+                    __ctx.fail(err);
+                    return Default::default();
+                }
+            };
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_type_bool(__ctx: *mut vrt_ctx, _v: VCL_BOOL) {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __var0 = _v.into_rust();
+            let __result = super::type_bool(__var0);
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        #[repr(C)]
+        struct arg_vmod_types_opt_bool {
+            valid__v: c_char,
+            _v: VCL_BOOL,
+        }
+        unsafe extern "C" fn vmod_c_opt_bool(
+            __ctx: *mut vrt_ctx,
+            __args: *const arg_vmod_types_opt_bool,
+        ) {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __args = __args.as_ref().unwrap();
+            let __var0 = (__args.valid__v != 0).then(|| __args._v.into_rust());
+            let __result = super::opt_bool(__var0);
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_to_bool(__ctx: *mut vrt_ctx) -> VCL_BOOL {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_bool();
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_to_res_bool(__ctx: *mut vrt_ctx) -> VCL_BOOL {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_res_bool();
+            let __result = match __result {
+                Ok(v) => v,
+                Err(err) => {
+                    __ctx.fail(err);
+                    return Default::default();
+                }
+            };
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_type_duration(
+            __ctx: *mut vrt_ctx,
+            _v: VCL_DURATION,
+        ) {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __var0 = _v.into_rust();
+            let __result = super::type_duration(__var0);
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        #[repr(C)]
+        struct arg_vmod_types_opt_duration {
+            valid__v: c_char,
+            _v: VCL_DURATION,
+        }
+        unsafe extern "C" fn vmod_c_opt_duration(
+            __ctx: *mut vrt_ctx,
+            __args: *const arg_vmod_types_opt_duration,
+        ) {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __args = __args.as_ref().unwrap();
+            let __var0 = (__args.valid__v != 0).then(|| __args._v.into_rust());
+            let __result = super::opt_duration(__var0);
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_to_duration(__ctx: *mut vrt_ctx) -> VCL_DURATION {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_duration();
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_to_res_duration(
+            __ctx: *mut vrt_ctx,
+        ) -> VCL_DURATION {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_res_duration();
+            let __result = match __result {
+                Ok(v) => v,
+                Err(err) => {
+                    __ctx.fail(err);
+                    return Default::default();
+                }
+            };
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_type_f64(__ctx: *mut vrt_ctx, _v: VCL_REAL) {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __var0 = _v.into_rust();
+            let __result = super::type_f64(__var0);
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        #[repr(C)]
+        struct arg_vmod_types_opt_f64 {
+            valid__v: c_char,
+            _v: VCL_REAL,
+        }
+        unsafe extern "C" fn vmod_c_opt_f64(
+            __ctx: *mut vrt_ctx,
+            __args: *const arg_vmod_types_opt_f64,
+        ) {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __args = __args.as_ref().unwrap();
+            let __var0 = (__args.valid__v != 0).then(|| __args._v.into_rust());
+            let __result = super::opt_f64(__var0);
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_to_f64(__ctx: *mut vrt_ctx) -> VCL_REAL {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_f64();
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_to_res_f64(__ctx: *mut vrt_ctx) -> VCL_REAL {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_res_f64();
+            let __result = match __result {
+                Ok(v) => v,
+                Err(err) => {
+                    __ctx.fail(err);
+                    return Default::default();
+                }
+            };
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_type_i64(__ctx: *mut vrt_ctx, _v: VCL_INT) {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __var0 = _v.into_rust();
+            let __result = super::type_i64(__var0);
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        #[repr(C)]
+        struct arg_vmod_types_opt_i64 {
+            valid__v: c_char,
+            _v: VCL_INT,
+        }
+        unsafe extern "C" fn vmod_c_opt_i64(
+            __ctx: *mut vrt_ctx,
+            __args: *const arg_vmod_types_opt_i64,
+        ) {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __args = __args.as_ref().unwrap();
+            let __var0 = (__args.valid__v != 0).then(|| __args._v.into_rust());
+            let __result = super::opt_i64(__var0);
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_to_i64(__ctx: *mut vrt_ctx) -> VCL_INT {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_i64();
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_to_res_i64(__ctx: *mut vrt_ctx) -> VCL_INT {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_res_i64();
+            let __result = match __result {
+                Ok(v) => v,
+                Err(err) => {
+                    __ctx.fail(err);
+                    return Default::default();
+                }
+            };
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_type_str(__ctx: *mut vrt_ctx, _v: VCL_STRING) {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __var0 = _v.into_rust();
+            let __var0 = __var0.as_ref();
+            let __result = super::type_str(__var0);
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        #[repr(C)]
+        struct arg_vmod_types_opt_str {
+            valid__v: c_char,
+            _v: VCL_STRING,
+        }
+        unsafe extern "C" fn vmod_c_opt_str(
+            __ctx: *mut vrt_ctx,
+            __args: *const arg_vmod_types_opt_str,
+        ) {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __args = __args.as_ref().unwrap();
+            let __var0 = (__args.valid__v != 0).then(|| __args._v.into_rust());
+            let __var0 = __var0.as_deref();
+            let __result = super::opt_str(__var0);
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_type_str_dflt(__ctx: *mut vrt_ctx, _v: VCL_STRING) {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __var0 = _v.into_rust();
+            let __var0 = __var0.as_ref();
+            let __result = super::type_str_dflt(__var0);
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        #[repr(C)]
+        struct arg_vmod_types_opt_str_dflt {
+            valid__v: c_char,
+            _v: VCL_STRING,
+        }
+        unsafe extern "C" fn vmod_c_opt_str_dflt(
+            __ctx: *mut vrt_ctx,
+            __args: *const arg_vmod_types_opt_str_dflt,
+        ) {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __args = __args.as_ref().unwrap();
+            let __var0 = (__args.valid__v != 0).then(|| __args._v.into_rust());
+            let __var0 = __var0.as_deref();
+            let __result = super::opt_str_dflt(__var0);
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_to_str(__ctx: *mut vrt_ctx) -> VCL_STRING {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_str();
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    std::ptr::null()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_to_res_str(__ctx: *mut vrt_ctx) -> VCL_STRING {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_res_str();
+            let __result = match __result {
+                Ok(v) => v,
+                Err(err) => {
+                    __ctx.fail(err);
+                    return std::ptr::null();
+                }
+            };
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    std::ptr::null()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_type_probe(__ctx: *mut vrt_ctx, _v: VCL_PROBE) {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __var0 = _v.into_rust();
+            let __result = super::type_probe(__var0);
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_to_probe(__ctx: *mut vrt_ctx) -> VCL_PROBE {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_probe();
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    std::ptr::null()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_to_res_probe(__ctx: *mut vrt_ctx) -> VCL_PROBE {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_res_probe();
+            let __result = match __result {
+                Ok(v) => v,
+                Err(err) => {
+                    __ctx.fail(err);
+                    return std::ptr::null();
+                }
+            };
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    std::ptr::null()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_type_cow_probe(__ctx: *mut vrt_ctx, _v: VCL_PROBE) {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __var0 = _v.into_rust();
+            let __result = super::type_cow_probe(__var0);
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_to_cow_probe(__ctx: *mut vrt_ctx) -> VCL_PROBE {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_cow_probe();
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    std::ptr::null()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_to_res_cow_probe(__ctx: *mut vrt_ctx) -> VCL_PROBE {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_res_cow_probe();
+            let __result = match __result {
+                Ok(v) => v,
+                Err(err) => {
+                    __ctx.fail(err);
+                    return std::ptr::null();
+                }
+            };
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    std::ptr::null()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_type_ip(__ctx: *mut vrt_ctx, _v: VCL_IP) {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __var0 = _v.into_rust();
+            let __result = super::type_ip(__var0);
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    Default::default()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_to_ip(__ctx: *mut vrt_ctx) -> VCL_IP {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_ip();
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    std::ptr::null()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_to_res_ip(__ctx: *mut vrt_ctx) -> VCL_IP {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_res_ip();
+            let __result = match __result {
+                Ok(v) => v,
+                Err(err) => {
+                    __ctx.fail(err);
+                    return std::ptr::null();
+                }
+            };
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    std::ptr::null()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_to_string(__ctx: *mut vrt_ctx) -> VCL_STRING {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_string();
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    std::ptr::null()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_to_res_string(__ctx: *mut vrt_ctx) -> VCL_STRING {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_res_string();
+            let __result = match __result {
+                Ok(v) => v,
+                Err(err) => {
+                    __ctx.fail(err);
+                    return std::ptr::null();
+                }
+            };
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    std::ptr::null()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_to_vcl_string(__ctx: *mut vrt_ctx) -> VCL_STRING {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_vcl_string();
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    std::ptr::null()
+                }
+            }
+        }
+        unsafe extern "C" fn vmod_c_to_res_vcl_string(
+            __ctx: *mut vrt_ctx,
+        ) -> VCL_STRING {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __result = super::to_res_vcl_string();
+            let __result = match __result {
+                Ok(v) => v,
+                Err(err) => {
+                    __ctx.fail(err);
+                    return std::ptr::null();
+                }
+            };
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    std::ptr::null()
+                }
+            }
+        }
+        #[repr(C)]
+        struct arg_vmod_types_opt_i64_opt_i64 {
+            a1: VCL_INT,
+            valid_a2: c_char,
+            a2: VCL_INT,
+            a3: VCL_INT,
+        }
+        unsafe extern "C" fn vmod_c_opt_i64_opt_i64(
+            __ctx: *mut vrt_ctx,
+            __args: *const arg_vmod_types_opt_i64_opt_i64,
+        ) -> VCL_STRING {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let __args = __args.as_ref().unwrap();
+            let __var0 = __args.a1.into_rust();
+            let __var1 = (__args.valid_a2 != 0).then(|| __args.a2.into_rust());
+            let __var2 = __args.a3.into_rust();
+            let __result = super::opt_i64_opt_i64(__var0, __var1, __var2);
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(e) => {
+                    __ctx.fail(e);
+                    std::ptr::null()
+                }
+            }
+        }
+        #[repr(C)]
+        pub struct VmodExports {
+            vmod_c_to_void: Option<unsafe extern "C" fn(__ctx: *mut vrt_ctx)>,
+            vmod_c_to_res_void_err: Option<unsafe extern "C" fn(__ctx: *mut vrt_ctx)>,
+            vmod_c_to_res_str_err: Option<unsafe extern "C" fn(__ctx: *mut vrt_ctx)>,
+            vmod_c_type_bool: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx, _v: VCL_BOOL),
+            >,
+            vmod_c_opt_bool: Option<
+                unsafe extern "C" fn(
+                    __ctx: *mut vrt_ctx,
+                    __args: *const arg_vmod_types_opt_bool,
+                ),
+            >,
+            vmod_c_to_bool: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx) -> VCL_BOOL,
+            >,
+            vmod_c_to_res_bool: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx) -> VCL_BOOL,
+            >,
+            vmod_c_type_duration: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx, _v: VCL_DURATION),
+            >,
+            vmod_c_opt_duration: Option<
+                unsafe extern "C" fn(
+                    __ctx: *mut vrt_ctx,
+                    __args: *const arg_vmod_types_opt_duration,
+                ),
+            >,
+            vmod_c_to_duration: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx) -> VCL_DURATION,
+            >,
+            vmod_c_to_res_duration: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx) -> VCL_DURATION,
+            >,
+            vmod_c_type_f64: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx, _v: VCL_REAL),
+            >,
+            vmod_c_opt_f64: Option<
+                unsafe extern "C" fn(
+                    __ctx: *mut vrt_ctx,
+                    __args: *const arg_vmod_types_opt_f64,
+                ),
+            >,
+            vmod_c_to_f64: Option<unsafe extern "C" fn(__ctx: *mut vrt_ctx) -> VCL_REAL>,
+            vmod_c_to_res_f64: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx) -> VCL_REAL,
+            >,
+            vmod_c_type_i64: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx, _v: VCL_INT),
+            >,
+            vmod_c_opt_i64: Option<
+                unsafe extern "C" fn(
+                    __ctx: *mut vrt_ctx,
+                    __args: *const arg_vmod_types_opt_i64,
+                ),
+            >,
+            vmod_c_to_i64: Option<unsafe extern "C" fn(__ctx: *mut vrt_ctx) -> VCL_INT>,
+            vmod_c_to_res_i64: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx) -> VCL_INT,
+            >,
+            vmod_c_type_str: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx, _v: VCL_STRING),
+            >,
+            vmod_c_opt_str: Option<
+                unsafe extern "C" fn(
+                    __ctx: *mut vrt_ctx,
+                    __args: *const arg_vmod_types_opt_str,
+                ),
+            >,
+            vmod_c_type_str_dflt: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx, _v: VCL_STRING),
+            >,
+            vmod_c_opt_str_dflt: Option<
+                unsafe extern "C" fn(
+                    __ctx: *mut vrt_ctx,
+                    __args: *const arg_vmod_types_opt_str_dflt,
+                ),
+            >,
+            vmod_c_to_str: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx) -> VCL_STRING,
+            >,
+            vmod_c_to_res_str: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx) -> VCL_STRING,
+            >,
+            vmod_c_type_probe: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx, _v: VCL_PROBE),
+            >,
+            vmod_c_to_probe: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx) -> VCL_PROBE,
+            >,
+            vmod_c_to_res_probe: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx) -> VCL_PROBE,
+            >,
+            vmod_c_type_cow_probe: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx, _v: VCL_PROBE),
+            >,
+            vmod_c_to_cow_probe: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx) -> VCL_PROBE,
+            >,
+            vmod_c_to_res_cow_probe: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx) -> VCL_PROBE,
+            >,
+            vmod_c_type_ip: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx, _v: VCL_IP),
+            >,
+            vmod_c_to_ip: Option<unsafe extern "C" fn(__ctx: *mut vrt_ctx) -> VCL_IP>,
+            vmod_c_to_res_ip: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx) -> VCL_IP,
+            >,
+            vmod_c_to_string: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx) -> VCL_STRING,
+            >,
+            vmod_c_to_res_string: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx) -> VCL_STRING,
+            >,
+            vmod_c_to_vcl_string: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx) -> VCL_STRING,
+            >,
+            vmod_c_to_res_vcl_string: Option<
+                unsafe extern "C" fn(__ctx: *mut vrt_ctx) -> VCL_STRING,
+            >,
+            vmod_c_opt_i64_opt_i64: Option<
+                unsafe extern "C" fn(
+                    __ctx: *mut vrt_ctx,
+                    __args: *const arg_vmod_types_opt_i64_opt_i64,
+                ) -> VCL_STRING,
+            >,
+        }
+        pub static VMOD_EXPORTS: VmodExports = VmodExports {
+            vmod_c_to_void: Some(vmod_c_to_void),
+            vmod_c_to_res_void_err: Some(vmod_c_to_res_void_err),
+            vmod_c_to_res_str_err: Some(vmod_c_to_res_str_err),
+            vmod_c_type_bool: Some(vmod_c_type_bool),
+            vmod_c_opt_bool: Some(vmod_c_opt_bool),
+            vmod_c_to_bool: Some(vmod_c_to_bool),
+            vmod_c_to_res_bool: Some(vmod_c_to_res_bool),
+            vmod_c_type_duration: Some(vmod_c_type_duration),
+            vmod_c_opt_duration: Some(vmod_c_opt_duration),
+            vmod_c_to_duration: Some(vmod_c_to_duration),
+            vmod_c_to_res_duration: Some(vmod_c_to_res_duration),
+            vmod_c_type_f64: Some(vmod_c_type_f64),
+            vmod_c_opt_f64: Some(vmod_c_opt_f64),
+            vmod_c_to_f64: Some(vmod_c_to_f64),
+            vmod_c_to_res_f64: Some(vmod_c_to_res_f64),
+            vmod_c_type_i64: Some(vmod_c_type_i64),
+            vmod_c_opt_i64: Some(vmod_c_opt_i64),
+            vmod_c_to_i64: Some(vmod_c_to_i64),
+            vmod_c_to_res_i64: Some(vmod_c_to_res_i64),
+            vmod_c_type_str: Some(vmod_c_type_str),
+            vmod_c_opt_str: Some(vmod_c_opt_str),
+            vmod_c_type_str_dflt: Some(vmod_c_type_str_dflt),
+            vmod_c_opt_str_dflt: Some(vmod_c_opt_str_dflt),
+            vmod_c_to_str: Some(vmod_c_to_str),
+            vmod_c_to_res_str: Some(vmod_c_to_res_str),
+            vmod_c_type_probe: Some(vmod_c_type_probe),
+            vmod_c_to_probe: Some(vmod_c_to_probe),
+            vmod_c_to_res_probe: Some(vmod_c_to_res_probe),
+            vmod_c_type_cow_probe: Some(vmod_c_type_cow_probe),
+            vmod_c_to_cow_probe: Some(vmod_c_to_cow_probe),
+            vmod_c_to_res_cow_probe: Some(vmod_c_to_res_cow_probe),
+            vmod_c_type_ip: Some(vmod_c_type_ip),
+            vmod_c_to_ip: Some(vmod_c_to_ip),
+            vmod_c_to_res_ip: Some(vmod_c_to_res_ip),
+            vmod_c_to_string: Some(vmod_c_to_string),
+            vmod_c_to_res_string: Some(vmod_c_to_res_string),
+            vmod_c_to_vcl_string: Some(vmod_c_to_vcl_string),
+            vmod_c_to_res_vcl_string: Some(vmod_c_to_res_vcl_string),
+            vmod_c_opt_i64_opt_i64: Some(vmod_c_opt_i64_opt_i64),
+        };
+        #[repr(C)]
+        pub struct VmodData {
+            vrt_major: c_uint,
+            vrt_minor: c_uint,
+            file_id: *const c_char,
+            name: *const c_char,
+            func_name: *const c_char,
+            func: *const c_void,
+            func_len: c_int,
+            proto: *const c_char,
+            json: *const c_char,
+            abi: *const c_char,
+        }
+        unsafe impl Sync for VmodData {}
+        #[allow(non_upper_case_globals)]
+        #[no_mangle]
+        pub static Vmod_types_Data: VmodData = VmodData {
+            vrt_major: 0,
+            vrt_minor: 0,
+            file_id: c"78e5522099498752f5242cb2dbb3265e7692f19380f49b3079f22e74a28c2105"
+                .as_ptr(),
+            name: c"types".as_ptr(),
+            func_name: c"Vmod_vmod_types_Func".as_ptr(),
+            func_len: size_of::<VmodExports>() as c_int,
+            func: &VMOD_EXPORTS as *const _ as *const c_void,
+            abi: VMOD_ABI_Version.as_ptr(),
+            json: JSON.as_ptr(),
+            proto: null(),
+        };
+        const JSON: &CStr = c"VMOD_JSON_SPEC\u{2}\n[\n  [\n    \"$VMOD\",\n    \"1.0\",\n    \"types\",\n    \"Vmod_vmod_types_Func\",\n    \"78e5522099498752f5242cb2dbb3265e7692f19380f49b3079f22e74a28c2105\",\n    \"Varnish (version) (hash)\",\n    \"0\",\n    \"0\"\n  ],\n  [\n    \"$CPROTO\",\n    \"\\ntypedef VCL_VOID td_vmod_types_to_void(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_VOID td_vmod_types_to_res_void_err(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_VOID td_vmod_types_to_res_str_err(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_VOID td_vmod_types_type_bool(\\n    VRT_CTX,\\n    VCL_BOOL\\n);\\n\\nstruct arg_vmod_types_opt_bool {\\n  char valid__v;\\n  VCL_BOOL _v;\\n};\\n\\ntypedef VCL_VOID td_vmod_types_opt_bool(\\n    VRT_CTX,\\n    struct arg_vmod_types_opt_bool *\\n);\\n\\ntypedef VCL_BOOL td_vmod_types_to_bool(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_BOOL td_vmod_types_to_res_bool(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_VOID td_vmod_types_type_duration(\\n    VRT_CTX,\\n    VCL_DURATION\\n);\\n\\nstruct arg_vmod_types_opt_duration {\\n  char valid__v;\\n  VCL_DURATION _v;\\n};\\n\\ntypedef VCL_VOID td_vmod_types_opt_duration(\\n    VRT_CTX,\\n    struct arg_vmod_types_opt_duration *\\n);\\n\\ntypedef VCL_DURATION td_vmod_types_to_duration(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_DURATION td_vmod_types_to_res_duration(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_VOID td_vmod_types_type_f64(\\n    VRT_CTX,\\n    VCL_REAL\\n);\\n\\nstruct arg_vmod_types_opt_f64 {\\n  char valid__v;\\n  VCL_REAL _v;\\n};\\n\\ntypedef VCL_VOID td_vmod_types_opt_f64(\\n    VRT_CTX,\\n    struct arg_vmod_types_opt_f64 *\\n);\\n\\ntypedef VCL_REAL td_vmod_types_to_f64(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_REAL td_vmod_types_to_res_f64(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_VOID td_vmod_types_type_i64(\\n    VRT_CTX,\\n    VCL_INT\\n);\\n\\nstruct arg_vmod_types_opt_i64 {\\n  char valid__v;\\n  VCL_INT _v;\\n};\\n\\ntypedef VCL_VOID td_vmod_types_opt_i64(\\n    VRT_CTX,\\n    struct arg_vmod_types_opt_i64 *\\n);\\n\\ntypedef VCL_INT td_vmod_types_to_i64(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_INT td_vmod_types_to_res_i64(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_VOID td_vmod_types_type_str(\\n    VRT_CTX,\\n    VCL_STRING\\n);\\n\\nstruct arg_vmod_types_opt_str {\\n  char valid__v;\\n  VCL_STRING _v;\\n};\\n\\ntypedef VCL_VOID td_vmod_types_opt_str(\\n    VRT_CTX,\\n    struct arg_vmod_types_opt_str *\\n);\\n\\ntypedef VCL_VOID td_vmod_types_type_str_dflt(\\n    VRT_CTX,\\n    VCL_STRING\\n);\\n\\nstruct arg_vmod_types_opt_str_dflt {\\n  char valid__v;\\n  VCL_STRING _v;\\n};\\n\\ntypedef VCL_VOID td_vmod_types_opt_str_dflt(\\n    VRT_CTX,\\n    struct arg_vmod_types_opt_str_dflt *\\n);\\n\\ntypedef VCL_STRING td_vmod_types_to_str(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_STRING td_vmod_types_to_res_str(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_VOID td_vmod_types_type_probe(\\n    VRT_CTX,\\n    VCL_PROBE\\n);\\n\\ntypedef VCL_PROBE td_vmod_types_to_probe(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_PROBE td_vmod_types_to_res_probe(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_VOID td_vmod_types_type_cow_probe(\\n    VRT_CTX,\\n    VCL_PROBE\\n);\\n\\ntypedef VCL_PROBE td_vmod_types_to_cow_probe(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_PROBE td_vmod_types_to_res_cow_probe(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_VOID td_vmod_types_type_ip(\\n    VRT_CTX,\\n    VCL_IP\\n);\\n\\ntypedef VCL_IP td_vmod_types_to_ip(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_IP td_vmod_types_to_res_ip(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_STRING td_vmod_types_to_string(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_STRING td_vmod_types_to_res_string(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_STRING td_vmod_types_to_vcl_string(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_STRING td_vmod_types_to_res_vcl_string(\\n    VRT_CTX\\n);\\n\\nstruct arg_vmod_types_opt_i64_opt_i64 {\\n  VCL_INT a1;\\n  char valid_a2;\\n  VCL_INT a2;\\n  VCL_INT a3;\\n};\\n\\ntypedef VCL_STRING td_vmod_types_opt_i64_opt_i64(\\n    VRT_CTX,\\n    struct arg_vmod_types_opt_i64_opt_i64 *\\n);\\n\\nstruct Vmod_vmod_types_Func {\\n  td_vmod_types_to_void *f_to_void;\\n  td_vmod_types_to_res_void_err *f_to_res_void_err;\\n  td_vmod_types_to_res_str_err *f_to_res_str_err;\\n  td_vmod_types_type_bool *f_type_bool;\\n  td_vmod_types_opt_bool *f_opt_bool;\\n  td_vmod_types_to_bool *f_to_bool;\\n  td_vmod_types_to_res_bool *f_to_res_bool;\\n  td_vmod_types_type_duration *f_type_duration;\\n  td_vmod_types_opt_duration *f_opt_duration;\\n  td_vmod_types_to_duration *f_to_duration;\\n  td_vmod_types_to_res_duration *f_to_res_duration;\\n  td_vmod_types_type_f64 *f_type_f64;\\n  td_vmod_types_opt_f64 *f_opt_f64;\\n  td_vmod_types_to_f64 *f_to_f64;\\n  td_vmod_types_to_res_f64 *f_to_res_f64;\\n  td_vmod_types_type_i64 *f_type_i64;\\n  td_vmod_types_opt_i64 *f_opt_i64;\\n  td_vmod_types_to_i64 *f_to_i64;\\n  td_vmod_types_to_res_i64 *f_to_res_i64;\\n  td_vmod_types_type_str *f_type_str;\\n  td_vmod_types_opt_str *f_opt_str;\\n  td_vmod_types_type_str_dflt *f_type_str_dflt;\\n  td_vmod_types_opt_str_dflt *f_opt_str_dflt;\\n  td_vmod_types_to_str *f_to_str;\\n  td_vmod_types_to_res_str *f_to_res_str;\\n  td_vmod_types_type_probe *f_type_probe;\\n  td_vmod_types_to_probe *f_to_probe;\\n  td_vmod_types_to_res_probe *f_to_res_probe;\\n  td_vmod_types_type_cow_probe *f_type_cow_probe;\\n  td_vmod_types_to_cow_probe *f_to_cow_probe;\\n  td_vmod_types_to_res_cow_probe *f_to_res_cow_probe;\\n  td_vmod_types_type_ip *f_type_ip;\\n  td_vmod_types_to_ip *f_to_ip;\\n  td_vmod_types_to_res_ip *f_to_res_ip;\\n  td_vmod_types_to_string *f_to_string;\\n  td_vmod_types_to_res_string *f_to_res_string;\\n  td_vmod_types_to_vcl_string *f_to_vcl_string;\\n  td_vmod_types_to_res_vcl_string *f_to_res_vcl_string;\\n  td_vmod_types_opt_i64_opt_i64 *f_opt_i64_opt_i64;\\n};\\n\\nstatic struct Vmod_vmod_types_Func Vmod_vmod_types_Func;\"\n  ],\n  [\n    \"$FUNC\",\n    \"to_void\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_void\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"to_res_void_err\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_res_void_err\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"to_res_str_err\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_res_str_err\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"type_bool\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_type_bool\",\n      \"\",\n      [\n        \"BOOL\",\n        \"_v\"\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"opt_bool\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_opt_bool\",\n      \"struct arg_vmod_types_opt_bool\",\n      [\n        \"BOOL\",\n        \"_v\",\n        null,\n        null,\n        true\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"to_bool\",\n    [\n      [\n        \"BOOL\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_bool\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"to_res_bool\",\n    [\n      [\n        \"BOOL\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_res_bool\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"type_duration\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_type_duration\",\n      \"\",\n      [\n        \"DURATION\",\n        \"_v\"\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"opt_duration\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_opt_duration\",\n      \"struct arg_vmod_types_opt_duration\",\n      [\n        \"DURATION\",\n        \"_v\",\n        null,\n        null,\n        true\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"to_duration\",\n    [\n      [\n        \"DURATION\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_duration\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"to_res_duration\",\n    [\n      [\n        \"DURATION\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_res_duration\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"type_f64\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_type_f64\",\n      \"\",\n      [\n        \"REAL\",\n        \"_v\"\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"opt_f64\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_opt_f64\",\n      \"struct arg_vmod_types_opt_f64\",\n      [\n        \"REAL\",\n        \"_v\",\n        null,\n        null,\n        true\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"to_f64\",\n    [\n      [\n        \"REAL\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_f64\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"to_res_f64\",\n    [\n      [\n        \"REAL\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_res_f64\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"type_i64\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_type_i64\",\n      \"\",\n      [\n        \"INT\",\n        \"_v\"\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"opt_i64\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_opt_i64\",\n      \"struct arg_vmod_types_opt_i64\",\n      [\n        \"INT\",\n        \"_v\",\n        null,\n        null,\n        true\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"to_i64\",\n    [\n      [\n        \"INT\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_i64\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"to_res_i64\",\n    [\n      [\n        \"INT\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_res_i64\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"type_str\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_type_str\",\n      \"\",\n      [\n        \"STRING\",\n        \"_v\"\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"opt_str\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_opt_str\",\n      \"struct arg_vmod_types_opt_str\",\n      [\n        \"STRING\",\n        \"_v\",\n        null,\n        null,\n        true\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"type_str_dflt\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_type_str_dflt\",\n      \"\",\n      [\n        \"STRING\",\n        \"_v\",\n        \"\\\"baz\\\"\"\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"opt_str_dflt\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_opt_str_dflt\",\n      \"struct arg_vmod_types_opt_str_dflt\",\n      [\n        \"STRING\",\n        \"_v\",\n        \"\\\"baz\\\"\",\n        null,\n        true\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"to_str\",\n    [\n      [\n        \"STRING\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_str\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"to_res_str\",\n    [\n      [\n        \"STRING\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_res_str\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"type_probe\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_type_probe\",\n      \"\",\n      [\n        \"PROBE\",\n        \"_v\"\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"to_probe\",\n    [\n      [\n        \"PROBE\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_probe\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"to_res_probe\",\n    [\n      [\n        \"PROBE\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_res_probe\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"type_cow_probe\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_type_cow_probe\",\n      \"\",\n      [\n        \"PROBE\",\n        \"_v\"\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"to_cow_probe\",\n    [\n      [\n        \"PROBE\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_cow_probe\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"to_res_cow_probe\",\n    [\n      [\n        \"PROBE\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_res_cow_probe\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"type_ip\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_type_ip\",\n      \"\",\n      [\n        \"IP\",\n        \"_v\"\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"to_ip\",\n    [\n      [\n        \"IP\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_ip\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"to_res_ip\",\n    [\n      [\n        \"IP\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_res_ip\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"to_string\",\n    [\n      [\n        \"STRING\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_string\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"to_res_string\",\n    [\n      [\n        \"STRING\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_res_string\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"to_vcl_string\",\n    [\n      [\n        \"STRING\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_vcl_string\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"to_res_vcl_string\",\n    [\n      [\n        \"STRING\"\n      ],\n      \"Vmod_vmod_types_Func.f_to_res_vcl_string\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"opt_i64_opt_i64\",\n    [\n      [\n        \"STRING\"\n      ],\n      \"Vmod_vmod_types_Func.f_opt_i64_opt_i64\",\n      \"struct arg_vmod_types_opt_i64_opt_i64\",\n      [\n        \"INT\",\n        \"a1\"\n      ],\n      [\n        \"INT\",\n        \"a2\",\n        null,\n        null,\n        true\n      ],\n      [\n        \"INT\",\n        \"a3\"\n      ]\n    ]\n  ]\n]\n\u{3}";
+    }
+    use std::error::Error;
+    use std::net::SocketAddr;
+    use std::time::Duration;
+    use varnish::ffi::VCL_STRING;
+    use varnish::vcl::{COWProbe, Probe};
+    pub fn to_void() {
+        panic!()
+    }
+    pub fn to_res_void_err() -> Result<(), Box<dyn Error>> {
+        panic!()
+    }
+    pub fn to_res_str_err() -> Result<(), &'static str> {
+        panic!()
+    }
+    pub fn type_bool(_v: bool) {}
+    pub fn opt_bool(_v: Option<bool>) {}
+    pub fn to_bool() -> bool {
+        panic!()
+    }
+    pub fn to_res_bool() -> Result<bool, &'static str> {
+        panic!()
+    }
+    pub fn type_duration(_v: Duration) {}
+    pub fn opt_duration(_v: Option<Duration>) {}
+    pub fn to_duration() -> Duration {
+        panic!()
+    }
+    pub fn to_res_duration() -> Result<Duration, &'static str> {
+        panic!()
+    }
+    pub fn type_f64(_v: f64) {}
+    pub fn opt_f64(_v: Option<f64>) {}
+    pub fn to_f64() -> f64 {
+        panic!()
+    }
+    pub fn to_res_f64() -> Result<f64, &'static str> {
+        panic!()
+    }
+    pub fn type_i64(_v: i64) {}
+    pub fn opt_i64(_v: Option<i64>) {}
+    pub fn to_i64() -> i64 {
+        panic!()
+    }
+    pub fn to_res_i64() -> Result<i64, &'static str> {
+        panic!()
+    }
+    pub fn type_str(_v: &str) {}
+    pub fn opt_str(_v: Option<&str>) {}
+    pub fn type_str_dflt(_v: &str) {}
+    pub fn opt_str_dflt(_v: Option<&str>) {}
+    pub fn to_str() -> &'static str {
+        panic!()
+    }
+    pub fn to_res_str() -> Result<&'static str, &'static str> {
+        panic!()
+    }
+    pub fn type_probe(_v: Option<Probe>) {}
+    pub fn to_probe() -> Probe {
+        panic!()
+    }
+    pub fn to_res_probe() -> Result<Probe, &'static str> {
+        panic!()
+    }
+    pub fn type_cow_probe(_v: Option<COWProbe<'_>>) {}
+    pub fn to_cow_probe() -> COWProbe<'static> {
+        panic!()
+    }
+    pub fn to_res_cow_probe() -> Result<COWProbe<'static>, &'static str> {
+        panic!()
+    }
+    pub fn type_ip(_v: Option<SocketAddr>) {}
+    pub fn to_ip() -> SocketAddr {
+        panic!()
+    }
+    pub fn to_res_ip() -> Result<SocketAddr, &'static str> {
+        panic!()
+    }
+    pub fn to_string() -> String {
+        panic!()
+    }
+    pub fn to_res_string() -> Result<String, &'static str> {
+        panic!()
+    }
+    pub fn to_vcl_string() -> VCL_STRING {
+        panic!()
+    }
+    pub fn to_res_vcl_string() -> Result<VCL_STRING, &'static str> {
+        panic!()
+    }
+    pub fn opt_i64_opt_i64(a1: i64, a2: Option<i64>, a3: i64) -> String {
+        panic!()
+    }
+}

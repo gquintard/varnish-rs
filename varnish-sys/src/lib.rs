@@ -14,6 +14,7 @@ pub mod ffi {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
 
+mod extensions;
 mod txt;
 mod utils;
 mod validate;
