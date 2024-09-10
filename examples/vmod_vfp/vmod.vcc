@@ -1,9 +1,0 @@
-#-
-$Module vfp 3 "Manipulate resp.body"
-
-Varnish Fetch Processors allow a vmod writer to insert themselves into a delivery pipeline and alter an object body as it is being received from the backend.
-In this vmod, we simply lowercase the ascii letters using a VFP named "lower".
-
-$Event event_function
-
-We need the event function here to declare our VFP. However, there's no "manual" VCL function for us to implement here, loading the vmod is sufficient to add the VDP to the list of available processors, and we'll set it on a per-request basis using `beresp.filters` in VCL.

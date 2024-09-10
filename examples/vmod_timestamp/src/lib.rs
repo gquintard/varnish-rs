@@ -1,25 +1,31 @@
-varnish::boilerplate!();
-
-use std::time::{Duration, Instant};
-
-use varnish::vcl::{Ctx, VPriv};
-
 varnish::run_vtc_tests!("tests/*.vtc");
 
-// VPriv can wrap any (possibly custom) struct, here we only need an Instant from std::time.
-// Storing and getting is up to the vmod writer but this removes the worry of NULL dereferencing
-// and of the memory management
-pub fn timestamp(_: &Ctx, vp: &mut VPriv<Instant>) -> Duration {
-    // we will need this either way
-    let now = Instant::now();
+/// Measure time in VCL
+#[varnish::vmod(docs = "README.md")]
+mod timestamp {
+    use std::mem;
+    use std::time::{Duration, Instant};
 
-    let interval = match vp.as_ref() {
-        // if `.get()` returns None, we just store `now` and interval is 0
-        None => Duration::new(0, 0),
-        // if there was a value, compute the difference with now
-        Some(old_now) => now.duration_since(*old_now),
-    };
-    // store the current time and return `interval`
-    vp.store(now);
-    interval
+    /// Returns the duration since the same function was called for the last time (in the same task).
+    /// If it's the first time it's been called, return 0.
+    ///
+    /// There could be only one type of per-task shared context data type in a Varnish VMOD.
+    pub fn timestamp(#[shared_per_task] shared: &mut Option<Box<Instant>>) -> Duration {
+        // we will need this either way
+        let now = Instant::now();
+
+        match shared {
+            None => {
+                // This is the first time we're running this function in the task's context
+                *shared = Some(Box::new(now));
+                Duration::default()
+            }
+            Some(shared) => {
+                // Update box content in-place to the new value, and get the old value
+                let old_now = mem::replace(&mut **shared, now);
+                // Since Instant implements Copy, we can continue using it and subtract the old value
+                now.duration_since(old_now)
+            }
+        }
+    }
 }

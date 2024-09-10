@@ -1,41 +1,54 @@
-#![allow(non_camel_case_types)]
-
-varnish::boilerplate!();
-
 use std::error::Error;
 
-use varnish::vcl::{Backend, Ctx, Serve, Transfer, VCLBackendPtr};
+use varnish::vcl::{Ctx, Serve, Transfer};
 
 varnish::run_vtc_tests!("tests/*.vtc");
 
-// parrot is our VCL object, which just holds a rust Backend,
-// it only needs two functions:
-// - new(), so that the VCL can instantiate it
-// - backend(), so that we can produce a C pointer for varnish to use
-pub struct parrot {
-    be: Backend<Sentence, Body>,
-}
+/// a simple STRING dictionary in your VCL
+#[varnish::vmod(docs = "README.md")]
+mod be {
+    use std::error::Error;
 
-impl parrot {
-    pub fn new(ctx: &mut Ctx, vcl_name: &str, to_repeat: &str) -> Result<Self, Box<dyn Error>> {
-        // to create the backend, we need:
-        // - the vcl context, that we just pass along
-        // - the vcl_name (how the vcl writer named the object)
-        // - a struct that implements the Serve trait
-        let be = Backend::new(
-            ctx,
-            vcl_name,
-            Sentence {
-                v: Vec::from(to_repeat),
-            },
-            false,
-        )?;
+    use varnish::vcl::{Backend, Ctx, VCLBackendPtr};
 
-        Ok(parrot { be })
+    use super::{Body, Sentence};
+
+    /// parrot is our VCL object, which just holds a rust Backend,
+    /// it only needs two functions:
+    /// - new(), so that the VCL can instantiate it
+    /// - backend(), so that we can produce a C pointer for varnish to use
+    #[allow(non_camel_case_types)]
+    pub struct parrot {
+        be: Backend<Sentence, Body>,
     }
 
-    pub fn backend(&self, _ctx: &Ctx) -> VCLBackendPtr {
-        self.be.vcl_ptr()
+    impl parrot {
+        pub fn new(
+            ctx: &mut Ctx,
+            // Varnish automatically supplies this parameter if listed here
+            // It is not part of the object instantiation in VCL
+            #[vcl_name] name: &str,
+            to_repeat: &str,
+        ) -> Result<Self, Box<dyn Error>> {
+            // to create the backend, we need:
+            // - the vcl context, that we just pass along
+            // - the vcl_name (how the vcl writer named the object)
+            // - a struct that implements the Serve trait
+            let be = Backend::new(
+                ctx,
+                name,
+                Sentence {
+                    v: Vec::from(to_repeat),
+                },
+                false,
+            )?;
+
+            Ok(parrot { be })
+        }
+
+        pub fn backend(&self) -> VCLBackendPtr {
+            self.be.vcl_ptr()
+        }
     }
 }
 

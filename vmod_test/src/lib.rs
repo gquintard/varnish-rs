@@ -1,152 +1,186 @@
-varnish::boilerplate!();
+#![allow(clippy::unnecessary_wraps)]
 
 use std::ffi::CStr;
-use std::io::Write;
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
-use std::time::Duration;
 
-use varnish::ffi;
-use varnish::vcl::{
-    new_vfp, COWProbe, COWRequest, Ctx, Event, InitResult, Probe, PullResult, Request, VFPCtx,
-    VPriv, VclResult, VFP,
-};
+use varnish::vcl::{Ctx, InitResult, PullResult, VFPCtx, VFP};
+use varnish::vmod;
 
 varnish::run_vtc_tests!("tests/*.vtc");
 
-pub fn set_hdr(ctx: &mut Ctx, name: &str, value: &str) -> VclResult<()> {
-    if let Some(ref mut req) = ctx.http_req {
-        req.set_header(name, value)
-    } else {
-        Err("http_req isn't accessible".into())
-    }
-}
+/// Test vmod
+#[vmod(docs = "README.md")]
+mod rustest {
+    use std::error::Error;
+    use std::io::Write;
+    use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
+    use std::time::Duration;
 
-pub fn unset_hdr(ctx: &mut Ctx, name: &str) -> VclResult<()> {
-    if let Some(ref mut req) = ctx.http_req {
-        req.unset_header(name);
-        Ok(())
-    } else {
-        Err("http_req isn't accessible".into())
-    }
-}
+    use varnish::ffi;
+    use varnish::ffi::VCL_STRING;
+    use varnish::vcl::{new_vfp, COWProbe, COWRequest, Ctx, Event, Probe, Request};
 
-pub fn ws_reserve(ctx: &mut Ctx<'_>, s: &str) -> VclResult<ffi::VCL_STRING> {
-    let mut rbuf = ctx.ws.reserve();
-    match write!(rbuf.buf, "{s} {s} {s}\0") {
-        Ok(()) => {
-            let final_buf = rbuf.release(0);
-            assert_eq!(final_buf.len(), 3 * s.len() + 3);
-            Ok(final_buf.as_ptr() as *const i8)
+    use super::VFPTest;
+
+    pub fn set_hdr(ctx: &mut Ctx, name: &str, value: &str) -> Result<(), Box<dyn Error>> {
+        if let Some(ref mut req) = ctx.http_req {
+            Ok(req.set_header(name, value)?)
+        } else {
+            Err("http_req isn't accessible".into())
         }
-        _ => Err("workspace issue".into()),
     }
-}
 
-pub fn out_str(_: &mut Ctx) -> &'static str {
-    "str"
-}
-
-pub fn out_res_str(_: &mut Ctx) -> VclResult<&'static str> {
-    Ok("str")
-}
-
-pub fn out_string(_: &mut Ctx) -> String {
-    "str".to_owned()
-}
-
-pub fn out_res_string(_: &mut Ctx) -> VclResult<String> {
-    Ok("str".to_owned())
-}
-
-pub fn out_bool(_: &mut Ctx) -> bool {
-    true
-}
-
-pub fn out_res_bool(_: &mut Ctx) -> VclResult<bool> {
-    Ok(true)
-}
-
-pub fn out_duration(_: &mut Ctx) -> Duration {
-    Duration::new(0, 0)
-}
-
-pub fn out_res_duration(_: &mut Ctx) -> VclResult<Duration> {
-    Ok(Duration::new(0, 0))
-}
-
-pub fn build_ip4(_: &mut Ctx) -> SocketAddr {
-    SocketAddr::new(IpAddr::V4(Ipv4Addr::new(12, 34, 56, 78)), 9012)
-}
-
-pub fn build_ip6(_: &mut Ctx) -> SocketAddr {
-    SocketAddr::new(
-        IpAddr::V6(Ipv6Addr::new(
-            0x1234, 0x5678, 0x9012, 0x3456, 0x7890, 0x1111, 0x2222, 0x3333,
-        )),
-        4444,
-    )
-}
-
-pub fn print_ip(_: &mut Ctx, maybe_ip: Option<SocketAddr>) -> String {
-    match maybe_ip {
-        None => "0.0.0.0".to_string(),
-        Some(ip) => ip.to_string(),
+    pub fn unset_hdr(ctx: &mut Ctx, name: &str) -> Result<(), &'static str> {
+        if let Some(ref mut req) = ctx.http_req {
+            req.unset_header(name);
+            Ok(())
+        } else {
+            Err("http_req isn't accessible")
+        }
     }
-}
 
-// this is a pretty terrible idea, the request body is probably big, and your workspace is tiny,
-// but hey, it's a test function
-pub fn req_body(ctx: &mut Ctx) -> VclResult<ffi::VCL_STRING> {
-    let mut body_chunks = ctx.cached_req_body()?;
-    // make sure the body will be null-terminated
-    body_chunks.push(b"\0");
-    // open a ws reservation and blast the body into it
-    let mut r = ctx.ws.reserve();
-    for chunk in body_chunks {
-        r.buf
-            .write(chunk)
-            .map_err(|_| "workspace issue".to_owned())?;
+    pub fn ws_reserve(ctx: &mut Ctx, s: &str) -> Result<VCL_STRING, &'static str> {
+        let mut rbuf = ctx.ws.reserve();
+        match write!(rbuf.buf, "{s} {s} {s}\0") {
+            Ok(()) => {
+                let final_buf = rbuf.release(0);
+                assert_eq!(final_buf.len(), 3 * s.len() + 3);
+                Ok(final_buf.as_ptr() as *const i8)
+            }
+            _ => Err("workspace issue"),
+        }
     }
-    Ok(r.release(0).as_ptr() as *const i8)
-}
 
-pub fn default_arg<'a>(_ctx: &mut Ctx, arg: &'a str) -> &'a str {
-    arg
-}
-
-pub fn cowprobe_prop(_ctx: &mut Ctx, probe: Option<COWProbe<'_>>) -> String {
-    match probe {
-        Some(probe) => format!(
-            "{}-{}-{}-{}-{}-{}",
-            match probe.request {
-                COWRequest::URL(url) => format!("url:{url}"),
-                COWRequest::Text(text) => format!("text:{text}"),
-            },
-            probe.threshold,
-            probe.timeout.as_secs(),
-            probe.interval.as_secs(),
-            probe.initial,
-            probe.window
-        ),
-        None => "no probe".to_string(),
+    pub fn out_str() -> &'static str {
+        "str"
     }
-}
 
-pub fn probe_prop(_ctx: &mut Ctx, probe: Option<Probe>) -> String {
-    match probe {
-        Some(probe) => format!(
-            "{}-{}-{}-{}-{}-{}",
-            match probe.request {
-                Request::URL(url) => format!("url:{url}"),
-                Request::Text(text) => format!("text:{text}"),
-            },
-            probe.threshold,
-            probe.timeout.as_secs(),
-            probe.interval.as_secs(),
-            probe.initial,
-            probe.window
-        ),
-        None => "no probe".to_string(),
+    pub fn out_res_str() -> Result<&'static str, &'static str> {
+        Ok("str")
+    }
+
+    pub fn out_string() -> String {
+        "str".to_owned()
+    }
+
+    pub fn out_res_string() -> Result<String, &'static str> {
+        Ok("str".to_owned())
+    }
+
+    pub fn out_bool() -> bool {
+        true
+    }
+
+    pub fn out_res_bool() -> Result<bool, &'static str> {
+        Ok(true)
+    }
+
+    pub fn out_duration() -> Duration {
+        Duration::new(0, 0)
+    }
+
+    pub fn out_res_duration() -> Result<Duration, &'static str> {
+        Ok(Duration::new(0, 0))
+    }
+
+    pub fn build_ip4() -> SocketAddr {
+        SocketAddr::new(IpAddr::V4(Ipv4Addr::new(12, 34, 56, 78)), 9012)
+    }
+
+    pub fn build_ip6() -> SocketAddr {
+        SocketAddr::new(
+            IpAddr::V6(Ipv6Addr::new(
+                0x1234, 0x5678, 0x9012, 0x3456, 0x7890, 0x1111, 0x2222, 0x3333,
+            )),
+            4444,
+        )
+    }
+
+    pub fn print_ip(maybe_ip: Option<SocketAddr>) -> String {
+        match maybe_ip {
+            None => "0.0.0.0".to_string(),
+            Some(ip) => ip.to_string(),
+        }
+    }
+
+    // this is a pretty terrible idea, the request body is probably big, and your workspace is tiny,
+    // but hey, it's a test function
+    pub fn req_body(ctx: &mut Ctx) -> Result<VCL_STRING, Box<dyn Error>> {
+        let mut body_chunks = ctx.cached_req_body()?;
+        // make sure the body will be null-terminated
+        body_chunks.push(b"\0");
+        // open a ws reservation and blast the body into it
+        let mut r = ctx.ws.reserve();
+        for chunk in body_chunks {
+            r.buf.write_all(chunk).map_err(|_| "workspace issue")?;
+        }
+        Ok(r.release(0).as_ptr() as *const i8)
+    }
+
+    pub fn default_arg(#[arg(default = "foo")] arg: &str) -> &str {
+        arg
+    }
+
+    pub fn cowprobe_prop(probe: Option<COWProbe<'_>>) -> String {
+        match probe {
+            Some(probe) => format!(
+                "{}-{}-{}-{}-{}-{}",
+                match probe.request {
+                    COWRequest::URL(url) => format!("url:{url}"),
+                    COWRequest::Text(text) => format!("text:{text}"),
+                },
+                probe.threshold,
+                probe.timeout.as_secs(),
+                probe.interval.as_secs(),
+                probe.initial,
+                probe.window
+            ),
+            None => "no probe".to_string(),
+        }
+    }
+
+    pub fn probe_prop(probe: Option<Probe>) -> String {
+        match probe {
+            Some(probe) => format!(
+                "{}-{}-{}-{}-{}-{}",
+                match probe.request {
+                    Request::URL(url) => format!("url:{url}"),
+                    Request::Text(text) => format!("text:{text}"),
+                },
+                probe.threshold,
+                probe.timeout.as_secs(),
+                probe.interval.as_secs(),
+                probe.initial,
+                probe.window
+            ),
+            None => "no probe".to_string(),
+        }
+    }
+
+    #[event]
+    pub fn event(
+        ctx: &mut Ctx,
+        #[shared_per_vcl] vp: &mut Option<Box<ffi::vfp>>,
+        event: Event,
+    ) -> Result<(), &'static str> {
+        match event {
+            // on load, create the VFP C struct, save it into a priv, they register it
+            Event::Load => {
+                let instance = Box::new(new_vfp::<VFPTest>());
+                unsafe {
+                    ffi::VRT_AddVFP(ctx.raw, instance.as_ref());
+                }
+                *vp = Some(instance);
+            }
+            // on discard, deregister the VFP, but don't worry about cleaning it, it'll be done by
+            // Varnish automatically
+            Event::Discard => {
+                if let Some(vp) = vp.as_ref() {
+                    unsafe { ffi::VRT_RemoveVFP(ctx.raw, vp.as_ref()) }
+                }
+            }
+            _ => {}
+        }
+        Ok(())
     }
 }
 
@@ -168,23 +202,4 @@ impl VFP for VFPTest {
     fn pull(&mut self, _: &mut VFPCtx, _: &mut [u8]) -> PullResult {
         PullResult::Err
     }
-}
-
-pub unsafe fn event(
-    ctx: &mut Ctx,
-    vp: &mut VPriv<ffi::vfp>,
-    event: Event,
-) -> Result<(), &'static str> {
-    match event {
-        // on load, create the VFP C struct, save it into a priv, they register it
-        Event::Load => {
-            vp.store(new_vfp::<VFPTest>());
-            ffi::VRT_AddVFP(ctx.raw, vp.as_ref().unwrap());
-        }
-        // on discard, deregister the VFP, but don't worry about cleaning it, it'll be done by
-        // Varnish automatically
-        Event::Discard => ffi::VRT_RemoveVFP(ctx.raw, vp.as_ref().unwrap()),
-        _ => (),
-    }
-    Ok(())
 }
