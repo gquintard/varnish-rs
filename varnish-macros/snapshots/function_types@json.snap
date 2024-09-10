@@ -8,7 +8,7 @@ VMOD_JSON_SPEC
     "1.0",
     "types",
     "Vmod_vmod_types_Func",
-    "305d7e5bb207b939306ed27283d79808276446ee4e23dc9f083d4cf73c54d751",
+    "2919fd18b0c1d0213b302bc7eb52a44d611e8d634dbc82693ee45034cb52ae8d",
     "Varnish (version) (hash)",
     "0",
     "0"
@@ -189,7 +189,17 @@ typedef VCL_STRING td_vmod_types_to_res_opt_string(
     VRT_CTX
 );
 
+struct arg_vmod_types_type_probe {
+  char valid__v;
+  VCL_PROBE _v;
+};
+
 typedef VCL_VOID td_vmod_types_type_probe(
+    VRT_CTX,
+    struct arg_vmod_types_type_probe *
+);
+
+typedef VCL_VOID td_vmod_types_type_probe_req(
     VRT_CTX,
     VCL_PROBE
 );
@@ -202,7 +212,17 @@ typedef VCL_PROBE td_vmod_types_to_res_probe(
     VRT_CTX
 );
 
+struct arg_vmod_types_type_cow_probe {
+  char valid__v;
+  VCL_PROBE _v;
+};
+
 typedef VCL_VOID td_vmod_types_type_cow_probe(
+    VRT_CTX,
+    struct arg_vmod_types_type_cow_probe *
+);
+
+typedef VCL_VOID td_vmod_types_type_cow_probe_req(
     VRT_CTX,
     VCL_PROBE
 );
@@ -215,7 +235,17 @@ typedef VCL_PROBE td_vmod_types_to_res_cow_probe(
     VRT_CTX
 );
 
+struct arg_vmod_types_type_ip {
+  char valid__v;
+  VCL_IP _v;
+};
+
 typedef VCL_VOID td_vmod_types_type_ip(
+    VRT_CTX,
+    struct arg_vmod_types_type_ip *
+);
+
+typedef VCL_VOID td_vmod_types_type_ip_req(
     VRT_CTX,
     VCL_IP
 );
@@ -282,12 +312,15 @@ struct Vmod_vmod_types_Func {
   td_vmod_types_to_res_string *f_to_res_string;
   td_vmod_types_to_res_opt_string *f_to_res_opt_string;
   td_vmod_types_type_probe *f_type_probe;
+  td_vmod_types_type_probe_req *f_type_probe_req;
   td_vmod_types_to_probe *f_to_probe;
   td_vmod_types_to_res_probe *f_to_res_probe;
   td_vmod_types_type_cow_probe *f_type_cow_probe;
+  td_vmod_types_type_cow_probe_req *f_type_cow_probe_req;
   td_vmod_types_to_cow_probe *f_to_cow_probe;
   td_vmod_types_to_res_cow_probe *f_to_res_cow_probe;
   td_vmod_types_type_ip *f_type_ip;
+  td_vmod_types_type_ip_req *f_type_ip_req;
   td_vmod_types_to_ip *f_to_ip;
   td_vmod_types_to_res_ip *f_to_res_ip;
   td_vmod_types_to_vcl_string *f_to_vcl_string;
@@ -357,7 +390,7 @@ static struct Vmod_vmod_types_Func Vmod_vmod_types_Func;"
       [
         "BOOL",
         "_v",
-        "true"
+        "1"
       ]
     ]
   ],
@@ -739,6 +772,24 @@ static struct Vmod_vmod_types_Func Vmod_vmod_types_Func;"
         "VOID"
       ],
       "Vmod_vmod_types_Func.f_type_probe",
+      "struct arg_vmod_types_type_probe",
+      [
+        "PROBE",
+        "_v",
+        null,
+        null,
+        true
+      ]
+    ]
+  ],
+  [
+    "$FUNC",
+    "type_probe_req",
+    [
+      [
+        "VOID"
+      ],
+      "Vmod_vmod_types_Func.f_type_probe_req",
       "",
       [
         "PROBE",
@@ -776,6 +827,24 @@ static struct Vmod_vmod_types_Func Vmod_vmod_types_Func;"
         "VOID"
       ],
       "Vmod_vmod_types_Func.f_type_cow_probe",
+      "struct arg_vmod_types_type_cow_probe",
+      [
+        "PROBE",
+        "_v",
+        null,
+        null,
+        true
+      ]
+    ]
+  ],
+  [
+    "$FUNC",
+    "type_cow_probe_req",
+    [
+      [
+        "VOID"
+      ],
+      "Vmod_vmod_types_Func.f_type_cow_probe_req",
       "",
       [
         "PROBE",
@@ -813,6 +882,24 @@ static struct Vmod_vmod_types_Func Vmod_vmod_types_Func;"
         "VOID"
       ],
       "Vmod_vmod_types_Func.f_type_ip",
+      "struct arg_vmod_types_type_ip",
+      [
+        "IP",
+        "_v",
+        null,
+        null,
+        true
+      ]
+    ]
+  ],
+  [
+    "$FUNC",
+    "type_ip_req",
+    [
+      [
+        "VOID"
+      ],
+      "Vmod_vmod_types_Func.f_type_ip_req",
       "",
       [
         "IP",

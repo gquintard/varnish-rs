@@ -25,7 +25,7 @@ mod types {
 
     // bool
     pub fn type_bool(_v: bool) {}
-    pub fn type_bool_dflt(#[arg(default = true)] _v: bool) {}
+    pub fn type_bool_dflt(#[default(true)] _v: bool) {}
     pub fn opt_bool(_v: Option<bool>) {}
     pub fn to_bool() -> bool {
         panic!()
@@ -46,7 +46,7 @@ mod types {
 
     // f64
     pub fn type_f64(_v: f64) {}
-    pub fn type_f64_dflt(#[arg(default = 42.3)] _v: f64) {}
+    pub fn type_f64_dflt(#[default(42.3)] _v: f64) {}
     pub fn opt_f64(_v: Option<f64>) {}
     pub fn to_f64() -> f64 {
         panic!()
@@ -57,7 +57,7 @@ mod types {
 
     // i64
     pub fn type_i64(_v: i64) {}
-    pub fn type_i64_dflt(#[arg(default = 10)] _v: i64) {}
+    pub fn type_i64_dflt(#[default(10)] _v: i64) {}
     pub fn opt_i64(_v: Option<i64>) {}
     pub fn to_i64() -> i64 {
         panic!()
@@ -69,8 +69,8 @@ mod types {
     // str
     pub fn type_str(_v: &str) {}
     pub fn opt_str(_v: Option<&str>) {}
-    pub fn type_str_dflt(#[arg(default = "baz")] _v: &str) {}
-    pub fn opt_str_dflt(#[arg(default = "baz")] _v: Option<&str>) {}
+    pub fn type_str_dflt(#[default("baz")] _v: &str) {}
+    pub fn opt_str_dflt(#[default("baz")] _v: Option<&str>) {}
     pub fn to_str() -> &'static str {
         panic!()
     }
@@ -94,6 +94,7 @@ mod types {
 
     // Probe
     pub fn type_probe(_v: Option<Probe>) {}
+    pub fn type_probe_req(#[required] _v: Option<Probe>) {}
     pub fn to_probe() -> Probe {
         panic!()
     }
@@ -103,6 +104,7 @@ mod types {
 
     // COWProbe<'_
     pub fn type_cow_probe(_v: Option<COWProbe<'_>>) {}
+    pub fn type_cow_probe_req(#[required] _v: Option<COWProbe<'_>>) {}
     // FIXME: is it correct to return a COWProbe? If it has a lifetime, it must be tied to something else...
     pub fn to_cow_probe() -> COWProbe<'static> {
         panic!()
@@ -113,6 +115,7 @@ mod types {
 
     // SocketAddr
     pub fn type_ip(_v: Option<SocketAddr>) {}
+    pub fn type_ip_req(#[required] _v: Option<SocketAddr>) {}
     pub fn to_ip() -> SocketAddr {
         panic!()
     }

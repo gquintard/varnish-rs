@@ -68,7 +68,7 @@ fn main() {
         //
         // .new_type_alias("VCL_ACL") // *const vrt_acl
         .new_type_alias("VCL_BACKEND") // *const director
-        // .new_type_alias("VCL_BLOB") // *const vrt_blob
+        .new_type_alias("VCL_BLOB") // *const vrt_blob
         // .new_type_alias("VCL_BODY") // *const ::std::os::raw::c_void
         .new_type_alias("VCL_BOOL") // ::std::os::raw::c_uint
         // .new_type_alias("VCL_BYTES") // i64
@@ -90,6 +90,13 @@ fn main() {
         .new_type_alias("VCL_TIME") // VCL_TIME = vtim_real = f64
         // .new_type_alias("VCL_VCL") // *mut vcl
         // .new_type_alias("VCL_VOID") // ::std::os::raw::c_void
+        //
+        .newtype_enum("vfp_status") // ::std::ffi::c_int
+        .newtype_enum("vcl_func_call_e") // ::std::ffi::c_int
+        .newtype_enum("vcl_func_fail_e") // ::std::ffi::c_int
+        .newtype_enum("vcl_event_e") // ::std::ffi::c_int
+        .newtype_enum("gethdr_e") // ::std::ffi::c_int
+        .newtype_enum("lbody_e") // ::std::ffi::c_int
         //
         .generate()
         .expect("Unable to generate bindings");

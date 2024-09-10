@@ -78,7 +78,7 @@ VmodInfo {
                     ty: Value(
                         ParamInfo {
                             is_optional: false,
-                            default: Bool(true),
+                            default: Number(1),
                             ty_info: Bool,
                         },
                     ),
@@ -572,6 +572,29 @@ VmodInfo {
             func_type: Function,
             ident: "type_probe",
             docs: "",
+            has_optional_args: true,
+            args: [
+                ParamTypeInfo {
+                    ident: "_v",
+                    docs: "",
+                    idx: 0,
+                    ty: Value(
+                        ParamInfo {
+                            is_optional: true,
+                            default: Null,
+                            ty_info: Probe,
+                        },
+                    ),
+                },
+            ],
+            returns: Value(
+                Default,
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "type_probe_req",
+            docs: "",
             has_optional_args: false,
             args: [
                 ParamTypeInfo {
@@ -622,6 +645,29 @@ VmodInfo {
             func_type: Function,
             ident: "type_cow_probe",
             docs: "",
+            has_optional_args: true,
+            args: [
+                ParamTypeInfo {
+                    ident: "_v",
+                    docs: "",
+                    idx: 0,
+                    ty: Value(
+                        ParamInfo {
+                            is_optional: true,
+                            default: Null,
+                            ty_info: ProbeCow,
+                        },
+                    ),
+                },
+            ],
+            returns: Value(
+                Default,
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "type_cow_probe_req",
+            docs: "",
             has_optional_args: false,
             args: [
                 ParamTypeInfo {
@@ -671,6 +717,29 @@ VmodInfo {
         FuncInfo {
             func_type: Function,
             ident: "type_ip",
+            docs: "",
+            has_optional_args: true,
+            args: [
+                ParamTypeInfo {
+                    ident: "_v",
+                    docs: "",
+                    idx: 0,
+                    ty: Value(
+                        ParamInfo {
+                            is_optional: true,
+                            default: Null,
+                            ty_info: SocketAddr,
+                        },
+                    ),
+                },
+            ],
+            returns: Value(
+                Default,
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "type_ip_req",
             docs: "",
             has_optional_args: false,
             args: [

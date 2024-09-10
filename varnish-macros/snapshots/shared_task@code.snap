@@ -59,7 +59,11 @@ mod task {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
             let __var0 = __args.vcl.as_ref().and_then(|v| v.get_ref());
-            let __var1: Option<i64> = (__args.valid_op != 0).then(|| __args.op.into());
+            let __var1: Option<i64> = if __args.valid_op != 0 {
+                Some(__args.op.into())
+            } else {
+                None
+            };
             let __result = super::per_vcl_opt(__var0, __var1);
         }
         unsafe extern "C" fn vmod_c_per_tsk_val(
@@ -86,7 +90,11 @@ mod task {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
             let mut __var0 = (*__args.tsk).take();
-            let __var1: Option<i64> = (__args.valid_op != 0).then(|| __args.op.into());
+            let __var1: Option<i64> = if __args.valid_op != 0 {
+                Some(__args.op.into())
+            } else {
+                None
+            };
             let __result = super::per_tsk_opt(&mut __var0, __var1);
             if let Some(obj) = __var0 {
                 (*__args.tsk).put(obj, &PRIV_TASK_METHODS);
@@ -160,7 +168,11 @@ mod task {
             let __obj = __obj.as_ref().unwrap();
             let mut __var1 = (*__args.tsk).take();
             let __var2 = __args.vcl.as_ref().and_then(|v| v.get_ref());
-            let __var3: Option<i64> = (__args.valid_opt != 0).then(|| __args.opt.into());
+            let __var3: Option<i64> = if __args.valid_opt != 0 {
+                Some(__args.opt.into())
+            } else {
+                None
+            };
             let __result = __obj.both_opt(&mut __var1, __var2, __var3);
             if let Some(obj) = __var1 {
                 (*__args.tsk).put(obj, &PRIV_TASK_METHODS);

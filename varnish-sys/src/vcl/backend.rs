@@ -74,7 +74,7 @@ use std::os::unix::io::FromRawFd;
 use std::ptr::{null, null_mut};
 use std::time::SystemTime;
 
-use crate::ffi::{VCL_BACKEND, VCL_IP};
+use crate::ffi::{vfp_status, VCL_BACKEND, VCL_IP};
 use crate::utils::get_backend;
 use crate::vcl::{Ctx, Event, IntoVCL, LogTag, VclError, VclResult, Vsb, WS};
 use crate::{
@@ -279,14 +279,14 @@ unsafe extern "C" fn vfp_pull<T: Transfer>(
     vfep: *mut ffi::vfp_entry,
     ptr: *mut c_void,
     len: *mut isize,
-) -> ffi::vfp_status {
+) -> vfp_status {
     let ctx = validate_vfp_ctx(ctxp);
     let vfe = validate_vfp_entry(vfep);
 
     let buf = std::slice::from_raw_parts_mut(ptr.cast::<u8>(), *len as usize);
     if buf.is_empty() {
         *len = 0;
-        return ffi::vfp_status_VFP_OK;
+        return vfp_status::VFP_OK;
     }
 
     let reader = vfe.priv1.cast::<T>().as_mut().unwrap();
@@ -296,15 +296,15 @@ unsafe extern "C" fn vfp_pull<T: Transfer>(
             // SAFETY: we assume ffi::VSLbt() will not store the pointer to the string's content
             let msg = ffi::txt::from_str(e.as_ref());
             ffi::VSLbt(ctx.req.as_ref().unwrap().vsl, ffi::VSL_tag_e_SLT_Error, msg);
-            ffi::vfp_status_VFP_ERROR
+            vfp_status::VFP_ERROR
         }
         Ok(0) => {
             *len = 0;
-            ffi::vfp_status_VFP_END
+            vfp_status::VFP_END
         }
         Ok(l) => {
             *len = l as isize;
-            ffi::vfp_status_VFP_OK
+            vfp_status::VFP_OK
         }
     }
 }
@@ -312,7 +312,7 @@ unsafe extern "C" fn vfp_pull<T: Transfer>(
 unsafe extern "C" fn wrap_event<S: Serve<T>, T: Transfer>(be: VCL_BACKEND, ev: ffi::vcl_event_e) {
     let backend: &S = get_backend(validate_director(be));
     backend.event(ev.try_into().unwrap_or_else(|e| {
-        panic!("{e}: value={ev} for backend {}", backend.get_type());
+        panic!("{e}: value={} for backend {}", ev.0, backend.get_type());
     }));
 }
 

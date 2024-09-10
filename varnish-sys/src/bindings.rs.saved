@@ -4296,7 +4296,9 @@ pub type VCL_ACL = *const vrt_acl;
 #[repr(transparent)]
 #[derive(Debug, Copy, Clone)]
 pub struct VCL_BACKEND(pub *const director);
-pub type VCL_BLOB = *const vrt_blob;
+#[repr(transparent)]
+#[derive(Debug, Copy, Clone)]
+pub struct VCL_BLOB(pub *const vrt_blob);
 pub type VCL_BODY = *const ::std::ffi::c_void;
 #[repr(transparent)]
 #[derive(Debug, Default, Copy, Clone)]
@@ -4403,14 +4405,30 @@ impl Default for vrt_ctx {
 extern "C" {
     pub fn VRT_CTX_Assert(ctx: *const vrt_ctx);
 }
-pub const vcl_func_call_e_VSUB_STATIC: vcl_func_call_e = 0;
-pub const vcl_func_call_e_VSUB_DYNAMIC: vcl_func_call_e = 1;
-pub const vcl_func_call_e_VSUB_CHECK: vcl_func_call_e = 2;
-pub type vcl_func_call_e = ::std::ffi::c_uint;
-pub const vcl_func_fail_e_VSUB_E_OK: vcl_func_fail_e = 0;
-pub const vcl_func_fail_e_VSUB_E_RECURSE: vcl_func_fail_e = 1;
-pub const vcl_func_fail_e_VSUB_E_METHOD: vcl_func_fail_e = 2;
-pub type vcl_func_fail_e = ::std::ffi::c_uint;
+impl vcl_func_call_e {
+    pub const VSUB_STATIC: vcl_func_call_e = vcl_func_call_e(0);
+}
+impl vcl_func_call_e {
+    pub const VSUB_DYNAMIC: vcl_func_call_e = vcl_func_call_e(1);
+}
+impl vcl_func_call_e {
+    pub const VSUB_CHECK: vcl_func_call_e = vcl_func_call_e(2);
+}
+#[repr(transparent)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub struct vcl_func_call_e(pub ::std::ffi::c_uint);
+impl vcl_func_fail_e {
+    pub const VSUB_E_OK: vcl_func_fail_e = vcl_func_fail_e(0);
+}
+impl vcl_func_fail_e {
+    pub const VSUB_E_RECURSE: vcl_func_fail_e = vcl_func_fail_e(1);
+}
+impl vcl_func_fail_e {
+    pub const VSUB_E_METHOD: vcl_func_fail_e = vcl_func_fail_e(2);
+}
+#[repr(transparent)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub struct vcl_func_fail_e(pub ::std::ffi::c_uint);
 pub type vcl_func_f = ::std::option::Option<
     unsafe extern "C" fn(ctx: *const vrt_ctx, arg1: vcl_func_call_e, arg2: *mut vcl_func_fail_e),
 >;
@@ -4456,12 +4474,22 @@ impl Default for vmod_data {
         }
     }
 }
-pub const vcl_event_e_VCL_EVENT_LOAD: vcl_event_e = 0;
-pub const vcl_event_e_VCL_EVENT_WARM: vcl_event_e = 1;
-pub const vcl_event_e_VCL_EVENT_COLD: vcl_event_e = 2;
-pub const vcl_event_e_VCL_EVENT_DISCARD: vcl_event_e = 3;
+impl vcl_event_e {
+    pub const VCL_EVENT_LOAD: vcl_event_e = vcl_event_e(0);
+}
+impl vcl_event_e {
+    pub const VCL_EVENT_WARM: vcl_event_e = vcl_event_e(1);
+}
+impl vcl_event_e {
+    pub const VCL_EVENT_COLD: vcl_event_e = vcl_event_e(2);
+}
+impl vcl_event_e {
+    pub const VCL_EVENT_DISCARD: vcl_event_e = vcl_event_e(3);
+}
+#[repr(transparent)]
 #[doc = " VCL events sent to VMODs"]
-pub type vcl_event_e = ::std::ffi::c_uint;
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub struct vcl_event_e(pub ::std::ffi::c_uint);
 pub type vmod_event_f = ::std::option::Option<
     unsafe extern "C" fn(
         ctx: *const vrt_ctx,
@@ -4762,14 +4790,28 @@ extern "C" {
 extern "C" {
     pub fn VRT_Endpoint_Clone(vep: *const vrt_endpoint) -> *mut vrt_endpoint;
 }
-pub const gethdr_e_HDR_REQ: gethdr_e = 0;
-pub const gethdr_e_HDR_REQ_TOP: gethdr_e = 1;
-pub const gethdr_e_HDR_RESP: gethdr_e = 2;
-pub const gethdr_e_HDR_OBJ: gethdr_e = 3;
-pub const gethdr_e_HDR_BEREQ: gethdr_e = 4;
-pub const gethdr_e_HDR_BERESP: gethdr_e = 5;
+impl gethdr_e {
+    pub const HDR_REQ: gethdr_e = gethdr_e(0);
+}
+impl gethdr_e {
+    pub const HDR_REQ_TOP: gethdr_e = gethdr_e(1);
+}
+impl gethdr_e {
+    pub const HDR_RESP: gethdr_e = gethdr_e(2);
+}
+impl gethdr_e {
+    pub const HDR_OBJ: gethdr_e = gethdr_e(3);
+}
+impl gethdr_e {
+    pub const HDR_BEREQ: gethdr_e = gethdr_e(4);
+}
+impl gethdr_e {
+    pub const HDR_BERESP: gethdr_e = gethdr_e(5);
+}
+#[repr(transparent)]
 #[doc = " Getting hold of the various struct http"]
-pub type gethdr_e = ::std::ffi::c_uint;
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub struct gethdr_e(pub ::std::ffi::c_uint);
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct gethdr_s {
@@ -4798,12 +4840,22 @@ extern "C" {
 extern "C" {
     pub fn VRT_GetHdr(ctx: *const vrt_ctx, arg1: VCL_HEADER) -> VCL_STRING;
 }
-pub const lbody_e_LBODY_SET_STRING: lbody_e = 0;
-pub const lbody_e_LBODY_ADD_STRING: lbody_e = 1;
-pub const lbody_e_LBODY_SET_BLOB: lbody_e = 2;
-pub const lbody_e_LBODY_ADD_BLOB: lbody_e = 3;
+impl lbody_e {
+    pub const LBODY_SET_STRING: lbody_e = lbody_e(0);
+}
+impl lbody_e {
+    pub const LBODY_ADD_STRING: lbody_e = lbody_e(1);
+}
+impl lbody_e {
+    pub const LBODY_SET_BLOB: lbody_e = lbody_e(2);
+}
+impl lbody_e {
+    pub const LBODY_ADD_BLOB: lbody_e = lbody_e(3);
+}
+#[repr(transparent)]
 #[doc = " req related"]
-pub type lbody_e = ::std::ffi::c_uint;
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub struct lbody_e(pub ::std::ffi::c_uint);
 extern "C" {
     pub fn VRT_CacheReqBody(ctx: *const vrt_ctx, maxsize: VCL_BYTES) -> VCL_BYTES;
 }
@@ -7602,11 +7654,21 @@ extern "C" {
 extern "C" {
     pub static VDI_AH_DELETED: *const vdi_ahealth;
 }
-pub const vfp_status_VFP_ERROR: vfp_status = -1;
-pub const vfp_status_VFP_OK: vfp_status = 0;
-pub const vfp_status_VFP_END: vfp_status = 1;
-pub const vfp_status_VFP_NULL: vfp_status = 2;
-pub type vfp_status = ::std::ffi::c_int;
+impl vfp_status {
+    pub const VFP_ERROR: vfp_status = vfp_status(-1);
+}
+impl vfp_status {
+    pub const VFP_OK: vfp_status = vfp_status(0);
+}
+impl vfp_status {
+    pub const VFP_END: vfp_status = vfp_status(1);
+}
+impl vfp_status {
+    pub const VFP_NULL: vfp_status = vfp_status(2);
+}
+#[repr(transparent)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub struct vfp_status(pub ::std::ffi::c_int);
 pub type vfp_init_f = ::std::option::Option<
     unsafe extern "C" fn(
         ctx: *const vrt_ctx,

@@ -7,7 +7,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use serde_json::{json, Value};
 use sha2::{Digest as _, Sha256};
-use syn::{Item, ItemMod, Path};
+use syn::{Item, ItemMod, Type};
 
 use crate::gen_func::FuncProcessor;
 use crate::gen_objects::ObjProcessor;
@@ -70,7 +70,7 @@ impl Generator {
         if let Some(type_name) = shared_type {
             let ident = name.to_ident();
             // The type name is stored as a string, but we already validated we can parse it during the `parse` phase.
-            let ty_ident = syn::parse_str::<Path>(type_name).expect("Unable to parse second time");
+            let ty_ident = syn::parse_str::<Type>(type_name).expect("Unable to parse second time");
             let ty_name = type_name.force_cstr();
             // Static methods to clean up the `vmod_priv` object's `T`
             tokens.push(quote! {

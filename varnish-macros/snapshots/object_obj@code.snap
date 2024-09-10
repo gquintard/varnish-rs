@@ -27,7 +27,11 @@ mod obj {
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
-            let __var0: Option<i64> = (__args.valid_cap != 0).then(|| __args.cap.into());
+            let __var0: Option<i64> = if __args.valid_cap != 0 {
+                Some(__args.cap.into())
+            } else {
+                None
+            };
             let __result = super::kv1::new(__var0);
             let __result = Box::new(__result);
             *__objp = Box::into_raw(__result);
@@ -81,7 +85,11 @@ mod obj {
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
-            let __var0: Option<i64> = (__args.valid_cap != 0).then(|| __args.cap.into());
+            let __var0: Option<i64> = if __args.valid_cap != 0 {
+                Some(__args.cap.into())
+            } else {
+                None
+            };
             let __var1: Cow<'_, str> = VCL_STRING(__vcl_name).into();
             let __result = super::kv2::new(__var0, &__var1);
             let __result = Box::new(__result);
@@ -107,8 +115,11 @@ mod obj {
             let __obj = __obj.as_ref().unwrap();
             let __var1: Cow<'_, str> = __args.key.into();
             let __var1 = __var1.as_ref();
-            let __var2: Option<Cow<'_, str>> = (__args.valid_value != 0)
-                .then(|| __args.value.into());
+            let __var2: Option<Cow<'_, str>> = if __args.valid_value != 0 {
+                Some(__args.value.into())
+            } else {
+                None
+            };
             let __var2 = __var2.as_deref();
             let __result = __obj.set(__var1, __var2);
         }
