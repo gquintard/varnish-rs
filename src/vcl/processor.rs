@@ -8,10 +8,11 @@
 use std::ffi::{c_int, c_uint, c_void, CStr};
 use std::ptr;
 
+use varnish_sys::{validate_vfp_ctx, validate_vfp_entry};
+
 use crate::ffi;
 use crate::ffi::{objcore, vdp_ctx, vfp_ctx, vfp_entry};
 use crate::vcl::ctx::Ctx;
-use crate::vcl::utils::{validate_vfp_ctx, validate_vfp_entry};
 
 /// passed to [`VDP::push`] to describe special conditions occurring in the pipeline.
 #[derive(Debug, Copy, Clone)]

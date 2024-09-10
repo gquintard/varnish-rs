@@ -78,12 +78,14 @@ use std::os::unix::io::FromRawFd;
 use std::ptr::{null, null_mut};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use varnish_sys::{
+    validate_director, validate_vdir, validate_vfp_ctx, validate_vfp_entry, validate_vrt_ctx,
+};
+
 use crate::ffi;
 use crate::vcl::convert::IntoVCL;
 use crate::vcl::ctx::{Ctx, Event, LogTag};
-use crate::vcl::utils::{
-    validate_director, validate_vdir, validate_vfp_ctx, validate_vfp_entry, validate_vrt_ctx,
-};
+use crate::vcl::utils::get_backend;
 use crate::vcl::vsb::Vsb;
 use crate::vcl::ws::WS;
 
@@ -319,7 +321,7 @@ unsafe extern "C" fn vfp_pull<T: Transfer>(
 }
 
 unsafe extern "C" fn wrap_event<S: Serve<T>, T: Transfer>(be: VCLBackendPtr, ev: ffi::vcl_event_e) {
-    let backend: &S = validate_director(be).get_backend();
+    let backend: &S = get_backend(validate_director(be));
     backend.event(ev.try_into().unwrap_or_else(|e| {
         panic!("{e}: value={ev} for backend {}", backend.get_type());
     }));
@@ -334,13 +336,13 @@ unsafe extern "C" fn wrap_list<S: Serve<T>, T: Transfer>(
 ) {
     let mut ctx = Ctx::from_ptr(ctxp);
     let mut vsb = Vsb::new(vsbp);
-    let backend: &S = validate_director(be).get_backend();
+    let backend: &S = get_backend(validate_director(be));
     backend.list(&mut ctx, &mut vsb, detailed != 0, json != 0);
 }
 
 unsafe extern "C" fn wrap_panic<S: Serve<T>, T: Transfer>(be: VCLBackendPtr, vsbp: *mut ffi::vsb) {
     let mut vsb = Vsb::new(vsbp);
-    let backend: &S = validate_director(be).get_backend();
+    let backend: &S = get_backend(validate_director(be));
     backend.panic(&mut vsb);
 }
 
@@ -355,7 +357,7 @@ unsafe extern "C" fn wrap_pipe<S: Serve<T>, T: Transfer>(
     assert_ne!(fd, 0);
     let tcp_stream = TcpStream::from_raw_fd(fd);
 
-    let backend: &S = validate_director(be).get_backend();
+    let backend: &S = get_backend(validate_director(be));
     sc_to_ptr(backend.pipe(&mut ctx, tcp_stream))
 }
 
@@ -366,7 +368,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
 ) -> c_int {
     let mut ctx = Ctx::from_ptr(ctxp);
     let be = validate_director(be);
-    let backend: &S = be.get_backend();
+    let backend: &S = get_backend(be);
     assert!(!be.vcl_name.is_null()); // FIXME: is this validation needed?
     validate_vdir(be); // FIXME: is this validation needed?
 
@@ -462,7 +464,7 @@ unsafe extern "C" fn wrap_healthy<S: Serve<T>, T: Transfer>(
     be: ffi::VCL_BACKEND,
     changed: *mut ffi::VCL_TIME,
 ) -> ffi::VCL_BOOL {
-    let backend: &S = validate_director(be).get_backend();
+    let backend: &S = get_backend(validate_director(be));
 
     let mut ctx = Ctx::from_ptr(ctxp);
     let (healthy, when) = backend.healthy(&mut ctx);
@@ -499,7 +501,7 @@ unsafe extern "C" fn wrap_finish<S: Serve<T>, T: Transfer>(
     ctxp: *const ffi::vrt_ctx,
     be: VCLBackendPtr,
 ) {
-    let prev_backend: &S = validate_director(be).get_backend();
+    let prev_backend: &S = get_backend(validate_director(be));
 
     // FIXME: shouldn't the ctx magic number be checked? If so, use validate_vrt_ctx()
     let ctx = ctxp.as_ref().unwrap();

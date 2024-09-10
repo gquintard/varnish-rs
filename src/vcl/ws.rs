@@ -16,9 +16,10 @@ use std::ptr;
 use std::slice::from_raw_parts_mut;
 use std::str::from_utf8;
 
+use varnish_sys::validate_ws;
+
 use crate::ffi;
 use crate::ffi::WS_Allocated;
-use crate::vcl::utils::validate_ws;
 
 /// A workspace object
 ///
