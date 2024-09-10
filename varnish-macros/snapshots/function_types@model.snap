@@ -26,7 +26,7 @@ VmodInfo {
             args: [],
             returns: Result(
                 Default,
-                BoxDynError,
+                VclError,
             ),
         },
         FuncInfo {

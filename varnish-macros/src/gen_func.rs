@@ -211,7 +211,7 @@ impl FuncProcessor {
             }
             ParamType::VclName => {
                 self.func_init_vars
-                    .push(quote! { let #temp_var = &*__vcl_name.into_rust(); });
+                    .push(quote! { let #temp_var: Cow<'_, str> = VCL_STRING(__vcl_name).into(); });
                 self.func_call_vars.push(quote! { &#temp_var });
             }
             ParamType::SharedPerTask => {
@@ -267,14 +267,16 @@ impl FuncProcessor {
             }
             ParamType::Value(pi) => {
                 // Convert C arg into Rust arg and pass it to the user's function
-                let mut input_expr = quote! { #input_val.into_rust() };
+                let mut input_expr = quote! { #input_val.into() };
+                let mut temp_var_ty = pi.ty_info.to_rust_type();
                 if pi.is_optional {
                     let input_valid = format_ident!("valid_{}", arg_info.ident);
                     input_expr = quote! { (__args.#input_valid != 0).then(|| #input_expr) };
                     self.add_wrapper_arg(func_info, quote! { #input_valid: c_char });
                     self.cproto_opt_arg_decl.push(format!("char {input_valid}"));
+                    temp_var_ty = quote! { Option<#temp_var_ty> };
                 }
-                let mut init_var = quote! { let #temp_var = #input_expr; };
+                let mut init_var = quote! { let #temp_var: #temp_var_ty = #input_expr; };
 
                 // For `str`, we now have a Cow or an Option<Cow> which need additional parsing.
                 // We cannot do this on the same statement because we need a ref to it without dropping the temp var.
@@ -409,7 +411,7 @@ impl FuncProcessor {
         let (let_var_assigns, extra_declarations) = self.gen_pre_call_conversion_code(info);
         let call_user_fn = self.gen_user_fn_call(info);
         let func_post_call = &self.func_post_call;
-        let unwrap_result = Self::gen_result_handler_code(info);
+        let unwrap_result = self.gen_result_handler_code(info);
 
         quote! {
             #extra_declarations
@@ -472,11 +474,12 @@ impl FuncProcessor {
         call_user_fn
     }
 
-    fn gen_result_handler_code(info: &FuncInfo) -> TokenStream {
-        if matches!(info.func_type, Destructor) {
-            return quote! {};
-        }
-        let log_result_err = if let ReturnType::Result(_, err) = info.returns {
+    fn gen_result_handler_code(&self, info: &FuncInfo) -> TokenStream {
+        let is_result;
+
+        // Always process the error from the result type
+        let on_error = if let ReturnType::Result(_, err) = info.returns {
+            is_result = true;
             let err = if matches!(err, ReturnTy::BoxDynError) {
                 quote! { &err.to_string() }
             } else {
@@ -484,18 +487,17 @@ impl FuncProcessor {
             };
             quote! { __ctx.fail(#err); }
         } else {
+            is_result = false;
             quote! {}
         };
 
+        // Events require special handling - convert errors into 1, otherwise 0
         if matches!(info.func_type, Event) {
-            return if matches!(info.returns, ReturnType::Result(_, _)) {
+            return if is_result {
                 quote! {
                     match __result {
                         Ok(_) => VCL_INT(0),
-                        Err(err) => {
-                            #log_result_err
-                            VCL_INT(1)  // Event failure should have non-zero return value
-                        },
+                        Err(err) => { #on_error; VCL_INT(1) },
                     }
                 }
             } else {
@@ -503,39 +505,46 @@ impl FuncProcessor {
             };
         }
 
-        let default_expr = info.returns.value_type().to_default();
-
-        let unwrap_result = if let ReturnType::Result(_, _) = info.returns {
-            quote! {
-                let __result = match __result {
-                    Ok(v) => v,
-                    Err(err) => {
-                        #log_result_err
-                        return #default_expr;
-                    },
-                };
-            }
-        } else {
+        let default_expr = if self.output_hdr == "VCL_VOID" {
             quote! {}
+        } else {
+            quote! { Default::default() }
+            // info.returns.value_type().to_default()
         };
 
-        if matches!(info.func_type, Constructor) {
+        let on_success = if matches!(info.func_type, Constructor) {
             quote! {
-                #unwrap_result
                 let __result = Box::new(__result);
                 *__objp = Box::into_raw(__result);
             }
+        } else if self.output_hdr == "VCL_VOID" {
+            quote! {}
         } else {
             quote! {
-                #unwrap_result
                 match __result.into_vcl(&mut __ctx.ws) {
                     Ok(v) => v,
-                    Err(e) => {
-                        __ctx.fail(e);
+                    Err(err) => {
+                        __ctx.fail(err);
                         #default_expr
                     }
                 }
             }
+        };
+
+        if is_result {
+            quote! {
+                match __result {
+                    Ok(__result) => {
+                        #on_success
+                    },
+                    Err(err) => {
+                        #on_error;
+                        #default_expr
+                    }
+                }
+            }
+        } else {
+            on_success
         }
     }
 }

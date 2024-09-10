@@ -6,17 +6,17 @@ fn main() {}
 
 #[vmod]
 mod types {
-    use std::error::Error;
     use std::net::SocketAddr;
     use std::time::Duration;
     use varnish::ffi::VCL_STRING;
     use varnish::vcl::{COWProbe, Probe};
+    use varnish_sys::vcl::VclError;
 
     // void
     pub fn to_void() {
         panic!()
     }
-    pub fn to_res_void_err() -> Result<(), Box<dyn Error>> {
+    pub fn to_res_void_err() -> Result<(), VclError> {
         panic!()
     }
     pub fn to_res_str_err() -> Result<(), &'static str> {

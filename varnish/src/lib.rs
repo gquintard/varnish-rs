@@ -86,22 +86,8 @@
 //!
 //! The various type translations are described in detail in [`vcl`].
 
-use std::env::join_paths;
-use std::io::{self, Write};
-use std::path::{Path, PathBuf};
-use std::process::Command;
-use std::{env, fs};
-
 // Re-publish varnish_sys::ffi and vcl
-mod boilerplate;
-pub mod vcl {
-    pub mod boilerplate {
-        pub use crate::boilerplate::*;
-    }
-    pub use varnish_sys::vcl::*;
-}
-pub use varnish_sys::ffi;
-use varnish_sys::vcl::VclError;
+pub use varnish_sys::{ffi, vcl};
 
 pub mod varnishtest;
 pub mod vsc;
@@ -173,78 +159,4 @@ macro_rules! run_vtc_tests {
             }
         }
     };
-}
-
-/// Convenience macro to include the generate boilerplate code.
-///
-/// Simply add a call to it anywhere in your code to include the code Varnish needs to load your
-/// module. This requires `vmod::vmod::generate` to have been run first in `build.rs`.
-#[macro_export]
-macro_rules! boilerplate {
-    () => {
-        #[allow(
-            dead_code,
-            non_camel_case_types,
-            non_snake_case,
-            non_upper_case_globals,
-            unused_imports,
-            unused_mut
-        )]
-        #[allow(
-            clippy::explicit_auto_deref,
-            clippy::needless_borrow,
-            clippy::semicolon_if_nothing_returned,
-            clippy::unit_arg,
-            clippy::unnecessary_mut_passed,
-            clippy::used_underscore_binding
-        )]
-        mod generated {
-            include!(concat!(env!("OUT_DIR"), "/generated.rs"));
-        }
-    };
-}
-
-/// Process the `vmod.vcc` file into the boilerplate code
-///
-/// This function is meant to be called from `build.rs` to translate the API described in
-/// `vmod.vcc` into C-compatible code that will allow Varnish to load and use your vmod.
-///
-/// It does require `python3` to run as it embed a script to do the processing.
-pub fn generate_boilerplate() -> Result<(), VclError> {
-    println!("cargo:rerun-if-changed=vmod.vcc");
-
-    let rstool_bytes = include_bytes!("vmodtool-rs.py");
-    let rs_tool_path = Path::new(&env::var("OUT_DIR").unwrap()).join(String::from("rstool.py"));
-    fs::write(&rs_tool_path, rstool_bytes)
-        .unwrap_or_else(|_| panic!("couldn't write rstool.py tool in {:?}", &*rs_tool_path));
-
-    let vmodtool_path = pkg_config::get_variable("varnishapi", "vmodtool").unwrap();
-    let vmodtool_dir = (vmodtool_path.as_ref() as &Path)
-        .parent()
-        .expect("couldn't find the directory name containing vmodtool.py")
-        .to_str()
-        .unwrap()
-        .to_string();
-
-    let python = env::var("PYTHON").unwrap_or_else(|_| "python3".into());
-    let cmd = Command::new(python)
-        .arg(rs_tool_path)
-        .arg("vmod.vcc")
-        .arg("-w")
-        .arg(env::var("OUT_DIR").unwrap())
-        .arg("-a")
-        .arg(ffi::VMOD_ABI_Version.to_str().unwrap())
-        .env(
-            "PYTHONPATH",
-            join_paths([env::var("OUT_DIR").unwrap_or_default(), vmodtool_dir]).unwrap(),
-        )
-        .output()
-        .expect("failed to run vmodtool");
-
-    io::stdout().write_all(&cmd.stderr).unwrap();
-    assert!(cmd.status.success());
-
-    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("generated.rs");
-    fs::write(out_path, &cmd.stdout).expect("Couldn't write boilerplate!");
-    Ok(())
 }

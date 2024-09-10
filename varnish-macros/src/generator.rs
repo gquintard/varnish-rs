@@ -170,6 +170,7 @@ impl Generator {
                 unused_variables,
             )]
             mod varnish_generated {
+                use std::borrow::Cow;
                 use std::ffi::{c_char, c_int, c_uint, c_void, CStr};
                 use std::ptr::null;
                 use varnish::ffi::{
@@ -189,7 +190,7 @@ impl Generator {
                     vmod_priv_methods,
                     vrt_ctx,
                 };
-                use varnish::vcl::{Ctx, IntoRust, IntoVCL};
+                use varnish::vcl::{Ctx, IntoVCL};
                 use super::*;
 
                 #( #priv_structs )*

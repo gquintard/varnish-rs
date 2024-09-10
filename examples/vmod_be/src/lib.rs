@@ -1,15 +1,12 @@
-use std::error::Error;
-
-use varnish::vcl::{Ctx, Serve, Transfer};
+use varnish::vcl::{Ctx, Serve, Transfer, VclError};
 
 varnish::run_vtc_tests!("tests/*.vtc");
 
 /// a simple STRING dictionary in your VCL
 #[varnish::vmod(docs = "README.md")]
 mod be {
-    use std::error::Error;
-
-    use varnish::vcl::{Backend, Ctx, VCLBackendPtr};
+    use varnish::ffi::VCL_BACKEND;
+    use varnish::vcl::{Backend, Ctx, VclError};
 
     use super::{Body, Sentence};
 
@@ -29,7 +26,7 @@ mod be {
             // It is not part of the object instantiation in VCL
             #[vcl_name] name: &str,
             to_repeat: &str,
-        ) -> Result<Self, Box<dyn Error>> {
+        ) -> Result<Self, VclError> {
             // to create the backend, we need:
             // - the vcl context, that we just pass along
             // - the vcl_name (how the vcl writer named the object)
@@ -46,7 +43,7 @@ mod be {
             Ok(parrot { be })
         }
 
-        pub fn backend(&self) -> VCLBackendPtr {
+        pub fn backend(&self) -> VCL_BACKEND {
             self.be.vcl_ptr()
         }
     }
@@ -66,7 +63,7 @@ impl Serve<Body> for Sentence {
         "parrot"
     }
 
-    fn get_headers(&self, ctx: &mut Ctx) -> Result<Option<Body>, Box<dyn Error>> {
+    fn get_headers(&self, ctx: &mut Ctx) -> Result<Option<Body>, VclError> {
         let beresp = ctx.http_beresp.as_mut().unwrap();
         beresp.set_status(200);
         beresp.set_header("server", "parrot")?;
@@ -89,7 +86,7 @@ pub struct Body {
 impl Transfer for Body {
     // Varnish will call us over and over, asking us to fill buffers
     // we'll happily oblige by filling as much as we can every time
-    fn read(&mut self, buf: &mut [u8]) -> Result<usize, Box<dyn Error>> {
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize, VclError> {
         // can't send more than what we have, or more than what the buffer can hold
         let l = std::cmp::min(self.left, buf.len());
 

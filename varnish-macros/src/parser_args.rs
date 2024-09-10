@@ -317,6 +317,8 @@ impl ReturnTy {
                 return Some(Self::Backend);
             } else if ident == "VCL_STRING" {
                 return Some(Self::VclString);
+            } else if ident == "VclError" {
+                return Some(Self::VclError);
             }
         }
         if let Tuple(v) = ty {

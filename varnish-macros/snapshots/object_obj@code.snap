@@ -4,6 +4,7 @@ source: varnish-macros/src/tests.rs
 mod obj {
     #[allow(non_snake_case, unused_imports, unused_qualifications, unused_variables)]
     mod varnish_generated {
+        use std::borrow::Cow;
         use std::ffi::{c_char, c_int, c_uint, c_void, CStr};
         use std::ptr::null;
         use varnish::ffi::{
@@ -11,7 +12,7 @@ mod obj {
             VCL_STRING, VCL_VOID, VMOD_ABI_Version, VMOD_PRIV_METHODS_MAGIC, vcl_event_e,
             vmod_priv, vmod_priv_methods, vrt_ctx,
         };
-        use varnish::vcl::{Ctx, IntoRust, IntoVCL};
+        use varnish::vcl::{Ctx, IntoVCL};
         use super::*;
         #[repr(C)]
         struct arg_vmod_obj_kv1__init {
@@ -26,7 +27,7 @@ mod obj {
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
-            let __var0 = (__args.valid_cap != 0).then(|| __args.cap.into_rust());
+            let __var0: Option<i64> = (__args.valid_cap != 0).then(|| __args.cap.into());
             let __result = super::kv1::new(__var0);
             let __result = Box::new(__result);
             *__objp = Box::into_raw(__result);
@@ -43,18 +44,11 @@ mod obj {
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __obj = __obj.as_ref().unwrap();
-            let __var1 = key.into_rust();
+            let __var1: Cow<'_, str> = key.into();
             let __var1 = __var1.as_ref();
-            let __var2 = value.into_rust();
+            let __var2: Cow<'_, str> = value.into();
             let __var2 = __var2.as_ref();
             let __result = __obj.set(__var1, __var2);
-            match __result.into_vcl(&mut __ctx.ws) {
-                Ok(v) => v,
-                Err(e) => {
-                    __ctx.fail(e);
-                    Default::default()
-                }
-            }
         }
         unsafe extern "C" fn vmod_c_kv1_get(
             __ctx: *mut vrt_ctx,
@@ -63,14 +57,14 @@ mod obj {
         ) -> VCL_STRING {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __obj = __obj.as_ref().unwrap();
-            let __var1 = key.into_rust();
+            let __var1: Cow<'_, str> = key.into();
             let __var1 = __var1.as_ref();
             let __result = __obj.get(__var1);
             match __result.into_vcl(&mut __ctx.ws) {
                 Ok(v) => v,
-                Err(e) => {
-                    __ctx.fail(e);
-                    std::ptr::null()
+                Err(err) => {
+                    __ctx.fail(err);
+                    Default::default()
                 }
             }
         }
@@ -87,8 +81,8 @@ mod obj {
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
-            let __var0 = (__args.valid_cap != 0).then(|| __args.cap.into_rust());
-            let __var1 = &*__vcl_name.into_rust();
+            let __var0: Option<i64> = (__args.valid_cap != 0).then(|| __args.cap.into());
+            let __var1: Cow<'_, str> = VCL_STRING(__vcl_name).into();
             let __result = super::kv2::new(__var0, &__var1);
             let __result = Box::new(__result);
             *__objp = Box::into_raw(__result);
@@ -111,18 +105,12 @@ mod obj {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
             let __obj = __obj.as_ref().unwrap();
-            let __var1 = __args.key.into_rust();
+            let __var1: Cow<'_, str> = __args.key.into();
             let __var1 = __var1.as_ref();
-            let __var2 = (__args.valid_value != 0).then(|| __args.value.into_rust());
+            let __var2: Option<Cow<'_, str>> = (__args.valid_value != 0)
+                .then(|| __args.value.into());
             let __var2 = __var2.as_deref();
             let __result = __obj.set(__var1, __var2);
-            match __result.into_vcl(&mut __ctx.ws) {
-                Ok(v) => v,
-                Err(e) => {
-                    __ctx.fail(e);
-                    Default::default()
-                }
-            }
         }
         #[repr(C)]
         pub struct VmodExports {
