@@ -120,6 +120,14 @@ pub fn as_ref_mut_ty(ty: &Type) -> Option<&Type> {
     None
 }
 
+/// Try to get the inner type of the `[T]` slice, or return None if it's not a `[T]` slice.
+pub fn as_slice_ty(ty: &Type) -> Option<&Type> {
+    if let Type::Slice(slice) = ty {
+        return Some(&slice.elem);
+    }
+    None
+}
+
 /// Try to get the ident of a simple type, or return None if it's not a simple type.
 pub fn as_simple_ty(ty: &Type) -> Option<&Ident> {
     if let Path(TypePath { qself: None, path }) = ty {
@@ -143,6 +151,17 @@ pub fn parse_shared_ref(store: &mut Option<String>, arg_ty: &Type) -> ProcResult
     store_shared(store, arg_ty, val, false)
 }
 
+use syn::visit_mut::VisitMut;
+use syn::Lifetime;
+
+struct AnonymizeLifetimes;
+
+impl VisitMut for AnonymizeLifetimes {
+    fn visit_lifetime_mut(&mut self, lifetime: &mut Lifetime) {
+        lifetime.ident = Ident::new("_", lifetime.ident.span());
+    }
+}
+
 /// When processing a fn arg tagged with `#[shared_per_task]` or `#[shared_per_vcl]`,
 /// we need to ensure that the shared type is the same everywhere. This function
 /// stores the shared type into the `store`, or if it is already non-None, it checks
@@ -153,13 +172,7 @@ fn store_shared(
     ty: Option<&Type>,
     is_mut: bool,
 ) -> ProcResult<()> {
-    let Some(ty) = ty.and_then(|ty| {
-        if let Path(TypePath { qself: None, path }) = ty {
-            Some(quote! { #path }.to_string())
-        } else {
-            None
-        }
-    }) else {
+    let Some(ty) = ty else {
         let msg = if is_mut {
             "This params must be declared as `&mut Option<Box<...>>`"
         } else {
@@ -167,6 +180,11 @@ fn store_shared(
         };
         Err(error(arg_ty, msg))?
     };
+
+    // For later usage, we need to anonymize all lifetimes, replacing 'foo with '_
+    let mut ty = ty.clone();
+    AnonymizeLifetimes.visit_type_mut(&mut ty);
+    let ty = quote! { #ty }.to_string();
 
     if let Some(t) = store {
         if t != &ty {
@@ -177,7 +195,7 @@ fn store_shared(
         }
     } else {
         // Ensure we can parse the types later, but we need to store it as a string to avoid lifetime issues
-        if let Err(e) = syn::parse_str::<syn::Path>(&ty) {
+        if let Err(e) = syn::parse_str::<Type>(&ty) {
             let msg = format!(
                 "Internal error, please report: unable to re-parse this from a string '{ty}'"
             );

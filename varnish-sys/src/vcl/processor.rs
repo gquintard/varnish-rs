@@ -8,8 +8,8 @@
 use std::ffi::{c_int, c_uint, c_void, CStr};
 use std::ptr;
 
-use crate::ffi::{vdp_ctx, vfp_ctx, vfp_entry};
-use crate::vcl::Ctx;
+use crate::ffi::{vdp_ctx, vfp_ctx, vfp_entry, vfp_status};
+use crate::vcl::{Ctx, VclError};
 use crate::{ffi, validate_vfp_ctx, validate_vfp_entry};
 
 /// passed to [`VDP::push`] to describe special conditions occurring in the pipeline.
@@ -49,7 +49,7 @@ pub enum PullResult {
 /// The return type for [`VDP::new`] and [`VFP::new`]
 #[derive(Debug)]
 pub enum InitResult<T> {
-    Err(String),
+    Err(VclError),
     Ok(T),
     Pass,
 }
@@ -185,16 +185,16 @@ unsafe extern "C" fn wrap_vfp_init<T: VFP>(
     vrt_ctx: *const ffi::vrt_ctx,
     ctxp: *mut vfp_ctx,
     vfep: *mut vfp_entry,
-) -> ffi::vfp_status {
+) -> vfp_status {
     let ctx = validate_vfp_ctx(ctxp);
     let vfe = validate_vfp_entry(vfep);
     match T::new(&mut Ctx::from_ptr(vrt_ctx), &mut VFPCtx::new(ctx)) {
         InitResult::Ok(proc) => {
             vfe.priv1 = Box::into_raw(Box::new(proc)).cast::<c_void>();
-            0
+            vfp_status::VFP_OK
         }
-        InitResult::Err(_) => -1, // TODO: log the error,
-        InitResult::Pass => 1,
+        InitResult::Err(_) => vfp_status::VFP_ERROR, // TODO: log the error,
+        InitResult::Pass => vfp_status::VFP_END,
     }
 }
 
@@ -203,7 +203,7 @@ pub unsafe extern "C" fn wrap_vfp_pull<T: VFP>(
     vfep: *mut vfp_entry,
     ptr: *mut c_void,
     len: *mut isize,
-) -> ffi::vfp_status {
+) -> vfp_status {
     let ctx = validate_vfp_ctx(ctxp);
     let vfe = validate_vfp_entry(vfep);
     let mut empty_buffer: [u8; 0] = [0; 0];
@@ -214,14 +214,14 @@ pub unsafe extern "C" fn wrap_vfp_pull<T: VFP>(
     };
     let obj = vfe.priv1.cast::<T>().as_mut().unwrap();
     match obj.pull(&mut VFPCtx::new(ctx), buf) {
-        PullResult::Err => ffi::vfp_status_VFP_ERROR, // TODO: log error
+        PullResult::Err => vfp_status::VFP_ERROR, // TODO: log error
         PullResult::Ok(l) => {
             *len = l as isize;
-            ffi::vfp_status_VFP_OK
+            vfp_status::VFP_OK
         }
         PullResult::End(l) => {
             *len = l as isize;
-            ffi::vfp_status_VFP_END
+            vfp_status::VFP_END
         }
     }
 }
@@ -272,18 +272,18 @@ impl<'a> VFPCtx<'a> {
         let max_len = len;
 
         match unsafe { ffi::VFP_Suck(self.raw, buf.as_ptr() as *mut c_void, &mut len) } {
-            ffi::vfp_status_VFP_OK => {
+            vfp_status::VFP_OK => {
                 assert!(len <= max_len);
                 assert!(len >= 0);
                 PullResult::Ok(len as usize)
             }
-            ffi::vfp_status_VFP_END => {
+            vfp_status::VFP_END => {
                 assert!(len <= max_len);
                 assert!(len >= 0);
                 PullResult::End(len as usize)
             }
-            ffi::vfp_status_VFP_ERROR => PullResult::Err,
-            n => panic!("unknown vfp_status: {n}"),
+            vfp_status::VFP_ERROR => PullResult::Err,
+            n => panic!("unknown vfp_status: {}", n.0),
         }
     }
 }

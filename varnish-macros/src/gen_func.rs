@@ -271,11 +271,19 @@ impl FuncProcessor {
                 let mut temp_var_ty = pi.ty_info.to_rust_type();
                 if pi.is_optional {
                     let input_valid = format_ident!("valid_{}", arg_info.ident);
-                    input_expr = quote! { (__args.#input_valid != 0).then(|| #input_expr) };
+                    if !pi.ty_info.must_be_optional() {
+                        input_expr = quote! { Some(#input_expr) };
+                        // else input_expr will be converted to option as is
+                    }
+                    input_expr =
+                        quote! { if __args.#input_valid != 0 { #input_expr } else { None } };
                     self.add_wrapper_arg(func_info, quote! { #input_valid: c_char });
                     self.cproto_opt_arg_decl.push(format!("char {input_valid}"));
+                }
+                if pi.is_optional || pi.ty_info.must_be_optional() {
                     temp_var_ty = quote! { Option<#temp_var_ty> };
                 }
+
                 let mut init_var = quote! { let #temp_var: #temp_var_ty = #input_expr; };
 
                 // For `str`, we now have a Cow or an Option<Cow> which need additional parsing.

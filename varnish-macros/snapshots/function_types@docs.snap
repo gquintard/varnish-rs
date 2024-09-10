@@ -28,7 +28,7 @@ import types from "path/to/libtypes.so";
 
 ### Function `VOID type_bool(BOOL _v)`
 
-### Function `VOID type_bool_dflt(BOOL _v = true)`
+### Function `VOID type_bool_dflt(BOOL _v = 1)`
 
 ### Function `VOID opt_bool([BOOL _v])`
 
@@ -84,19 +84,25 @@ import types from "path/to/libtypes.so";
 
 ### Function `STRING to_res_opt_string()`
 
-### Function `VOID type_probe(PROBE _v)`
+### Function `VOID type_probe([PROBE _v])`
+
+### Function `VOID type_probe_req(PROBE _v)`
 
 ### Function `PROBE to_probe()`
 
 ### Function `PROBE to_res_probe()`
 
-### Function `VOID type_cow_probe(PROBE _v)`
+### Function `VOID type_cow_probe([PROBE _v])`
+
+### Function `VOID type_cow_probe_req(PROBE _v)`
 
 ### Function `PROBE to_cow_probe()`
 
 ### Function `PROBE to_res_cow_probe()`
 
-### Function `VOID type_ip(IP _v)`
+### Function `VOID type_ip([IP _v])`
+
+### Function `VOID type_ip_req(IP _v)`
 
 ### Function `IP to_ip()`
 

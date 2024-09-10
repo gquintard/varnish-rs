@@ -115,7 +115,7 @@ mod rustest {
         Ok(VCL_STRING(r.release(0).as_ptr() as *const i8))
     }
 
-    pub fn default_arg(#[arg(default = "foo")] arg: &str) -> &str {
+    pub fn default_arg(#[default("foo")] arg: &str) -> &str {
         arg
     }
 

@@ -1,9 +1,7 @@
 use darling::ast::NestedMeta;
-use darling::util::parse_expr::preserve_str_literal;
-use darling::FromMeta;
 use serde_json::Value;
 use syn::Type::Tuple;
-use syn::{Expr, ExprLit, FnArg, GenericArgument, Lit, Meta, Pat, PatType, Type, TypeParamBound};
+use syn::{FnArg, GenericArgument, Lit, Meta, Pat, PatType, Type, TypeParamBound};
 
 use crate::errors::error;
 use crate::model::FuncType::{Constructor, Event, Function, Method};
@@ -11,8 +9,8 @@ use crate::model::{
     FuncType, ParamInfo, ParamTy, ParamType, ParamTypeInfo, ReturnTy, ReturnType, SharedTypes,
 };
 use crate::parser_utils::{
-    as_one_gen_arg, as_option_type, as_ref_mut_ty, as_ref_ty, as_simple_ty, parse_doc_str,
-    parse_shared_mut, parse_shared_ref, remove_attr,
+    as_one_gen_arg, as_option_type, as_ref_mut_ty, as_ref_ty, as_simple_ty, as_slice_ty,
+    parse_doc_str, parse_shared_mut, parse_shared_ref, remove_attr,
 };
 use crate::{parser_utils, ProcResult};
 
@@ -37,12 +35,13 @@ impl FuncStatus {
     }
 }
 
-/// Represents function parameter configuration
-#[derive(Debug, FromMeta)]
-struct ArgConfig {
-    #[darling(with = preserve_str_literal)]
-    pub default: Expr,
-}
+// /// Represents function parameter configuration
+// #[derive(Debug, FromMeta)]
+// struct ArgConfig {
+//     #[darling(with = preserve_str_literal)]
+//     pub default: Option<Expr>,
+//     pub required: Option<bool>,
+// }
 
 impl ParamTypeInfo {
     /// Parse an argument of a function, including `&self` for methods.
@@ -180,34 +179,44 @@ impl ParamType {
         } else {
             // Only standard types left, possibly optional
             not_in! { Event, "Event functions can only have `Ctx`, `#[event] Event`, and `#[shared_per_vcl] &mut Option<Box<T>>` arguments." }
-            if let Some(arg_type) = as_option_type(arg_ty).and_then(ParamTy::try_parse) {
-                // Special "always-optional" types should be stored as non-optional
-                let dflt = Self::get_default(pat_ty, arg_type)?;
-                Self::Value(ParamInfo::new(arg_type, dflt, !arg_type.must_be_optional()))
-            } else if let Some(arg_type) = ParamTy::try_parse(arg_ty) {
-                if arg_type.must_be_optional() {
-                    error! { "This type of argument must be declared as optional with `Option<...>`" }
-                }
-                let dflt = Self::get_default(pat_ty, arg_type)?;
-                Self::Value(ParamInfo::new(arg_type, dflt, false))
-            } else {
-                Err(error(&pat_ty, "unsupported argument type"))?
+            let (opt, arg_ty) =
+                if let Some(arg_ty) = as_option_type(arg_ty).and_then(ParamTy::try_parse) {
+                    (true, arg_ty)
+                } else if let Some(arg_ty) = ParamTy::try_parse(arg_ty) {
+                    (false, arg_ty)
+                } else {
+                    Err(error(&pat_ty, "unsupported argument type"))?
+                };
+            if !opt && arg_ty.must_be_optional() {
+                error! { "This type of argument must be declared as optional with `Option<...>`" }
             }
+            let default = Self::get_arg_opts(pat_ty, arg_ty)?;
+            let has_required = Self::get_required_attr(pat_ty)?;
+            let opt = if has_required {
+                if !opt {
+                    error! { "The `required` attribute is only allowed on Option<...> arguments" }
+                }
+                if !arg_ty.must_be_optional() {
+                    error! { "The `required` attribute is only allowed on Probe, ProbeCow, and SocketAddr arguments" }
+                }
+                false
+            } else {
+                opt
+            };
+            Self::Value(ParamInfo::new(arg_ty, default, opt))
         })
     }
 
-    /// Try to get the default value from the #[arg(default = "...")] attribute on an argument
-    fn get_default(pat_ty: &mut PatType, arg_type: ParamTy) -> ProcResult<Value> {
-        let Some(arg) = remove_attr(&mut pat_ty.attrs, "arg") else {
+    /// Try to get the default value from the #[default(...)] attribute on an argument
+    fn get_arg_opts(pat_ty: &mut PatType, arg_type: ParamTy) -> ProcResult<Value> {
+        let Some(arg) = remove_attr(&mut pat_ty.attrs, "default") else {
             return Ok(Value::Null);
         };
-        // FIXME: This seems hacky, see https://github.com/TedDriggs/darling/issues/307
         let Meta::List(arg) = arg.meta else {
-            Err(error(&pat_ty, "Unexpected #[arg(...)] attribute"))?
+            Err(error(&pat_ty, "Unexpected #[default(...)] attribute"))?
         };
         let arg = NestedMeta::parse_meta_list(arg.tokens)?;
-        let arg = ArgConfig::from_list(&arg)?;
-        let Expr::Lit(ExprLit { lit, .. }) = arg.default else {
+        let [NestedMeta::Lit(lit)] = arg.as_slice() else {
             Err(error(&pat_ty, "Default value must be a literal value"))?
         };
 
@@ -221,23 +230,38 @@ impl ParamType {
 
         Ok(match lit {
             Lit::Str(v) => {
-                only! { ParamTy::Str, "Only `&str` arguments can have a default string value" };
+                only! { ParamTy::Str, "Only `&str` arguments can have a default string value" }
                 Value::String(v.value())
             }
             Lit::Int(v) => {
-                only! { ParamTy::I64, "Only `i64` arguments can have a default integer value" };
+                only! { ParamTy::I64, "Only `i64` arguments can have a default integer value" }
                 serde_json::from_str(&v.to_string()).unwrap()
             }
             Lit::Float(v) => {
-                only! { ParamTy::F64, "Only `f64` arguments can have a default float value" };
+                only! { ParamTy::F64, "Only `f64` arguments can have a default float value" }
                 serde_json::from_str(&v.to_string()).unwrap()
             }
             Lit::Bool(v) => {
-                only! { ParamTy::Bool, "Only `bool` arguments can have a default boolean value" };
-                Value::Bool(v.value)
+                only! { ParamTy::Bool, "Only `bool` arguments can have a default boolean value" }
+                Value::Number(i32::from(v.value).into())
             }
-            _ => Err(error(&pat_ty, "Unrecognized literal value"))?,
+            _ => Err(error(&pat_ty, "Unrecognized value in #[default(...)]"))?,
         })
+    }
+
+    /// Try to get the #[required] attribute on an argument
+    fn get_required_attr(pat_ty: &mut PatType) -> ProcResult<bool> {
+        let Some(arg) = remove_attr(&mut pat_ty.attrs, "required") else {
+            return Ok(false);
+        };
+        if let Meta::Path(syn::Path { segments, .. }) = arg.meta {
+            if let Some(segment) = segments.last() {
+                if segment.arguments.is_empty() {
+                    return Ok(true);
+                }
+            }
+        }
+        Err(error(&pat_ty, "#[required] attribute must not have params"))?
     }
 }
 
@@ -347,10 +371,21 @@ impl ReturnTy {
                 return Some(Self::VclError);
             }
         }
-        if let Some(ident) = as_option_type(ty).and_then(as_simple_ty) {
-            if ident == "String" {
-                // `Option<String>`
-                return Some(Self::String);
+        if let Some(ty) = as_option_type(ty) {
+            if let Some(ident) = as_simple_ty(ty) {
+                if ident == "String" {
+                    // `Option<String>`
+                    return Some(Self::String);
+                }
+            }
+            if let Some(ty) = as_ref_ty(ty).and_then(as_slice_ty).and_then(as_simple_ty) {
+                // panic!("ident: {:?}", ty);
+                // if let Some(ident) = as_simple_ty(ty) {
+                if ty == "u8" {
+                    // `&[u8]`
+                    return Some(Self::Bytes);
+                    // }
+                }
             }
         }
         if let Tuple(v) = ty {

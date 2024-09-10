@@ -45,12 +45,12 @@ import rustest from "path/to/librustest.so";
 
 ### Function `IP build_ip6()`
 
-### Function `STRING print_ip(IP maybe_ip)`
+### Function `STRING print_ip([IP maybe_ip])`
 
 ### Function `STRING req_body()`
 
 ### Function `STRING default_arg(STRING arg = "foo")`
 
-### Function `STRING cowprobe_prop(PROBE probe)`
+### Function `STRING cowprobe_prop([PROBE probe])`
 
-### Function `STRING probe_prop(PROBE probe)`
+### Function `STRING probe_prop([PROBE probe])`

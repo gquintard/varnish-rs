@@ -147,9 +147,9 @@ impl ParamTy {
             Self::Duration => quote! { Duration },
             Self::F64 => quote! { f64 },
             Self::I64 => quote! { i64 },
-            Self::Probe => quote! { Option<Probe> },
-            Self::ProbeCow => quote! { Option<COWProbe> },
-            Self::SocketAddr => quote! { Option<SocketAddr> },
+            Self::Probe => quote! { Probe },
+            Self::ProbeCow => quote! { COWProbe },
+            Self::SocketAddr => quote! { SocketAddr },
             Self::Str => quote! { Cow<'_, str> },
         }
     }
@@ -199,6 +199,7 @@ pub enum ReturnTy {
     ParamType(ParamTy),
     String,
     Backend,
+    Bytes,
     VclString,   // hopefully some day we won't expose this type to the user
     BoxDynError, // Error type only
     VclError,    // Error type only
@@ -210,7 +211,7 @@ impl ReturnTy {
             // Self is returned by obj constructors which are void in VCC
             Self::Default | Self::SelfType => "VOID",
             Self::ParamType(ty) => ty.to_vcc_type(),
-            Self::VclString | Self::String => "STRING",
+            Self::Bytes | Self::VclString | Self::String => "STRING",
             Self::Backend => "BACKEND",
             Self::BoxDynError | Self::VclError => "VCC-SomeError", // internal to the generator
         }
@@ -221,7 +222,7 @@ impl ReturnTy {
         //            statement in the `varnish-macros/src/generator.rs` file.
         match self {
             Self::ParamType(ty) => ty.to_c_type(),
-            Self::VclString | Self::String => "VCL_STRING",
+            Self::Bytes | Self::VclString | Self::String => "VCL_STRING",
             Self::SelfType | Self::Default => "VCL_VOID",
             Self::Backend => "VCL_BACKEND",
             Self::BoxDynError | Self::VclError => "C-BoxDynError", // internal to the generator
