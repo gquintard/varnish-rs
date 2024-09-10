@@ -150,6 +150,9 @@ fn fn_sig(func: &FuncInfo, user_args: &Vec<(&ParamTypeInfo, &ParamInfo)>) -> Str
             wrt!(res, ", ");
         }
         wrt!(res, "{}", bracketed_name(arg, ty));
+        if !ty.default.is_null() {
+            wrt!(res, " = {}", ty.default);
+        }
     }
     wrt!(res, ")");
     if is_md_txt {

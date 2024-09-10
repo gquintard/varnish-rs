@@ -4,6 +4,7 @@ source: varnish-macros/src/tests.rs
 mod event2 {
     #[allow(non_snake_case, unused_imports, unused_qualifications, unused_variables)]
     mod varnish_generated {
+        use std::borrow::Cow;
         use std::ffi::{c_char, c_int, c_uint, c_void, CStr};
         use std::ptr::null;
         use varnish::ffi::{
@@ -11,7 +12,7 @@ mod event2 {
             VCL_STRING, VCL_VOID, VMOD_ABI_Version, VMOD_PRIV_METHODS_MAGIC, vcl_event_e,
             vmod_priv, vmod_priv_methods, vrt_ctx,
         };
-        use varnish::vcl::{Ctx, IntoRust, IntoVCL};
+        use varnish::vcl::{Ctx, IntoVCL};
         use super::*;
         unsafe extern "C" fn vmod_c_on_event(
             __ctx: *mut vrt_ctx,

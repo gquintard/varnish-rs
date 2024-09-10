@@ -22,9 +22,7 @@
 //! number of times.
 //!
 //! ```
-//! use std::error::Error;
-//!
-//! use varnish::vcl::{Ctx, Backend, Serve, Transfer};
+//! use varnish::vcl::{Ctx, Backend, Serve, Transfer, VclError};
 //!
 //! // First we need to define a struct that implement [Transfer]:
 //! struct BodyResponse {
@@ -32,7 +30,7 @@
 //! }
 //!
 //! impl Transfer for BodyResponse {
-//!     fn read(&mut self, buf: &mut [u8]) -> Result<usize, Box<dyn Error>> {
+//!     fn read(&mut self, buf: &mut [u8]) -> Result<usize, VclError> {
 //!         let mut done = 0;
 //!         for p in buf {
 //!              if self.left == 0 {
@@ -55,7 +53,7 @@
 //! impl Serve<BodyResponse> for MyBe {
 //!      fn get_type(&self) -> &str { "example" }
 //!
-//!      fn get_headers(&self, ctx: &mut Ctx) -> Result<Option<BodyResponse>, Box<dyn Error>> {
+//!      fn get_headers(&self, ctx: &mut Ctx) -> Result<Option<BodyResponse>, VclError> {
 //!          Ok(Some(
 //!            BodyResponse { left: self.n },
 //!          ))
@@ -69,23 +67,19 @@
 //!     let ptr = backend.vcl_ptr();
 //! }
 //! ```
-use std::error::Error;
 use std::ffi::{c_char, c_int, c_void, CString};
 use std::marker::PhantomData;
 use std::net::{SocketAddr, TcpStream};
 use std::os::unix::io::FromRawFd;
 use std::ptr::{null, null_mut};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::SystemTime;
 
+use crate::ffi::{VCL_BACKEND, VCL_IP};
 use crate::utils::get_backend;
-use crate::vcl::{Ctx, Event, IntoVCL, LogTag, VclResult, Vsb, WS};
+use crate::vcl::{Ctx, Event, IntoVCL, LogTag, VclError, VclResult, Vsb, WS};
 use crate::{
     ffi, validate_director, validate_vdir, validate_vfp_ctx, validate_vfp_entry, validate_vrt_ctx,
 };
-
-// FIXME: this should not be an alias, but instead we can simply re-export using `pub use ffi::VCL_BACKEND` to have a more consistent type API
-/// Alias for [`ffi::VCL_BACKEND`]
-pub type VCLBackendPtr = ffi::VCL_BACKEND;
 
 /// Fat wrapper around [`VCLBackendPtr`]/[`ffi::VCL_BACKEND`].
 ///
@@ -98,7 +92,7 @@ pub type VCLBackendPtr = ffi::VCL_BACKEND;
 /// the VCL is discarded and that can only happen once all the backend fetches are done.
 #[derive(Debug)]
 pub struct Backend<S: Serve<T>, T: Transfer> {
-    bep: *const ffi::director,
+    bep: VCL_BACKEND,
     #[allow(dead_code)]
     methods: Box<ffi::vdi_methods>,
     inner: Box<S>,
@@ -116,7 +110,7 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
 
     /// Return the C pointer wrapped by the [`Backend`]. Conventionally used by the `.backend()`
     /// methods of VCL objects.
-    pub fn vcl_ptr(&self) -> *const ffi::director {
+    pub fn vcl_ptr(&self) -> VCL_BACKEND {
         self.bep
     }
 
@@ -152,7 +146,7 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
                 name.as_ptr().cast::<c_char>(),
             )
         };
-        if bep.is_null() {
+        if bep.0.is_null() {
             return Err(format!("VRT_AddDirector return null while creating {name}").into());
         }
 
@@ -187,7 +181,7 @@ pub trait Serve<T: Transfer> {
     ///
     /// If this function returns a `Ok(_)` without having set the method and protocol of
     /// `ctx.http_beresp`, we'll default to `HTTP/1.1 200 OK`
-    fn get_headers(&self, _ctx: &mut Ctx) -> Result<Option<T>, Box<dyn Error>>;
+    fn get_headers(&self, _ctx: &mut Ctx) -> Result<Option<T>, VclError>;
 
     /// Once a backend transaction is finished, the [`Backend`] has a chance to clean up, collect
     /// data and others in the finish methods.
@@ -258,7 +252,7 @@ pub trait Transfer {
     ///
     /// `.read()` will never be called on an empty buffer, and the implementer must return the
     /// number of bytes written (which therefore must be less than the buffer size).
-    fn read(&mut self, buf: &mut [u8]) -> Result<usize, Box<dyn Error>>;
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize, VclError>;
 
     /// If returning `Some(_)`, we know the size of the body generated, and it'll be used to fill the
     /// `content-length` header of the response. Otherwise, chunked encoding will be used, which is
@@ -269,13 +263,13 @@ pub trait Transfer {
 
     /// Potentially return the IP:port pair that the backend is using to transfer the body. It
     /// might not make sense for your implementation.
-    fn get_ip(&self) -> Result<Option<SocketAddr>, Box<dyn Error>> {
+    fn get_ip(&self) -> Result<Option<SocketAddr>, VclError> {
         Ok(None)
     }
 }
 
 impl Transfer for () {
-    fn read(&mut self, _buf: &mut [u8]) -> Result<usize, Box<dyn Error>> {
+    fn read(&mut self, _buf: &mut [u8]) -> Result<usize, VclError> {
         Ok(0)
     }
 }
@@ -300,7 +294,7 @@ unsafe extern "C" fn vfp_pull<T: Transfer>(
         Err(e) => {
             // TODO: we should grow a VSL object
             // SAFETY: we assume ffi::VSLbt() will not store the pointer to the string's content
-            let msg = ffi::txt::from_str(&e.to_string());
+            let msg = ffi::txt::from_str(e.as_ref());
             ffi::VSLbt(ctx.req.as_ref().unwrap().vsl, ffi::VSL_tag_e_SLT_Error, msg);
             ffi::vfp_status_VFP_ERROR
         }
@@ -315,7 +309,7 @@ unsafe extern "C" fn vfp_pull<T: Transfer>(
     }
 }
 
-unsafe extern "C" fn wrap_event<S: Serve<T>, T: Transfer>(be: VCLBackendPtr, ev: ffi::vcl_event_e) {
+unsafe extern "C" fn wrap_event<S: Serve<T>, T: Transfer>(be: VCL_BACKEND, ev: ffi::vcl_event_e) {
     let backend: &S = get_backend(validate_director(be));
     backend.event(ev.try_into().unwrap_or_else(|e| {
         panic!("{e}: value={ev} for backend {}", backend.get_type());
@@ -324,7 +318,7 @@ unsafe extern "C" fn wrap_event<S: Serve<T>, T: Transfer>(be: VCLBackendPtr, ev:
 
 unsafe extern "C" fn wrap_list<S: Serve<T>, T: Transfer>(
     ctxp: *const ffi::vrt_ctx,
-    be: VCLBackendPtr,
+    be: VCL_BACKEND,
     vsbp: *mut ffi::vsb,
     detailed: i32,
     json: i32,
@@ -335,7 +329,7 @@ unsafe extern "C" fn wrap_list<S: Serve<T>, T: Transfer>(
     backend.list(&mut ctx, &mut vsb, detailed != 0, json != 0);
 }
 
-unsafe extern "C" fn wrap_panic<S: Serve<T>, T: Transfer>(be: VCLBackendPtr, vsbp: *mut ffi::vsb) {
+unsafe extern "C" fn wrap_panic<S: Serve<T>, T: Transfer>(be: VCL_BACKEND, vsbp: *mut ffi::vsb) {
     let mut vsb = Vsb::new(vsbp);
     let backend: &S = get_backend(validate_director(be));
     backend.panic(&mut vsb);
@@ -343,7 +337,7 @@ unsafe extern "C" fn wrap_panic<S: Serve<T>, T: Transfer>(be: VCLBackendPtr, vsb
 
 unsafe extern "C" fn wrap_pipe<S: Serve<T>, T: Transfer>(
     ctxp: *const ffi::vrt_ctx,
-    be: VCLBackendPtr,
+    be: VCL_BACKEND,
 ) -> ffi::stream_close_t {
     let mut ctx = Ctx::from_ptr(ctxp);
     let req = ctx.raw.validated_req();
@@ -359,7 +353,7 @@ unsafe extern "C" fn wrap_pipe<S: Serve<T>, T: Transfer>(
 #[allow(clippy::too_many_lines)] // fixme
 unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
     ctxp: *const ffi::vrt_ctx,
-    be: VCLBackendPtr,
+    be: VCL_BACKEND,
 ) -> c_int {
     let mut ctx = Ctx::from_ptr(ctxp);
     let be = validate_director(be);
@@ -456,7 +450,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
 
 unsafe extern "C" fn wrap_healthy<S: Serve<T>, T: Transfer>(
     ctxp: *const ffi::vrt_ctx,
-    be: ffi::VCL_BACKEND,
+    be: VCL_BACKEND,
     changed: *mut ffi::VCL_TIME,
 ) -> ffi::VCL_BOOL {
     let backend: &S = get_backend(validate_director(be));
@@ -464,15 +458,15 @@ unsafe extern "C" fn wrap_healthy<S: Serve<T>, T: Transfer>(
     let mut ctx = Ctx::from_ptr(ctxp);
     let (healthy, when) = backend.healthy(&mut ctx);
     if !changed.is_null() {
-        *changed = when.duration_since(UNIX_EPOCH).unwrap().as_secs_f64();
+        *changed = when.try_into().unwrap(); // FIXME: on error?
     }
     healthy.into()
 }
 
 unsafe extern "C" fn wrap_getip<T: Transfer>(
     ctxp: *const ffi::vrt_ctx,
-    _be: ffi::VCL_BACKEND,
-) -> ffi::VCL_IP {
+    _be: VCL_BACKEND,
+) -> VCL_IP {
     let ctxp = validate_vrt_ctx(ctxp);
     let bo = ctxp.bo.as_ref().unwrap();
     assert_eq!(bo.magic, ffi::BUSYOBJ_MAGIC);
@@ -485,16 +479,19 @@ unsafe extern "C" fn wrap_getip<T: Transfer>(
 
     transfer
         .get_ip()
-        .and_then(|ip| ip.into_vcl(&mut ctx.ws).map_err(|e| e.into()))
+        .and_then(|ip| match ip {
+            Some(ip) => Ok(ip.into_vcl(&mut ctx.ws)?),
+            None => Ok(VCL_IP(null())),
+        })
         .unwrap_or_else(|e| {
             ctx.fail(format!("{e}"));
-            null()
+            VCL_IP(null())
         })
 }
 
 unsafe extern "C" fn wrap_finish<S: Serve<T>, T: Transfer>(
     ctxp: *const ffi::vrt_ctx,
-    be: VCLBackendPtr,
+    be: VCL_BACKEND,
 ) {
     let prev_backend: &S = get_backend(validate_director(be));
 

@@ -141,6 +141,21 @@ pub enum ParamTy {
 }
 
 impl ParamTy {
+    pub fn to_rust_type(self) -> TokenStream {
+        match self {
+            Self::Bool => quote! { bool },
+            Self::Duration => quote! { Duration },
+            Self::F64 => quote! { f64 },
+            Self::I64 => quote! { i64 },
+            Self::Probe => quote! { Option<Probe> },
+            Self::ProbeCow => quote! { Option<COWProbe> },
+            Self::SocketAddr => quote! { Option<SocketAddr> },
+            Self::Str => quote! { Cow<'_, str> },
+        }
+    }
+}
+
+impl ParamTy {
     pub fn to_vcc_type(self) -> &'static str {
         match self {
             Self::Bool => "BOOL",
@@ -174,28 +189,19 @@ impl ParamTy {
             Self::Probe | Self::ProbeCow | Self::SocketAddr => true,
         }
     }
-
-    pub fn to_default(self) -> TokenStream {
-        match self {
-            Self::Bool | Self::Duration | Self::F64 | Self::I64 => quote! { Default::default() },
-            Self::Probe | Self::ProbeCow | Self::SocketAddr | Self::Str => {
-                quote! { std::ptr::null() }
-            }
-        }
-    }
 }
 
 /// Represents all return types of functions.
 #[derive(Debug, Clone, Copy)]
 pub enum ReturnTy {
-    Default,
+    Default, // Nothing is returned
     SelfType,
     ParamType(ParamTy),
     String,
     Backend,
-    VclString, // hopefully some day we won't expose this type to the user
-    /// For the Error return type only: `Result<_, Box<dyn Error>>`
-    BoxDynError,
+    VclString,   // hopefully some day we won't expose this type to the user
+    BoxDynError, // Error type only
+    VclError,    // Error type only
 }
 
 impl ReturnTy {
@@ -206,7 +212,7 @@ impl ReturnTy {
             Self::ParamType(ty) => ty.to_vcc_type(),
             Self::VclString | Self::String => "STRING",
             Self::Backend => "BACKEND",
-            Self::BoxDynError => "VCC-BoxDynError", // internal to the generator
+            Self::BoxDynError | Self::VclError => "VCC-SomeError", // internal to the generator
         }
     }
 
@@ -218,16 +224,7 @@ impl ReturnTy {
             Self::VclString | Self::String => "VCL_STRING",
             Self::SelfType | Self::Default => "VCL_VOID",
             Self::Backend => "VCL_BACKEND",
-            Self::BoxDynError => "C-BoxDynError", // internal to the generator
-        }
-    }
-
-    pub fn to_default(self) -> TokenStream {
-        match self {
-            Self::Default => quote! { Default::default() },
-            Self::ParamType(ty) => ty.to_default(),
-            Self::Backend | Self::VclString | Self::String => quote! { std::ptr::null() },
-            Self::SelfType | Self::BoxDynError => quote! {},
+            Self::BoxDynError | Self::VclError => "C-BoxDynError", // internal to the generator
         }
     }
 }

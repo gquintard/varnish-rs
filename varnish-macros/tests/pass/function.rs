@@ -6,17 +6,17 @@ fn main() {}
 
 #[vmod]
 mod types {
-    use std::error::Error;
     use std::net::SocketAddr;
     use std::time::Duration;
     use varnish::ffi::VCL_STRING;
     use varnish::vcl::{COWProbe, Probe};
+    use varnish_sys::vcl::VclError;
 
     // void
     pub fn to_void() {
         panic!()
     }
-    pub fn to_res_void_err() -> Result<(), Box<dyn Error>> {
+    pub fn to_res_void_err() -> Result<(), VclError> {
         panic!()
     }
     pub fn to_res_str_err() -> Result<(), &'static str> {
@@ -25,6 +25,7 @@ mod types {
 
     // bool
     pub fn type_bool(_v: bool) {}
+    pub fn type_bool_dflt(#[arg(default = true)] _v: bool) {}
     pub fn opt_bool(_v: Option<bool>) {}
     pub fn to_bool() -> bool {
         panic!()
@@ -45,6 +46,7 @@ mod types {
 
     // f64
     pub fn type_f64(_v: f64) {}
+    pub fn type_f64_dflt(#[arg(default = 42.3)] _v: f64) {}
     pub fn opt_f64(_v: Option<f64>) {}
     pub fn to_f64() -> f64 {
         panic!()
@@ -55,6 +57,7 @@ mod types {
 
     // i64
     pub fn type_i64(_v: i64) {}
+    pub fn type_i64_dflt(#[arg(default = 10)] _v: i64) {}
     pub fn opt_i64(_v: Option<i64>) {}
     pub fn to_i64() -> i64 {
         panic!()
@@ -63,6 +66,7 @@ mod types {
         panic!()
     }
 
+    // str
     pub fn type_str(_v: &str) {}
     pub fn opt_str(_v: Option<&str>) {}
     pub fn type_str_dflt(#[arg(default = "baz")] _v: &str) {}
@@ -71,6 +75,20 @@ mod types {
         panic!()
     }
     pub fn to_res_str() -> Result<&'static str, &'static str> {
+        panic!()
+    }
+
+    // String
+    pub fn to_string() -> String {
+        panic!()
+    }
+    pub fn to_opt_string() -> Option<String> {
+        panic!()
+    }
+    pub fn to_res_string() -> Result<String, &'static str> {
+        panic!()
+    }
+    pub fn to_res_opt_string() -> Result<Option<String>, &'static str> {
         panic!()
     }
 
@@ -99,14 +117,6 @@ mod types {
         panic!()
     }
     pub fn to_res_ip() -> Result<SocketAddr, &'static str> {
-        panic!()
-    }
-
-    // String
-    pub fn to_string() -> String {
-        panic!()
-    }
-    pub fn to_res_string() -> Result<String, &'static str> {
         panic!()
     }
 

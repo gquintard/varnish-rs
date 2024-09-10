@@ -26,7 +26,7 @@ VmodInfo {
             args: [],
             returns: Result(
                 Default,
-                BoxDynError,
+                VclError,
             ),
         },
         FuncInfo {
@@ -56,6 +56,29 @@ VmodInfo {
                         ParamInfo {
                             is_optional: false,
                             default: Null,
+                            ty_info: Bool,
+                        },
+                    ),
+                },
+            ],
+            returns: Value(
+                Default,
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "type_bool_dflt",
+            docs: "",
+            has_optional_args: false,
+            args: [
+                ParamTypeInfo {
+                    ident: "_v",
+                    docs: "",
+                    idx: 0,
+                    ty: Value(
+                        ParamInfo {
+                            is_optional: false,
+                            default: Bool(true),
                             ty_info: Bool,
                         },
                     ),
@@ -213,6 +236,29 @@ VmodInfo {
         },
         FuncInfo {
             func_type: Function,
+            ident: "type_f64_dflt",
+            docs: "",
+            has_optional_args: false,
+            args: [
+                ParamTypeInfo {
+                    ident: "_v",
+                    docs: "",
+                    idx: 0,
+                    ty: Value(
+                        ParamInfo {
+                            is_optional: false,
+                            default: Number(42.3),
+                            ty_info: F64,
+                        },
+                    ),
+                },
+            ],
+            returns: Value(
+                Default,
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
             ident: "opt_f64",
             docs: "",
             has_optional_args: true,
@@ -275,6 +321,29 @@ VmodInfo {
                         ParamInfo {
                             is_optional: false,
                             default: Null,
+                            ty_info: I64,
+                        },
+                    ),
+                },
+            ],
+            returns: Value(
+                Default,
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "type_i64_dflt",
+            docs: "",
+            has_optional_args: false,
+            args: [
+                ParamTypeInfo {
+                    ident: "_v",
+                    docs: "",
+                    idx: 0,
+                    ty: Value(
+                        ParamInfo {
+                            is_optional: false,
+                            default: Number(10),
                             ty_info: I64,
                         },
                     ),
@@ -455,6 +524,52 @@ VmodInfo {
         },
         FuncInfo {
             func_type: Function,
+            ident: "to_string",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                String,
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "to_opt_string",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                String,
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "to_res_string",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                String,
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "to_res_opt_string",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                String,
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
             ident: "type_probe",
             docs: "",
             has_optional_args: false,
@@ -598,29 +713,6 @@ VmodInfo {
                 ParamType(
                     SocketAddr,
                 ),
-                ParamType(
-                    Str,
-                ),
-            ),
-        },
-        FuncInfo {
-            func_type: Function,
-            ident: "to_string",
-            docs: "",
-            has_optional_args: false,
-            args: [],
-            returns: Value(
-                String,
-            ),
-        },
-        FuncInfo {
-            func_type: Function,
-            ident: "to_res_string",
-            docs: "",
-            has_optional_args: false,
-            args: [],
-            returns: Result(
-                String,
                 ParamType(
                     Str,
                 ),
