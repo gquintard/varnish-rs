@@ -67,26 +67,27 @@ fn main() {
         .generate_cstr(true)
         //
         // .new_type_alias("VCL_ACL") // *const vrt_acl
-        // .new_type_alias("VCL_BACKEND") // *const director
+        .new_type_alias("VCL_BACKEND") // *const director
         // .new_type_alias("VCL_BLOB") // *const vrt_blob
         // .new_type_alias("VCL_BODY") // *const ::std::os::raw::c_void
         .new_type_alias("VCL_BOOL") // ::std::os::raw::c_uint
         // .new_type_alias("VCL_BYTES") // i64
-        // .new_type_alias("VCL_DURATION") // vtim_dur
+        .new_type_alias("VCL_DURATION") // VCL_DURATION = vtim_dur = f64
+        .new_type_alias("vtim_dur") // VCL_DURATION = vtim_dur = f64
         // .new_type_alias("VCL_ENUM") // *const ::std::os::raw::c_char
         // .new_type_alias("VCL_HEADER") // *const gethdr_s
         // .new_type_alias("VCL_HTTP") // *mut http
         // .new_type_alias("VCL_INSTANCE") // ::std::os::raw::c_void
         .new_type_alias("VCL_INT") // i64
-        // .new_type_alias("VCL_IP") // *const suckaddr
-        // .new_type_alias("VCL_PROBE") // *const vrt_backend_probe
+        .new_type_alias("VCL_IP") // *const suckaddr
+        .new_type_alias("VCL_PROBE") // *const vrt_backend_probe
         .new_type_alias("VCL_REAL") // f64
         // .new_type_alias("VCL_REGEX") // *const vre
         // .new_type_alias("VCL_STEVEDORE") // *const stevedore
         // .new_type_alias("VCL_STRANDS") // *const strands
-        // .new_type_alias("VCL_STRING") // *const ::std::os::raw::c_char
+        .new_type_alias("VCL_STRING") // *const ::std::os::raw::c_char
         // .new_type_alias("VCL_SUB") // *const vcl_sub
-        // .new_type_alias("VCL_TIME") // vtim_real
+        .new_type_alias("VCL_TIME") // VCL_TIME = vtim_real = f64
         // .new_type_alias("VCL_VCL") // *mut vcl
         // .new_type_alias("VCL_VOID") // ::std::os::raw::c_void
         //

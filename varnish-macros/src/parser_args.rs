@@ -1,8 +1,9 @@
 use darling::ast::NestedMeta;
+use darling::util::parse_expr::preserve_str_literal;
 use darling::FromMeta;
 use serde_json::Value;
 use syn::Type::Tuple;
-use syn::{FnArg, GenericArgument, Meta, Pat, PatType, Type, TypeParamBound};
+use syn::{Expr, ExprLit, FnArg, GenericArgument, Lit, Meta, Pat, PatType, Type, TypeParamBound};
 
 use crate::errors::error;
 use crate::model::FuncType::{Constructor, Event, Function, Method};
@@ -37,10 +38,10 @@ impl FuncStatus {
 }
 
 /// Represents function parameter configuration
-#[derive(Default, Debug, FromMeta)]
-#[darling(default)]
-pub struct ArgConfig {
-    pub default: Option<String>,
+#[derive(Debug, FromMeta)]
+struct ArgConfig {
+    #[darling(with = preserve_str_literal)]
+    pub default: Expr,
 }
 
 impl ParamTypeInfo {
@@ -204,14 +205,39 @@ impl ParamType {
         let Meta::List(arg) = arg.meta else {
             Err(error(&pat_ty, "Unexpected #[arg(...)] attribute"))?
         };
-        if !matches!(arg_type, ParamTy::Str) {
-            Err(error(
-                &pat_ty,
-                "Only `&str` arguments can have a default value for now. Parsing other types is not yet implemented",
-            ))?;
-        }
         let arg = NestedMeta::parse_meta_list(arg.tokens)?;
-        Ok(ArgConfig::from_list(&arg)?.default.into())
+        let arg = ArgConfig::from_list(&arg)?;
+        let Expr::Lit(ExprLit { lit, .. }) = arg.default else {
+            Err(error(&pat_ty, "Default value must be a literal value"))?
+        };
+
+        macro_rules! only {
+            ($pat:pat, $msg:literal) => {
+                if !matches!(arg_type, $pat) {
+                    Err(error(&pat_ty, $msg))?;
+                }
+            };
+        }
+
+        Ok(match lit {
+            Lit::Str(v) => {
+                only! { ParamTy::Str, "Only `&str` arguments can have a default string value" };
+                Value::String(v.value())
+            }
+            Lit::Int(v) => {
+                only! { ParamTy::I64, "Only `i64` arguments can have a default integer value" };
+                serde_json::from_str(&v.to_string()).unwrap()
+            }
+            Lit::Float(v) => {
+                only! { ParamTy::F64, "Only `f64` arguments can have a default float value" };
+                serde_json::from_str(&v.to_string()).unwrap()
+            }
+            Lit::Bool(v) => {
+                only! { ParamTy::Bool, "Only `bool` arguments can have a default boolean value" };
+                Value::Bool(v.value)
+            }
+            _ => Err(error(&pat_ty, "Unrecognized literal value"))?,
+        })
     }
 }
 
@@ -317,6 +343,14 @@ impl ReturnTy {
                 return Some(Self::Backend);
             } else if ident == "VCL_STRING" {
                 return Some(Self::VclString);
+            } else if ident == "VclError" {
+                return Some(Self::VclError);
+            }
+        }
+        if let Some(ident) = as_option_type(ty).and_then(as_simple_ty) {
+            if ident == "String" {
+                // `Option<String>`
+                return Some(Self::String);
             }
         }
         if let Tuple(v) = ty {

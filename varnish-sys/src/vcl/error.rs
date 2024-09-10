@@ -39,5 +39,11 @@ impl From<&str> for VclError {
     }
 }
 
+impl AsRef<str> for VclError {
+    fn as_ref(&self) -> &str {
+        &self.s
+    }
+}
+
 /// Shorthand to [`Result<T, VclError>`]
 pub type VclResult<T> = Result<T, VclError>;

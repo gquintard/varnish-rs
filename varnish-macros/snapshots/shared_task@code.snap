@@ -4,6 +4,7 @@ source: varnish-macros/src/tests.rs
 mod task {
     #[allow(non_snake_case, unused_imports, unused_qualifications, unused_variables)]
     mod varnish_generated {
+        use std::borrow::Cow;
         use std::ffi::{c_char, c_int, c_uint, c_void, CStr};
         use std::ptr::null;
         use varnish::ffi::{
@@ -11,7 +12,7 @@ mod task {
             VCL_STRING, VCL_VOID, VMOD_ABI_Version, VMOD_PRIV_METHODS_MAGIC, vcl_event_e,
             vmod_priv, vmod_priv_methods, vrt_ctx,
         };
-        use varnish::vcl::{Ctx, IntoRust, IntoVCL};
+        use varnish::vcl::{Ctx, IntoVCL};
         use super::*;
         static PRIV_TASK_METHODS: vmod_priv_methods = vmod_priv_methods {
             magic: VMOD_PRIV_METHODS_MAGIC,
@@ -44,13 +45,6 @@ mod task {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __var0 = vcl.as_ref().and_then(|v| v.get_ref());
             let __result = super::per_vcl_val(__var0);
-            match __result.into_vcl(&mut __ctx.ws) {
-                Ok(v) => v,
-                Err(e) => {
-                    __ctx.fail(e);
-                    Default::default()
-                }
-            }
         }
         #[repr(C)]
         struct arg_vmod_task_per_vcl_opt {
@@ -65,15 +59,8 @@ mod task {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
             let __var0 = __args.vcl.as_ref().and_then(|v| v.get_ref());
-            let __var1 = (__args.valid_op != 0).then(|| __args.op.into_rust());
+            let __var1: Option<i64> = (__args.valid_op != 0).then(|| __args.op.into());
             let __result = super::per_vcl_opt(__var0, __var1);
-            match __result.into_vcl(&mut __ctx.ws) {
-                Ok(v) => v,
-                Err(e) => {
-                    __ctx.fail(e);
-                    Default::default()
-                }
-            }
         }
         unsafe extern "C" fn vmod_c_per_tsk_val(
             __ctx: *mut vrt_ctx,
@@ -84,13 +71,6 @@ mod task {
             let __result = super::per_tsk_val(&mut __var0);
             if let Some(obj) = __var0 {
                 (*tsk).put(obj, &PRIV_TASK_METHODS);
-            }
-            match __result.into_vcl(&mut __ctx.ws) {
-                Ok(v) => v,
-                Err(e) => {
-                    __ctx.fail(e);
-                    Default::default()
-                }
             }
         }
         #[repr(C)]
@@ -106,17 +86,10 @@ mod task {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
             let mut __var0 = (*__args.tsk).take();
-            let __var1 = (__args.valid_op != 0).then(|| __args.op.into_rust());
+            let __var1: Option<i64> = (__args.valid_op != 0).then(|| __args.op.into());
             let __result = super::per_tsk_opt(&mut __var0, __var1);
             if let Some(obj) = __var0 {
                 (*__args.tsk).put(obj, &PRIV_TASK_METHODS);
-            }
-            match __result.into_vcl(&mut __ctx.ws) {
-                Ok(v) => v,
-                Err(e) => {
-                    __ctx.fail(e);
-                    Default::default()
-                }
             }
         }
         unsafe extern "C" fn vmod_c_PerVcl__init(
@@ -152,13 +125,6 @@ mod task {
             if let Some(obj) = __var1 {
                 (*tsk).put(obj, &PRIV_TASK_METHODS);
             }
-            match __result.into_vcl(&mut __ctx.ws) {
-                Ok(v) => v,
-                Err(e) => {
-                    __ctx.fail(e);
-                    Default::default()
-                }
-            }
         }
         unsafe extern "C" fn vmod_c_PerVcl_both_pos(
             __ctx: *mut vrt_ctx,
@@ -171,17 +137,10 @@ mod task {
             let __obj = __obj.as_ref().unwrap();
             let mut __var1 = (*tsk).take();
             let __var2 = vcl.as_ref().and_then(|v| v.get_ref());
-            let __var3 = val.into_rust();
+            let __var3: i64 = val.into();
             let __result = __obj.both_pos(&mut __var1, __var2, __var3);
             if let Some(obj) = __var1 {
                 (*tsk).put(obj, &PRIV_TASK_METHODS);
-            }
-            match __result.into_vcl(&mut __ctx.ws) {
-                Ok(v) => v,
-                Err(e) => {
-                    __ctx.fail(e);
-                    Default::default()
-                }
             }
         }
         #[repr(C)]
@@ -201,17 +160,10 @@ mod task {
             let __obj = __obj.as_ref().unwrap();
             let mut __var1 = (*__args.tsk).take();
             let __var2 = __args.vcl.as_ref().and_then(|v| v.get_ref());
-            let __var3 = (__args.valid_opt != 0).then(|| __args.opt.into_rust());
+            let __var3: Option<i64> = (__args.valid_opt != 0).then(|| __args.opt.into());
             let __result = __obj.both_opt(&mut __var1, __var2, __var3);
             if let Some(obj) = __var1 {
                 (*__args.tsk).put(obj, &PRIV_TASK_METHODS);
-            }
-            match __result.into_vcl(&mut __ctx.ws) {
-                Ok(v) => v,
-                Err(e) => {
-                    __ctx.fail(e);
-                    Default::default()
-                }
             }
         }
         #[repr(C)]

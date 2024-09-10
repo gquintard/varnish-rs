@@ -28,6 +28,8 @@ import types from "path/to/libtypes.so";
 
 ### Function `VOID type_bool(BOOL _v)`
 
+### Function `VOID type_bool_dflt(BOOL _v = true)`
+
 ### Function `VOID opt_bool([BOOL _v])`
 
 ### Function `BOOL to_bool()`
@@ -44,6 +46,8 @@ import types from "path/to/libtypes.so";
 
 ### Function `VOID type_f64(REAL _v)`
 
+### Function `VOID type_f64_dflt(REAL _v = 42.3)`
+
 ### Function `VOID opt_f64([REAL _v])`
 
 ### Function `REAL to_f64()`
@@ -51,6 +55,8 @@ import types from "path/to/libtypes.so";
 ### Function `REAL to_res_f64()`
 
 ### Function `VOID type_i64(INT _v)`
+
+### Function `VOID type_i64_dflt(INT _v = 10)`
 
 ### Function `VOID opt_i64([INT _v])`
 
@@ -62,13 +68,21 @@ import types from "path/to/libtypes.so";
 
 ### Function `VOID opt_str([STRING _v])`
 
-### Function `VOID type_str_dflt(STRING _v)`
+### Function `VOID type_str_dflt(STRING _v = "baz")`
 
-### Function `VOID opt_str_dflt([STRING _v])`
+### Function `VOID opt_str_dflt([STRING _v] = "baz")`
 
 ### Function `STRING to_str()`
 
 ### Function `STRING to_res_str()`
+
+### Function `STRING to_string()`
+
+### Function `STRING to_opt_string()`
+
+### Function `STRING to_res_string()`
+
+### Function `STRING to_res_opt_string()`
 
 ### Function `VOID type_probe(PROBE _v)`
 
@@ -87,10 +101,6 @@ import types from "path/to/libtypes.so";
 ### Function `IP to_ip()`
 
 ### Function `IP to_res_ip()`
-
-### Function `STRING to_string()`
-
-### Function `STRING to_res_string()`
 
 ### Function `STRING to_vcl_string()`
 

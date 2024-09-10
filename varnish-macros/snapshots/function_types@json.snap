@@ -8,7 +8,7 @@ VMOD_JSON_SPEC
     "1.0",
     "types",
     "Vmod_vmod_types_Func",
-    "78e5522099498752f5242cb2dbb3265e7692f19380f49b3079f22e74a28c2105",
+    "305d7e5bb207b939306ed27283d79808276446ee4e23dc9f083d4cf73c54d751",
     "Varnish (version) (hash)",
     "0",
     "0"
@@ -29,6 +29,11 @@ typedef VCL_VOID td_vmod_types_to_res_str_err(
 );
 
 typedef VCL_VOID td_vmod_types_type_bool(
+    VRT_CTX,
+    VCL_BOOL
+);
+
+typedef VCL_VOID td_vmod_types_type_bool_dflt(
     VRT_CTX,
     VCL_BOOL
 );
@@ -79,6 +84,11 @@ typedef VCL_VOID td_vmod_types_type_f64(
     VCL_REAL
 );
 
+typedef VCL_VOID td_vmod_types_type_f64_dflt(
+    VRT_CTX,
+    VCL_REAL
+);
+
 struct arg_vmod_types_opt_f64 {
   char valid__v;
   VCL_REAL _v;
@@ -98,6 +108,11 @@ typedef VCL_REAL td_vmod_types_to_res_f64(
 );
 
 typedef VCL_VOID td_vmod_types_type_i64(
+    VRT_CTX,
+    VCL_INT
+);
+
+typedef VCL_VOID td_vmod_types_type_i64_dflt(
     VRT_CTX,
     VCL_INT
 );
@@ -158,6 +173,22 @@ typedef VCL_STRING td_vmod_types_to_res_str(
     VRT_CTX
 );
 
+typedef VCL_STRING td_vmod_types_to_string(
+    VRT_CTX
+);
+
+typedef VCL_STRING td_vmod_types_to_opt_string(
+    VRT_CTX
+);
+
+typedef VCL_STRING td_vmod_types_to_res_string(
+    VRT_CTX
+);
+
+typedef VCL_STRING td_vmod_types_to_res_opt_string(
+    VRT_CTX
+);
+
 typedef VCL_VOID td_vmod_types_type_probe(
     VRT_CTX,
     VCL_PROBE
@@ -197,14 +228,6 @@ typedef VCL_IP td_vmod_types_to_res_ip(
     VRT_CTX
 );
 
-typedef VCL_STRING td_vmod_types_to_string(
-    VRT_CTX
-);
-
-typedef VCL_STRING td_vmod_types_to_res_string(
-    VRT_CTX
-);
-
 typedef VCL_STRING td_vmod_types_to_vcl_string(
     VRT_CTX
 );
@@ -230,6 +253,7 @@ struct Vmod_vmod_types_Func {
   td_vmod_types_to_res_void_err *f_to_res_void_err;
   td_vmod_types_to_res_str_err *f_to_res_str_err;
   td_vmod_types_type_bool *f_type_bool;
+  td_vmod_types_type_bool_dflt *f_type_bool_dflt;
   td_vmod_types_opt_bool *f_opt_bool;
   td_vmod_types_to_bool *f_to_bool;
   td_vmod_types_to_res_bool *f_to_res_bool;
@@ -238,10 +262,12 @@ struct Vmod_vmod_types_Func {
   td_vmod_types_to_duration *f_to_duration;
   td_vmod_types_to_res_duration *f_to_res_duration;
   td_vmod_types_type_f64 *f_type_f64;
+  td_vmod_types_type_f64_dflt *f_type_f64_dflt;
   td_vmod_types_opt_f64 *f_opt_f64;
   td_vmod_types_to_f64 *f_to_f64;
   td_vmod_types_to_res_f64 *f_to_res_f64;
   td_vmod_types_type_i64 *f_type_i64;
+  td_vmod_types_type_i64_dflt *f_type_i64_dflt;
   td_vmod_types_opt_i64 *f_opt_i64;
   td_vmod_types_to_i64 *f_to_i64;
   td_vmod_types_to_res_i64 *f_to_res_i64;
@@ -251,6 +277,10 @@ struct Vmod_vmod_types_Func {
   td_vmod_types_opt_str_dflt *f_opt_str_dflt;
   td_vmod_types_to_str *f_to_str;
   td_vmod_types_to_res_str *f_to_res_str;
+  td_vmod_types_to_string *f_to_string;
+  td_vmod_types_to_opt_string *f_to_opt_string;
+  td_vmod_types_to_res_string *f_to_res_string;
+  td_vmod_types_to_res_opt_string *f_to_res_opt_string;
   td_vmod_types_type_probe *f_type_probe;
   td_vmod_types_to_probe *f_to_probe;
   td_vmod_types_to_res_probe *f_to_res_probe;
@@ -260,8 +290,6 @@ struct Vmod_vmod_types_Func {
   td_vmod_types_type_ip *f_type_ip;
   td_vmod_types_to_ip *f_to_ip;
   td_vmod_types_to_res_ip *f_to_res_ip;
-  td_vmod_types_to_string *f_to_string;
-  td_vmod_types_to_res_string *f_to_res_string;
   td_vmod_types_to_vcl_string *f_to_vcl_string;
   td_vmod_types_to_res_vcl_string *f_to_res_vcl_string;
   td_vmod_types_opt_i64_opt_i64 *f_opt_i64_opt_i64;
@@ -314,6 +342,22 @@ static struct Vmod_vmod_types_Func Vmod_vmod_types_Func;"
       [
         "BOOL",
         "_v"
+      ]
+    ]
+  ],
+  [
+    "$FUNC",
+    "type_bool_dflt",
+    [
+      [
+        "VOID"
+      ],
+      "Vmod_vmod_types_Func.f_type_bool_dflt",
+      "",
+      [
+        "BOOL",
+        "_v",
+        "true"
       ]
     ]
   ],
@@ -429,6 +473,22 @@ static struct Vmod_vmod_types_Func Vmod_vmod_types_Func;"
   ],
   [
     "$FUNC",
+    "type_f64_dflt",
+    [
+      [
+        "VOID"
+      ],
+      "Vmod_vmod_types_Func.f_type_f64_dflt",
+      "",
+      [
+        "REAL",
+        "_v",
+        "42.3"
+      ]
+    ]
+  ],
+  [
+    "$FUNC",
     "opt_f64",
     [
       [
@@ -479,6 +539,22 @@ static struct Vmod_vmod_types_Func Vmod_vmod_types_Func;"
       [
         "INT",
         "_v"
+      ]
+    ]
+  ],
+  [
+    "$FUNC",
+    "type_i64_dflt",
+    [
+      [
+        "VOID"
+      ],
+      "Vmod_vmod_types_Func.f_type_i64_dflt",
+      "",
+      [
+        "INT",
+        "_v",
+        "10"
       ]
     ]
   ],
@@ -613,6 +689,50 @@ static struct Vmod_vmod_types_Func Vmod_vmod_types_Func;"
   ],
   [
     "$FUNC",
+    "to_string",
+    [
+      [
+        "STRING"
+      ],
+      "Vmod_vmod_types_Func.f_to_string",
+      ""
+    ]
+  ],
+  [
+    "$FUNC",
+    "to_opt_string",
+    [
+      [
+        "STRING"
+      ],
+      "Vmod_vmod_types_Func.f_to_opt_string",
+      ""
+    ]
+  ],
+  [
+    "$FUNC",
+    "to_res_string",
+    [
+      [
+        "STRING"
+      ],
+      "Vmod_vmod_types_Func.f_to_res_string",
+      ""
+    ]
+  ],
+  [
+    "$FUNC",
+    "to_res_opt_string",
+    [
+      [
+        "STRING"
+      ],
+      "Vmod_vmod_types_Func.f_to_res_opt_string",
+      ""
+    ]
+  ],
+  [
+    "$FUNC",
     "type_probe",
     [
       [
@@ -719,28 +839,6 @@ static struct Vmod_vmod_types_Func Vmod_vmod_types_Func;"
         "IP"
       ],
       "Vmod_vmod_types_Func.f_to_res_ip",
-      ""
-    ]
-  ],
-  [
-    "$FUNC",
-    "to_string",
-    [
-      [
-        "STRING"
-      ],
-      "Vmod_vmod_types_Func.f_to_string",
-      ""
-    ]
-  ],
-  [
-    "$FUNC",
-    "to_res_string",
-    [
-      [
-        "STRING"
-      ],
-      "Vmod_vmod_types_Func.f_to_res_string",
       ""
     ]
   ],

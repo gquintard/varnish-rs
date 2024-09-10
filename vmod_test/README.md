@@ -49,7 +49,7 @@ import rustest from "path/to/librustest.so";
 
 ### Function `STRING req_body()`
 
-### Function `STRING default_arg(STRING arg)`
+### Function `STRING default_arg(STRING arg = "foo")`
 
 ### Function `STRING cowprobe_prop(PROBE probe)`
 

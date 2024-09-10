@@ -29,7 +29,7 @@ mod error {
     ///
     /// We call `ctx.fail()` ourselves, but we still need to return an i64.
     pub fn manual_fail(ctx: &mut Ctx, fp: &str) -> i64 {
-        // try to read the path at fp into a string, or return 0 if there was an error
+        // try to read the path at fp into a string, or return 0if there was an error
         let Ok(content) = read_to_string(fp) else {
             ctx.fail("manual_fail: couldn't read file into string");
             return 0;
