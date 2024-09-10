@@ -30,6 +30,10 @@ jobs:
         run: cargo build --workspace --all-targets
       - name: test
         run: cargo test --workspace --all-targets
+      - name: build-all
+        run: cargo build --workspace --all-targets --all-features
+      - name: test-all
+        run: cargo test --workspace --all-targets --all-features
       - name: test-doc
         run: |
           cargo test --doc

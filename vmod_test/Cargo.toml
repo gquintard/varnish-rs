@@ -1,9 +1,7 @@
-lints.workspace = true
-
 [package]
 name = "vmod_test"
 version = "0.0.1"
-edition = "2021"
+edition.workspace = true
 
 [build-dependencies]
 varnish = { path = ".." }
@@ -13,3 +11,6 @@ varnish = { path = ".." }
 
 [lib]
 crate-type = ["cdylib"]
+
+[lints]
+workspace = true
