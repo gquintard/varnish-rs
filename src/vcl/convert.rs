@@ -508,11 +508,6 @@ impl IntoRust<Option<SocketAddr>> for VCL_IP {
 
 macro_rules! impl_type_cast {
     ($ident:ident, $typ:ty) => {
-        impl From<$typ> for $ident {
-            fn from(b: $typ) -> Self {
-                Self(b.into())
-            }
-        }
         impl IntoVCL<$ident> for $typ {
             fn into_vcl(self, _: &mut WS) -> Result<$ident, String> {
                 Ok(self.into())
@@ -539,24 +534,5 @@ macro_rules! impl_type_cast {
 }
 
 impl_type_cast!(VCL_BOOL, bool);
-impl From<VCL_BOOL> for bool {
-    fn from(b: VCL_BOOL) -> Self {
-        b.0 != 0
-    }
-}
-
-macro_rules! impl_type_cast_from {
-    ($ident:ident, $typ:ty) => {
-        impl From<$ident> for $typ {
-            fn from(b: $ident) -> Self {
-                <Self>::from(b.0)
-            }
-        }
-    };
-}
-
 impl_type_cast!(VCL_REAL, f64);
-impl_type_cast_from!(VCL_REAL, f64);
-
 impl_type_cast!(VCL_INT, i64);
-impl_type_cast_from!(VCL_INT, i64);

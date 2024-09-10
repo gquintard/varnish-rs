@@ -16,10 +16,7 @@ serde = ["dep:serde"]
 [dependencies]
 pkg-config.workspace = true
 serde = { workspace = true, optional = true }
-
-[build-dependencies]
-pkg-config.workspace = true
-bindgen.workspace = true
+varnish-sys.workspace = true
 
 [lints]
 workspace = true
@@ -29,16 +26,21 @@ workspace = true
 #
 
 [workspace]
-members = ["vmod_test", "examples/vmod_*"]
+members = ["varnish-sys", "vmod_test", "examples/vmod_*"]
 
 [workspace.package]
-# These fields could be used by multiple crates
+# These fields are used by multiple crates, so it's defined here.
+# Version must also be updated in the `varnish-macros` dependency below.
 version = "0.0.19"
 repository = "https://github.com/gquintard/varnish-rs"
 edition = "2021"
 license = "BSD-3-Clause"
 
 [workspace.dependencies]
+# These versions must match the one in the [workspace.package] section above
+varnish-sys = { path = "./varnish-sys", version = "=0.0.19" }
+#
+# These dependencies are used by one or more crates, and easier to maintain in one place.
 bindgen = "0.70.1"
 pkg-config = "0.3.30"
 serde = { version = "1", features = ["derive"] }

@@ -1,0 +1,23 @@
+[package]
+name = "varnish-sys"
+description = "Bindings to the Varnish Cache libraries"
+authors = ["Guillaume Quintard <guillaume.quintard@gmail.com>"]
+keywords = ["varnish", "vmod", "cache", "http", "reverse-proxy"]
+categories = [ "api-bindings"]
+version.workspace = true
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "varnish_sys"
+
+[package.metadata.libvarnishapi]
+version = "7.5"
+
+[build-dependencies]
+pkg-config.workspace = true
+bindgen.workspace = true
+
+[lints]
+workspace = true
