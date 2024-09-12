@@ -171,9 +171,17 @@ pub mod vcl {
 /// otherwise you'll get a panic.
 ///
 /// Tests will automatically time out after 5s. To override, set `VARNISHTEST_DURATION` env var.
+///
+/// To debug the tests, pass `true` as the second argument:
+/// ``` rust
+/// varnish::vtc!(test01, true);
+/// ```
 #[macro_export]
 macro_rules! vtc {
     ( $name:ident ) => {
+        $crate::vtc!($name, false);
+    };
+    ( $name:ident, $debug:expr ) => {
         #[cfg(test)]
         #[test]
         fn $name() {
@@ -201,15 +209,21 @@ macro_rules! vtc {
                 Some(p) => p.to_str().unwrap().to_owned(),
             };
             let mut cmd = Command::new("varnishtest");
+            if $debug {
+                // Keep output, and run in verbose mode
+                cmd.arg("-L").arg("-v");
+            }
             cmd.arg("-D")
                 .arg(format!("vmod={}", vmod_path))
                 .arg(concat!("tests/", stringify!($name), ".vtc"))
                 .env("VARNISHTEST_DURATION", test_duration);
 
             let output = cmd.output().unwrap();
-            if !output.status.success() {
+            if $debug || !output.status.success() {
                 io::stdout().write_all(&output.stdout).unwrap();
                 io::stdout().write_all(&output.stderr).unwrap();
+            }
+            if !output.status.success() {
                 panic!(
                     "{}",
                     format!(
