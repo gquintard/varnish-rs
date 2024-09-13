@@ -252,29 +252,30 @@ impl From<Format> for char {
 }
 
 unsafe extern "C" fn add_point(ptr: *mut c_void, point: *const ffi::VSC_point) -> *mut c_void {
-    let internal = ptr.cast::<VSCInternal>();
+    let internal = ptr.cast::<VSCInternal>().as_mut().unwrap();
     let k = point as usize;
+    let point = point.as_ref().unwrap();
 
     let stat = Stat {
-        value: (*point).ptr,
-        name: CStr::from_ptr((*point).name).to_str().unwrap(),
-        short_desc: CStr::from_ptr((*point).sdesc).to_str().unwrap(),
-        long_desc: CStr::from_ptr((*point).ldesc).to_str().unwrap(),
-        semantics: (*point).semantics.into(),
-        format: (*point).format.into(),
+        value: point.ptr,
+        name: CStr::from_ptr(point.name).to_str().unwrap(),
+        short_desc: CStr::from_ptr(point.sdesc).to_str().unwrap(),
+        long_desc: CStr::from_ptr(point.ldesc).to_str().unwrap(),
+        semantics: point.semantics.into(),
+        format: point.format.into(),
     };
-    assert_eq!((*internal).points.insert(k, stat), None);
-    (*internal).added.push(k);
+    // FIXME: needs to be documented: pointer is used as a key?
+    assert_eq!(internal.points.insert(k, stat), None);
+    internal.added.push(k);
     ptr::null_mut()
 }
 
 unsafe extern "C" fn del_point(ptr: *mut c_void, point: *const ffi::VSC_point) {
-    let internal = ptr.cast::<VSCInternal>();
+    let internal = ptr.cast::<VSCInternal>().as_mut().unwrap();
     let k = point as usize;
-    assert!((*internal).points.contains_key(&k));
-
-    (*internal).deleted.push(k);
-    assert!((*internal).points.remove(&k).is_some());
+    assert!(internal.points.contains_key(&k));
+    internal.deleted.push(k);
+    assert!(internal.points.remove(&k).is_some());
 }
 
 /// A live statistic
