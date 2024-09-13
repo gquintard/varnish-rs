@@ -19,7 +19,7 @@ pub fn loaded(_: &Ctx, vp: &VPriv<i64>) -> i64 {
 // guarantees that event functions are called sequentially in the cli thread, so we'll be fine
 pub unsafe fn event(ctx: &mut Ctx, vp: &mut VPriv<i64>, event: Event) -> Result<(), &'static str> {
     // log the event, showing that it implements Debug
-    ctx.log(LogTag::Debug, &format!("event: {event:?}"));
+    ctx.log(LogTag::Debug, format!("event: {event:?}"));
 
     // we only care about load events, which is why we don't use `match`
     if matches!(event, Event::Load) {

@@ -1,6 +1,7 @@
 //! Expose the Varnish context [`vrt_ctx`] as a Rust object
 //!
-use std::ffi::{c_int, c_uint, c_void, CString};
+use std::borrow::Cow;
+use std::ffi::{c_int, c_uint, c_void, CStr, CString};
 
 use crate::ffi;
 use crate::ffi::{
@@ -73,6 +74,50 @@ pub struct Ctx<'a> {
     pub ws: WS<'a>,
 }
 
+/// An instance of a message that can be logged efficiently, possibly avoiding allocations.
+pub struct Loggable<'a>(Cow<'a, CStr>);
+
+impl Loggable<'_> {
+    pub fn as_cstr(&self) -> &CStr {
+        self.0.as_ref()
+    }
+}
+
+/// TODO: Try to show all parts of the message that are not null bytes, i.e. lossy for CString
+const NULL_BYTE_ERR_MSG: &CStr = c"Internal Error: message contains null bytes and cannot be shown";
+
+impl<'a> From<&'a str> for Loggable<'a> {
+    fn from(s: &'a str) -> Self {
+        Self(CString::new(s).map_or(Cow::Borrowed(NULL_BYTE_ERR_MSG), Cow::Owned))
+    }
+}
+
+impl<'a> From<String> for Loggable<'a> {
+    fn from(s: String) -> Self {
+        Self(CString::new(s).map_or(Cow::Borrowed(NULL_BYTE_ERR_MSG), Cow::Owned))
+    }
+}
+
+/// FIXME: Do not use because it is likely you want to either pass the owned value,
+/// or the &str / &CStr.  TODO: delete this one?
+impl<'a> From<&'a String> for Loggable<'a> {
+    fn from(s: &'a String) -> Self {
+        s.as_str().into()
+    }
+}
+
+impl<'a> From<&'a CStr> for Loggable<'a> {
+    fn from(s: &'a CStr) -> Self {
+        Self(Cow::Borrowed(s))
+    }
+}
+
+impl<'a> From<CString> for Loggable<'a> {
+    fn from(s: CString) -> Self {
+        Self(Cow::Owned(s))
+    }
+}
+
 impl<'a> Ctx<'a> {
     /// Wrap a raw pointer into an object we can use.
     ///
@@ -105,23 +150,22 @@ impl<'a> Ctx<'a> {
     ///
     /// Once the control goes back to Varnish, it will see that the transaction was marked as fail
     /// and will return a synthetic error to the client.
-    pub fn fail(&mut self, msg: &str) -> u8 {
-        // not great, we have to copy the string to add a null character
-        let c_cstring = CString::new(msg).unwrap();
+    pub fn fail<'b, T: Into<Loggable<'b>>>(&mut self, msg: T) -> u8 {
         unsafe {
-            VRT_fail(self.raw, c"%s".as_ptr(), c_cstring.as_ptr());
+            VRT_fail(self.raw, c"%s".as_ptr(), msg.into().as_cstr());
         }
         0
     }
 
     /// Log a message, attached to the current context
-    pub fn log(&mut self, logtag: LogTag, msg: &str) {
+    pub fn log<'b, T: Into<Loggable<'b>>>(&mut self, logtag: LogTag, msg: T) {
         unsafe {
             let vsl = self.raw.vsl;
             if vsl.is_null() {
                 log(logtag, msg);
             } else {
-                ffi::VSLbt(vsl, logtag.into_u32(), ffi::txt::from_str(msg));
+                let msg = ffi::txt::from_cstr(msg.into().as_cstr());
+                ffi::VSLbt(vsl, logtag.into_u32(), msg);
             }
         }
     }
@@ -220,15 +264,13 @@ impl Event {
     }
 }
 
-// TODO: avoid Stringification
-pub fn log(logtag: LogTag, msg: &str) {
+pub fn log<'b, T: Into<Loggable<'b>>>(logtag: LogTag, msg: T) {
     unsafe {
-        let c_cstring = CString::new(msg).unwrap();
         ffi::VSL(
             logtag.into_u32(),
             ffi::vxids { vxid: 0 },
             c"%s".as_ptr(),
-            c_cstring.as_ptr().cast::<u8>(),
+            msg.into().as_cstr(),
         );
     }
 }
