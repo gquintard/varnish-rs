@@ -1,6 +1,6 @@
 //! Expose the Varnish context [`vrt_ctx`] as a Rust object
 //!
-use std::ffi::{c_int, c_uint, c_void, CString};
+use std::ffi::{c_int, c_uint, c_void};
 
 use crate::ffi;
 use crate::ffi::{
@@ -105,23 +105,23 @@ impl<'a> Ctx<'a> {
     ///
     /// Once the control goes back to Varnish, it will see that the transaction was marked as fail
     /// and will return a synthetic error to the client.
-    pub fn fail(&mut self, msg: &str) -> u8 {
-        // not great, we have to copy the string to add a null character
-        let c_cstring = CString::new(msg).unwrap();
+    pub fn fail(&mut self, msg: impl AsRef<str>) -> u8 {
+        let msg = msg.as_ref();
         unsafe {
-            VRT_fail(self.raw, c"%s".as_ptr(), c_cstring.as_ptr());
+            VRT_fail(self.raw, c"%.*s".as_ptr(), msg.len(), msg.as_ptr());
         }
         0
     }
 
     /// Log a message, attached to the current context
-    pub fn log(&mut self, logtag: LogTag, msg: &str) {
+    pub fn log(&mut self, logtag: LogTag, msg: impl AsRef<str>) {
         unsafe {
             let vsl = self.raw.vsl;
             if vsl.is_null() {
                 log(logtag, msg);
             } else {
-                ffi::VSLbt(vsl, logtag.into_u32(), ffi::txt::from_str(msg));
+                let msg = ffi::txt::from_str(msg.as_ref());
+                ffi::VSLbt(vsl, logtag.into_u32(), msg);
             }
         }
     }
@@ -220,15 +220,15 @@ impl Event {
     }
 }
 
-// TODO: avoid Stringification
-pub fn log(logtag: LogTag, msg: &str) {
+pub fn log(logtag: LogTag, msg: impl AsRef<str>) {
+    let msg = msg.as_ref();
     unsafe {
-        let c_cstring = CString::new(msg).unwrap();
         ffi::VSL(
             logtag.into_u32(),
             ffi::vxids { vxid: 0 },
-            c"%s".as_ptr(),
-            c_cstring.as_ptr().cast::<u8>(),
+            c"%.*s".as_ptr(),
+            msg.len(),
+            msg.as_ptr(),
         );
     }
 }

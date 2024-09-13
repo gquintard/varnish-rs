@@ -86,7 +86,7 @@ def rustfuncBody(self, vcc, t):
         rustFuncArgs(self, t)
         print('''\t) {
 \t\tOk(o) => { *objp = Box::into_raw(Box::new(o)); },
-\t\tErr(e) => { _ctx.fail(&e.to_string()); },
+\t\tErr(e) => { #[allow(clippy::unnecessary_to_owned)] { _ctx.fail(e.to_string()); }},
 \t}''')
     elif t == "fini":
         print("\tdrop(Box::from_raw(*objp));")
@@ -96,7 +96,7 @@ def rustfuncBody(self, vcc, t):
         else:
             print("\tcrate::{name}(".format(name=self.cname()))
         rustFuncArgs(self, t)
-        print("\t).into_result().and_then(|v| v.into_vcl(&mut _ctx.ws)).unwrap_or_else(|e| {{ _ctx.fail(&e); <{0}>::vcl_default() }})".format(self.retval.ct if self.retval.vt != "VOID" else "()"))
+        print("\t).into_result().and_then(|v| v.into_vcl(&mut _ctx.ws)).unwrap_or_else(|e| {{ _ctx.fail(e); <{0}>::vcl_default() }})".format(self.retval.ct if self.retval.vt != "VOID" else "()"))
     print("}")
 
 
