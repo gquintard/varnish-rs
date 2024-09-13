@@ -389,73 +389,70 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
                     return 1;
                 }
             }
-
-            let htc = ffi::WS_Alloc(
-                (*ctx.raw.bo).ws.as_mut_ptr(),
-                size_of::<ffi::http_conn>() as u32,
-            )
-            .cast::<ffi::http_conn>();
-            if htc.is_null() {
+            let bo = ctx.raw.bo.as_mut().unwrap();
+            let Some(htc) = ffi::WS_Alloc(bo.ws.as_mut_ptr(), size_of::<ffi::http_conn>() as u32)
+                .cast::<ffi::http_conn>()
+                .as_mut()
+            else {
                 ctx.fail(&format!("{}: insufficient workspace", backend.get_type()));
                 return -1;
-            }
-            (*htc).magic = ffi::HTTP_CONN_MAGIC;
-            (*htc).doclose = &ffi::SC_REM_CLOSE[0];
-            (*htc).content_length = 0;
+            };
+            htc.magic = ffi::HTTP_CONN_MAGIC;
+            htc.doclose = &ffi::SC_REM_CLOSE[0];
+            htc.content_length = 0;
             match res {
                 None => {
-                    (*htc).body_status = ffi::BS_NONE.as_ptr();
+                    htc.body_status = ffi::BS_NONE.as_ptr();
                 }
                 Some(transfer) => {
                     match transfer.len() {
                         None => {
-                            (*htc).body_status = ffi::BS_CHUNKED.as_ptr();
-                            (*htc).content_length = -1;
+                            htc.body_status = ffi::BS_CHUNKED.as_ptr();
+                            htc.content_length = -1;
                         }
                         Some(0) => {
-                            (*htc).body_status = ffi::BS_NONE.as_ptr();
+                            htc.body_status = ffi::BS_NONE.as_ptr();
                         }
                         Some(l) => {
-                            (*htc).body_status = ffi::BS_LENGTH.as_ptr();
-                            (*htc).content_length = l as isize;
+                            htc.body_status = ffi::BS_LENGTH.as_ptr();
+                            htc.content_length = l as isize;
                         }
                     };
-                    (*htc).priv_ = Box::into_raw(Box::new(transfer)).cast::<c_void>();
+                    htc.priv_ = Box::into_raw(Box::new(transfer)).cast::<c_void>();
                     // build a vfp to wrap the Transfer object if there's something to push
-                    if (*htc).body_status != ffi::BS_NONE.as_ptr() {
-                        let vfp = ffi::WS_Alloc(
-                            (*ctx.raw.bo).ws.as_mut_ptr(),
-                            size_of::<ffi::vfp>() as u32,
-                        )
-                        .cast::<ffi::vfp>();
-                        if vfp.is_null() {
-                            ctx.fail(&format!("{}: insufficient workspace", backend.get_type()));
-                            return -1;
-                        }
-                        let Ok(t) = WS::new((*ctx.raw.bo).ws.as_mut_ptr())
-                            .copy_bytes_with_null(&backend.get_type())
+                    if htc.body_status != ffi::BS_NONE.as_ptr() {
+                        let Some(vfp) =
+                            ffi::WS_Alloc(bo.ws.as_mut_ptr(), size_of::<ffi::vfp>() as u32)
+                                .cast::<ffi::vfp>()
+                                .as_mut()
                         else {
                             ctx.fail(&format!("{}: insufficient workspace", backend.get_type()));
                             return -1;
                         };
-                        (*vfp).name = t.as_ptr();
-                        (*vfp).init = None;
-                        (*vfp).pull = Some(vfp_pull::<T>);
-                        (*vfp).fini = None;
-                        (*vfp).priv1 = null();
-                        let vfe = ffi::VFP_Push((*ctx.raw.bo).vfc, vfp);
-                        if vfe.is_null() {
+                        let Ok(t) =
+                            WS::new(bo.ws.as_mut_ptr()).copy_bytes_with_null(&backend.get_type())
+                        else {
+                            ctx.fail(&format!("{}: insufficient workspace", backend.get_type()));
+                            return -1;
+                        };
+                        vfp.name = t.as_ptr();
+                        vfp.init = None;
+                        vfp.pull = Some(vfp_pull::<T>);
+                        vfp.fini = None;
+                        vfp.priv1 = null();
+
+                        let Some(vfe) = ffi::VFP_Push(bo.vfc, vfp).as_mut() else {
                             ctx.fail(&format!("{}: couldn't insert vfp", backend.get_type()));
                             return -1;
-                        }
-                        // we don't need to clean (*vfe).priv1 at the vfp level, the backend will
+                        };
+                        // we don't need to clean vfe.priv1 at the vfp level, the backend will
                         // do it in wrap_finish
-                        (*vfe).priv1 = (*htc).priv_;
+                        vfe.priv1 = htc.priv_;
                     }
                 }
             }
 
-            (*ctx.raw.bo).htc = htc;
+            bo.htc = htc;
             0
         }
         Err(s) => {
