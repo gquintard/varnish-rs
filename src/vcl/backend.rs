@@ -305,14 +305,10 @@ unsafe extern "C" fn vfp_pull<T: Transfer>(
     let reader = vfe.priv1.cast::<T>().as_mut().unwrap();
     match reader.read(buf) {
         Err(e) => {
-            let msg = e.to_string();
             // TODO: we should grow a VSL object
-            ffi::VSLbt(
-                ctx.req.as_ref().unwrap().vsl,
-                ffi::VSL_tag_e_SLT_Error,
-                // SAFETY: we assume ffi::VSLbt() will not store the pointer to the string's content
-                ffi::txt::from_str(msg.as_str()),
-            );
+            // SAFETY: we assume ffi::VSLbt() will not store the pointer to the string's content
+            let msg = ffi::txt::from_str(&e.to_string());
+            ffi::VSLbt(ctx.req.as_ref().unwrap().vsl, ffi::VSL_tag_e_SLT_Error, msg);
             ffi::vfp_status_VFP_ERROR
         }
         Ok(0) => {
@@ -385,7 +381,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
             }
             if beresp.proto().is_none() {
                 if let Err(e) = beresp.set_proto("HTTP/1.1") {
-                    ctx.fail(&format!("{}: {e}", backend.get_type()));
+                    ctx.fail(format!("{}: {e}", backend.get_type()));
                     return 1;
                 }
             }
@@ -394,7 +390,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
                 .cast::<ffi::http_conn>()
                 .as_mut()
             else {
-                ctx.fail(&format!("{}: insufficient workspace", backend.get_type()));
+                ctx.fail(format!("{}: insufficient workspace", backend.get_type()));
                 return -1;
             };
             htc.magic = ffi::HTTP_CONN_MAGIC;
@@ -426,13 +422,13 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
                                 .cast::<ffi::vfp>()
                                 .as_mut()
                         else {
-                            ctx.fail(&format!("{}: insufficient workspace", backend.get_type()));
+                            ctx.fail(format!("{}: insufficient workspace", backend.get_type()));
                             return -1;
                         };
                         let Ok(t) =
                             WS::new(bo.ws.as_mut_ptr()).copy_bytes_with_null(&backend.get_type())
                         else {
-                            ctx.fail(&format!("{}: insufficient workspace", backend.get_type()));
+                            ctx.fail(format!("{}: insufficient workspace", backend.get_type()));
                             return -1;
                         };
                         vfp.name = t.as_ptr();
@@ -442,7 +438,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
                         vfp.priv1 = null();
 
                         let Some(vfe) = ffi::VFP_Push(bo.vfc, vfp).as_mut() else {
-                            ctx.fail(&format!("{}: couldn't insert vfp", backend.get_type()));
+                            ctx.fail(format!("{}: couldn't insert vfp", backend.get_type()));
                             return -1;
                         };
                         // we don't need to clean vfe.priv1 at the vfp level, the backend will
@@ -456,10 +452,8 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
             0
         }
         Err(s) => {
-            ctx.log(
-                LogTag::FetchError,
-                &format!("{}: {}", backend.get_type(), &s.to_string()),
-            );
+            let typ = backend.get_type();
+            ctx.log(LogTag::FetchError, format!("{typ}: {s}"));
             1
         }
     }
@@ -498,7 +492,7 @@ unsafe extern "C" fn wrap_getip<T: Transfer>(
         .get_ip()
         .and_then(|ip| ip.into_vcl(&mut ctx.ws).map_err(|e| e.into()))
         .unwrap_or_else(|e| {
-            ctx.fail(&format!("{e}"));
+            ctx.fail(format!("{e}"));
             null()
         })
 }
