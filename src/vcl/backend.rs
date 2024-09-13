@@ -128,7 +128,6 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
     /// true.
     pub fn new(ctx: &mut Ctx, name: &str, be: S, has_probe: bool) -> crate::vcl::Result<Self> {
         let mut inner = Box::new(be);
-        let cstring_name: CString = CString::new(name).map_err(|e| e.to_string())?;
         let type_: CString = CString::new(inner.get_type()).map_err(|e| e.to_string())?;
         let methods = Box::new(ffi::vdi_methods {
             type_: type_.as_ptr(),
@@ -138,11 +137,7 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
             finish: Some(wrap_finish::<S, T>),
             gethdrs: Some(wrap_gethdrs::<S, T>),
             getip: Some(wrap_getip::<T>),
-            healthy: if has_probe {
-                Some(wrap_healthy::<S, T>)
-            } else {
-                None
-            },
+            healthy: has_probe.then_some(wrap_healthy::<S, T>),
             http1pipe: Some(wrap_pipe::<S, T>),
             list: Some(wrap_list::<S, T>),
             panic: Some(wrap_panic::<S, T>),
@@ -155,8 +150,9 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
                 ctx.raw,
                 &*methods,
                 &mut *inner as *mut S as *mut c_void,
-                c"%s".as_ptr(),
-                cstring_name.as_ptr() as *const c_char,
+                c"%.*s".as_ptr(),
+                name.len(),
+                name.as_ptr().cast::<c_char>(),
             )
         };
         if bep.is_null() {
