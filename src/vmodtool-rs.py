@@ -26,7 +26,7 @@ def rustFuncSig(self, vcc, t):
     if t == "fini":
         buf.write("(objp: *mut *mut crate::{0})".format(self.obj[1:]))
         return buf.getvalue()
-    buf.write("(vrt_ctx: * mut varnish::vcl::boilerplate::vrt_ctx")
+    buf.write("(vrt_ctx: *mut varnish::vcl::boilerplate::vrt_ctx")
     if t == "ini":
         buf.write(", objp: *mut *mut crate::{0}".format(self.obj[1:]))
     if t == "ini":
@@ -102,7 +102,7 @@ def rustfuncBody(self, vcc, t):
 
 def rustEventFunc():
     print('''
-unsafe extern "C" fn vmod_c__event(vrt_ctx: * mut varnish::vcl::boilerplate::vrt_ctx, vp: *mut varnish::vcl::boilerplate::vmod_priv, ev: varnish::vcl::boilerplate::vcl_event_e) -> varnish::vcl::boilerplate::VCL_INT {
+unsafe extern "C" fn vmod_c__event(vrt_ctx: *mut varnish::vcl::boilerplate::vrt_ctx, vp: *mut varnish::vcl::boilerplate::vmod_priv, ev: varnish::vcl::boilerplate::vcl_event_e) -> varnish::vcl::boilerplate::VCL_INT {
     let mut ctx = Ctx::from_ptr(vrt_ctx);
     let event = Event::new(ev);
     match crate::event(
@@ -147,9 +147,9 @@ def runmain(inputvcc, rstdir, abi):
 use std::ptr;
 use std::ffi::*;
 use std::boxed::Box;
-use varnish::vcl::ctx::{{ Ctx, Event }};
-use varnish::vcl::convert::{{IntoRust, IntoVCL, IntoResult, VCLDefault}};
-""".format(modname=v.modname))
+use varnish::vcl::ctx::{Ctx, Event};
+use varnish::vcl::convert::{IntoRust, IntoVCL, IntoResult, VCLDefault};
+""")
 
     # C stuff is done, get comfortable with our own types
     for i in vmodtool.CTYPES:
@@ -180,7 +180,7 @@ pub struct {csn} {{""".format(csn=v.csn))
 
         if isinstance(i, vmodtool.EventStanza):
             print(
-                '''\t_event: Option<unsafe extern "C" fn(vrt_ctx: * mut varnish::vcl::boilerplate::vrt_ctx, vp: *mut varnish::vcl::boilerplate::vmod_priv, ev: varnish::vcl::boilerplate::vcl_event_e) -> varnish::vcl::boilerplate::VCL_INT>,''')
+                '''\t_event: Option<unsafe extern "C" fn(vrt_ctx: *mut varnish::vcl::boilerplate::vrt_ctx, vp: *mut varnish::vcl::boilerplate::vmod_priv, ev: varnish::vcl::boilerplate::vcl_event_e) -> varnish::vcl::boilerplate::VCL_INT>,''')
         elif isinstance(i, vmodtool.FunctionStanza):
             rustMemberDeclare(i.proto.cname(), i.proto, "func")
         elif isinstance(i, vmodtool.ObjectStanza):
