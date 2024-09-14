@@ -191,12 +191,6 @@ impl TestCtx {
     }
 }
 
-#[test]
-fn ctx_test() {
-    let mut test_ctx = TestCtx::new(100);
-    test_ctx.ctx();
-}
-
 /// Qualify a VCL phase, mainly consumed by vmod `event` functions.
 #[derive(Debug)]
 pub enum Event {
@@ -207,16 +201,29 @@ pub enum Event {
 }
 
 impl Event {
-    /// Create a new event from a [`ffi::vcl_event_e`]. Note that it *will panic* if
-    /// provided with an invalid number.
-    pub fn new(event: ffi::vcl_event_e) -> Self {
-        match event {
-            ffi::vcl_event_e_VCL_EVENT_LOAD => Event::Load,
-            ffi::vcl_event_e_VCL_EVENT_WARM => Event::Warm,
-            ffi::vcl_event_e_VCL_EVENT_COLD => Event::Cold,
-            ffi::vcl_event_e_VCL_EVENT_DISCARD => Event::Discard,
-            _ => panic!("invalid event number"),
-        }
+    /// Create a new event from a [`ffi::vcl_event_e`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if provided with an unrecognized number.
+    pub fn from_raw(event: ffi::vcl_event_e) -> Self {
+        event
+            .try_into()
+            .unwrap_or_else(|e| panic!("{e}: vcl_event_e =={event}"))
+    }
+}
+
+impl TryFrom<ffi::vcl_event_e> for Event {
+    type Error = &'static str;
+
+    fn try_from(event: ffi::vcl_event_e) -> Result<Self, Self::Error> {
+        Ok(match event {
+            ffi::vcl_event_e_VCL_EVENT_LOAD => Self::Load,
+            ffi::vcl_event_e_VCL_EVENT_WARM => Self::Warm,
+            ffi::vcl_event_e_VCL_EVENT_COLD => Self::Cold,
+            ffi::vcl_event_e_VCL_EVENT_DISCARD => Self::Discard,
+            _ => Err("unrecognized event value")?,
+        })
     }
 }
 
@@ -230,5 +237,16 @@ pub fn log(logtag: LogTag, msg: impl AsRef<str>) {
             msg.len(),
             msg.as_ptr(),
         );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ctx_test() {
+        let mut test_ctx = TestCtx::new(100);
+        test_ctx.ctx();
     }
 }

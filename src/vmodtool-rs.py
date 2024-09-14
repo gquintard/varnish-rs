@@ -104,7 +104,7 @@ def rustEventFunc():
     print('''
 unsafe extern "C" fn vmod_c__event(vrt_ctx: *mut varnish::vcl::boilerplate::vrt_ctx, vp: *mut varnish::vcl::boilerplate::vmod_priv, ev: varnish::vcl::boilerplate::vcl_event_e) -> varnish::vcl::boilerplate::VCL_INT {
     let mut ctx = Ctx::from_ptr(vrt_ctx);
-    let event = Event::new(ev);
+    let event = Event::from_raw(ev);
     match crate::event(
         &mut ctx,
         &mut vp.into_rust(),
