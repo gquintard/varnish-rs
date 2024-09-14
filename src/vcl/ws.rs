@@ -270,15 +270,20 @@ impl TestWS {
     }
 }
 
-#[test]
-fn ws_test() {
-    let mut test_ws = TestWS::new(160);
-    let mut ws = test_ws.ws();
-    for _ in 0..10 {
-        let r = ws.alloc(16);
-        assert!(r.is_ok());
-        let buf = r.unwrap();
-        assert_eq!(buf.len(), 16);
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ws_test() {
+        let mut test_ws = TestWS::new(160);
+        let mut ws = test_ws.ws();
+        for _ in 0..10 {
+            let r = ws.alloc(16);
+            assert!(r.is_ok());
+            let buf = r.unwrap();
+            assert_eq!(buf.len(), 16);
+        }
+        assert!(ws.alloc(1).is_err());
     }
-    assert!(ws.alloc(1).is_err());
 }

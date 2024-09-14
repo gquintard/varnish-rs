@@ -320,7 +320,9 @@ unsafe extern "C" fn vfp_pull<T: Transfer>(
 
 unsafe extern "C" fn wrap_event<S: Serve<T>, T: Transfer>(be: VCLBackendPtr, ev: ffi::vcl_event_e) {
     let backend: &S = validate_director(be).get_backend();
-    backend.event(Event::new(ev));
+    backend.event(ev.try_into().unwrap_or_else(|e| {
+        panic!("{e}: value={ev} for backend {}", backend.get_type());
+    }));
 }
 
 unsafe extern "C" fn wrap_list<S: Serve<T>, T: Transfer>(
