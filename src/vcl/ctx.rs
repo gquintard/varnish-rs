@@ -15,7 +15,7 @@ use crate::vcl::ws::{TestWS, WS};
 /// An `enum` wrapper around [VSL tags](https://varnish-cache.org/docs/trunk/reference/vsl.html#vsl-tags).
 /// Only the most current tags (for vmod writers) are mapped, and [`LogTag::Any`] will allow to
 /// directly pass a native tag code (`ffi::VSL_tag_e_SLT_*`).
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum LogTag {
     Debug,
     Error,
@@ -26,16 +26,16 @@ pub enum LogTag {
     Any(u32),
 }
 
-impl LogTag {
-    pub fn into_u32(&self) -> u32 {
-        match self {
+impl From<LogTag> for u32 {
+    fn from(tag: LogTag) -> u32 {
+        match tag {
             LogTag::Debug => VSL_tag_e_SLT_Debug,
             LogTag::Error => VSL_tag_e_SLT_Error,
             LogTag::VclError => VSL_tag_e_SLT_VCL_Error,
             LogTag::FetchError => VSL_tag_e_SLT_FetchError,
             LogTag::BackendHealth => VSL_tag_e_SLT_Backend_health,
             LogTag::VclLog => VSL_tag_e_SLT_VCL_Log,
-            LogTag::Any(n) => *n,
+            LogTag::Any(n) => n,
         }
     }
 }
@@ -121,7 +121,7 @@ impl<'a> Ctx<'a> {
                 log(logtag, msg);
             } else {
                 let msg = ffi::txt::from_str(msg.as_ref());
-                ffi::VSLbt(vsl, logtag.into_u32(), msg);
+                ffi::VSLbt(vsl, logtag.into(), msg);
             }
         }
     }
@@ -224,7 +224,7 @@ pub fn log(logtag: LogTag, msg: impl AsRef<str>) {
     let msg = msg.as_ref();
     unsafe {
         ffi::VSL(
-            logtag.into_u32(),
+            logtag.into(),
             ffi::vxids { vxid: 0 },
             c"%.*s".as_ptr(),
             msg.len(),
