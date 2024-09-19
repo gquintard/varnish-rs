@@ -15,31 +15,22 @@ jobs:
     env:
       RUST_BACKTRACE: 1
     steps:
+      - uses: taiki-e/install-action@v2
+        with: { tool: just }
       - uses: actions/checkout@v4
-      - name: rust-info
-        run: rustc --version && cargo --version
+      - name: Ensure this crate has not yet been published (on release)
+        if: github.event_name == 'release'
+        run: just check-if-published
       - uses: Swatinem/rust-cache@v2
         if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
       - name: install varnish-dev
         run: |
           curl -s https://packagecloud.io/install/repositories/varnishcache/varnish75/script.deb.sh | sudo bash
           sudo apt-get install -y varnish-dev
-      - name: test-fmt
-        run: cargo fmt --all -- --check
-      - name: build
-        run: cargo build --workspace --all-targets
-      - name: test
-        run: cargo test --workspace --all-targets
-      - name: build-all
-        run: cargo build --workspace --all-targets --all-features
-      - name: test-all
-        run: cargo test --workspace --all-targets --all-features
-      - name: test-doc
-        run: |
-          cargo test --doc
-          cargo doc --no-deps
-      - name: clippy
-        run: cargo clippy --workspace --all-targets
+      - run: just -v ci-test
+      - name: Check semver (disabled)
+        if: false  # FIXME: This should be enabled to ensure semver compliance
+        uses: obi1kenobi/cargo-semver-checks-action@v2
 
   # Ensure that the docs can be built at docs.rs without varnish dependencies
   test-docs-rs:

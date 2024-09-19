@@ -39,7 +39,12 @@ Right now, the only Varnish versions supported are `7.*`.
 
 At the moment, we use an embedded [python script](src/vmodtool-rs.py) to generate the boilerplate that exposes the rust vmod code to Varnish. Make sure that `python3` is in your path, or that the `PYTHON` environment variable is pointing at a compatible interpreter.
 
-## Building
+## Development
+
+* This project is easier to develop with [just](https://github.com/casey/just#readme), a modern alternative to `make`.
+  Install it with `cargo install just`.
+* To get a list of available commands, run `just`.
+* To run tests, use `just test`.
 
 ``` bash
 git clone https://github.com/gquintard/varnish-rs.git
