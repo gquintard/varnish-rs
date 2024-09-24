@@ -14,6 +14,11 @@ struct Lower {}
 
 // implement the actual behavior of the VFP
 impl VFP for Lower {
+    // return our id
+    fn name() -> &'static CStr {
+        c"lower"
+    }
+
     // `new` is called when the VCL specifies "lower" in `beresp.filters`
     fn new(_: &mut Ctx, _: &mut VFPCtx) -> InitResult<Self> {
         InitResult::Ok(Lower {})
@@ -30,11 +35,6 @@ impl VFP for Lower {
             e.make_ascii_lowercase();
         }
         pull_res
-    }
-
-    // return our id
-    fn name() -> &'static CStr {
-        c"lower"
     }
 }
 
