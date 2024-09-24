@@ -17,6 +17,11 @@ struct Flipper {
 
 // implement the actual behavior of the VDP
 impl VDP for Flipper {
+    // return our id
+    fn name() -> &'static CStr {
+        c"flipper"
+    }
+
     // `new` is called when the VCL specifies "flipper" in `resp.filters`
     // just return a default struct, thanks to the derive macro
     fn new(_: &mut Ctx, _: &mut VDPCtx, _oc: *mut ffi::objcore) -> InitResult<Self> {
@@ -37,11 +42,6 @@ impl VDP for Flipper {
         self.body.reverse();
         // send
         ctx.push(act, &self.body)
-    }
-
-    // return our id
-    fn name() -> &'static CStr {
-        c"flipper"
     }
 }
 

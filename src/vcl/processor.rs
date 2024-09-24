@@ -57,18 +57,15 @@ pub enum InitResult<T> {
 }
 
 /// Describes a VDP
-pub trait VDP
-where
-    Self: Sized,
-{
+pub trait VDP: Sized {
+    /// The name of the processor.
+    fn name() -> &'static CStr;
     /// Create a new processor, possibly using knowledge from the pipeline, or from the current
     /// request.
     fn new(vrt_ctx: &mut Ctx, vdp_ctx: &mut VDPCtx, oc: *mut objcore) -> InitResult<Self>;
     /// Handle the data buffer from the previous processor. This function generally uses
     /// [`VDPCtx::push`] to push data to the next processor.
     fn push(&mut self, ctx: &mut VDPCtx, act: PushAction, buf: &[u8]) -> PushResult;
-    /// The name of the processor.
-    fn name() -> &'static CStr;
 }
 
 pub unsafe extern "C" fn gen_vdp_init<T: VDP>(
@@ -176,19 +173,14 @@ impl<'a> VDPCtx<'a> {
 }
 
 /// Describes a VFP
-pub trait VFP
-where
-    Self: Sized,
-{
+pub trait VFP: Sized {
+    /// The name of the processor.
+    fn name() -> &'static CStr;
     /// Create a new processor, possibly using knowledge from the pipeline
-    fn new(_vrt_ctx: &mut Ctx, _vfp_ctx: &mut VFPCtx) -> InitResult<Self> {
-        unimplemented!()
-    }
+    fn new(vrt_ctx: &mut Ctx, vfp_ctx: &mut VFPCtx) -> InitResult<Self>;
     /// Write data into `buf`, generally using `VFP_Suck` to collect data from the previous
     /// processor.
     fn pull(&mut self, ctx: &mut VFPCtx, buf: &mut [u8]) -> PullResult;
-    /// The name of the processor.
-    fn name() -> &'static CStr;
 }
 
 unsafe extern "C" fn wrap_vfp_init<T: VFP>(
