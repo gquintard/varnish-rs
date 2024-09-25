@@ -2,7 +2,6 @@ use std::env;
 use std::path::PathBuf;
 
 fn main() {
-    println!("cargo:rustc-link-lib=varnishapi");
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
 
     println!("cargo:rerun-if-env-changed=VARNISH_INCLUDE_PATHS");
@@ -15,6 +14,7 @@ fn main() {
             {
                 Ok(l) => l.include_paths,
                 Err(e) => {
+                    // FIXME: we should only do this with `docsrs` feature - it is pointless otherwise
                     println!("no system libvarnish found, using the pre-generated bindings {e}");
                     std::fs::copy("src/bindings.rs.saved", out_path).unwrap();
                     return;
@@ -23,6 +23,8 @@ fn main() {
         }
     };
 
+    // Only link to varnishapi if we found it
+    println!("cargo:rustc-link-lib=varnishapi");
     println!("cargo:rerun-if-changed=src/wrapper.h");
     let bindings = bindgen::Builder::default()
         .header("src/wrapper.h")
