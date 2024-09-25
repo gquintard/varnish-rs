@@ -12,7 +12,8 @@ use std::path::Path;
 use std::ptr;
 use std::time::Duration;
 
-pub use crate::error::{Error, Result};
+use varnish_sys::vcl::{VclError, VclResult};
+
 use crate::ffi;
 
 /// A statistics set, created using a [`VSCBuilder`]
@@ -59,7 +60,7 @@ impl<'a> VSCBuilder<'a> {
     ///
     /// It's usually superfluous to call this function, unless `varnishd` itself was called with
     /// the `-n` argument (in which case, both arguments should match)
-    pub fn work_dir(self, dir: &Path) -> std::result::Result<Self, NulError> {
+    pub fn work_dir(self, dir: &Path) -> Result<Self, NulError> {
         let c_dir = CString::new(dir.to_str().unwrap())?;
         let ret = unsafe { ffi::VSM_Arg(self.vsm, 'n' as c_char, c_dir.as_ptr()) };
         assert_eq!(ret, 1);
@@ -71,7 +72,7 @@ impl<'a> VSCBuilder<'a> {
     /// When [`VSCBuilder::build()`] is called, it'll internally call `VSM_Attach`, hoping to find a running
     /// `varnishd` instance. If `None`, the function will not return until it connects, otherwise
     /// it specifies the timeout to use.
-    pub fn patience(self, t: Option<Duration>) -> Result<Self> {
+    pub fn patience(self, t: Option<Duration>) -> VclResult<Self> {
         // the things we do for love...
         let arg = match t {
             None => "off".to_string(),
@@ -84,7 +85,7 @@ impl<'a> VSCBuilder<'a> {
         Ok(self)
     }
 
-    fn vsc_arg(self, o: char, s: &str) -> std::result::Result<Self, NulError> {
+    fn vsc_arg(self, o: char, s: &str) -> Result<Self, NulError> {
         let c_s = CString::new(s)?;
         unsafe {
             let ret = ffi::VSC_Arg(self.vsc, o as c_char, c_s.as_ptr().cast::<c_char>());
@@ -96,25 +97,25 @@ impl<'a> VSCBuilder<'a> {
     /// Provide a globbing pattern of statistics names to include.
     ///
     /// May be called multiple times, interleaved with [`VSCBuilder::exclude()`], the order matters.
-    pub fn include(self, s: &str) -> std::result::Result<Self, NulError> {
+    pub fn include(self, s: &str) -> Result<Self, NulError> {
         self.vsc_arg('I', s)
     }
 
     /// Provide a globbing pattern of statistics names to exclude.
     ///
     /// May be called multiple times, interleaved with [`VSCBuilder::include()`], the order matters.
-    pub fn exclude(self, s: &str) -> std::result::Result<Self, NulError> {
+    pub fn exclude(self, s: &str) -> Result<Self, NulError> {
         self.vsc_arg('X', s)
     }
 
     /// Provide a globbing pattern of statistics names to keep around, protecting them from
     /// exclusion.
-    pub fn require(self, s: &str) -> std::result::Result<Self, NulError> {
+    pub fn require(self, s: &str) -> Result<Self, NulError> {
         self.vsc_arg('R', s)
     }
 
     /// Build the [`VSC`], attaching to a running `varnishd` instance
-    pub fn build(mut self) -> Result<VSC<'a>> {
+    pub fn build(mut self) -> VclResult<VSC<'a>> {
         let ret = unsafe { ffi::VSM_Attach(self.vsm, 0) };
         if ret != 0 {
             let err = vsm_error(self.vsm);
@@ -142,9 +143,9 @@ impl<'a> VSCBuilder<'a> {
     }
 }
 
-fn vsm_error(p: *const ffi::vsm) -> Error {
+fn vsm_error(p: *const ffi::vsm) -> VclError {
     unsafe {
-        Error::new(
+        VclError::new(
             CStr::from_ptr(ffi::VSM_Error(p))
                 .to_str()
                 .unwrap()

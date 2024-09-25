@@ -24,8 +24,7 @@
 //! ```
 //! use std::error::Error;
 //!
-//! use varnish::vcl::backend::{ Backend, Serve, Transfer };
-//! use varnish::vcl::ctx::Ctx;
+//! use varnish::vcl::{Ctx, Backend, Serve, Transfer};
 //!
 //! // First we need to define a struct that implement [Transfer]:
 //! struct BodyResponse {
@@ -78,16 +77,11 @@ use std::os::unix::io::FromRawFd;
 use std::ptr::{null, null_mut};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use varnish_sys::{
-    validate_director, validate_vdir, validate_vfp_ctx, validate_vfp_entry, validate_vrt_ctx,
+use crate::utils::get_backend;
+use crate::vcl::{Ctx, Event, IntoVCL, LogTag, VclResult, Vsb, WS};
+use crate::{
+    ffi, validate_director, validate_vdir, validate_vfp_ctx, validate_vfp_entry, validate_vrt_ctx,
 };
-
-use crate::ffi;
-use crate::vcl::convert::IntoVCL;
-use crate::vcl::ctx::{Ctx, Event, LogTag};
-use crate::vcl::utils::get_backend;
-use crate::vcl::vsb::Vsb;
-use crate::vcl::ws::WS;
 
 /// Alias for [`ffi::VCL_BACKEND`]
 pub type VCLBackendPtr = ffi::VCL_BACKEND;
@@ -128,7 +122,7 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
     /// Create a new builder, wrapping the `inner` structure (that implements `Serve`),
     /// calling the backend `name`. If the backend has a probe attached to it, set `has_probe` to
     /// true.
-    pub fn new(ctx: &mut Ctx, name: &str, be: S, has_probe: bool) -> crate::vcl::Result<Self> {
+    pub fn new(ctx: &mut Ctx, name: &str, be: S, has_probe: bool) -> VclResult<Self> {
         let mut inner = Box::new(be);
         let type_: CString = CString::new(inner.get_type()).map_err(|e| e.to_string())?;
         let methods = Box::new(ffi::vdi_methods {

@@ -2,7 +2,7 @@
 varnish::boilerplate!();
 
 // even though we won't use it here, we still need to know what the context type is
-use varnish::vcl::ctx::Ctx;
+use varnish::vcl::Ctx;
 
 // we now implement both functions from vmod.vcc, but with rust types.
 // Don't forget to make the function public with "pub" in front of them
@@ -25,7 +25,7 @@ pub fn captain_obvious(_: &Ctx, opt: Option<i64>) -> String {
 
 #[cfg(test)]
 mod tests {
-    use varnish::vcl::ctx::TestCtx;
+    use varnish::vcl::TestCtx;
 
     use super::*;
 

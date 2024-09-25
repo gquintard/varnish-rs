@@ -2,7 +2,7 @@ varnish::boilerplate!();
 
 use std::fs::read_to_string;
 
-use varnish::vcl::ctx::Ctx;
+use varnish::vcl::Ctx;
 
 varnish::vtc!(test01);
 

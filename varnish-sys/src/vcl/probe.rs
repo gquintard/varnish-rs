@@ -2,18 +2,15 @@ use std::borrow::Cow;
 use std::ffi::c_uint;
 use std::time::Duration;
 
-#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum COWRequest<'a> {
     URL(Cow<'a, str>),
     Text(Cow<'a, str>),
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct COWProbe<'a> {
     pub request: COWRequest<'a>,
     pub timeout: Duration,
@@ -24,15 +21,13 @@ pub struct COWProbe<'a> {
     pub initial: c_uint,
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum Request {
     URL(String),
     Text(String),
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Probe {
     pub request: Request,
     pub timeout: Duration,

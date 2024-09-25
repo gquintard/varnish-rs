@@ -16,10 +16,8 @@ use std::ptr;
 use std::slice::from_raw_parts_mut;
 use std::str::from_utf8;
 
-use varnish_sys::validate_ws;
-
-use crate::ffi;
 use crate::ffi::WS_Allocated;
+use crate::{ffi, validate_ws};
 
 /// A workspace object
 ///
@@ -156,7 +154,7 @@ impl<'a> WS<'a> {
 /// ``` ignore
 /// // write trait needs to be in scope
 /// use std::io::Write;
-/// use varnish::vcl::ws::TestWS;
+/// use varnish::vcl::TestWS;
 ///
 /// // init a workspace
 /// let mut test_ws = TestWS::new(160);
@@ -199,7 +197,7 @@ impl<'a> ReservedBuf<'a> {
     /// slice is pristine when you receive it.
     ///
     /// ``` ignore
-    /// use varnish::vcl::ws::TestWS;
+    /// use varnish::vcl::TestWS;
     /// let mut test_ws = TestWS::new(160);
     /// let mut ws = test_ws.ws();
     ///

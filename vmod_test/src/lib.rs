@@ -6,10 +6,10 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::time::Duration;
 
 use varnish::ffi;
-use varnish::vcl::ctx::{Ctx, Event};
-use varnish::vcl::processor::{new_vfp, InitResult, PullResult, VFPCtx, VFP};
-use varnish::vcl::vpriv::VPriv;
-use varnish::vcl::{probe, Result};
+use varnish::vcl::{
+    new_vfp, COWProbe, COWRequest, Ctx, Event, InitResult, Probe, PullResult, Request, VFPCtx,
+    VPriv, VclResult, VFP,
+};
 
 varnish::vtc!(test01);
 varnish::vtc!(test02);
@@ -19,7 +19,7 @@ varnish::vtc!(test05);
 varnish::vtc!(test06);
 varnish::vtc!(test07);
 
-pub fn set_hdr(ctx: &mut Ctx, name: &str, value: &str) -> Result<()> {
+pub fn set_hdr(ctx: &mut Ctx, name: &str, value: &str) -> VclResult<()> {
     if let Some(ref mut req) = ctx.http_req {
         req.set_header(name, value)
     } else {
@@ -27,7 +27,7 @@ pub fn set_hdr(ctx: &mut Ctx, name: &str, value: &str) -> Result<()> {
     }
 }
 
-pub fn unset_hdr(ctx: &mut Ctx, name: &str) -> Result<()> {
+pub fn unset_hdr(ctx: &mut Ctx, name: &str) -> VclResult<()> {
     if let Some(ref mut req) = ctx.http_req {
         req.unset_header(name);
         Ok(())
@@ -36,7 +36,7 @@ pub fn unset_hdr(ctx: &mut Ctx, name: &str) -> Result<()> {
     }
 }
 
-pub fn ws_reserve(ctx: &mut Ctx<'_>, s: &str) -> Result<ffi::VCL_STRING> {
+pub fn ws_reserve(ctx: &mut Ctx<'_>, s: &str) -> VclResult<ffi::VCL_STRING> {
     let mut rbuf = ctx.ws.reserve();
     match write!(rbuf.buf, "{s} {s} {s}\0") {
         Ok(()) => {
@@ -52,7 +52,7 @@ pub fn out_str(_: &mut Ctx) -> &'static str {
     "str"
 }
 
-pub fn out_res_str(_: &mut Ctx) -> Result<&'static str> {
+pub fn out_res_str(_: &mut Ctx) -> VclResult<&'static str> {
     Ok("str")
 }
 
@@ -60,7 +60,7 @@ pub fn out_string(_: &mut Ctx) -> String {
     "str".to_owned()
 }
 
-pub fn out_res_string(_: &mut Ctx) -> Result<String> {
+pub fn out_res_string(_: &mut Ctx) -> VclResult<String> {
     Ok("str".to_owned())
 }
 
@@ -68,7 +68,7 @@ pub fn out_bool(_: &mut Ctx) -> bool {
     true
 }
 
-pub fn out_res_bool(_: &mut Ctx) -> Result<bool> {
+pub fn out_res_bool(_: &mut Ctx) -> VclResult<bool> {
     Ok(true)
 }
 
@@ -76,7 +76,7 @@ pub fn out_duration(_: &mut Ctx) -> Duration {
     Duration::new(0, 0)
 }
 
-pub fn out_res_duration(_: &mut Ctx) -> Result<Duration> {
+pub fn out_res_duration(_: &mut Ctx) -> VclResult<Duration> {
     Ok(Duration::new(0, 0))
 }
 
@@ -102,7 +102,7 @@ pub fn print_ip(_: &mut Ctx, maybe_ip: Option<SocketAddr>) -> String {
 
 // this is a pretty terrible idea, the request body is probably big, and your workspace is tiny,
 // but hey, it's a test function
-pub fn req_body(ctx: &mut Ctx) -> Result<ffi::VCL_STRING> {
+pub fn req_body(ctx: &mut Ctx) -> VclResult<ffi::VCL_STRING> {
     let mut body_chunks = ctx.cached_req_body()?;
     // make sure the body will be null-terminated
     body_chunks.push(b"\0");
@@ -120,13 +120,13 @@ pub fn default_arg<'a>(_ctx: &mut Ctx, arg: &'a str) -> &'a str {
     arg
 }
 
-pub fn cowprobe_prop(_ctx: &mut Ctx, probe: Option<probe::COWProbe<'_>>) -> String {
+pub fn cowprobe_prop(_ctx: &mut Ctx, probe: Option<COWProbe<'_>>) -> String {
     match probe {
         Some(probe) => format!(
             "{}-{}-{}-{}-{}-{}",
             match probe.request {
-                probe::COWRequest::URL(url) => format!("url:{}", &url),
-                probe::COWRequest::Text(text) => format!("text:{}", &text),
+                COWRequest::URL(url) => format!("url:{}", &url),
+                COWRequest::Text(text) => format!("text:{}", &text),
             },
             probe.threshold,
             probe.timeout.as_secs(),
@@ -138,13 +138,13 @@ pub fn cowprobe_prop(_ctx: &mut Ctx, probe: Option<probe::COWProbe<'_>>) -> Stri
     }
 }
 
-pub fn probe_prop(_ctx: &mut Ctx, probe: Option<probe::Probe>) -> String {
+pub fn probe_prop(_ctx: &mut Ctx, probe: Option<Probe>) -> String {
     match probe {
         Some(probe) => format!(
             "{}-{}-{}-{}-{}-{}",
             match probe.request {
-                probe::Request::URL(url) => format!("url:{}", &url),
-                probe::Request::Text(text) => format!("text:{}", &text),
+                Request::URL(url) => format!("url:{}", &url),
+                Request::Text(text) => format!("text:{}", &text),
             },
             probe.threshold,
             probe.timeout.as_secs(),
@@ -180,7 +180,7 @@ pub unsafe fn event(
     ctx: &mut Ctx,
     vp: &mut VPriv<ffi::vfp>,
     event: Event,
-) -> std::result::Result<(), &'static str> {
+) -> Result<(), &'static str> {
     match event {
         // on load, create the VFP C struct, save it into a priv, they register it
         Event::Load => {

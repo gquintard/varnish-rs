@@ -7,8 +7,7 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 
 use varnish::ffi::VCL_STRING;
-use varnish::vcl::convert::IntoVCL;
-use varnish::vcl::ctx::Ctx;
+use varnish::vcl::{Ctx, IntoVCL};
 
 varnish::vtc!(test01);
 varnish::vtc!(test02);

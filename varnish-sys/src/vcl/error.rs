@@ -2,42 +2,42 @@
 ///
 /// The C errors aren't typed and are just C strings, so we just wrap them into a proper rust
 /// `Error`
-pub struct Error {
+pub struct VclError {
     s: String,
 }
 
-impl Error {
+impl VclError {
     /// Create a new `Error` from a string
-    pub(crate) fn new(s: String) -> Self {
-        Error { s }
+    pub fn new(s: String) -> Self {
+        VclError { s }
     }
 }
 
-impl std::fmt::Debug for Error {
+impl std::fmt::Debug for VclError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Debug::fmt(&self.s, f)
     }
 }
 
-impl std::fmt::Display for Error {
+impl std::fmt::Display for VclError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(&self.s, f)
     }
 }
 
-impl std::error::Error for Error {}
+impl std::error::Error for VclError {}
 
-impl From<String> for Error {
+impl From<String> for VclError {
     fn from(s: String) -> Self {
-        Error { s }
+        VclError { s }
     }
 }
 
-impl From<&str> for Error {
+impl From<&str> for VclError {
     fn from(s: &str) -> Self {
-        Error { s: s.into() }
+        VclError { s: s.into() }
     }
 }
 
-/// Shorthand to [`std::result::Result<T, Error>`]
-pub type Result<T> = std::result::Result<T, Error>;
+/// Shorthand to [`Result<T, VclError>`]
+pub type VclResult<T> = Result<T, VclError>;

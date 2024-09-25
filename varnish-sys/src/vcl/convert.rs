@@ -49,11 +49,8 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::ptr;
 use std::time::Duration;
 
-use crate::ffi::*;
-use crate::vcl::probe;
-use crate::vcl::probe::{COWProbe, Probe};
-use crate::vcl::vpriv::VPriv;
-use crate::vcl::ws::WS;
+use crate::ffi::{VCL_BOOL, VCL_INT, VCL_REAL, *};
+use crate::vcl::{COWProbe, COWRequest, Probe, Request, VPriv, WS};
 
 /// Convert a Rust type into a VCL one
 ///
@@ -178,10 +175,10 @@ impl<'a> IntoVCL<VCL_PROBE> for COWProbe<'a> {
         let probe = unsafe { p.as_mut().unwrap() };
         probe.magic = VRT_BACKEND_PROBE_MAGIC;
         match self.request {
-            probe::COWRequest::URL(ref s) => {
+            COWRequest::URL(ref s) => {
                 probe.url = s.into_vcl(ws)?;
             }
-            probe::COWRequest::Text(ref s) => {
+            COWRequest::Text(ref s) => {
                 probe.request = s.into_vcl(ws)?;
             }
         }
@@ -205,10 +202,10 @@ impl IntoVCL<VCL_PROBE> for Probe {
         let probe = unsafe { p.as_mut().unwrap() };
         probe.magic = VRT_BACKEND_PROBE_MAGIC;
         match self.request {
-            probe::Request::URL(ref s) => {
+            Request::URL(ref s) => {
                 probe.url = s.as_str().into_vcl(ws)?;
             }
-            probe::Request::Text(ref s) => {
+            Request::Text(ref s) => {
                 probe.request = s.as_str().into_vcl(ws)?;
             }
         }
@@ -440,9 +437,9 @@ impl<'a> IntoRust<Option<COWProbe<'a>>> for VCL_PROBE {
         );
         Some(COWProbe {
             request: if pr.url.is_null() {
-                probe::COWRequest::Text(pr.request.into_rust())
+                COWRequest::Text(pr.request.into_rust())
             } else {
-                probe::COWRequest::URL(pr.url.into_rust())
+                COWRequest::URL(pr.url.into_rust())
             },
             timeout: pr.timeout.into_rust(),
             interval: pr.interval.into_rust(),
@@ -463,9 +460,9 @@ impl IntoRust<Option<Probe>> for VCL_PROBE {
         );
         Some(Probe {
             request: if pr.url.is_null() {
-                probe::Request::Text(pr.request.into_rust().to_string())
+                Request::Text(pr.request.into_rust().to_string())
             } else {
-                probe::Request::URL(pr.url.into_rust().to_string())
+                Request::URL(pr.url.into_rust().to_string())
             },
             timeout: pr.timeout.into_rust(),
             interval: pr.interval.into_rust(),
@@ -536,3 +533,36 @@ macro_rules! impl_type_cast {
 impl_type_cast!(VCL_BOOL, bool);
 impl_type_cast!(VCL_REAL, f64);
 impl_type_cast!(VCL_INT, i64);
+
+macro_rules! impl_type_cast_from_typ {
+    ($ident:ident, $typ:ty) => {
+        impl From<$typ> for $ident {
+            fn from(b: $typ) -> Self {
+                Self(b.into())
+            }
+        }
+    };
+}
+
+macro_rules! impl_type_cast_from_vcl {
+    ($ident:ident, $typ:ty) => {
+        impl From<$ident> for $typ {
+            fn from(b: $ident) -> Self {
+                <Self>::from(b.0)
+            }
+        }
+    };
+}
+
+impl_type_cast_from_vcl!(VCL_REAL, f64);
+impl_type_cast_from_typ!(VCL_REAL, f64);
+
+impl_type_cast_from_typ!(VCL_INT, i64);
+impl_type_cast_from_vcl!(VCL_INT, i64);
+
+impl_type_cast_from_typ!(VCL_BOOL, bool);
+impl From<VCL_BOOL> for bool {
+    fn from(b: VCL_BOOL) -> Self {
+        b.0 != 0
+    }
+}

@@ -7,8 +7,7 @@ use crate::ffi::{
     vrt_ctx, VRT_fail, VSL_tag_e_SLT_Backend_health, VSL_tag_e_SLT_Debug, VSL_tag_e_SLT_Error,
     VSL_tag_e_SLT_FetchError, VSL_tag_e_SLT_VCL_Error, VSL_tag_e_SLT_VCL_Log, VRT_CTX_MAGIC,
 };
-use crate::vcl::http::HTTP;
-use crate::vcl::ws::{TestWS, WS};
+use crate::vcl::{TestWS, VclError, HTTP, WS};
 
 /// VSL logging tag
 ///
@@ -52,7 +51,7 @@ impl From<LogTag> for u32 {
 /// Which `http_*` are present will depend on which VCL sub routine the function is called from.
 ///
 /// ``` rust
-/// use varnish::vcl::ctx::Ctx;
+/// use varnish::vcl::Ctx;
 ///
 /// fn foo(ctx: &Ctx) {
 ///     if let Some(ref req) = ctx.http_req {
@@ -126,7 +125,7 @@ impl<'a> Ctx<'a> {
         }
     }
 
-    pub fn cached_req_body(&mut self) -> Result<Vec<&'a [u8]>, crate::vcl::Error> {
+    pub fn cached_req_body(&mut self) -> Result<Vec<&'a [u8]>, VclError> {
         unsafe extern "C" fn chunk_collector(
             priv_: *mut c_void,
             _flush: c_uint,
