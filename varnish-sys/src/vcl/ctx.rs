@@ -104,12 +104,11 @@ impl<'a> Ctx<'a> {
     ///
     /// Once the control goes back to Varnish, it will see that the transaction was marked as fail
     /// and will return a synthetic error to the client.
-    pub fn fail(&mut self, msg: impl AsRef<str>) -> u8 {
+    pub fn fail(&mut self, msg: impl AsRef<str>) {
         let msg = msg.as_ref();
         unsafe {
             VRT_fail(self.raw, c"%.*s".as_ptr(), msg.len(), msg.as_ptr());
         }
-        0
     }
 
     /// Log a message, attached to the current context

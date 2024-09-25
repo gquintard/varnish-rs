@@ -125,8 +125,8 @@ pub fn cowprobe_prop(_ctx: &mut Ctx, probe: Option<COWProbe<'_>>) -> String {
         Some(probe) => format!(
             "{}-{}-{}-{}-{}-{}",
             match probe.request {
-                COWRequest::URL(url) => format!("url:{}", &url),
-                COWRequest::Text(text) => format!("text:{}", &text),
+                COWRequest::URL(url) => format!("url:{url}"),
+                COWRequest::Text(text) => format!("text:{text}"),
             },
             probe.threshold,
             probe.timeout.as_secs(),
@@ -143,8 +143,8 @@ pub fn probe_prop(_ctx: &mut Ctx, probe: Option<Probe>) -> String {
         Some(probe) => format!(
             "{}-{}-{}-{}-{}-{}",
             match probe.request {
-                Request::URL(url) => format!("url:{}", &url),
-                Request::Text(text) => format!("text:{}", &text),
+                Request::URL(url) => format!("url:{url}"),
+                Request::Text(text) => format!("text:{text}"),
             },
             probe.threshold,
             probe.timeout.as_secs(),
