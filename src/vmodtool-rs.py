@@ -147,8 +147,8 @@ def runmain(inputvcc, rstdir, abi):
 use std::ptr;
 use std::ffi::*;
 use std::boxed::Box;
-use varnish::vcl::ctx::{Ctx, Event};
-use varnish::vcl::convert::{IntoRust, IntoVCL, IntoResult, VCLDefault};
+use varnish::vcl::{Ctx, Event};
+use varnish::vcl::{IntoRust, IntoVCL, IntoResult, VCLDefault};
 """)
 
     # C stuff is done, get comfortable with our own types

@@ -11,11 +11,9 @@ license.workspace = true
 
 [features]
 default = []
-serde = ["dep:serde"]
 
 [dependencies]
 pkg-config.workspace = true
-serde = { workspace = true, optional = true }
 varnish-sys.workspace = true
 
 [lints]
@@ -38,6 +36,7 @@ license = "BSD-3-Clause"
 
 [workspace.dependencies]
 # These versions must match the one in the [workspace.package] section above
+varnish = { path = ".", version = "=0.0.19" }
 varnish-sys = { path = "./varnish-sys", version = "=0.0.19" }
 #
 # These dependencies are used by one or more crates, and easier to maintain in one place.

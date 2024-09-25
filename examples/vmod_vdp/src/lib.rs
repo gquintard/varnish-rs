@@ -3,9 +3,7 @@ varnish::boilerplate!();
 use std::ffi::CStr;
 
 use varnish::ffi;
-use varnish::vcl::ctx::{Ctx, Event};
-use varnish::vcl::processor::{new_vdp, InitResult, PushAction, PushResult, VDPCtx, VDP};
-use varnish::vcl::vpriv::VPriv;
+use varnish::vcl::{new_vdp, Ctx, Event, InitResult, PushAction, PushResult, VDPCtx, VPriv, VDP};
 
 varnish::vtc!(test01);
 

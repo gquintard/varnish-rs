@@ -2,8 +2,7 @@ varnish::boilerplate!();
 
 use std::time::{Duration, Instant};
 
-use varnish::vcl::ctx::Ctx;
-use varnish::vcl::vpriv::VPriv;
+use varnish::vcl::{Ctx, VPriv};
 
 varnish::vtc!(test01);
 

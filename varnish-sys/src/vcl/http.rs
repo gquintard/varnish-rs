@@ -16,8 +16,7 @@ use std::ffi::c_uint;
 use std::slice::from_raw_parts_mut;
 
 use crate::ffi;
-use crate::vcl::ws::WS;
-use crate::vcl::Result;
+use crate::vcl::{VclResult, WS};
 
 // C constants pop up as u32, but header indexing uses u16, redefine
 // some stuff to avoid casting all the time
@@ -43,7 +42,7 @@ impl<'a> HTTP<'a> {
         })
     }
 
-    fn change_header(&mut self, idx: u16, value: &str) -> Result<()> {
+    fn change_header(&mut self, idx: u16, value: &str) -> VclResult<()> {
         assert!(idx < self.raw.nhd);
 
         /* XXX: aliasing warning, it's the same pointer as the one in Ctx */
@@ -59,7 +58,7 @@ impl<'a> HTTP<'a> {
 
     /// Append a new header using `name` and `value`. This can fail if we run out of internal slots
     /// to store the new header
-    pub fn set_header(&mut self, name: &str, value: &str) -> Result<()> {
+    pub fn set_header(&mut self, name: &str, value: &str) -> VclResult<()> {
         assert!(self.raw.nhd <= self.raw.shd);
         if self.raw.nhd == self.raw.shd {
             return Err("no more header slot".into());
@@ -149,7 +148,7 @@ impl<'a> HTTP<'a> {
     }
 
     /// Set prototype
-    pub fn set_proto(&mut self, value: &str) -> Result<()> {
+    pub fn set_proto(&mut self, value: &str) -> VclResult<()> {
         self.raw.protover = match value {
             "HTTP/0.9" => 9,
             "HTTP/1.0" => 10,
@@ -176,7 +175,7 @@ impl<'a> HTTP<'a> {
     }
 
     /// Set reason
-    pub fn set_reason(&mut self, value: &str) -> Result<()> {
+    pub fn set_reason(&mut self, value: &str) -> VclResult<()> {
         self.change_header(HDR_REASON, value)
     }
 

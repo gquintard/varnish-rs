@@ -4,8 +4,7 @@ varnish::boilerplate!();
 
 use std::error::Error;
 
-use varnish::vcl::backend::{Backend, Serve, Transfer, VCLBackendPtr};
-use varnish::vcl::ctx::Ctx;
+use varnish::vcl::{Backend, Ctx, Serve, Transfer, VCLBackendPtr};
 
 varnish::vtc!(test01);
 

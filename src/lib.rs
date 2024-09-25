@@ -45,7 +45,7 @@
 //! from VCL.
 //!
 //! The good news is that the syntax is exactly the same as for a C vmod. The bad news is that we
-//! don't support all types and niceties just yet. Check out the [`vcl::convert`] page for
+//! don't support all types and niceties just yet. Check out the [`vcl`] page for
 //! more information.
 //!
 //! ``` text
@@ -72,19 +72,19 @@
 //!
 //! Here's the actual code that you can write to implement your API. Basically, you need to
 //! implement public functions that mirror what you described in `vmod.vcc`, and the first
-//! argument needs to be a reference to [`vcl::ctx::Ctx`]:
+//! argument needs to be a reference to [`vcl::Ctx`]:
 //!
 //! ``` ignore
 //! varnish::boilerplate!();
 //!
-//! use varnish::vcl::ctx::Ctx;
+//! use varnish::vcl::Ctx;
 //!
 //! pub fn is_even(_: &Ctx, n: i64) -> bool {
 //!     return n % 2 == 0;
 //! }
 //! ```
 //!
-//! The various type translations are described in detail in [`vcl::convert`].
+//! The various type translations are described in detail in [`vcl`].
 
 use std::env::join_paths;
 use std::io::{self, Write};
@@ -92,27 +92,18 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{env, fs};
 
-// Re-publish varnish_sys::ffi
-pub use varnish_sys::ffi;
-pub mod vsc;
-
-mod error;
-
+// Re-publish varnish_sys::ffi and vcl
+mod boilerplate;
 pub mod vcl {
-    pub mod backend;
-    pub mod convert;
-    pub mod ctx;
-    pub mod http;
-    pub mod probe;
-    pub mod processor;
-    pub mod vpriv;
-    pub mod vsb;
-    pub mod ws;
-    pub use super::error::{Error, Result};
-
-    pub mod boilerplate;
-    mod utils;
+    pub mod boilerplate {
+        pub use crate::boilerplate::*;
+    }
+    pub use varnish_sys::vcl::*;
 }
+pub use varnish_sys::ffi;
+use varnish_sys::vcl::VclError;
+
+pub mod vsc;
 
 /// Automate VTC testing
 ///
@@ -258,7 +249,7 @@ macro_rules! boilerplate {
 /// `vmod.vcc` into C-compatible code that will allow Varnish to load and use your vmod.
 ///
 /// It does require `python3` to run as it embed a script to do the processing.
-pub fn generate_boilerplate() -> Result<(), vcl::Error> {
+pub fn generate_boilerplate() -> Result<(), VclError> {
     println!("cargo:rerun-if-changed=vmod.vcc");
 
     let rstool_bytes = include_bytes!("vmodtool-rs.py");
