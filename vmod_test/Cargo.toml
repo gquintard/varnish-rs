@@ -1,13 +1,14 @@
 [package]
 name = "vmod_test"
-version = "0.0.1"
+version = "0.0.0"
+publish = false
 edition.workspace = true
 
 [build-dependencies]
-varnish = { path = ".." }
+varnish.workspace = true
 
 [dependencies]
-varnish = { path = ".." }
+varnish.workspace = true
 
 [lib]
 crate-type = ["cdylib"]
