@@ -131,6 +131,8 @@ impl IntoVCL<VCL_STRING> for &[u8] {
     fn into_vcl(self, ws: &mut WS) -> Result<VCL_STRING, String> {
         // try to save some work if the buffer is already in the workspace
         // and if it ends in a null byte
+        // FIXME: UB here - we check if the value AFTER the slice is a null byte
+        //        in other words we access memory that is not ours. This is a bug.
         if unsafe { ws.is_slice_allocated(self) && *self.as_ptr().add(self.len()) == b'\0' } {
             Ok(self.as_ptr().cast::<c_char>())
         } else {
