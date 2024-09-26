@@ -11,13 +11,7 @@ use varnish::vcl::{
     VPriv, VclResult, VFP,
 };
 
-varnish::vtc!(test01);
-varnish::vtc!(test02);
-varnish::vtc!(test03);
-varnish::vtc!(test04);
-varnish::vtc!(test05);
-varnish::vtc!(test06);
-varnish::vtc!(test07);
+varnish::run_vtc_tests!("tests/*.vtc");
 
 pub fn set_hdr(ctx: &mut Ctx, name: &str, value: &str) -> VclResult<()> {
     if let Some(ref mut req) = ctx.http_req {

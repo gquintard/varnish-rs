@@ -9,8 +9,7 @@ use std::sync::Mutex;
 use varnish::ffi::VCL_STRING;
 use varnish::vcl::{Ctx, IntoVCL};
 
-varnish::vtc!(test01);
-varnish::vtc!(test02);
+varnish::run_vtc_tests!("tests/*.vtc");
 
 const EMPTY_STRING: String = String::new();
 

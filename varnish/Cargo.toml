@@ -14,6 +14,7 @@ license.workspace = true
 default = []
 
 [dependencies]
+glob.workspace = true
 pkg-config.workspace = true
 varnish-sys.workspace = true
 

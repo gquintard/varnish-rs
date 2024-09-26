@@ -103,17 +103,16 @@ pub mod vcl {
 pub use varnish_sys::ffi;
 use varnish_sys::vcl::VclError;
 
+pub mod varnishtest;
 pub mod vsc;
 
 /// Automate VTC testing
 ///
 /// Varnish provides a very handy tool for end-to-end testing:
 /// [`varnishtest`](https://varnish-cache.org/docs/trunk/reference/varnishtest.html) which will
-/// test various scenarios you describe in a [`VTC
-/// file`](https://varnish-cache.org/docs/trunk/reference/vtc.html), for example:
+/// test various scenarios you describe in a [`VTC file`](https://varnish-cache.org/docs/trunk/reference/vtc.html):
 ///
 /// ``` vtc
-///
 /// server s1 {
 ///     rxreq
 ///     expect req.http.even == "true"
@@ -134,11 +133,10 @@ pub mod vsc;
 ///     expect resp.status == 200
 /// ```
 ///
-/// Provided your VTC files are in `tests/` and have the `.vtc` extension, you can declare these
-/// them in your rust code with this macro.
+/// Provided your VTC files are in `tests/` and have the `.vtc` extension, you can run them as part of automated testing:
 ///
 /// ``` rust
-/// varnish::vtc!(test01);
+/// varnish::run_vtc_tests!("tests/*.vtc");
 /// ```
 ///
 /// This will declare the test named `test01` and set up and run `varnishtest` alongside your unit
@@ -151,64 +149,25 @@ pub mod vsc;
 ///
 /// To debug the tests, pass `true` as the second argument:
 /// ``` rust
-/// varnish::vtc!(test01, true);
+/// varnish::run_vtc_tests!("tests/*.vtc", true);
 /// ```
 #[macro_export]
-macro_rules! vtc {
-    ( $name:ident ) => {
-        $crate::vtc!($name, false);
+macro_rules! run_vtc_tests {
+    ( $glob_path:expr ) => {
+        $crate::run_vtc_tests!($glob_path, false);
     };
-    ( $name:ident, $debug:expr ) => {
+    ( $glob_path:expr, $debug:expr ) => {
         #[cfg(test)]
         #[test]
-        fn $name() {
-            use std::io::{self, Write};
-            use std::path::Path;
-            use std::process::Command;
-
-            let test_duration = std::env::var("VARNISHTEST_DURATION");
-            let test_duration = test_duration.as_deref().unwrap_or("5s");
-
-            // find the vmod so file
-            let llp = std::env::var("LD_LIBRARY_PATH").unwrap();
-            let vmod_filename =
-                String::from("lib") + &std::env::var("CARGO_PKG_NAME").unwrap() + ".so";
-            let vmod_path = match std::env::split_paths(&llp)
-                .into_iter()
-                .map(|p| p.join(&vmod_filename))
-                .filter(|p| p.exists())
-                .nth(0)
-            {
-                None => panic!(
-                    "couldn't find {} in {}\nHave you built your vmod first?",
-                    &vmod_filename, llp
-                ),
-                Some(p) => p.to_str().unwrap().to_owned(),
-            };
-            let mut cmd = Command::new("varnishtest");
-            if $debug {
-                // Keep output, and run in verbose mode
-                cmd.arg("-L").arg("-v");
-            }
-            cmd.arg("-D")
-                .arg(format!("vmod={}", vmod_path))
-                .arg(concat!("tests/", stringify!($name), ".vtc"))
-                .env("VARNISHTEST_DURATION", test_duration);
-
-            let output = cmd.output().unwrap();
-            if $debug || !output.status.success() {
-                io::stdout().write_all(&output.stdout).unwrap();
-                io::stdout().write_all(&output.stderr).unwrap();
-            }
-            if !output.status.success() {
-                panic!(
-                    "{}",
-                    format!(
-                        "tests/{}.vtc failed ({:?})",
-                        stringify!($name),
-                        cmd.get_args()
-                    )
-                );
+        fn run_vtc_tests() {
+            if let Err(err) = $crate::varnishtest::run_all_tests(
+                env!("LD_LIBRARY_PATH"),
+                env!("CARGO_PKG_NAME"),
+                $glob_path,
+                option_env!("VARNISHTEST_DURATION").unwrap_or("5s"),
+                $debug,
+            ) {
+                panic!("{err}");
             }
         }
     };

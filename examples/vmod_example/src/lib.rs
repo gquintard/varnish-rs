@@ -56,5 +56,5 @@ mod tests {
     }
 
     // we also want to run test/test01.vtc
-    varnish::vtc!(test01);
+    varnish::run_vtc_tests!("tests/*.vtc");
 }

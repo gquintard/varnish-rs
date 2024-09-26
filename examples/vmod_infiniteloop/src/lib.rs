@@ -3,7 +3,7 @@ varnish::boilerplate!();
 use varnish::ffi::{BUSYOBJ_MAGIC, REQ_MAGIC};
 use varnish::vcl::Ctx;
 
-varnish::vtc!(test01);
+varnish::run_vtc_tests!("tests/*.vtc");
 
 /// # Safety
 /// this function is unsafe from the varnish point of view, doing away with
