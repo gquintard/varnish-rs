@@ -1,16 +1,18 @@
-lints.workspace = true
-
 [package]
 name = "vmod_error"
-version = "0.0.1"
-edition = "2021"
+version = "0.0.0"
+publish = false
+edition.workspace = true
 
 [build-dependencies]
-varnish = { path = "../.." }
+varnish.workspace = true
 
 [dependencies]
-varnish = { path = "../.." }
+varnish.workspace = true
 rand = "0.8.3"
 
 [lib]
 crate-type = ["cdylib"]
+
+[lints]
+workspace = true

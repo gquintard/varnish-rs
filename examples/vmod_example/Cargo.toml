@@ -1,17 +1,17 @@
-lints.workspace = true
-
 [package]
 name = "vmod_example"
-version = "0.0.1"
-edition = "2021"
+version = "0.0.0"
+publish = false
+edition.workspace = true
 
-# if you copy this into a standalone repository,
-# replace `{ path = "../.." }` with `"0.0.19"`
 [build-dependencies]
-varnish = { path = "../.." }
+varnish.workspace = true
 
 [dependencies]
-varnish = { path = "../.." }
+varnish.workspace = true
 
 [lib]
 crate-type = ["cdylib"]
+
+[lints]
+workspace = true

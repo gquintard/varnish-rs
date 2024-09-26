@@ -1,0 +1,21 @@
+[package]
+name = "varnish"
+authors = ["Guillaume Quintard <guillaume.quintard@gmail.com>"]
+description = "Access to the Varnish modules API"
+keywords = ["varnish", "vmod", "cache", "http", "reverse-proxy"]
+categories = ["api-bindings"]
+readme = "../README.md"
+version.workspace = true
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[features]
+default = []
+
+[dependencies]
+pkg-config.workspace = true
+varnish-sys.workspace = true
+
+[lints]
+workspace = true
