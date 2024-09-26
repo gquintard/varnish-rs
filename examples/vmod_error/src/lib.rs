@@ -4,7 +4,7 @@ use std::fs::read_to_string;
 
 use varnish::vcl::Ctx;
 
-varnish::vtc!(test01);
+varnish::run_vtc_tests!("tests/*.vtc");
 
 // no error, just return 0 if anything goes wrong
 pub fn cannot_fail(_: &Ctx, fp: &str) -> i64 {

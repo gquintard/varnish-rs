@@ -6,7 +6,7 @@ use std::error::Error;
 
 use varnish::vcl::{Backend, Ctx, Serve, Transfer, VCLBackendPtr};
 
-varnish::vtc!(test01);
+varnish::run_vtc_tests!("tests/*.vtc");
 
 // parrot is our VCL object, which just holds a rust Backend,
 // it only needs two functions:

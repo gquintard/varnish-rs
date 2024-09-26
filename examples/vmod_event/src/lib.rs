@@ -2,7 +2,7 @@ varnish::boilerplate!();
 
 use varnish::vcl::{Ctx, Event, LogTag, VPriv};
 
-varnish::vtc!(test01);
+varnish::run_vtc_tests!("tests/*.vtc");
 
 // number of times event() was run with Event::Load
 // event will increment it and store a VCL-local copy via VPriv, that loaded() will be able to

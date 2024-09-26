@@ -4,7 +4,7 @@ use std::time::{Duration, Instant};
 
 use varnish::vcl::{Ctx, VPriv};
 
-varnish::vtc!(test01);
+varnish::run_vtc_tests!("tests/*.vtc");
 
 // VPriv can wrap any (possibly custom) struct, here we only need an Instant from std::time.
 // Storing and getting is up to the vmod writer but this removes the worry of NULL dereferencing

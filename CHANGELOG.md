@@ -1,7 +1,9 @@
 # Unpublished
 
-- `vtc!` macro now supports `VARNISHTEST_DURATION` env var, defaulting to "5s"
-- `vtc!` macro now supported debug mode, e.g. `vtc!(file, true)` - keeps the temporary files and always prints the output.
+- `vtc!` macro has been replaced with `run_vtc_tests!("tests/*.vtc")`:
+  - supports glob patterns
+  - supports `VARNISHTEST_DURATION` env var, defaulting to "5s"
+  - supports debug mode - keeps the temporary files and always prints the output: `run_vtc_tests!!("tests/*.vtc", true)`
 
 # 0.0.19 (2024-03-24)
 

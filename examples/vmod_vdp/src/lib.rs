@@ -5,7 +5,7 @@ use std::ffi::CStr;
 use varnish::ffi;
 use varnish::vcl::{new_vdp, Ctx, Event, InitResult, PushAction, PushResult, VDPCtx, VPriv, VDP};
 
-varnish::vtc!(test01);
+varnish::run_vtc_tests!("tests/*.vtc");
 
 // declare a new struct that will buffer the response body
 #[derive(Default)]

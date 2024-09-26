@@ -5,7 +5,7 @@ use std::ffi::CStr;
 use varnish::ffi;
 use varnish::vcl::{new_vfp, Ctx, Event, InitResult, PullResult, VFPCtx, VPriv, VFP};
 
-varnish::vtc!(test01);
+varnish::run_vtc_tests!("tests/*.vtc");
 
 // here, we don't actually need a struct to hold data, just to implement some methods
 struct Lower {}
