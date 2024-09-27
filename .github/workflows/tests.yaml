@@ -38,7 +38,6 @@ jobs:
           sudo apt-get install -y varnish-dev
       - run: just -v ci-test
       - name: Check semver (disabled)
-        if: false  # FIXME: This should be enabled to ensure semver compliance
         uses: obi1kenobi/cargo-semver-checks-action@v2
 
   # Ensure that the docs can be built at docs.rs without varnish dependencies
