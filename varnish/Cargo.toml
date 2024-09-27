@@ -1,6 +1,6 @@
 [package]
 name = "varnish"
-authors = ["Guillaume Quintard <guillaume.quintard@gmail.com>"]
+authors = ["Guillaume Quintard <guillaume.quintard@gmail.com>", "Yuri Astrakhan <YuriAstrakhan@gmail.com>"]
 description = "Access to the Varnish modules API"
 keywords = ["varnish", "vmod", "cache", "http", "reverse-proxy"]
 categories = ["api-bindings"]

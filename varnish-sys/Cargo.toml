@@ -1,7 +1,7 @@
 [package]
 name = "varnish-sys"
 description = "Bindings to the Varnish Cache libraries"
-authors = ["Guillaume Quintard <guillaume.quintard@gmail.com>"]
+authors = ["Guillaume Quintard <guillaume.quintard@gmail.com>", "Yuri Astrakhan <YuriAstrakhan@gmail.com>"]
 keywords = ["varnish", "vmod", "cache", "http", "reverse-proxy"]
 categories = [ "api-bindings"]
 version.workspace = true
