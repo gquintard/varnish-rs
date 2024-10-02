@@ -308,6 +308,11 @@ impl ReturnTy {
         if let Some(ty) = ParamTy::try_parse(ty) {
             return Some(Self::ParamType(ty));
         }
+        if let Some(ident) = as_option_type(ty).and_then(as_simple_ty) {
+            if ident == "String" {
+                return Some(Self::VclString);
+            }
+        }
         if let Some(ident) = as_simple_ty(ty) {
             if ident == "String" {
                 return Some(Self::String);
