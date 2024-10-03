@@ -9,6 +9,10 @@ repository.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[features]
+default = []
+objcore_in_init = []  # <=7.5 passed *objcore in vdp_init_f as the 4th param
+
 [lib]
 name = "varnish_sys"
 

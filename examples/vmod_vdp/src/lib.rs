@@ -22,7 +22,7 @@ impl VDP for Flipper {
 
     // `new` is called when the VCL specifies "flipper" in `resp.filters`
     // just return a default struct, thanks to the derive macro
-    fn new(_: &mut Ctx, _: &mut VDPCtx, _oc: *mut ffi::objcore) -> InitResult<Self> {
+    fn new(_: &mut Ctx, _: &mut VDPCtx) -> InitResult<Self> {
         InitResult::Ok(Flipper::default())
     }
 
