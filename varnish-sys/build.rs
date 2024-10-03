@@ -14,10 +14,17 @@ fn main() {
             {
                 Ok(l) => l.include_paths,
                 Err(e) => {
-                    // FIXME: we should only do this with `docsrs` feature - it is pointless otherwise
-                    println!("no system libvarnish found, using the pre-generated bindings {e}");
-                    std::fs::copy("src/bindings.rs.saved", out_path).unwrap();
-                    return;
+                    // See https://docs.rs/about/builds#detecting-docsrs
+                    if env::var("DOCS_RS").is_ok() {
+                        eprintln!("libvarnish not found, using saved bindings for the doc.rs: {e}");
+                        std::fs::copy("src/bindings.rs.saved", out_path).unwrap();
+                        return;
+                    }
+                    // FIXME: we should give a URL describing how to install varnishapi
+                    // I tried to find it, but failed to find a clear URL for this.
+                    panic!(
+                        "pkg_config failed to find varnishapi, make sure it is installed: {e:?}"
+                    );
                 }
             }
         }
