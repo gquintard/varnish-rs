@@ -136,7 +136,6 @@ pub const __USE_ATFILE: u32 = 1;
 pub const __USE_FORTIFY_LEVEL: u32 = 0;
 pub const __GLIBC_USE_DEPRECATED_GETS: u32 = 0;
 pub const __GLIBC_USE_DEPRECATED_SCANF: u32 = 0;
-pub const __GLIBC_USE_C2X_STRTOL: u32 = 0;
 pub const _STDC_PREDEF_H: u32 = 1;
 pub const __STDC_IEC_559__: u32 = 1;
 pub const __STDC_IEC_60559_BFP__: u32 = 201404;
@@ -145,7 +144,7 @@ pub const __STDC_IEC_60559_COMPLEX__: u32 = 201404;
 pub const __STDC_ISO_10646__: u32 = 201706;
 pub const __GNU_LIBRARY__: u32 = 6;
 pub const __GLIBC__: u32 = 2;
-pub const __GLIBC_MINOR__: u32 = 39;
+pub const __GLIBC_MINOR__: u32 = 36;
 pub const _SYS_CDEFS_H: u32 = 1;
 pub const __glibc_c99_flexarr_available: u32 = 1;
 pub const __LDOUBLE_REDIRECTS_TO_FLOAT128_ABI: u32 = 0;
@@ -419,8 +418,6 @@ pub const SO_BUF_LOCK: u32 = 72;
 pub const SO_RESERVE_MEM: u32 = 73;
 pub const SO_TXREHASH: u32 = 74;
 pub const SO_RCVMARK: u32 = 75;
-pub const SO_PASSPIDFD: u32 = 76;
-pub const SO_PEERPIDFD: u32 = 77;
 pub const SO_TIMESTAMP: u32 = 29;
 pub const SO_TIMESTAMPNS: u32 = 35;
 pub const SO_TIMESTAMPING: u32 = 37;
@@ -509,14 +506,14 @@ pub const __jmp_buf_tag_defined: u32 = 1;
 pub const PTHREAD_STACK_MIN: u32 = 16384;
 pub const PTHREAD_ONCE_INIT: u32 = 0;
 pub const PTHREAD_BARRIER_SERIAL_THREAD: i32 = -1;
+pub const __GNUC_VA_LIST: u32 = 1;
 pub const VRT_INTEGER_MAX: u64 = 999999999999999;
 pub const VRT_INTEGER_MIN: i64 = -999999999999999;
-pub const VRT_MAJOR_VERSION: u32 = 19;
+pub const VRT_MAJOR_VERSION: u32 = 20;
 pub const VRT_MINOR_VERSION: u32 = 0;
 pub const _STDINT_H: u32 = 1;
 pub const _BITS_WCHAR_H: u32 = 1;
 pub const _BITS_STDINT_UINTN_H: u32 = 1;
-pub const _BITS_STDINT_LEAST_H: u32 = 1;
 pub const INT8_MIN: i32 = -128;
 pub const INT16_MIN: i32 = -32768;
 pub const INT32_MIN: i32 = -2147483648;
@@ -772,7 +769,7 @@ pub const VDP_CTX_MAGIC: u32 = 3998227959;
 #[allow(unsafe_code)]
 pub const VMOD_ABI_Version: &::std::ffi::CStr = unsafe {
     ::std::ffi::CStr::from_bytes_with_nul_unchecked(
-        b"Varnish 7.5.0 eef25264e5ca5f96a77129308edb83ccf84cb1b1\0",
+        b"Varnish 7.6.0 ed1243ca162a7b1d975bc0332f0d66d33f0bc78e\0",
     )
 };
 pub const VSB_MAGIC: u32 = 1250090378;
@@ -801,6 +798,8 @@ pub const VSM_MGT_RESTARTED: u32 = 8;
 pub const VSM_WRK_RUNNING: u32 = 512;
 pub const VSM_WRK_CHANGED: u32 = 1024;
 pub const VSM_WRK_RESTARTED: u32 = 2048;
+pub const VSM_MGT_MASK: u32 = 255;
+pub const VSM_WRK_MASK: u32 = 65280;
 pub const HTTP_CONN_MAGIC: u32 = 1041886673;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -4116,8 +4115,8 @@ extern "C" {
         __child: ::std::option::Option<unsafe extern "C" fn()>,
     ) -> ::std::ffi::c_int;
 }
-pub type __gnuc_va_list = __builtin_va_list;
 pub type va_list = __builtin_va_list;
+pub type __gnuc_va_list = __builtin_va_list;
 pub type wchar_t = ::std::ffi::c_int;
 #[repr(C)]
 #[repr(align(16))]
@@ -4633,13 +4632,15 @@ pub struct vrt_backend {
     pub connect_timeout: vtim_dur,
     pub first_byte_timeout: vtim_dur,
     pub between_bytes_timeout: vtim_dur,
+    pub backend_wait_timeout: vtim_dur,
     pub max_connections: ::std::ffi::c_uint,
     pub proxy_header: ::std::ffi::c_uint,
+    pub backend_wait_limit: ::std::ffi::c_uint,
     pub probe: VCL_PROBE,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-    ["Size of vrt_backend"][::std::mem::size_of::<vrt_backend>() - 80usize];
+    ["Size of vrt_backend"][::std::mem::size_of::<vrt_backend>() - 96usize];
     ["Alignment of vrt_backend"][::std::mem::align_of::<vrt_backend>() - 8usize];
     ["Offset of field: vrt_backend::magic"][::std::mem::offset_of!(vrt_backend, magic) - 0usize];
     ["Offset of field: vrt_backend::endpoint"]
@@ -4656,11 +4657,15 @@ const _: () = {
         [::std::mem::offset_of!(vrt_backend, first_byte_timeout) - 48usize];
     ["Offset of field: vrt_backend::between_bytes_timeout"]
         [::std::mem::offset_of!(vrt_backend, between_bytes_timeout) - 56usize];
+    ["Offset of field: vrt_backend::backend_wait_timeout"]
+        [::std::mem::offset_of!(vrt_backend, backend_wait_timeout) - 64usize];
     ["Offset of field: vrt_backend::max_connections"]
-        [::std::mem::offset_of!(vrt_backend, max_connections) - 64usize];
+        [::std::mem::offset_of!(vrt_backend, max_connections) - 72usize];
     ["Offset of field: vrt_backend::proxy_header"]
-        [::std::mem::offset_of!(vrt_backend, proxy_header) - 68usize];
-    ["Offset of field: vrt_backend::probe"][::std::mem::offset_of!(vrt_backend, probe) - 72usize];
+        [::std::mem::offset_of!(vrt_backend, proxy_header) - 76usize];
+    ["Offset of field: vrt_backend::backend_wait_limit"]
+        [::std::mem::offset_of!(vrt_backend, backend_wait_limit) - 80usize];
+    ["Offset of field: vrt_backend::probe"][::std::mem::offset_of!(vrt_backend, probe) - 88usize];
 };
 impl Default for vrt_backend {
     fn default() -> Self {
@@ -7774,7 +7779,6 @@ pub type vdp_init_f = ::std::option::Option<
         ctx: *const vrt_ctx,
         arg1: *mut vdp_ctx,
         priv_: *mut *mut ::std::ffi::c_void,
-        arg2: *mut objcore,
     ) -> ::std::ffi::c_int,
 >;
 pub type vdp_fini_f = ::std::option::Option<
@@ -7911,11 +7915,13 @@ pub struct vdp_ctx {
     pub nxt: *mut vdp_entry,
     pub wrk: *mut worker,
     pub vsl: *mut vsl_log,
-    pub req: *mut req,
+    pub oc: *mut objcore,
+    pub hp: *mut http,
+    pub clen: *mut intmax_t,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-    ["Size of vdp_ctx"][::std::mem::size_of::<vdp_ctx>() - 64usize];
+    ["Size of vdp_ctx"][::std::mem::size_of::<vdp_ctx>() - 80usize];
     ["Alignment of vdp_ctx"][::std::mem::align_of::<vdp_ctx>() - 8usize];
     ["Offset of field: vdp_ctx::magic"][::std::mem::offset_of!(vdp_ctx, magic) - 0usize];
     ["Offset of field: vdp_ctx::retval"][::std::mem::offset_of!(vdp_ctx, retval) - 4usize];
@@ -7924,7 +7930,9 @@ const _: () = {
     ["Offset of field: vdp_ctx::nxt"][::std::mem::offset_of!(vdp_ctx, nxt) - 32usize];
     ["Offset of field: vdp_ctx::wrk"][::std::mem::offset_of!(vdp_ctx, wrk) - 40usize];
     ["Offset of field: vdp_ctx::vsl"][::std::mem::offset_of!(vdp_ctx, vsl) - 48usize];
-    ["Offset of field: vdp_ctx::req"][::std::mem::offset_of!(vdp_ctx, req) - 56usize];
+    ["Offset of field: vdp_ctx::oc"][::std::mem::offset_of!(vdp_ctx, oc) - 56usize];
+    ["Offset of field: vdp_ctx::hp"][::std::mem::offset_of!(vdp_ctx, hp) - 64usize];
+    ["Offset of field: vdp_ctx::clen"][::std::mem::offset_of!(vdp_ctx, clen) - 72usize];
 };
 impl Default for vdp_ctx {
     fn default() -> Self {

@@ -8,7 +8,7 @@
 use std::ffi::{c_int, c_uint, c_void, CStr};
 use std::ptr;
 
-use crate::ffi::{objcore, vdp_ctx, vfp_ctx, vfp_entry};
+use crate::ffi::{vdp_ctx, vfp_ctx, vfp_entry};
 use crate::vcl::Ctx;
 use crate::{ffi, validate_vfp_ctx, validate_vfp_entry};
 
@@ -60,7 +60,7 @@ pub trait VDP: Sized {
     fn name() -> &'static CStr;
     /// Create a new processor, possibly using knowledge from the pipeline, or from the current
     /// request.
-    fn new(vrt_ctx: &mut Ctx, vdp_ctx: &mut VDPCtx, oc: *mut objcore) -> InitResult<Self>;
+    fn new(vrt_ctx: &mut Ctx, vdp_ctx: &mut VDPCtx) -> InitResult<Self>;
     /// Handle the data buffer from the previous processor. This function generally uses
     /// [`VDPCtx::push`] to push data to the next processor.
     fn push(&mut self, ctx: &mut VDPCtx, act: PushAction, buf: &[u8]) -> PushResult;
@@ -70,11 +70,11 @@ pub unsafe extern "C" fn gen_vdp_init<T: VDP>(
     vrt_ctx: *const ffi::vrt_ctx,
     ctx_raw: *mut vdp_ctx,
     priv_: *mut *mut c_void,
-    oc: *mut objcore,
+    #[cfg(feature = "objcore_in_init")] _oc: *mut ffi::objcore,
 ) -> c_int {
     assert_ne!(priv_, ptr::null_mut());
     assert_eq!(*priv_, ptr::null_mut());
-    match T::new(&mut Ctx::from_ptr(vrt_ctx), &mut VDPCtx::new(ctx_raw), oc) {
+    match T::new(&mut Ctx::from_ptr(vrt_ctx), &mut VDPCtx::new(ctx_raw)) {
         InitResult::Ok(proc) => {
             *priv_ = Box::into_raw(Box::new(proc)).cast::<c_void>();
             0

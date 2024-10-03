@@ -41,10 +41,6 @@ build:
 test: build
     cargo test --workspace --all-targets
 
-test-all-features: test
-    cargo build --workspace --all-targets --all-features
-    cargo test --workspace --all-targets --all-features
-
 # Test documentation
 test-doc:
     cargo test --doc
@@ -55,7 +51,7 @@ rust-info:
     cargo --version
 
 # Run all tests as expected by CI
-ci-test: rust-info test-fmt clippy test-all-features test-doc
+ci-test: rust-info test-fmt clippy test test-doc
 
 # Verify that the current version of the crate is not the same as the one published on crates.io
 check-if-published:
