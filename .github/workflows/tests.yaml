@@ -2,9 +2,9 @@ name: Build
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main", "feature-*" ]
   pull_request:
-    branches: [ main ]
+    branches: [ "main", "feature-*" ]
   release:
     types: [ published ]
   workflow_dispatch:
