@@ -4,8 +4,9 @@ use std::ffi::{c_int, c_uint, c_void};
 
 use crate::ffi;
 use crate::ffi::{
-    vrt_ctx, VRT_fail, VSL_tag_e_SLT_Backend_health, VSL_tag_e_SLT_Debug, VSL_tag_e_SLT_Error,
-    VSL_tag_e_SLT_FetchError, VSL_tag_e_SLT_VCL_Error, VSL_tag_e_SLT_VCL_Log, VRT_CTX_MAGIC,
+    vcl_event_e, vrt_ctx, VRT_fail, VSL_tag_e_SLT_Backend_health, VSL_tag_e_SLT_Debug,
+    VSL_tag_e_SLT_Error, VSL_tag_e_SLT_FetchError, VSL_tag_e_SLT_VCL_Error, VSL_tag_e_SLT_VCL_Log,
+    VRT_CTX_MAGIC,
 };
 use crate::vcl::{TestWS, VclError, HTTP, WS};
 
@@ -204,22 +205,22 @@ impl Event {
     /// # Panics
     ///
     /// Panics if provided with an unrecognized number.
-    pub fn from_raw(event: ffi::vcl_event_e) -> Self {
+    pub fn from_raw(event: vcl_event_e) -> Self {
         event
             .try_into()
-            .unwrap_or_else(|e| panic!("{e}: vcl_event_e =={event}"))
+            .unwrap_or_else(|e| panic!("{e}: vcl_event_e == {}", event.0))
     }
 }
 
-impl TryFrom<ffi::vcl_event_e> for Event {
+impl TryFrom<vcl_event_e> for Event {
     type Error = &'static str;
 
-    fn try_from(event: ffi::vcl_event_e) -> Result<Self, Self::Error> {
+    fn try_from(event: vcl_event_e) -> Result<Self, Self::Error> {
         Ok(match event {
-            ffi::vcl_event_e_VCL_EVENT_LOAD => Self::Load,
-            ffi::vcl_event_e_VCL_EVENT_WARM => Self::Warm,
-            ffi::vcl_event_e_VCL_EVENT_COLD => Self::Cold,
-            ffi::vcl_event_e_VCL_EVENT_DISCARD => Self::Discard,
+            vcl_event_e::VCL_EVENT_LOAD => Self::Load,
+            vcl_event_e::VCL_EVENT_WARM => Self::Warm,
+            vcl_event_e::VCL_EVENT_COLD => Self::Cold,
+            vcl_event_e::VCL_EVENT_DISCARD => Self::Discard,
             _ => Err("unrecognized event value")?,
         })
     }

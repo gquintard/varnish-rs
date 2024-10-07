@@ -1,0 +1,212 @@
+---
+source: varnish-macros/src/tests.rs
+---
+VmodInfo {
+    params: VmodParams {
+        docs: None,
+    },
+    ident: "obj",
+    docs: "",
+    funcs: [],
+    objects: [
+        ObjInfo {
+            ident: "kv1",
+            docs: "",
+            constructor: FuncInfo {
+                func_type: Constructor,
+                ident: "new",
+                docs: "",
+                has_optional_args: true,
+                args: [
+                    ParamTypeInfo {
+                        ident: "cap",
+                        docs: "",
+                        idx: 0,
+                        ty: Value(
+                            ParamInfo {
+                                is_optional: true,
+                                default: Null,
+                                ty_info: I64,
+                            },
+                        ),
+                    },
+                ],
+                returns: Value(
+                    SelfType,
+                ),
+            },
+            destructor: FuncInfo {
+                func_type: Destructor,
+                ident: "_fini",
+                docs: "",
+                has_optional_args: false,
+                args: [],
+                returns: Value(
+                    Default,
+                ),
+            },
+            funcs: [
+                FuncInfo {
+                    func_type: Method,
+                    ident: "set",
+                    docs: "",
+                    has_optional_args: false,
+                    args: [
+                        ParamTypeInfo {
+                            ident: "self",
+                            docs: "",
+                            idx: 0,
+                            ty: SelfType,
+                        },
+                        ParamTypeInfo {
+                            ident: "key",
+                            docs: "",
+                            idx: 1,
+                            ty: Value(
+                                ParamInfo {
+                                    is_optional: false,
+                                    default: Null,
+                                    ty_info: Str,
+                                },
+                            ),
+                        },
+                        ParamTypeInfo {
+                            ident: "value",
+                            docs: "",
+                            idx: 2,
+                            ty: Value(
+                                ParamInfo {
+                                    is_optional: false,
+                                    default: Null,
+                                    ty_info: Str,
+                                },
+                            ),
+                        },
+                    ],
+                    returns: Value(
+                        Default,
+                    ),
+                },
+                FuncInfo {
+                    func_type: Method,
+                    ident: "get",
+                    docs: "",
+                    has_optional_args: false,
+                    args: [
+                        ParamTypeInfo {
+                            ident: "self",
+                            docs: "",
+                            idx: 0,
+                            ty: SelfType,
+                        },
+                        ParamTypeInfo {
+                            ident: "key",
+                            docs: "",
+                            idx: 1,
+                            ty: Value(
+                                ParamInfo {
+                                    is_optional: false,
+                                    default: Null,
+                                    ty_info: Str,
+                                },
+                            ),
+                        },
+                    ],
+                    returns: Value(
+                        String,
+                    ),
+                },
+            ],
+        },
+        ObjInfo {
+            ident: "kv2",
+            docs: "",
+            constructor: FuncInfo {
+                func_type: Constructor,
+                ident: "new",
+                docs: "",
+                has_optional_args: true,
+                args: [
+                    ParamTypeInfo {
+                        ident: "cap",
+                        docs: "",
+                        idx: 0,
+                        ty: Value(
+                            ParamInfo {
+                                is_optional: true,
+                                default: Null,
+                                ty_info: I64,
+                            },
+                        ),
+                    },
+                    ParamTypeInfo {
+                        ident: "name",
+                        docs: "",
+                        idx: 1,
+                        ty: VclName,
+                    },
+                ],
+                returns: Value(
+                    SelfType,
+                ),
+            },
+            destructor: FuncInfo {
+                func_type: Destructor,
+                ident: "_fini",
+                docs: "",
+                has_optional_args: false,
+                args: [],
+                returns: Value(
+                    Default,
+                ),
+            },
+            funcs: [
+                FuncInfo {
+                    func_type: Method,
+                    ident: "set",
+                    docs: "",
+                    has_optional_args: true,
+                    args: [
+                        ParamTypeInfo {
+                            ident: "self",
+                            docs: "",
+                            idx: 0,
+                            ty: SelfType,
+                        },
+                        ParamTypeInfo {
+                            ident: "key",
+                            docs: "",
+                            idx: 1,
+                            ty: Value(
+                                ParamInfo {
+                                    is_optional: false,
+                                    default: Null,
+                                    ty_info: Str,
+                                },
+                            ),
+                        },
+                        ParamTypeInfo {
+                            ident: "value",
+                            docs: "",
+                            idx: 2,
+                            ty: Value(
+                                ParamInfo {
+                                    is_optional: true,
+                                    default: Null,
+                                    ty_info: Str,
+                                },
+                            ),
+                        },
+                    ],
+                    returns: Value(
+                        Default,
+                    ),
+                },
+            ],
+        },
+    ],
+    shared_types: SharedTypes {
+        shared_per_task_ty: None,
+        shared_per_vcl_ty: None,
+    },
+}

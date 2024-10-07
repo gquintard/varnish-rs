@@ -5,7 +5,6 @@ mod error;
 mod http;
 mod probe;
 mod processor;
-mod vpriv;
 mod vsb;
 mod ws;
 
@@ -16,6 +15,5 @@ pub use error::*;
 pub use http::*;
 pub use probe::*;
 pub use processor::*;
-pub use vpriv::*;
 pub use vsb::*;
 pub use ws::*;

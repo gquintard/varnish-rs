@@ -1,6 +1,0 @@
-#-
-$Module infiniteloop 3 "Ignore the restart/retry limits"
-
-$Function VOID reset()
-
-Set the `retries` and `restarts` internal counters to 0. This is extremely dangerous and you only use this if you know what you are doing, and/or love infinite loops.

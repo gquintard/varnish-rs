@@ -1,11 +1,49 @@
-varnish::boilerplate!();
-
 use std::ffi::CStr;
 
-use varnish::ffi;
-use varnish::vcl::{new_vdp, Ctx, Event, InitResult, PushAction, PushResult, VDPCtx, VPriv, VDP};
+use varnish::vcl::{Ctx, InitResult, PushAction, PushResult, VDPCtx, VDP};
 
 varnish::run_vtc_tests!("tests/*.vtc");
+
+/// Manipulate `resp.body`
+///
+/// Varnish Delivery Processors allow a vmod writer to insert themselves into a delivery
+/// pipeline and alter an object body as it is being delivered to a client.  In this vmod,
+/// the transformation is very simple: we simply send the body backwards using a VDP named "flipper".
+#[varnish::vmod(docs = "README.md")]
+mod vdp {
+    use varnish::ffi;
+    use varnish::vcl::{new_vdp, Ctx, Event};
+
+    use crate::Flipper;
+
+    /// We need the event function here to declare our VDP.
+    /// However, there's no "manual" VCL function for us to implement here,
+    /// loading the vmod is sufficient to add the VDP to the list of available processors,
+    /// and we'll set it on a per-request basis using `resp.filters` in VCL.
+    #[event]
+    pub fn event(ctx: &mut Ctx, #[shared_per_vcl] vp: &mut Option<Box<ffi::vdp>>, event: Event) {
+        match event {
+            // on load, create the VDP C struct, save it into a priv, they register it
+            Event::Load => {
+                let instance = Box::new(new_vdp::<Flipper>());
+                unsafe {
+                    ffi::VRT_AddVDP(ctx.raw, instance.as_ref());
+                }
+                *vp = Some(instance);
+            }
+            // on discard, deregister the VDP, but don't worry about cleaning it, it'll be done by
+            // Varnish automatically
+            Event::Discard => {
+                if let Some(vp) = vp.as_ref() {
+                    unsafe {
+                        ffi::VRT_RemoveVDP(ctx.raw, vp.as_ref());
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+}
 
 // declare a new struct that will buffer the response body
 #[derive(Default)]
@@ -41,23 +79,4 @@ impl VDP for Flipper {
         // send
         ctx.push(act, &self.body)
     }
-}
-
-pub unsafe fn event(
-    ctx: &mut Ctx,
-    vp: &mut VPriv<ffi::vdp>,
-    event: Event,
-) -> Result<(), &'static str> {
-    match event {
-        // on load, create the VDP C struct, save it into a priv, they register it
-        Event::Load => {
-            vp.store(new_vdp::<Flipper>());
-            ffi::VRT_AddVDP(ctx.raw, vp.as_ref().unwrap());
-        }
-        // on discard, deregister the VDP, but don't worry about cleaning it, it'll be done by
-        // Varnish automatically
-        Event::Discard => ffi::VRT_RemoveVDP(ctx.raw, vp.as_ref().unwrap()),
-        _ => (),
-    }
-    Ok(())
 }

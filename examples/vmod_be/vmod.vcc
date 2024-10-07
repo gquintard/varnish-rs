@@ -1,5 +1,0 @@
-#-
-$Module be 3 "a simple STRING dictionary in your VCL"
-
-$Object parrot(STRING)
-$Method BACKEND .backend()

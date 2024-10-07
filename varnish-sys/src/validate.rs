@@ -1,6 +1,6 @@
 use crate::ffi::{
     director, req, sess, vcldir, vfp_ctx, vfp_entry, vrt_ctx, ws, DIRECTOR_MAGIC, REQ_MAGIC,
-    SESS_MAGIC, VCLDIR_MAGIC, VFP_CTX_MAGIC, VFP_ENTRY_MAGIC, VRT_CTX_MAGIC, WS_MAGIC,
+    SESS_MAGIC, VCLDIR_MAGIC, VCL_BACKEND, VFP_CTX_MAGIC, VFP_ENTRY_MAGIC, VRT_CTX_MAGIC, WS_MAGIC,
 };
 
 pub unsafe fn validate_vfp_ctx(ctxp: *mut vfp_ctx) -> &'static mut vfp_ctx {
@@ -21,8 +21,8 @@ pub unsafe fn validate_vfp_entry(vfep: *mut vfp_entry) -> &'static mut vfp_entry
     val
 }
 
-pub unsafe fn validate_director(be: *const director) -> &'static director {
-    let val = be.as_ref().unwrap();
+pub unsafe fn validate_director(be: VCL_BACKEND) -> &'static director {
+    let val = be.0.as_ref().unwrap();
     assert_eq!(val.magic, DIRECTOR_MAGIC);
     val
 }

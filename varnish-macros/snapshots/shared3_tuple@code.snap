@@ -1,0 +1,89 @@
+---
+source: varnish-macros/src/tests.rs
+---
+mod tuple {
+    #[allow(non_snake_case, unused_imports, unused_qualifications, unused_variables)]
+    mod varnish_generated {
+        use std::borrow::Cow;
+        use std::ffi::{c_char, c_int, c_uint, c_void, CStr};
+        use std::ptr::null;
+        use varnish::ffi::{
+            VCL_BACKEND, VCL_BOOL, VCL_DURATION, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL,
+            VCL_STRING, VCL_VOID, VMOD_ABI_Version, VMOD_PRIV_METHODS_MAGIC, vcl_event_e,
+            vmod_priv, vmod_priv_methods, vrt_ctx,
+        };
+        use varnish::vcl::{Ctx, IntoVCL};
+        use super::*;
+        static PRIV_TASK_METHODS: vmod_priv_methods = vmod_priv_methods {
+            magic: VMOD_PRIV_METHODS_MAGIC,
+            type_: c"PerTask < '_ >".as_ptr(),
+            fini: Some(vmod_priv::on_fini::<PerTask<'_>>),
+        };
+        unsafe extern "C" fn vmod_c_ref_to_slice_lifetime(
+            __ctx: *mut vrt_ctx,
+            tsk_vals: *mut vmod_priv,
+        ) -> VCL_STRING {
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let mut __var0 = (*tsk_vals).take();
+            let __result = super::ref_to_slice_lifetime(&mut __var0);
+            if let Some(obj) = __var0 {
+                (*tsk_vals).put(obj, &PRIV_TASK_METHODS);
+            }
+            match __result.into_vcl(&mut __ctx.ws) {
+                Ok(v) => v,
+                Err(err) => {
+                    __ctx.fail(err);
+                    Default::default()
+                }
+            }
+        }
+        #[repr(C)]
+        pub struct VmodExports {
+            vmod_c_ref_to_slice_lifetime: Option<
+                unsafe extern "C" fn(
+                    __ctx: *mut vrt_ctx,
+                    tsk_vals: *mut vmod_priv,
+                ) -> VCL_STRING,
+            >,
+        }
+        pub static VMOD_EXPORTS: VmodExports = VmodExports {
+            vmod_c_ref_to_slice_lifetime: Some(vmod_c_ref_to_slice_lifetime),
+        };
+        #[repr(C)]
+        pub struct VmodData {
+            vrt_major: c_uint,
+            vrt_minor: c_uint,
+            file_id: *const c_char,
+            name: *const c_char,
+            func_name: *const c_char,
+            func: *const c_void,
+            func_len: c_int,
+            proto: *const c_char,
+            json: *const c_char,
+            abi: *const c_char,
+        }
+        unsafe impl Sync for VmodData {}
+        #[allow(non_upper_case_globals)]
+        #[no_mangle]
+        pub static Vmod_tuple_Data: VmodData = VmodData {
+            vrt_major: 0,
+            vrt_minor: 0,
+            file_id: c"a03d8e3039e68536f4e8f75dd11b34e271064701a94b938ae561493fccb6d6b7"
+                .as_ptr(),
+            name: c"tuple".as_ptr(),
+            func_name: c"Vmod_vmod_tuple_Func".as_ptr(),
+            func_len: size_of::<VmodExports>() as c_int,
+            func: &VMOD_EXPORTS as *const _ as *const c_void,
+            abi: VMOD_ABI_Version.as_ptr(),
+            json: JSON.as_ptr(),
+            proto: null(),
+        };
+        const JSON: &CStr = c"VMOD_JSON_SPEC\u{2}\n[\n  [\n    \"$VMOD\",\n    \"1.0\",\n    \"tuple\",\n    \"Vmod_vmod_tuple_Func\",\n    \"a03d8e3039e68536f4e8f75dd11b34e271064701a94b938ae561493fccb6d6b7\",\n    \"Varnish (version) (hash)\",\n    \"0\",\n    \"0\"\n  ],\n  [\n    \"$CPROTO\",\n    \"\\ntypedef VCL_STRING td_vmod_tuple_ref_to_slice_lifetime(\\n    VRT_CTX,\\n    struct vmod_priv *\\n);\\n\\nstruct Vmod_vmod_tuple_Func {\\n  td_vmod_tuple_ref_to_slice_lifetime *f_ref_to_slice_lifetime;\\n};\\n\\nstatic struct Vmod_vmod_tuple_Func Vmod_vmod_tuple_Func;\"\n  ],\n  [\n    \"$FUNC\",\n    \"ref_to_slice_lifetime\",\n    [\n      [\n        \"STRING\"\n      ],\n      \"Vmod_vmod_tuple_Func.f_ref_to_slice_lifetime\",\n      \"\",\n      [\n        \"PRIV_TASK\",\n        \"tsk_vals\"\n      ]\n    ]\n  ]\n]\n\u{3}";
+    }
+    use super::PerTask;
+    pub fn ref_to_slice_lifetime<'a>(
+        tsk_vals: &mut Option<Box<PerTask<'a>>>,
+    ) -> Option<&'a [u8]> {
+        tsk_vals.as_ref().as_deref().map(|v| v.data)
+    }
+}
