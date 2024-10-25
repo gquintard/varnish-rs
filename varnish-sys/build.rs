@@ -29,7 +29,7 @@ fn main() {
                     .expect("varnishapi invalid version minor number");
                 println!("cargo::metadata=version_number={}", l.version);
                 if major == 7 && minor <= 5 {
-                    println!("cargo::rustc-cfg=feature=\"objcore_in_init\"");
+                    println!("cargo::rustc-cfg=feature=\"_objcore_in_init\"");
                 }
                 l.include_paths
             }

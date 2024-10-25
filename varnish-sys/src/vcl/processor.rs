@@ -70,7 +70,7 @@ pub unsafe extern "C" fn gen_vdp_init<T: VDP>(
     vrt_ctx: *const ffi::vrt_ctx,
     ctx_raw: *mut vdp_ctx,
     priv_: *mut *mut c_void,
-    #[cfg(feature = "objcore_in_init")] _oc: *mut ffi::objcore,
+    #[cfg(feature = "_objcore_in_init")] _oc: *mut ffi::objcore,
 ) -> c_int {
     assert_ne!(priv_, ptr::null_mut());
     assert_eq!(*priv_, ptr::null_mut());
