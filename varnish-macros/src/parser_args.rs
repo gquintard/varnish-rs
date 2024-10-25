@@ -363,7 +363,7 @@ impl ReturnTy {
                 return Some(Self::String);
             } else if ident == "Self" {
                 return Some(Self::SelfType);
-            } else if ident == "VCLBackendPtr" || ident == "VCL_BACKEND" {
+            } else if ident == "VCL_BACKEND" {
                 return Some(Self::Backend);
             } else if ident == "VCL_STRING" {
                 return Some(Self::VclString);

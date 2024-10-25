@@ -1,17 +1,15 @@
 //! Facilities to create a VMOD backend
 //!
-//! [`ffi::VCL_BACKEND`] can be a bit confusing to create and manipulate, notably as they
+//! [`VCL_BACKEND`] can be a bit confusing to create and manipulate, notably as they
 //! involve a bunch of structures with different lifetimes and quite a lot of casting. This
 //! module hopes to alleviate those issues by handling the most of them and by offering a more
 //! idiomatic interface centered around vmod objects.
 //!
 //! Here's what's in the toolbox:
-//! - [VCLBackendPtr] is just an alias for [`ffi::VCL_BACKEND`] to avoid depending on
-//!   `ffi`.
-//! - the [Backend] type  wraps a `Serve` struct into a C backend
-//! - the [Serve] trait defines which methods to implement to act as a backend, and includes
+//! - the [`Backend`] type wraps a `Serve`-implementing struct into a C backend
+//! - the [`Serve`] trait defines which methods to implement to act as a backend, and includes
 //!   default implementations for most methods.
-//! - the [Transfer] trait provides a way to generate a response body,notably handling the
+//! - the [`Transfer`] trait provides a way to generate a response body,notably handling the
 //!   transfer-encoding for you.
 //!
 //! Note: You can check out the [example/vmod_be
@@ -74,14 +72,14 @@ use std::os::unix::io::FromRawFd;
 use std::ptr::{null, null_mut};
 use std::time::SystemTime;
 
-use crate::ffi::{vfp_status, VCL_BACKEND, VCL_IP};
+use crate::ffi::{vfp_status, VCL_BACKEND, VCL_BOOL, VCL_IP, VCL_TIME};
 use crate::utils::get_backend;
 use crate::vcl::{Ctx, Event, IntoVCL, LogTag, VclError, VclResult, Vsb, WS};
 use crate::{
     ffi, validate_director, validate_vdir, validate_vfp_ctx, validate_vfp_entry, validate_vrt_ctx,
 };
 
-/// Fat wrapper around [`VCLBackendPtr`]/[`ffi::VCL_BACKEND`].
+/// Fat wrapper around [`VCL_BACKEND`].
 ///
 /// It will handle almost all the necessary boilerplate needed to create a vmod. Most importantly, it destroys/unregisters the backend as part of it's `Drop` implementation, and
 /// will convert the C methods to something more idiomatic.
@@ -451,8 +449,8 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
 unsafe extern "C" fn wrap_healthy<S: Serve<T>, T: Transfer>(
     ctxp: *const ffi::vrt_ctx,
     be: VCL_BACKEND,
-    changed: *mut ffi::VCL_TIME,
-) -> ffi::VCL_BOOL {
+    changed: *mut VCL_TIME,
+) -> VCL_BOOL {
     let backend: &S = get_backend(validate_director(be));
 
     let mut ctx = Ctx::from_ptr(ctxp);
