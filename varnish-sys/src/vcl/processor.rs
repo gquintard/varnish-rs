@@ -283,7 +283,11 @@ impl<'a> VFPCtx<'a> {
                 PullResult::End(len as usize)
             }
             vfp_status::VFP_ERROR => PullResult::Err,
-            n => panic!("unknown vfp_status: {}", n.0),
+            vfp_status::VFP_NULL => panic!("VFP_Suck() was never supposed to return VFP_NULL!"),
+            // In the future, there might be more enum values, so we should ensure it continues
+            // to compile, but we do want a warning when developing locally to add the new one.
+            #[expect(unreachable_patterns)]
+            n => panic!("unknown vfp_status {n:?}"),
         }
     }
 }
