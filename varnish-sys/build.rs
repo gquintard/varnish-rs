@@ -1,5 +1,5 @@
-use std::env;
 use std::path::PathBuf;
+use std::{env, fs};
 
 fn main() {
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
@@ -37,7 +37,7 @@ fn main() {
                 // See https://docs.rs/about/builds#detecting-docsrs
                 if env::var("DOCS_RS").is_ok() {
                     eprintln!("libvarnish not found, using saved bindings for the doc.rs: {e}");
-                    std::fs::copy("bindings.for-docs", out_path).unwrap();
+                    fs::copy("bindings.for-docs", out_path).unwrap();
                     println!("cargo::metadata=version_number=7.6.0");
                     return;
                 }
@@ -103,6 +103,17 @@ fn main() {
 
     // Write the bindings to the $OUT_DIR/bindings.rs file.
     bindings
-        .write_to_file(out_path)
+        .write_to_file(&out_path)
         .expect("Couldn't write bindings!");
+
+    // Compare generated `out_path` file to the checked-in `bindings.for-docs` file,
+    // and if they differ, raise a warning.
+    let generated = fs::read_to_string(&out_path).unwrap();
+    let checked_in = fs::read_to_string("bindings.for-docs").unwrap();
+    if generated != checked_in {
+        println!(
+            "cargo::warning=Generated bindings differ from checked-in bindings.for-docs. Update with   cp {} varnish-sys/bindings.for-docs",
+            out_path.display()
+        );
+    }
 }
