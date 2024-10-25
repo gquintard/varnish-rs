@@ -91,12 +91,12 @@ fn main() {
         // .new_type_alias("VCL_VCL") // *mut vcl
         // .new_type_alias("VCL_VOID") // ::std::os::raw::c_void
         //
-        .newtype_enum("vfp_status") // ::std::ffi::c_int
-        .newtype_enum("vcl_func_call_e") // ::std::ffi::c_int
-        .newtype_enum("vcl_func_fail_e") // ::std::ffi::c_int
-        .newtype_enum("vcl_event_e") // ::std::ffi::c_int
-        .newtype_enum("gethdr_e") // ::std::ffi::c_int
-        .newtype_enum("lbody_e") // ::std::ffi::c_int
+        .rustified_enum("vfp_status") // ::std::ffi::c_int
+        .rustified_enum("vcl_func_call_e") // ::std::ffi::c_int
+        .rustified_enum("vcl_func_fail_e") // ::std::ffi::c_int
+        .rustified_enum("vcl_event_e") // ::std::ffi::c_int
+        .rustified_enum("gethdr_e") // ::std::ffi::c_int
+        .rustified_enum("lbody_e") // ::std::ffi::c_int
         //
         .generate()
         .expect("Unable to generate bindings");

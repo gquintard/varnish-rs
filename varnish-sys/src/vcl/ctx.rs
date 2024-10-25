@@ -208,7 +208,7 @@ impl Event {
     pub fn from_raw(event: vcl_event_e) -> Self {
         event
             .try_into()
-            .unwrap_or_else(|e| panic!("{e}: vcl_event_e == {}", event.0))
+            .unwrap_or_else(|e| panic!("{e}: vcl_event_e == {event:?}"))
     }
 }
 
@@ -221,6 +221,9 @@ impl TryFrom<vcl_event_e> for Event {
             vcl_event_e::VCL_EVENT_WARM => Self::Warm,
             vcl_event_e::VCL_EVENT_COLD => Self::Cold,
             vcl_event_e::VCL_EVENT_DISCARD => Self::Discard,
+            // In the future, there might be more enum values, so we should ensure it continues
+            // to compile, but we do want a warning when developing locally to add the new one.
+            #[expect(unreachable_patterns)]
             _ => Err("unrecognized event value")?,
         })
     }
