@@ -37,7 +37,7 @@ fn main() {
                 // See https://docs.rs/about/builds#detecting-docsrs
                 if env::var("DOCS_RS").is_ok() {
                     eprintln!("libvarnish not found, using saved bindings for the doc.rs: {e}");
-                    std::fs::copy("src/bindings.rs.saved", out_path).unwrap();
+                    std::fs::copy("bindings.for-docs", out_path).unwrap();
                     println!("cargo::metadata=version_number=7.6.0");
                     return;
                 }
