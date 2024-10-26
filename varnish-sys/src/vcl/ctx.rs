@@ -8,7 +8,7 @@ use crate::ffi::{
     VSL_tag_e_SLT_Error, VSL_tag_e_SLT_FetchError, VSL_tag_e_SLT_VCL_Error, VSL_tag_e_SLT_VCL_Log,
     VRT_CTX_MAGIC,
 };
-use crate::vcl::{TestWS, VclError, HTTP, WS};
+use crate::vcl::{TestWS, VclError, Workspace, HTTP};
 
 /// VSL logging tag
 ///
@@ -70,7 +70,7 @@ pub struct Ctx<'a> {
     pub http_resp: Option<HTTP<'a>>,
     pub http_bereq: Option<HTTP<'a>>,
     pub http_beresp: Option<HTTP<'a>>,
-    pub ws: WS<'a>,
+    pub ws: Workspace<'a>,
 }
 
 impl<'a> Ctx<'a> {
@@ -89,7 +89,7 @@ impl<'a> Ctx<'a> {
         let http_resp = HTTP::new(raw.http_resp);
         let http_bereq = HTTP::new(raw.http_bereq);
         let http_beresp = HTTP::new(raw.http_beresp);
-        let ws = WS::new(raw.ws);
+        let ws = Workspace::new(raw.ws);
         Self {
             raw,
             http_req,
