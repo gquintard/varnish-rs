@@ -20,7 +20,7 @@ _objcore_in_init = []  # <=7.5 passed *objcore in vdp_init_f as the 4th param
 name = "varnish_sys"
 
 [package.metadata.libvarnishapi]
-version = "7.5"
+version = "7.6"
 
 [build-dependencies]
 bindgen.workspace = true
