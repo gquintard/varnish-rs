@@ -17,11 +17,11 @@ pub struct FuncProcessor {
     /// For fn with optional args, the name of the struct that holds all arguments, i.e. `arg_simple_void_to_void`
     opt_args_ty_name: String,
 
-    /// (FUNC) Steps to create and init temp vars from C values. `[ {let ctx = &mut ctx; }, {let __var1 = args.foo;} ]`
-    func_init_vars: Vec<TokenStream>,
-    /// (FUNC) Argument as passed to the user function `[ {&ctx}, {__var1;} ]`
+    /// Rust wrapper steps before calling user fn, e.g. create temp vars from C values. `[ {let ctx = &mut ctx; }, {let __var1 = args.foo;} ]`
+    func_pre_call: Vec<TokenStream>,
+    /// Arguments as passed to the user function from the Rust wrapper: `[ {&ctx}, {__var1;} ]`
     func_call_vars: Vec<TokenStream>,
-    /// (FUNC) Any post-call processing steps, i.e. `[ { }, { if ... { ... } } ]`
+    /// Rust wrapper steps to take after calling user function, e.g. `[ { if ... { ... } } ]`
     func_post_call: Vec<TokenStream>,
 
     /// C function list of arguments for funcs with no optional args, e.g. `["VCL_INT", "VCL_STRING"]`
@@ -80,7 +80,12 @@ impl FuncProcessor {
     fn init(&mut self, info: &FuncInfo) {
         self.do_fn_return(info);
 
-        if !matches!(info.func_type, Destructor) {
+        if matches!(info.func_type, Destructor) {
+            self.func_pre_call
+                .push(quote! { drop(Box::from_raw(*__objp)); *__objp = ::std::ptr::null_mut(); });
+        } else {
+            self.func_pre_call
+                .push(quote! { let mut __ctx = Ctx::from_ptr(__ctx); });
             self.wrap_fn_arg_decl.push(quote! { __ctx: *mut vrt_ctx });
             self.cproto_fn_arg_decl.push("VRT_CTX".to_string());
         }
@@ -108,6 +113,8 @@ impl FuncProcessor {
             self.wrap_fn_arg_decl.push(quote! { __ev: vcl_event_e });
         }
         if info.has_optional_args {
+            self.func_pre_call
+                .push(quote! { let __args = __args.as_ref().unwrap(); });
             let ty = self.opt_args_ty_name.to_ident();
             self.wrap_fn_arg_decl.push(quote! { __args: *const #ty });
         }
@@ -199,24 +206,24 @@ impl FuncProcessor {
                 });
             }
             ParamType::SelfType => {
-                self.func_init_vars
+                self.func_pre_call
                     .push(quote! { let __obj = __obj.as_ref().unwrap(); });
             }
             ParamType::Event => {
                 let r_arg = quote! { Event::from_raw(__ev) };
-                self.func_init_vars.push(quote! { let #temp_var = #r_arg; });
+                self.func_pre_call.push(quote! { let #temp_var = #r_arg; });
                 self.func_call_vars.push(quote! { #temp_var });
                 let json = Self::arg_to_json(arg_info.ident.clone(), false, "EVENT", Value::Null);
                 self.args_json.push(json.into());
             }
             ParamType::VclName => {
-                self.func_init_vars
+                self.func_pre_call
                     .push(quote! { let #temp_var: Cow<'_, str> = VCL_STRING(__vcl_name).into(); });
                 self.func_call_vars.push(quote! { &#temp_var });
             }
             ParamType::SharedPerTask => {
                 self.add_wrapper_arg(func_info, quote! { #arg_name_ident: *mut vmod_priv });
-                self.func_init_vars
+                self.func_pre_call
                     .push(quote! { let mut #temp_var = (* #input_val).take(); });
                 self.func_call_vars.push(quote! { &mut #temp_var });
                 self.func_post_call.push(quote! {
@@ -233,7 +240,7 @@ impl FuncProcessor {
             }
             ParamType::SharedPerVclRef => {
                 self.add_wrapper_arg(func_info, quote! { #arg_name_ident: *const vmod_priv });
-                self.func_init_vars.push(quote! {
+                self.func_pre_call.push(quote! {
                     // defensive programming: *vmod_priv should never be NULL,
                     // but might as well just treat it as None rather than crashing - its readonly anyway
                     let #temp_var = #input_val.as_ref().and_then(|v| v.get_ref());
@@ -251,7 +258,7 @@ impl FuncProcessor {
                 } else {
                     input_val
                 };
-                self.func_init_vars
+                self.func_pre_call
                     .push(quote! { let mut #temp_var = (* #input_val).take(); });
                 self.func_call_vars.push(quote! { &mut #temp_var });
                 self.func_post_call.push(quote! {
@@ -295,7 +302,7 @@ impl FuncProcessor {
                         init_var = quote! { #init_var let #temp_var = #temp_var.as_ref(); };
                     }
                 }
-                self.func_init_vars.push(init_var);
+                self.func_pre_call.push(init_var);
 
                 let c_type = pi.ty_info.to_c_type().to_ident();
                 self.add_wrapper_arg(func_info, quote! { #arg_name_ident: #c_type });
@@ -415,16 +422,17 @@ impl FuncProcessor {
 
     /// Generate an extern "C" wrapper function that calls user's Rust function
     fn gen_callback_fn(&self, info: &FuncInfo) -> TokenStream {
+        let opt_param_struct = self.gen_opt_param_struct(info);
         let signature = self.get_wrapper_fn_sig(true);
-        let (let_var_assigns, extra_declarations) = self.gen_pre_call_conversion_code(info);
+        let func_pre_call = &self.func_pre_call;
         let call_user_fn = self.gen_user_fn_call(info);
         let func_post_call = &self.func_post_call;
         let unwrap_result = self.gen_result_handler_code(info);
 
         quote! {
-            #extra_declarations
+            #opt_param_struct
             #signature {
-                #(#let_var_assigns)*
+                #(#func_pre_call)*
                 #call_user_fn
                 #(#func_post_call)*
                 #unwrap_result
@@ -441,32 +449,20 @@ impl FuncProcessor {
         quote! { unsafe extern "C" fn #fn_name(#(#fn_args),*) #fn_output }
     }
 
-    fn gen_pre_call_conversion_code(&self, info: &FuncInfo) -> (Vec<TokenStream>, TokenStream) {
-        let mut let_var_assigns = Vec::new();
-        if matches!(info.func_type, Destructor) {
-            let_var_assigns
-                .push(quote! { drop(Box::from_raw(*__objp)); *__objp = ::std::ptr::null_mut(); });
-        } else {
-            let_var_assigns.push(quote! { let mut __ctx = Ctx::from_ptr(__ctx); });
-        }
-
-        let opt_arg = if info.has_optional_args {
+    /// Get the Rust args struct in case optional arguments are being used
+    fn gen_opt_param_struct(&self, info: &FuncInfo) -> TokenStream {
+        if info.has_optional_args {
             let opt_args_ty_name = self.opt_args_ty_name.to_ident();
             let opt_args_arg_decl = &self.opt_args_arg_decl;
-            let opt_arg = quote! {
+            quote! {
                 #[repr(C)]
                 struct #opt_args_ty_name {
                     #(#opt_args_arg_decl,)*
                 }
-            };
-            let_var_assigns.push(quote! { let __args = __args.as_ref().unwrap(); });
-            opt_arg
+            }
         } else {
             quote! {}
-        };
-
-        let_var_assigns.extend(self.func_init_vars.iter().cloned());
-        (let_var_assigns, opt_arg)
+        }
     }
 
     fn gen_user_fn_call(&self, info: &FuncInfo) -> TokenStream {
