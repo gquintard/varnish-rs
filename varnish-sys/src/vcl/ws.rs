@@ -240,9 +240,7 @@ impl TestWS {
     pub fn new(sz: usize) -> Self {
         let al = align_of::<*const c_void>();
         let aligned_sz = (sz / al) * al;
-
         let mut v: Vec<c_char> = vec![0; sz];
-
         let s = v.as_mut_ptr();
         TestWS {
             c_ws: ffi::ws {

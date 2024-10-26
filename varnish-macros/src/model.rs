@@ -103,6 +103,8 @@ pub struct ParamTypeInfo {
 pub enum ParamType {
     /// An argument representing Varnish context (VRT_CTX) wrapper
     Context { is_mut: bool },
+    /// An argument representing Varnish Workspace wrapper
+    Workspace { is_mut: bool },
     /// For object methods, the first argument is always a reference to the object
     SelfType,
     /// An argument is an event type
