@@ -16,7 +16,9 @@ mod rustest {
 
     use varnish::ffi;
     use varnish::ffi::VCL_STRING;
-    use varnish::vcl::{new_vfp, COWProbe, COWRequest, Ctx, Event, Probe, Request, VclError};
+    use varnish::vcl::{
+        new_vfp, COWProbe, COWRequest, Ctx, Event, Probe, Request, VclError, Workspace,
+    };
 
     use super::VFPTest;
 
@@ -37,8 +39,8 @@ mod rustest {
         }
     }
 
-    pub fn ws_reserve(ctx: &mut Ctx, s: &str) -> Result<VCL_STRING, &'static str> {
-        let mut rbuf = ctx.ws.reserve();
+    pub fn ws_reserve(ws: &mut Workspace, s: &str) -> Result<VCL_STRING, &'static str> {
+        let mut rbuf = ws.reserve();
         match write!(rbuf.buf, "{s} {s} {s}\0") {
             Ok(()) => {
                 let final_buf = rbuf.release(0);
