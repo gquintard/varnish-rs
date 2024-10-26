@@ -55,7 +55,7 @@ use crate::ffi::{
     VSA_Port, PF_INET, PF_INET6, VCL_ACL, VCL_BACKEND, VCL_BLOB, VCL_BODY, VCL_BOOL, VCL_BYTES,
     VCL_DURATION, VCL_ENUM, VCL_HEADER, VCL_HTTP, VCL_INSTANCE, VCL_INT, VCL_IP, VCL_PROBE,
     VCL_REAL, VCL_REGEX, VCL_STEVEDORE, VCL_STRANDS, VCL_STRING, VCL_SUB, VCL_TIME, VCL_VCL,
-    VRT_BACKEND_PROBE_MAGIC,
+    VCL_VOID, VRT_BACKEND_PROBE_MAGIC,
 };
 use crate::vcl::{COWProbe, COWRequest, Probe, Request, VclError, WS};
 
@@ -76,30 +76,11 @@ macro_rules! itself_into_vcl {
     )*};
 }
 
+// Implement IntoVCL for all VCL_* types because users might want to return them directly
 itself_into_vcl! {
-    VCL_ACL,
-    VCL_BACKEND,
-    VCL_BLOB,
-    VCL_BODY,
-    VCL_BOOL,
-    VCL_BYTES,
-    VCL_DURATION,
-    VCL_ENUM, // same as VCL_BODY
-    VCL_HEADER,
-    VCL_HTTP,
-    VCL_INSTANCE,
-    VCL_INT, // same as VCL_BYTES
-    VCL_IP,
-    VCL_PROBE,
-    VCL_REAL, // same as VCL_DURATION
-    VCL_REGEX,
-    VCL_STEVEDORE,
-    VCL_STRANDS,
-    VCL_STRING,
-    VCL_SUB,
-    VCL_TIME, // same as VCL_DURATION
-    VCL_VCL,
-    // VCL_VOID, // same as VCL_INSTANCE
+    VCL_ACL, VCL_BACKEND, VCL_BLOB, VCL_BODY, VCL_BOOL, VCL_BYTES, VCL_DURATION, VCL_ENUM,
+    VCL_HEADER, VCL_HTTP, VCL_INSTANCE, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL, VCL_REGEX,
+    VCL_STEVEDORE, VCL_STRANDS, VCL_STRING, VCL_SUB, VCL_TIME, VCL_VCL, VCL_VOID
 }
 
 macro_rules! default_null_ptr {
