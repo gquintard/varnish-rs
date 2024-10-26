@@ -2,14 +2,13 @@
 //!
 //! # Type conversion
 //!
-//! To allow for easier development the generated boilerplate will handle conversion between the
-//! lightly disguised C types used by `vmod.vcc` into regular Rust, and it will also do the
-//! opposite conversion when it is time to send the return value to Varnish.
+//! The proc macro will generate the wrappers for each user function, relying on
+//! the type conversions defined here. The values need to be converted from Varnish's internal types
+//! to Rust's types, and vice versa.
 //!
-//! The two traits `IntoVCL` and `IntoRust` take care of this, with `IntoVCL` being notable in
-//! that it requires a `&mut `[`WS`] to possibly store the returned value into the task
-//! request. This allows vmod writes to just return easy-to-work-with `Strings` and let the
-//! boilerplate handle the allocation, copy and error handling.
+//! The  `IntoVCL` trait take care of converting a Rust type into VCL. It requires a `&mut `[`WS`]
+//! to possibly store the returned value into the task request. This allows vmod writes to just return
+//! easy-to-work-with strings, and let the boilerplate handle the allocation, copy and error handling.
 //!
 //! If one wants to handle things manually, all `VCL_*` types implement [`IntoVCL`] as a no-op. It
 //! can be useful to avoid extra memory allocations by the boilerplate, if that is a worry.
@@ -18,12 +17,11 @@
 //!
 //! | Rust | direction | VCL |
 //! | :--: | :-------: | :-:
+//! | `()` | -> | `VCL_VOID` |
 //! | `f64`  | <-> | `VCL_REAL` |
 //! | `i64`  | <-> | `VCL_INT` |
-//! | `i64`  | <-> | `VCL_BYTES` |
 //! | `bool` | <-> | `VCL_BOOL` |
 //! | `std::time::Duration` | <-> | `VCL_DURATION` |
-//! | `()` | <-> | `VOID` |
 //! | `&str` | <-> | `VCL_STRING` |
 //! | `String` | -> | `VCL_STRING` |
 //! | `Option<COWProbe>` | <-> | `VCL_PROBE` |
