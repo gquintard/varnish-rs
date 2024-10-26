@@ -190,7 +190,7 @@ impl Generator {
                     vmod_priv_methods,
                     vrt_ctx,
                 };
-                use varnish::vcl::{Ctx, IntoVCL};
+                use varnish::vcl::{Ctx, IntoVCL, Workspace};
                 use super::*;
 
                 #( #priv_structs )*

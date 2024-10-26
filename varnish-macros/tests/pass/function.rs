@@ -9,7 +9,7 @@ mod types {
     use std::net::SocketAddr;
     use std::time::Duration;
     use varnish::ffi::VCL_STRING;
-    use varnish::vcl::{COWProbe, Probe};
+    use varnish::vcl::{COWProbe, Probe, Workspace};
     use varnish_sys::vcl::VclError;
 
     // void
@@ -135,4 +135,8 @@ mod types {
     pub fn opt_i64_opt_i64(a1: i64, a2: Option<i64>, a3: i64) -> String {
         panic!()
     }
+
+    // Workspace
+    pub fn get_ws_mut(ws: &mut Workspace) {}
+    pub fn get_ws_ref(ws: &Workspace) {}
 }

@@ -27,17 +27,17 @@ use crate::{ffi, validate_ws};
 /// The workspace is usually a few tens of kilobytes large, don't be greedy. If you need more
 /// space, consider storing your data in a [`VPriv`](crate::vcl::vpriv::VPriv).
 #[derive(Debug)]
-pub struct WS<'a> {
+pub struct Workspace<'a> {
     /// Raw pointer to the C struct
     pub raw: *mut ffi::ws,
     phantom_a: PhantomData<&'a u8>,
 }
 
-impl<'a> WS<'a> {
+impl<'a> Workspace<'a> {
     /// Wrap a raw pointer into an object we can use.
     pub fn new(raw: *mut ffi::ws) -> Self {
         assert!(!raw.is_null(), "raw pointer was null");
-        WS {
+        Workspace {
             raw,
             phantom_a: PhantomData,
         }
@@ -96,7 +96,7 @@ impl<'a> WS<'a> {
         Ok(dest)
     }
 
-    /// Same as [`WS::copy_bytes`] but adds NULL character at the end to help converts buffers into
+    /// Same as [`Workspace::copy_bytes`] but adds NULL character at the end to help converts buffers into
     /// `VCL_STRING`s. Returns an error if `src` contain NULL characters.
     pub fn copy_bytes_with_null<T: AsRef<[u8]>>(&mut self, src: &T) -> Result<&'a CStr, String> {
         let buf = src.as_ref();
@@ -240,9 +240,7 @@ impl TestWS {
     pub fn new(sz: usize) -> Self {
         let al = align_of::<*const c_void>();
         let aligned_sz = (sz / al) * al;
-
         let mut v: Vec<c_char> = vec![0; sz];
-
         let s = v.as_mut_ptr();
         TestWS {
             c_ws: ffi::ws {
@@ -263,9 +261,9 @@ impl TestWS {
         &mut self.c_ws as *mut ffi::ws
     }
 
-    /// build a `WS`
-    pub fn ws(&mut self) -> WS {
-        WS::new(self.as_ptr())
+    /// build a `Workspace`
+    pub fn workspace(&mut self) -> Workspace {
+        Workspace::new(self.as_ptr())
     }
 }
 
@@ -276,7 +274,7 @@ mod tests {
     #[test]
     fn ws_test() {
         let mut test_ws = TestWS::new(160);
-        let mut ws = test_ws.ws();
+        let mut ws = test_ws.workspace();
         for _ in 0..10 {
             let r = ws.alloc(16);
             assert!(r.is_ok());
