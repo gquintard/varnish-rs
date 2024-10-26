@@ -74,7 +74,7 @@ use std::time::SystemTime;
 
 use crate::ffi::{VclEvent, VfpStatus, VCL_BACKEND, VCL_BOOL, VCL_IP, VCL_TIME};
 use crate::utils::get_backend;
-use crate::vcl::{Ctx, IntoVCL, LogTag, VclError, VclResult, Vsb, WS};
+use crate::vcl::{Ctx, IntoVCL, LogTag, VclError, VclResult, Vsb, Workspace};
 use crate::{
     ffi, validate_director, validate_vdir, validate_vfp_ctx, validate_vfp_entry, validate_vrt_ctx,
 };
@@ -410,8 +410,8 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
                             ctx.fail(format!("{}: insufficient workspace", backend.get_type()));
                             return -1;
                         };
-                        let Ok(t) =
-                            WS::new(bo.ws.as_mut_ptr()).copy_bytes_with_null(&backend.get_type())
+                        let Ok(t) = Workspace::new(bo.ws.as_mut_ptr())
+                            .copy_bytes_with_null(&backend.get_type())
                         else {
                             ctx.fail(format!("{}: insufficient workspace", backend.get_type()));
                             return -1;

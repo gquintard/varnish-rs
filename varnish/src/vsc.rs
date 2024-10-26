@@ -229,8 +229,7 @@ pub enum Format {
 
 impl From<c_int> for Format {
     fn from(value: c_int) -> Self {
-        let c = char::from_u32(value as u32).unwrap();
-        match c {
+        match char::from_u32(value as u32).unwrap() {
             'i' => Format::Integer,
             'B' => Format::Bytes,
             'b' => Format::Bitmap,

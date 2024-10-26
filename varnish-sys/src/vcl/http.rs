@@ -17,7 +17,7 @@ use std::slice::from_raw_parts_mut;
 
 use crate::ffi;
 use crate::ffi::VslTag;
-use crate::vcl::{VclResult, WS};
+use crate::vcl::{VclResult, Workspace};
 
 // C constants pop up as u32, but header indexing uses u16, redefine
 // some stuff to avoid casting all the time
@@ -47,7 +47,7 @@ impl<'a> HTTP<'a> {
         assert!(idx < self.raw.nhd);
 
         /* XXX: aliasing warning, it's the same pointer as the one in Ctx */
-        let mut ws = WS::new(self.raw.ws);
+        let mut ws = Workspace::new(self.raw.ws);
         unsafe {
             let hd = self.raw.hd.offset(idx as isize).as_mut().unwrap();
             *hd = ffi::txt::from_cstr(ws.copy_bytes_with_null(&value)?);

@@ -19,7 +19,7 @@ use crate::{parser_utils, ProcResult};
 #[allow(clippy::struct_excessive_bools)]
 pub struct FuncStatus {
     func_type: FuncType,
-    has_ctx: bool,
+    has_ctx_or_ws: bool,
     has_shared_per_task: bool,
     has_shared_per_vcl: bool,
     has_event: bool,
@@ -162,20 +162,26 @@ impl ParamType {
             only_in! { Event, "Event parameters are only allowed in event handlers. Try adding `#[event]` to this function." }
             unique! { has_event, "Event param is allowed only once in a function args list" }
             Self::Event
-        } else if as_ref_ty(arg_ty)
+        } else if let Some(arg_ty) = as_ref_ty(arg_ty)
             .and_then(as_simple_ty)
-            .filter(|ident| *ident == "Ctx")
-            .is_some()
+            .filter(|ident| *ident == "Ctx" || *ident == "Workspace")
         {
-            unique! { has_ctx, "Context param is allowed only once in a function args list" }
-            Self::Context { is_mut: false }
-        } else if as_ref_mut_ty(arg_ty)
+            unique! { has_ctx_or_ws, "Context or Workspace param is allowed only once in a function args list" }
+            if arg_ty == "Ctx" {
+                Self::Context { is_mut: false }
+            } else {
+                Self::Workspace { is_mut: false }
+            }
+        } else if let Some(arg_ty) = as_ref_mut_ty(arg_ty)
             .and_then(as_simple_ty)
-            .filter(|ident| *ident == "Ctx")
-            .is_some()
+            .filter(|ident| *ident == "Ctx" || *ident == "Workspace")
         {
-            unique! { has_ctx, "Context param is allowed only once in a function args list" }
-            Self::Context { is_mut: true }
+            unique! { has_ctx_or_ws, "Context or Workspace param is allowed only once in a function args list" }
+            if arg_ty == "Ctx" {
+                Self::Context { is_mut: true }
+            } else {
+                Self::Workspace { is_mut: true }
+            }
         } else {
             // Only standard types left, possibly optional
             not_in! { Event, "Event functions can only have `Ctx`, `#[event] Event`, and `#[shared_per_vcl] &mut Option<Box<T>>` arguments." }
