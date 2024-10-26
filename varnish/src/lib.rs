@@ -16,75 +16,67 @@
 //!
 //! The general structure of your code should look like this:
 //!
-//! ``` text
+//! ```text
 //! .
-//! ├── build.rs
-//! ├── Cargo.lock
-//! ├── Cargo.toml
-//! ├── README.md
+//! ├── Cargo.lock       # This code is a cdylib, so you should lock and track dependencies
+//! ├── Cargo.toml       # Add varnish as a dependency here
+//! ├── README.md        # This file can be auto-generated/updated by the Varnish macro
 //! ├── src
-//! │   └── lib.rs
-//! ├── tests
-//! │   └── test01.vtc
-//! └── vmod.vcc
+//! │   └── lib.rs       # Your main code that uses  #[vmod(docs = "README.md")]
+//! └── tests
+//!     └── test01.vtc   # Your VTC tests, executed with  run_vtc_tests!("tests/*.vtc") in lib.rs
 //! ```
+//!
 //! ## Cargo.toml
 //!
-//! ``` toml
-//! [build-dependencies]
-//! varnish = "0.1.0"
-//!
+//! ```toml
 //! [dependencies]
 //! varnish = "0.1.0"
 //! ```
 //!
-//! ## vmod.vcc
-//!
-//! You will need a [`vmod.vcc`](https://varnish-cache.org/docs/trunk/reference/vmod.html#the-vmod-vcc-file)
-//! alongside your `Cargo.toml`. This file describes your vmod's API and how it'll be accessible
-//! from VCL.
-//!
-//! The good news is that the syntax is exactly the same as for a C vmod. The bad news is that we
-//! don't support all types and niceties just yet. Check out the [`vcl`] page for
-//! more information.
-//!
-//! ``` text
-//! # we need a comment at the top, possibly describing the license
-//! $Module example 3 "An example vmod"
-//!
-//! $Function BOOL is_even(INT)
-//! ```
-//!
-//! ## build.rs
-//!
-//! The `vmod.vcc`  file needs to be processed into rust-code so the module is loadable by
-//! Varnish. These steps are currently done via a `python` script triggered by the `build.rs` file
-//! (also alongside `Cargo.toml`).
-//! The nitty-gritty details have been hidden away, and you can have a fairly simple file:
-//!
-//! ``` ignore
-//! fn main() {
-//!     varnish::generate_boilerplate().unwrap();
-//! }
-//! ```
-//!
 //! ## src/lib.rs
 //!
-//! Here's the actual code that you can write to implement your API. Basically, you need to
-//! implement public functions that mirror what you described in `vmod.vcc`, and the first
-//! argument needs to be a reference to [`vcl::Ctx`]:
+//! ```rust
+//! // Run all matching tests as part of `cargo test` using varnishtest utility. Fails if no tests are found.
+//! // Due to some limitations, make sure to run `cargo build` before `cargo test`
+//! varnish::run_vtc_tests!("tests/*.vtc");
 //!
-//! ``` ignore
-//! varnish::boilerplate!();
-//!
-//! use varnish::vcl::Ctx;
-//!
-//! pub fn is_even(_: &Ctx, n: i64) -> bool {
-//!     return n % 2 == 0;
+//! /// A VMOD must have one module tagged with `#[varnish::vmod]`.  All public functions in this module
+//! /// will be exported as Varnish VMOD functions.  The name of the module will be the name of the VMOD.
+//! /// Use `#[varnish::vmod(docs = "README.md")]` to auto-generate a `README.md` file from the doc comments.
+//! #[varnish::vmod]
+//! mod hello_world {
+//!     /// This function becomes available in VCL as `hello_world.is_even`
+//!     pub fn is_even(n: i64) -> bool {
+//!         n % 2 == 0
+//!     }
 //! }
 //! ```
 //!
-//! The various type translations are described in detail in [`vcl`].
+//! ## tests/test01.vtc
+//!
+//! This test will check that the `is_even` function works as expected. Make sure to run `cargo build` before `cargo test`.
+//!
+//! ```vtc
+//! server s1 {
+//!     rxreq
+//!     expect req.http.even == "true"
+//!     txresp
+//! } -start
+//!
+//! varnish v1 -vcl+backend {
+//!     import hello_world from "${vmod}";
+//!
+//!     sub vcl_recv {
+//!         set req.http.even = hello_world.is_even(8);
+//!     }
+//! } -start
+//!
+//! client c1 {
+//!     txreq
+//!     rxresp
+//!     expect resp.status == 200
+//! ```
 
 // Re-publish varnish_sys::ffi and vcl
 pub use varnish_sys::{ffi, vcl};
@@ -94,40 +86,17 @@ pub mod vsc;
 
 pub use varnish_macros::vmod;
 
-/// Automate VTC testing
+/// Run all VTC tests using `varnishtest` utility.
 ///
 /// Varnish provides a very handy tool for end-to-end testing:
 /// [`varnishtest`](https://varnish-cache.org/docs/trunk/reference/varnishtest.html) which will
 /// test various scenarios you describe in a [`VTC file`](https://varnish-cache.org/docs/trunk/reference/vtc.html):
 ///
-/// ``` vtc
-/// server s1 {
-///     rxreq
-///     expect req.http.even == "true"
-///     txresp
-/// } -start
-///
-/// varnish v1 -vcl+backend {
-///     import example from "${vmod}";
-///
-///     sub vcl_recv {
-///         set req.http.even = example.is_even(8);
-///     }
-/// } -start
-///
-/// client c1 {
-///     txreq
-///     rxresp
-///     expect resp.status == 200
-/// ```
-///
-/// Provided your VTC files are in `tests/` and have the `.vtc` extension, you can run them as part of automated testing:
-///
-/// ``` rust
+/// ```rust
 /// varnish::run_vtc_tests!("tests/*.vtc");
 /// ```
 ///
-/// This will declare the test named `test01` and set up and run `varnishtest` alongside your unit
+/// This will create all the needed code to run `varnishtest` alongside your unit
 /// tests when you run `cargo test`.
 ///
 /// **Important note:** you need to first build your vmod (i.e. with `cargo build`) before the tests can be run,
@@ -136,7 +105,7 @@ pub use varnish_macros::vmod;
 /// Tests will automatically time out after 5s. To override, set `VARNISHTEST_DURATION` env var.
 ///
 /// To debug the tests, pass `true` as the second argument:
-/// ``` rust
+/// ```rust
 /// varnish::run_vtc_tests!("tests/*.vtc", true);
 /// ```
 #[macro_export]

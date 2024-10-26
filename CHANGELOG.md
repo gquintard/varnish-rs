@@ -1,14 +1,21 @@
 # Unpublished
 
+- Introduce a new, vastly improved system of generating boilerplate code using a procedural macro `#[varnish(vmod)]` by @nyurik
+  - The macro will generate all the boilerplate code for a Varnish VMOD
+  - The macro attribute must be used on a `mod` block that contains the VMOD functions
+  - The macro can generate a markdown file, e.g. `#[varnish(docs = "README.md")]`
+  - All examples have been [updated](https://github.com/gquintard/varnish-rs/commit/f0f0120d3fddbdad491ff80fccbfdd1930d24dc6) to use the new system
+  - See [crate documentation](https://docs.rs/varnish/latest/varnish/) for more details 
 - `vtc!` macro has been replaced with `run_vtc_tests!("tests/*.vtc")`:
   - supports glob patterns
   - supports `VARNISHTEST_DURATION` env var, defaulting to "5s"
   - supports debug mode - keeps the temporary files and always prints the output: `run_vtc_tests!!("tests/*.vtc", true)`
+- Multi-version support for `libvarnish` headers now allows the same code to be used with Varnish v7.4, v7.5, and v7.6
 
 # 0.0.19 (2024-03-24)
 
-- vsc::Error implements std::Error
-- improve vtc!() debuggability
+- `vsc::Error` implements `std::Error`
+- improve `vtc!()` debuggability
 - use newer `bindgen`
 
 # 0.0.18 (2024-03-19)
