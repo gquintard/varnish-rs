@@ -29,8 +29,5 @@ pkg-config.workspace = true
 [dependencies]
 serde.workspace = true
 
-[dev-dependencies]
-varnish.workspace = true
-
 [lints]
 workspace = true
