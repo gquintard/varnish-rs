@@ -6,7 +6,8 @@
 //! the type conversions defined here. The values need to be converted from Varnish's internal types
 //! to Rust's types, and vice versa.
 //!
-//! The  `IntoVCL` trait take care of converting a Rust type into VCL. It requires a `&mut `[`WS`]
+//! Most conversions from VCL to Rust are straightforward, using either `From` or `TryFrom` traits.
+//! The `IntoVCL` trait take care of converting a Rust type into VCL. It requires a `&mut `[`WS`]
 //! to possibly store the returned value into the task request. This allows vmod writes to just return
 //! easy-to-work-with strings, and let the boilerplate handle the allocation, copy and error handling.
 //!
