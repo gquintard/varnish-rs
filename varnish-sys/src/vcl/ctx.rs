@@ -4,7 +4,7 @@ use std::ffi::{c_int, c_uint, c_void};
 
 use crate::ffi;
 use crate::ffi::{vrt_ctx, VRT_fail, VRT_CTX_MAGIC};
-use crate::vcl::{LogTag, TestWS, VclError, HTTP, WS};
+use crate::vcl::{LogTag, TestWS, VclError, Workspace, HTTP};
 
 /// VCL context
 ///
@@ -36,7 +36,7 @@ pub struct Ctx<'a> {
     pub http_resp: Option<HTTP<'a>>,
     pub http_bereq: Option<HTTP<'a>>,
     pub http_beresp: Option<HTTP<'a>>,
-    pub ws: WS<'a>,
+    pub ws: Workspace<'a>,
 }
 
 impl<'a> Ctx<'a> {
@@ -50,20 +50,14 @@ impl<'a> Ctx<'a> {
     /// Instantiate from a mutable reference to a [`vrt_ctx`].
     pub fn from_ref(raw: &'a mut vrt_ctx) -> Self {
         assert_eq!(raw.magic, VRT_CTX_MAGIC);
-        let http_req = HTTP::new(raw.http_req);
-        let http_req_top = HTTP::new(raw.http_req_top);
-        let http_resp = HTTP::new(raw.http_resp);
-        let http_bereq = HTTP::new(raw.http_bereq);
-        let http_beresp = HTTP::new(raw.http_beresp);
-        let ws = WS::new(raw.ws);
         Self {
+            http_req: HTTP::new(raw.http_req),
+            http_req_top: HTTP::new(raw.http_req_top),
+            http_resp: HTTP::new(raw.http_resp),
+            http_bereq: HTTP::new(raw.http_bereq),
+            http_beresp: HTTP::new(raw.http_beresp),
+            ws: Workspace::new(raw.ws),
             raw,
-            http_req,
-            http_req_top,
-            http_resp,
-            http_bereq,
-            http_beresp,
-            ws,
         }
     }
 

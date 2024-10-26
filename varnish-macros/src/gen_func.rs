@@ -198,11 +198,17 @@ impl FuncProcessor {
 
         match &arg_info.ty {
             ParamType::Context { is_mut } => {
-                let ident = "__ctx".to_ident();
                 self.func_call_vars.push(if *is_mut {
-                    quote! { &mut #ident }
+                    quote! { &mut __ctx }
                 } else {
-                    quote! { &#ident }
+                    quote! { &__ctx }
+                });
+            }
+            ParamType::Workspace { is_mut } => {
+                self.func_call_vars.push(if *is_mut {
+                    quote! { &mut __ctx.ws }
+                } else {
+                    quote! { &__ctx.ws }
                 });
             }
             ParamType::SelfType => {

@@ -113,3 +113,7 @@ import types from "path/to/libtypes.so";
 ### Function `STRING to_res_vcl_string()`
 
 ### Function `STRING opt_i64_opt_i64(INT a1, [INT a2], INT a3)`
+
+### Function `VOID get_ws_mut()`
+
+### Function `VOID get_ws_ref()`

@@ -7,7 +7,7 @@
 //! to Rust's types, and vice versa.
 //!
 //! Most conversions from VCL to Rust are straightforward, using either `From` or `TryFrom` traits.
-//! The `IntoVCL` trait take care of converting a Rust type into VCL. It requires a `&mut `[`WS`]
+//! The `IntoVCL` trait take care of converting a Rust type into VCL. It requires a `&mut `[`Workspace`]
 //! to possibly store the returned value into the task request. This allows vmod writes to just return
 //! easy-to-work-with strings, and let the boilerplate handle the allocation, copy and error handling.
 //!
@@ -55,13 +55,13 @@ use crate::ffi::{
     VCL_DURATION, VCL_ENUM, VCL_HEADER, VCL_HTTP, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL, VCL_REGEX,
     VCL_STEVEDORE, VCL_STRANDS, VCL_STRING, VCL_SUB, VCL_TIME, VCL_VCL, VRT_BACKEND_PROBE_MAGIC,
 };
-use crate::vcl::{COWProbe, COWRequest, Probe, Request, VclError, WS};
+use crate::vcl::{COWProbe, COWRequest, Probe, Request, VclError, Workspace};
 
 /// Convert a Rust type into a VCL one
 ///
-/// It will use the [`WS`] to persist the data during the VCL task if necessary
+/// It will use the [`Workspace`] to persist the data during the VCL task if necessary
 pub trait IntoVCL<T> {
-    fn into_vcl(self, ws: &mut WS) -> Result<T, VclError>;
+    fn into_vcl(self, ws: &mut Workspace) -> Result<T, VclError>;
 }
 
 macro_rules! default_null_ptr {
@@ -83,7 +83,7 @@ macro_rules! default_null_ptr {
 macro_rules! into_vcl_using_from {
     ($rust_ty:ty, $vcl_ty:ident) => {
         impl IntoVCL<$vcl_ty> for $rust_ty {
-            fn into_vcl(self, _: &mut WS) -> Result<$vcl_ty, VclError> {
+            fn into_vcl(self, _: &mut Workspace) -> Result<$vcl_ty, VclError> {
                 Ok(self.into())
             }
         }
@@ -181,7 +181,7 @@ from_vcl_to_rust!(VCL_INT, i64);
 //
 default_null_ptr!(VCL_IP);
 impl IntoVCL<VCL_IP> for SocketAddr {
-    fn into_vcl(self, ws: &mut WS) -> Result<VCL_IP, VclError> {
+    fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_IP, VclError> {
         unsafe {
             let p = ws.alloc(vsa_suckaddr_len)?.as_mut_ptr().cast::<suckaddr>();
             match self {
@@ -247,7 +247,7 @@ impl From<VCL_IP> for Option<SocketAddr> {
 //
 default_null_ptr!(VCL_PROBE);
 impl<'a> IntoVCL<VCL_PROBE> for COWProbe<'a> {
-    fn into_vcl(self, ws: &mut WS) -> Result<VCL_PROBE, VclError> {
+    fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_PROBE, VclError> {
         let p = ws
             .alloc(size_of::<vrt_backend_probe>())?
             .as_mut_ptr()
@@ -271,7 +271,7 @@ impl<'a> IntoVCL<VCL_PROBE> for COWProbe<'a> {
     }
 }
 impl IntoVCL<VCL_PROBE> for Probe {
-    fn into_vcl(self, ws: &mut WS) -> Result<VCL_PROBE, VclError> {
+    fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_PROBE, VclError> {
         let p = ws
             .alloc(size_of::<vrt_backend_probe>())?
             .as_mut_ptr()
@@ -354,7 +354,7 @@ default_null_ptr!(VCL_REGEX);
 //
 default_null_ptr!(VCL_STRING);
 impl IntoVCL<VCL_STRING> for &[u8] {
-    fn into_vcl(self, ws: &mut WS) -> Result<VCL_STRING, VclError> {
+    fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_STRING, VclError> {
         // try to save some work if the buffer is already in the workspace
         // and if it ends in a null byte
         // FIXME: UB here - we check if the value AFTER the slice is a null byte
@@ -367,22 +367,22 @@ impl IntoVCL<VCL_STRING> for &[u8] {
     }
 }
 impl IntoVCL<VCL_STRING> for &str {
-    fn into_vcl(self, ws: &mut WS) -> Result<VCL_STRING, VclError> {
+    fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_STRING, VclError> {
         self.as_bytes().into_vcl(ws)
     }
 }
 impl IntoVCL<VCL_STRING> for &Cow<'_, str> {
-    fn into_vcl(self, ws: &mut WS) -> Result<VCL_STRING, VclError> {
+    fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_STRING, VclError> {
         self.as_bytes().into_vcl(ws)
     }
 }
 impl IntoVCL<VCL_STRING> for String {
-    fn into_vcl(self, ws: &mut WS) -> Result<VCL_STRING, VclError> {
+    fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_STRING, VclError> {
         self.as_str().into_vcl(ws)
     }
 }
 impl<T: IntoVCL<VCL_STRING> + AsRef<[u8]>> IntoVCL<VCL_STRING> for Option<T> {
-    fn into_vcl(self, ws: &mut WS) -> Result<VCL_STRING, VclError> {
+    fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_STRING, VclError> {
         match self {
             None => Ok(VCL_STRING(null())),
             Some(t) => t.as_ref().into_vcl(ws),
@@ -416,7 +416,7 @@ default_null_ptr!(VCL_SUB);
 // VCL_TIME
 //
 impl IntoVCL<VCL_TIME> for SystemTime {
-    fn into_vcl(self, _: &mut WS) -> Result<VCL_TIME, VclError> {
+    fn into_vcl(self, _: &mut Workspace) -> Result<VCL_TIME, VclError> {
         self.try_into()
     }
 }

@@ -861,6 +861,44 @@ VmodInfo {
                 String,
             ),
         },
+        FuncInfo {
+            func_type: Function,
+            ident: "get_ws_mut",
+            docs: "",
+            has_optional_args: false,
+            args: [
+                ParamTypeInfo {
+                    ident: "ws",
+                    docs: "",
+                    idx: 0,
+                    ty: Workspace {
+                        is_mut: true,
+                    },
+                },
+            ],
+            returns: Value(
+                Default,
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "get_ws_ref",
+            docs: "",
+            has_optional_args: false,
+            args: [
+                ParamTypeInfo {
+                    ident: "ws",
+                    docs: "",
+                    idx: 0,
+                    ty: Workspace {
+                        is_mut: false,
+                    },
+                },
+            ],
+            returns: Value(
+                Default,
+            ),
+        },
     ],
     objects: [],
     shared_types: SharedTypes {

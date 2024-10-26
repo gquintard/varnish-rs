@@ -1,10 +1,10 @@
-error: Context param is allowed only once in a function args list
+error: Context or Workspace param is allowed only once in a function args list
  --> tests/fail/error_fn_args_dups.rs:4:39
   |
 4 |     pub fn dup_ctx(ctx: &Ctx, i: i64, ctx2: &Ctx) {}
   |                                       ^^^^
 
-error: Context param is allowed only once in a function args list
+error: Context or Workspace param is allowed only once in a function args list
  --> tests/fail/error_fn_args_dups.rs:5:40
   |
 5 |     pub fn dup_ctx2(ctx: &Ctx, i: i64, ctx2: &mut Ctx) {}
