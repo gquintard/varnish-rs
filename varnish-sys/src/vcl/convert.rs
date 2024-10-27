@@ -47,15 +47,14 @@
 use std::borrow::Cow;
 use std::ffi::{c_char, c_void, CStr};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
-use std::ptr::null;
+use std::ptr::{null, null_mut};
 use std::time::{Duration, SystemTime};
 
 use crate::ffi::{
     sa_family_t, suckaddr, vrt_backend_probe, vsa_suckaddr_len, vtim_dur, VSA_BuildFAP, VSA_GetPtr,
-    VSA_Port, PF_INET, PF_INET6, VCL_ACL, VCL_BACKEND, VCL_BLOB, VCL_BODY, VCL_BOOL, VCL_BYTES,
-    VCL_DURATION, VCL_ENUM, VCL_HEADER, VCL_HTTP, VCL_INSTANCE, VCL_INT, VCL_IP, VCL_PROBE,
-    VCL_REAL, VCL_REGEX, VCL_STEVEDORE, VCL_STRANDS, VCL_STRING, VCL_SUB, VCL_TIME, VCL_VCL,
-    VRT_BACKEND_PROBE_MAGIC,
+    VSA_Port, PF_INET, PF_INET6, VCL_ACL, VCL_BACKEND, VCL_BLOB, VCL_BODY, VCL_BOOL, VCL_DURATION,
+    VCL_ENUM, VCL_HEADER, VCL_HTTP, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL, VCL_REGEX, VCL_STEVEDORE,
+    VCL_STRANDS, VCL_STRING, VCL_SUB, VCL_TIME, VCL_VCL, VRT_BACKEND_PROBE_MAGIC,
 };
 use crate::vcl::{COWProbe, COWRequest, Probe, Request, VclError, WS};
 
@@ -66,28 +65,17 @@ pub trait IntoVCL<T> {
     fn into_vcl(self, ws: &mut WS) -> Result<T, VclError>;
 }
 
-macro_rules! itself_into_vcl {
-    ($( $vcl_ty:ident ),* $(,)?) => {$(
-        impl IntoVCL<$vcl_ty> for $vcl_ty {
-            fn into_vcl(self, _: &mut WS) -> Result<$vcl_ty, VclError> {
-                Ok(self)
-            }
-        }
-    )*};
-}
-
-// Implement IntoVCL for all VCL_* types because users might want to return them directly
-itself_into_vcl! {
-    VCL_ACL, VCL_BACKEND, VCL_BLOB, VCL_BODY, VCL_BOOL, VCL_BYTES, VCL_DURATION, VCL_ENUM,
-    VCL_HEADER, VCL_HTTP, VCL_INSTANCE, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL, VCL_REGEX,
-    VCL_STEVEDORE, VCL_STRANDS, VCL_STRING, VCL_SUB, VCL_TIME, VCL_VCL
-}
-
 macro_rules! default_null_ptr {
     ($ident:ident) => {
+        default_null_ptr!($ident, null);
+    };
+    (mut $ident:ident) => {
+        default_null_ptr!($ident, null_mut);
+    };
+    ($ident:ident, $func:ident) => {
         impl Default for $ident {
             fn default() -> Self {
-                $ident(null())
+                $ident($func())
             }
         }
     };
@@ -123,10 +111,17 @@ macro_rules! from_vcl_to_rust {
     };
 }
 
-//
+// VCL_ACL
+default_null_ptr!(VCL_ACL);
+
 // VCL_BACKEND
-//
 default_null_ptr!(VCL_BACKEND);
+
+// VCL_BLOB
+default_null_ptr!(VCL_BLOB);
+
+// VCL_BODY
+default_null_ptr!(VCL_BODY);
 
 //
 // VCL_BOOL
@@ -167,6 +162,13 @@ impl From<Duration> for vtim_dur {
         Self(value.as_secs_f64())
     }
 }
+
+// VCL_ENUM
+default_null_ptr!(VCL_ENUM);
+// VCL_HEADER
+default_null_ptr!(VCL_HEADER);
+// VCL_HTTP
+default_null_ptr!(mut VCL_HTTP);
 
 //
 // VCL_INT
@@ -345,6 +347,9 @@ into_vcl_using_from!(f64, VCL_REAL);
 from_rust_to_vcl!(f64, VCL_REAL);
 from_vcl_to_rust!(VCL_REAL, f64);
 
+// VCL_REGEX
+default_null_ptr!(VCL_REGEX);
+
 //
 // VCL_STRING
 //
@@ -401,6 +406,13 @@ fn from_str<'a>(value: *const c_char) -> Cow<'a, str> {
     }
 }
 
+// VCL_STEVEDORE
+default_null_ptr!(VCL_STEVEDORE);
+// VCL_STRANDS
+default_null_ptr!(VCL_STRANDS);
+// VCL_SUB
+default_null_ptr!(VCL_SUB);
+
 //
 // VCL_TIME
 //
@@ -421,3 +433,6 @@ impl TryFrom<SystemTime> for VCL_TIME {
         ))
     }
 }
+
+// VCL_VCL
+default_null_ptr!(mut VCL_VCL);

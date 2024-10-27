@@ -4295,24 +4295,36 @@ extern "C" {
     pub static mut vrt_null_blob: *const vrt_blob;
 }
 #[doc = " This is the central definition of the mapping from VCL types to\n C-types.  The python scripts read these from here.\n (keep alphabetic order)"]
-pub type VCL_ACL = *const vrt_acl;
+#[repr(transparent)]
+#[derive(Debug, Copy, Clone)]
+pub struct VCL_ACL(pub *const vrt_acl);
 #[repr(transparent)]
 #[derive(Debug, Copy, Clone)]
 pub struct VCL_BACKEND(pub *const director);
 #[repr(transparent)]
 #[derive(Debug, Copy, Clone)]
 pub struct VCL_BLOB(pub *const vrt_blob);
-pub type VCL_BODY = *const ::std::ffi::c_void;
+#[repr(transparent)]
+#[derive(Debug, Copy, Clone)]
+pub struct VCL_BODY(pub *const ::std::ffi::c_void);
 #[repr(transparent)]
 #[derive(Debug, Default, Copy, Clone)]
 pub struct VCL_BOOL(pub ::std::ffi::c_uint);
-pub type VCL_BYTES = i64;
+#[repr(transparent)]
+#[derive(Debug, Default, Copy, Clone)]
+pub struct VCL_BYTES(pub i64);
 #[repr(transparent)]
 #[derive(Debug, Default, Copy, Clone)]
 pub struct VCL_DURATION(pub vtim_dur);
-pub type VCL_ENUM = *const ::std::ffi::c_char;
-pub type VCL_HEADER = *const gethdr_s;
-pub type VCL_HTTP = *mut http;
+#[repr(transparent)]
+#[derive(Debug, Copy, Clone)]
+pub struct VCL_ENUM(pub *const ::std::ffi::c_char);
+#[repr(transparent)]
+#[derive(Debug, Copy, Clone)]
+pub struct VCL_HEADER(pub *const gethdr_s);
+#[repr(transparent)]
+#[derive(Debug, Copy, Clone)]
+pub struct VCL_HTTP(pub *mut http);
 pub type VCL_INSTANCE = ::std::ffi::c_void;
 #[repr(transparent)]
 #[derive(Debug, Default, Copy, Clone)]
@@ -4331,17 +4343,27 @@ pub struct VCL_REAL(pub f64);
 pub struct vre {
     _unused: [u8; 0],
 }
-pub type VCL_REGEX = *const vre;
-pub type VCL_STEVEDORE = *const stevedore;
-pub type VCL_STRANDS = *const strands;
+#[repr(transparent)]
+#[derive(Debug, Copy, Clone)]
+pub struct VCL_REGEX(pub *const vre);
+#[repr(transparent)]
+#[derive(Debug, Copy, Clone)]
+pub struct VCL_STEVEDORE(pub *const stevedore);
+#[repr(transparent)]
+#[derive(Debug, Copy, Clone)]
+pub struct VCL_STRANDS(pub *const strands);
 #[repr(transparent)]
 #[derive(Debug, Copy, Clone)]
 pub struct VCL_STRING(pub *const ::std::ffi::c_char);
-pub type VCL_SUB = *const vcl_sub;
+#[repr(transparent)]
+#[derive(Debug, Copy, Clone)]
+pub struct VCL_SUB(pub *const vcl_sub);
 #[repr(transparent)]
 #[derive(Debug, Default, Copy, Clone)]
 pub struct VCL_TIME(pub vtim_real);
-pub type VCL_VCL = *mut vcl;
+#[repr(transparent)]
+#[derive(Debug, Copy, Clone)]
+pub struct VCL_VCL(pub *mut vcl);
 pub type VCL_VOID = ::std::ffi::c_void;
 #[doc = " This is the composite \"context\" argument for compiled VCL, VRT and\n VMOD functions."]
 #[repr(C)]

@@ -337,18 +337,16 @@ impl ReturnTy {
             }
         };
 
-        match (ret_ty, func_type, is_value) {
-            (_, Event, true) if !matches!(ret_ty, Self::Default) => Err(error(
+        if matches!(func_type, Event) && !matches!(ret_ty, Self::Default) && is_value {
+            Err(error(
                 &ty,
                 "Event functions must not return a value, or return a Result<(), _>",
-            ))?,
-            (ReturnTy::SelfType, _, _) if !matches!(func_type, Constructor) => {
-                Err(error(
-                    ty,
-                    "`Self` return type is only allowed in object constructors named `new`",
-                ))?;
-            }
-            _ => {}
+            ))?;
+        } else if matches!(ret_ty, Self::SelfType) && !matches!(func_type, Constructor) {
+            Err(error(
+                ty,
+                "`Self` return type is only allowed in object constructors named `new`",
+            ))?;
         }
 
         Ok(ret_ty)
@@ -363,12 +361,16 @@ impl ReturnTy {
                 return Some(Self::String);
             } else if ident == "Self" {
                 return Some(Self::SelfType);
-            } else if ident == "VCL_BACKEND" {
-                return Some(Self::Backend);
-            } else if ident == "VCL_STRING" {
-                return Some(Self::VclString);
             } else if ident == "VclError" {
                 return Some(Self::VclError);
+            }
+            let ident = ident.to_string();
+            if ident.starts_with("VCL_")
+                && ident
+                    .chars()
+                    .all(|v| char::is_ascii_uppercase(&v) || v == '_')
+            {
+                return Some(Self::VclType(ident));
             }
         }
         if let Some(ty) = as_option_type(ty) {
