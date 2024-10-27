@@ -794,7 +794,9 @@ VmodInfo {
             has_optional_args: false,
             args: [],
             returns: Value(
-                VclString,
+                VclType(
+                    "VCL_STRING",
+                ),
             ),
         },
         FuncInfo {
@@ -804,7 +806,9 @@ VmodInfo {
             has_optional_args: false,
             args: [],
             returns: Result(
-                VclString,
+                VclType(
+                    "VCL_STRING",
+                ),
                 ParamType(
                     Str,
                 ),

@@ -82,9 +82,9 @@ pub enum ReturnType {
 }
 
 impl ReturnType {
-    pub fn value_type(&self) -> ReturnTy {
+    pub fn value_type(&self) -> &ReturnTy {
         match self {
-            Self::Value(ty) | Self::Result(ty, _) => *ty,
+            Self::Value(ty) | Self::Result(ty, _) => ty,
         }
     }
 }
@@ -192,40 +192,39 @@ impl ParamTy {
 }
 
 /// Represents all return types of functions.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum ReturnTy {
     Default, // Nothing is returned
     SelfType,
     ParamType(ParamTy),
     String,
-    Backend,
     Bytes,
-    VclString,   // hopefully some day we won't expose this type to the user
-    BoxDynError, // Error type only
-    VclError,    // Error type only
+    BoxDynError,     // Error type only
+    VclError,        // Error type only
+    VclType(String), // Raw VCL type, stored as original "VCL_..." string
 }
 
 impl ReturnTy {
-    pub fn to_vcc_type(self) -> &'static str {
+    pub fn to_vcc_type(&self) -> String {
         match self {
             // Self is returned by obj constructors which are void in VCC
-            Self::Default | Self::SelfType => "VOID",
-            Self::ParamType(ty) => ty.to_vcc_type(),
-            Self::Bytes | Self::VclString | Self::String => "STRING",
-            Self::Backend => "BACKEND",
-            Self::BoxDynError | Self::VclError => "VCC-SomeError", // internal to the generator
+            Self::Default | Self::SelfType => "VOID".into(),
+            Self::ParamType(ty) => ty.to_vcc_type().into(),
+            Self::Bytes | Self::String => "STRING".into(),
+            Self::VclType(ty) => ty[4..].to_string(), // remove "VCL_" prefix
+            Self::BoxDynError | Self::VclError => "VCC-SomeError".into(), // internal to the generator
         }
     }
 
-    pub fn to_c_type(self) -> &'static str {
+    pub fn to_c_type(&self) -> String {
         // ATTENTION: Each VCL_* type here must also be listed in the `use varnish::...`
         //            statement in the `varnish-macros/src/generator.rs` file.
         match self {
-            Self::ParamType(ty) => ty.to_c_type(),
-            Self::Bytes | Self::VclString | Self::String => "VCL_STRING",
-            Self::SelfType | Self::Default => "VCL_VOID",
-            Self::Backend => "VCL_BACKEND",
-            Self::BoxDynError | Self::VclError => "C-BoxDynError", // internal to the generator
+            Self::ParamType(ty) => ty.to_c_type().into(),
+            Self::Bytes | Self::String => "VCL_STRING".into(),
+            Self::SelfType | Self::Default => "VCL_VOID".into(),
+            Self::BoxDynError | Self::VclError => "C-BoxDynError".into(), // internal to the generator
+            Self::VclType(ty) => ty.into(),
         }
     }
 }

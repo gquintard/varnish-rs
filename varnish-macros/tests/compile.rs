@@ -1,5 +1,5 @@
 // Use this hack to include a specific file into the regular IDE code parsing to help fix a specific test file
-// #[path = "pass/function.rs"]
+// #[path = "pass/vcl_returns.rs"]
 // mod try_to_build;
 
 #[test]

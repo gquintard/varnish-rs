@@ -36,9 +36,9 @@ pub struct HTTP<'a> {
 
 impl<'a> HTTP<'a> {
     /// Wrap a raw pointer into an object we can use.
-    pub fn new(p: *mut ffi::http) -> Option<Self> {
+    pub fn new(p: ffi::VCL_HTTP) -> Option<Self> {
         Some(HTTP {
-            raw: unsafe { p.as_mut()? },
+            raw: unsafe { p.0.as_mut()? },
         })
     }
 

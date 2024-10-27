@@ -43,9 +43,9 @@ pub struct FuncProcessor {
     /// `-> c_output_type` or empty if the export "C" function returns nothing
     wrap_fn_output: TokenStream,
     /// VCL types as used in the .c and .h files, e.g. `VCL_INT`, `VCL_STRING`, `VCL_VOID`, ...
-    output_hdr: &'static str,
+    output_hdr: String,
     /// VCC types as used in the .vcc file, e.g. `INT`, `STRING`, `VOID`, ...
-    output_vcc: &'static str,
+    output_vcc: String,
 
     /// `typedef VCL_VOID td_simple_void_to_void(VRT_CTX, VCL_STRING, ...);` C code
     pub cproto_typedef_decl: String,
@@ -375,7 +375,7 @@ impl FuncProcessor {
     fn do_fn_return(&mut self, info: &FuncInfo) {
         let ty = if matches!(info.func_type, Event) {
             // Rust event functions do not return value, but their C wrappers must return an int
-            ReturnTy::ParamType(ParamTy::I64)
+            &ReturnTy::ParamType(ParamTy::I64)
         } else {
             info.returns.value_type()
         };
@@ -401,7 +401,7 @@ impl FuncProcessor {
             String::new()
         };
         let mut decl: Vec<Value> = vec![
-            vec![self.output_vcc].into(),
+            vec![self.output_vcc.clone()].into(),
             callback_fn.clone().into(),
             args_struct_cproto.into(),
         ];
@@ -480,20 +480,22 @@ impl FuncProcessor {
 
     fn gen_result_handler_code(&self, info: &FuncInfo) -> TokenStream {
         let is_result;
-
-        // Always process the error from the result type
-        let on_error = if let ReturnType::Result(_, err) = info.returns {
-            is_result = true;
-            let err = if matches!(err, ReturnTy::BoxDynError) {
-                quote! { &err.to_string() }
-            } else {
-                quote! { err }
-            };
-            quote! { __ctx.fail(#err); }
-        } else {
-            is_result = false;
-            quote! {}
+        let on_error = match &info.returns {
+            ReturnType::Result(_, err) => {
+                is_result = true;
+                let err = if matches!(err, ReturnTy::BoxDynError) {
+                    quote! { &err.to_string() }
+                } else {
+                    quote! { err }
+                };
+                quote! { __ctx.fail(#err); }
+            }
+            ReturnType::Value(_) => {
+                is_result = false;
+                quote! {}
+            }
         };
+        let is_vcl_type = matches!(info.returns.value_type(), ReturnTy::VclType(_));
 
         // Events require special handling - convert errors into 1, otherwise 0
         if matches!(info.func_type, Event) {
@@ -513,7 +515,6 @@ impl FuncProcessor {
             quote! {}
         } else {
             quote! { Default::default() }
-            // info.returns.value_type().to_default()
         };
 
         let on_success = if matches!(info.func_type, Constructor) {
@@ -523,6 +524,8 @@ impl FuncProcessor {
             }
         } else if self.output_hdr == "VCL_VOID" {
             quote! {}
+        } else if is_vcl_type {
+            quote! { __result }
         } else {
             quote! {
                 match __result.into_vcl(&mut __ctx.ws) {

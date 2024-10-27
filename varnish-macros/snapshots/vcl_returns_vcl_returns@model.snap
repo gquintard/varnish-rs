@@ -1,0 +1,596 @@
+---
+source: varnish-macros/src/tests.rs
+---
+VmodInfo {
+    params: VmodParams {
+        docs: None,
+    },
+    ident: "vcl_returns",
+    docs: "",
+    funcs: [
+        FuncInfo {
+            func_type: Function,
+            ident: "val_acl",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                VclType(
+                    "VCL_ACL",
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "res_acl",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                VclType(
+                    "VCL_ACL",
+                ),
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "val_backend",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                VclType(
+                    "VCL_BACKEND",
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "res_backend",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                VclType(
+                    "VCL_BACKEND",
+                ),
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "val_blob",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                VclType(
+                    "VCL_BLOB",
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "res_blob",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                VclType(
+                    "VCL_BLOB",
+                ),
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "val_body",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                VclType(
+                    "VCL_BODY",
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "res_body",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                VclType(
+                    "VCL_BODY",
+                ),
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "val_bool",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                VclType(
+                    "VCL_BOOL",
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "res_bool",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                VclType(
+                    "VCL_BOOL",
+                ),
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "val_bytes",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                VclType(
+                    "VCL_BYTES",
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "res_bytes",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                VclType(
+                    "VCL_BYTES",
+                ),
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "val_duration",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                VclType(
+                    "VCL_DURATION",
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "res_duration",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                VclType(
+                    "VCL_DURATION",
+                ),
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "val_enum",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                VclType(
+                    "VCL_ENUM",
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "res_enum",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                VclType(
+                    "VCL_ENUM",
+                ),
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "val_header",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                VclType(
+                    "VCL_HEADER",
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "res_header",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                VclType(
+                    "VCL_HEADER",
+                ),
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "val_http",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                VclType(
+                    "VCL_HTTP",
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "res_http",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                VclType(
+                    "VCL_HTTP",
+                ),
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "val_instance",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                VclType(
+                    "VCL_INSTANCE",
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "val_int",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                VclType(
+                    "VCL_INT",
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "res_int",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                VclType(
+                    "VCL_INT",
+                ),
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "val_ip",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                VclType(
+                    "VCL_IP",
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "res_ip",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                VclType(
+                    "VCL_IP",
+                ),
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "val_probe",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                VclType(
+                    "VCL_PROBE",
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "res_probe",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                VclType(
+                    "VCL_PROBE",
+                ),
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "val_real",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                VclType(
+                    "VCL_REAL",
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "res_real",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                VclType(
+                    "VCL_REAL",
+                ),
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "val_regex",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                VclType(
+                    "VCL_REGEX",
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "res_regex",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                VclType(
+                    "VCL_REGEX",
+                ),
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "val_stevedore",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                VclType(
+                    "VCL_STEVEDORE",
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "res_stevedore",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                VclType(
+                    "VCL_STEVEDORE",
+                ),
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "val_strands",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                VclType(
+                    "VCL_STRANDS",
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "res_strands",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                VclType(
+                    "VCL_STRANDS",
+                ),
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "val_string",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                VclType(
+                    "VCL_STRING",
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "res_string",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                VclType(
+                    "VCL_STRING",
+                ),
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "val_sub",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                VclType(
+                    "VCL_SUB",
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "res_sub",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                VclType(
+                    "VCL_SUB",
+                ),
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "val_time",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                VclType(
+                    "VCL_TIME",
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "res_time",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                VclType(
+                    "VCL_TIME",
+                ),
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "val_vcl",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Value(
+                VclType(
+                    "VCL_VCL",
+                ),
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "res_vcl",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                VclType(
+                    "VCL_VCL",
+                ),
+                ParamType(
+                    Str,
+                ),
+            ),
+        },
+    ],
+    objects: [],
+    shared_types: SharedTypes {
+        shared_per_task_ty: None,
+        shared_per_vcl_ty: None,
+    },
+}
