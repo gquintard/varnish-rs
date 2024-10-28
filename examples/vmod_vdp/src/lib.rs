@@ -1,6 +1,7 @@
 use std::ffi::CStr;
 
-use varnish::vcl::{Ctx, InitResult, PushAction, PushResult, VDPCtx, VDP};
+use varnish::ffi::VdpAction;
+use varnish::vcl::{Ctx, InitResult, PushResult, VDPCtx, VDP};
 
 varnish::run_vtc_tests!("tests/*.vtc");
 
@@ -65,12 +66,12 @@ impl VDP for Flipper {
     }
 
     // buffer everything, then reverse the buffer, and send it, easy
-    fn push(&mut self, ctx: &mut VDPCtx, act: PushAction, buf: &[u8]) -> PushResult {
+    fn push(&mut self, ctx: &mut VDPCtx, act: VdpAction, buf: &[u8]) -> PushResult {
         // ingest everything we're given
         self.body.extend_from_slice(buf);
 
         // nod along if it isn't the last call
-        if !matches!(act, PushAction::End) {
+        if !matches!(act, VdpAction::End) {
             return PushResult::Ok;
         }
 

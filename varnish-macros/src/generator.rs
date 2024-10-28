@@ -185,7 +185,7 @@ impl Generator {
                     VCL_VOID,
                     VMOD_ABI_Version,
                     VMOD_PRIV_METHODS_MAGIC,
-                    vcl_event_e,
+                    VclEvent,
                     vmod_priv,
                     vmod_priv_methods,
                     vrt_ctx,

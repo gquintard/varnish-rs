@@ -3,42 +3,8 @@
 use std::ffi::{c_int, c_uint, c_void};
 
 use crate::ffi;
-use crate::ffi::{
-    vcl_event_e, vrt_ctx, VRT_fail, VSL_tag_e_SLT_Backend_health, VSL_tag_e_SLT_Debug,
-    VSL_tag_e_SLT_Error, VSL_tag_e_SLT_FetchError, VSL_tag_e_SLT_VCL_Error, VSL_tag_e_SLT_VCL_Log,
-    VRT_CTX_MAGIC,
-};
-use crate::vcl::{TestWS, VclError, HTTP, WS};
-
-/// VSL logging tag
-///
-/// An `enum` wrapper around [VSL tags](https://varnish-cache.org/docs/trunk/reference/vsl.html#vsl-tags).
-/// Only the most current tags (for vmod writers) are mapped, and [`LogTag::Any`] will allow to
-/// directly pass a native tag code (`ffi::VSL_tag_e_SLT_*`).
-#[derive(Debug, Clone, Copy)]
-pub enum LogTag {
-    Debug,
-    Error,
-    VclError,
-    FetchError,
-    BackendHealth,
-    VclLog,
-    Any(u32),
-}
-
-impl From<LogTag> for u32 {
-    fn from(tag: LogTag) -> u32 {
-        match tag {
-            LogTag::Debug => VSL_tag_e_SLT_Debug,
-            LogTag::Error => VSL_tag_e_SLT_Error,
-            LogTag::VclError => VSL_tag_e_SLT_VCL_Error,
-            LogTag::FetchError => VSL_tag_e_SLT_FetchError,
-            LogTag::BackendHealth => VSL_tag_e_SLT_Backend_health,
-            LogTag::VclLog => VSL_tag_e_SLT_VCL_Log,
-            LogTag::Any(n) => n,
-        }
-    }
-}
+use crate::ffi::{vrt_ctx, VRT_fail, VRT_CTX_MAGIC};
+use crate::vcl::{LogTag, TestWS, VclError, HTTP, WS};
 
 /// VCL context
 ///
@@ -113,14 +79,14 @@ impl<'a> Ctx<'a> {
     }
 
     /// Log a message, attached to the current context
-    pub fn log(&mut self, logtag: LogTag, msg: impl AsRef<str>) {
+    pub fn log(&mut self, tag: LogTag, msg: impl AsRef<str>) {
         unsafe {
             let vsl = self.raw.vsl;
             if vsl.is_null() {
-                log(logtag, msg);
+                log(tag, msg);
             } else {
                 let msg = ffi::txt::from_str(msg.as_ref());
-                ffi::VSLbt(vsl, logtag.into(), msg);
+                ffi::VSLbt(vsl, tag, msg);
             }
         }
     }
@@ -190,50 +156,11 @@ impl TestCtx {
     }
 }
 
-/// Qualify a VCL phase, mainly consumed by vmod `event` functions.
-#[derive(Debug)]
-pub enum Event {
-    Load,
-    Warm,
-    Cold,
-    Discard,
-}
-
-impl Event {
-    /// Create a new event from a [`ffi::vcl_event_e`].
-    ///
-    /// # Panics
-    ///
-    /// Panics if provided with an unrecognized number.
-    pub fn from_raw(event: vcl_event_e) -> Self {
-        event
-            .try_into()
-            .unwrap_or_else(|e| panic!("{e}: vcl_event_e == {event:?}"))
-    }
-}
-
-impl TryFrom<vcl_event_e> for Event {
-    type Error = &'static str;
-
-    fn try_from(event: vcl_event_e) -> Result<Self, Self::Error> {
-        Ok(match event {
-            vcl_event_e::VCL_EVENT_LOAD => Self::Load,
-            vcl_event_e::VCL_EVENT_WARM => Self::Warm,
-            vcl_event_e::VCL_EVENT_COLD => Self::Cold,
-            vcl_event_e::VCL_EVENT_DISCARD => Self::Discard,
-            // In the future, there might be more enum values, so we should ensure it continues
-            // to compile, but we do want a warning when developing locally to add the new one.
-            #[expect(unreachable_patterns)]
-            _ => Err("unrecognized event value")?,
-        })
-    }
-}
-
-pub fn log(logtag: LogTag, msg: impl AsRef<str>) {
+pub fn log(tag: LogTag, msg: impl AsRef<str>) {
     let msg = msg.as_ref();
     unsafe {
         ffi::VSL(
-            logtag.into(),
+            tag,
             ffi::vxids { vxid: 0 },
             c"%.*s".as_ptr(),
             msg.len(),

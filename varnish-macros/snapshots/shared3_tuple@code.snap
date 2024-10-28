@@ -9,7 +9,7 @@ mod tuple {
         use std::ptr::null;
         use varnish::ffi::{
             VCL_BACKEND, VCL_BOOL, VCL_DURATION, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL,
-            VCL_STRING, VCL_VOID, VMOD_ABI_Version, VMOD_PRIV_METHODS_MAGIC, vcl_event_e,
+            VCL_STRING, VCL_VOID, VMOD_ABI_Version, VMOD_PRIV_METHODS_MAGIC, VclEvent,
             vmod_priv, vmod_priv_methods, vrt_ctx,
         };
         use varnish::vcl::{Ctx, IntoVCL};
