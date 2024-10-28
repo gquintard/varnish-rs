@@ -17,3 +17,5 @@ pub use probe::*;
 pub use processor::*;
 pub use vsb::*;
 pub use ws::*;
+
+pub use crate::ffi::{VclEvent as Event, VslTag as LogTag};

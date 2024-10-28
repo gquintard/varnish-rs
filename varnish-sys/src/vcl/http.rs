@@ -12,10 +12,11 @@
 //! this [issue](https://github.com/gquintard/varnish-rs/issues/4).
 
 #![allow(clippy::not_unsafe_ptr_arg_deref)]
-use std::ffi::c_uint;
+use std::mem::transmute;
 use std::slice::from_raw_parts_mut;
 
 use crate::ffi;
+use crate::ffi::VslTag;
 use crate::vcl::{VclResult, WS};
 
 // C constants pop up as u32, but header indexing uses u16, redefine
@@ -71,7 +72,7 @@ impl<'a> HTTP<'a> {
             unsafe {
                 ffi::VSLbt(
                     self.raw.vsl,
-                    self.raw.logtag as c_uint + HDR_FIRST as c_uint,
+                    transmute::<u32, VslTag>((self.raw.logtag as u32) + (HDR_FIRST as u32)),
                     *self.raw.hd.add(idx as usize),
                 );
             }
@@ -93,7 +94,9 @@ impl<'a> HTTP<'a> {
                 unsafe {
                     ffi::VSLbt(
                         self.raw.vsl,
-                        self.raw.logtag + HDR_UNSET as u32 - HDR_METHOD as u32,
+                        transmute::<u32, VslTag>(
+                            (self.raw.logtag as u32) + (HDR_UNSET as u32) + (HDR_METHOD as u32),
+                        ),
                         *self.raw.hd.add(HDR_FIRST as usize + idx),
                     );
                 }

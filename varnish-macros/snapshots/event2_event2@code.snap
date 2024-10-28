@@ -9,7 +9,7 @@ mod event2 {
         use std::ptr::null;
         use varnish::ffi::{
             VCL_BACKEND, VCL_BOOL, VCL_DURATION, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL,
-            VCL_STRING, VCL_VOID, VMOD_ABI_Version, VMOD_PRIV_METHODS_MAGIC, vcl_event_e,
+            VCL_STRING, VCL_VOID, VMOD_ABI_Version, VMOD_PRIV_METHODS_MAGIC, VclEvent,
             vmod_priv, vmod_priv_methods, vrt_ctx,
         };
         use varnish::vcl::{Ctx, IntoVCL};
@@ -17,11 +17,10 @@ mod event2 {
         unsafe extern "C" fn vmod_c_on_event(
             __ctx: *mut vrt_ctx,
             __vp: *mut vmod_priv,
-            __ev: vcl_event_e,
+            __ev: VclEvent,
         ) -> VCL_INT {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __var1 = Event::from_raw(__ev);
-            let __result = super::on_event(&__ctx, __var1);
+            let __result = super::on_event(&__ctx, __ev);
             match __result {
                 Ok(_) => VCL_INT(0),
                 Err(err) => {
@@ -36,7 +35,7 @@ mod event2 {
                 unsafe extern "C" fn(
                     __ctx: *mut vrt_ctx,
                     __vp: *mut vmod_priv,
-                    __ev: vcl_event_e,
+                    __ev: VclEvent,
                 ) -> VCL_INT,
             >,
         }

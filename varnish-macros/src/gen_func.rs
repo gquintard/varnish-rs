@@ -110,7 +110,7 @@ impl FuncProcessor {
         }
         if matches!(info.func_type, Event) {
             self.wrap_fn_arg_decl.push(quote! { __vp: *mut vmod_priv });
-            self.wrap_fn_arg_decl.push(quote! { __ev: vcl_event_e });
+            self.wrap_fn_arg_decl.push(quote! { __ev: VclEvent });
         }
         if info.has_optional_args {
             self.func_pre_call
@@ -210,9 +210,7 @@ impl FuncProcessor {
                     .push(quote! { let __obj = __obj.as_ref().unwrap(); });
             }
             ParamType::Event => {
-                let r_arg = quote! { Event::from_raw(__ev) };
-                self.func_pre_call.push(quote! { let #temp_var = #r_arg; });
-                self.func_call_vars.push(quote! { #temp_var });
+                self.func_call_vars.push(quote! { __ev });
                 let json = Self::arg_to_json(arg_info.ident.clone(), false, "EVENT", Value::Null);
                 self.args_json.push(json.into());
             }

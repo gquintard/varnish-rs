@@ -5,23 +5,12 @@
 //! *Note:* The rust wrapper here is pretty thin and the vmod writer will most probably need to have to
 //! deal with the raw Varnish internals.
 
-use std::ffi::{c_int, c_uint, c_void, CStr};
+use std::ffi::{c_int, c_void, CStr};
 use std::ptr;
 
-use crate::ffi::{vdp_ctx, vfp_ctx, vfp_entry, vfp_status};
+use crate::ffi::{vdp_ctx, vfp_ctx, vfp_entry, VdpAction, VfpStatus};
 use crate::vcl::{Ctx, VclError};
 use crate::{ffi, validate_vfp_ctx, validate_vfp_entry};
-
-/// passed to [`VDP::push`] to describe special conditions occurring in the pipeline.
-#[derive(Debug, Copy, Clone)]
-pub enum PushAction {
-    /// Nothing special
-    None = ffi::vdp_action_VDP_NULL as isize,
-    /// The accompanying buffer will be invalidated
-    Flush = ffi::vdp_action_VDP_FLUSH as isize,
-    /// Last call, and last chance to push bytes, implies `Flush`
-    End = ffi::vdp_action_VDP_END as isize,
-}
 
 /// The return type for [`VDP::push`]
 #[derive(Debug, Copy, Clone)]
@@ -63,7 +52,7 @@ pub trait VDP: Sized {
     fn new(vrt_ctx: &mut Ctx, vdp_ctx: &mut VDPCtx) -> InitResult<Self>;
     /// Handle the data buffer from the previous processor. This function generally uses
     /// [`VDPCtx::push`] to push data to the next processor.
-    fn push(&mut self, ctx: &mut VDPCtx, act: PushAction, buf: &[u8]) -> PushResult;
+    fn push(&mut self, ctx: &mut VDPCtx, act: VdpAction, buf: &[u8]) -> PushResult;
 }
 
 pub unsafe extern "C" fn gen_vdp_init<T: VDP>(
@@ -96,19 +85,16 @@ pub unsafe extern "C" fn gen_vdp_fini<T: VDP>(_: *mut vdp_ctx, priv_: *mut *mut 
 
 pub unsafe extern "C" fn gen_vdp_push<T: VDP>(
     ctx_raw: *mut vdp_ctx,
-    act: ffi::vdp_action,
+    act: VdpAction,
     priv_: *mut *mut c_void,
     ptr: *const c_void,
     len: isize,
 ) -> c_int {
     assert_ne!(priv_, ptr::null_mut());
     assert_ne!(*priv_, ptr::null_mut());
-    let out_action = match act {
-        ffi::vdp_action_VDP_NULL => PushAction::None,
-        ffi::vdp_action_VDP_FLUSH => PushAction::Flush,
-        ffi::vdp_action_VDP_END => PushAction::End,
-        _ => return 1, /* TODO: log */
-    };
+    if !matches!(act, VdpAction::Null | VdpAction::Flush | VdpAction::End) {
+        return 1; /* TODO: log */
+    }
 
     let empty_buffer: [u8; 0] = [0; 0];
     let buf = if ptr.is_null() {
@@ -117,7 +103,7 @@ pub unsafe extern "C" fn gen_vdp_push<T: VDP>(
         std::slice::from_raw_parts(ptr.cast::<u8>(), len as usize)
     };
 
-    match (*(*priv_).cast::<T>()).push(&mut VDPCtx::new(ctx_raw), out_action, buf) {
+    match (*(*priv_).cast::<T>()).push(&mut VDPCtx::new(ctx_raw), act, buf) {
         PushResult::Err => -1, // TODO: log error
         PushResult::Ok => 0,
         PushResult::End => 1,
@@ -154,11 +140,11 @@ impl<'a> VDPCtx<'a> {
     }
 
     /// Send buffer down the pipeline
-    pub fn push(&mut self, act: PushAction, buf: &[u8]) -> PushResult {
+    pub fn push(&mut self, act: VdpAction, buf: &[u8]) -> PushResult {
         match unsafe {
             ffi::VDP_bytes(
                 self.raw,
-                act as c_uint,
+                act,
                 buf.as_ptr().cast::<c_void>(),
                 buf.len() as isize,
             )
@@ -185,16 +171,16 @@ unsafe extern "C" fn wrap_vfp_init<T: VFP>(
     vrt_ctx: *const ffi::vrt_ctx,
     ctxp: *mut vfp_ctx,
     vfep: *mut vfp_entry,
-) -> vfp_status {
+) -> VfpStatus {
     let ctx = validate_vfp_ctx(ctxp);
     let vfe = validate_vfp_entry(vfep);
     match T::new(&mut Ctx::from_ptr(vrt_ctx), &mut VFPCtx::new(ctx)) {
         InitResult::Ok(proc) => {
             vfe.priv1 = Box::into_raw(Box::new(proc)).cast::<c_void>();
-            vfp_status::VFP_OK
+            VfpStatus::Ok
         }
-        InitResult::Err(_) => vfp_status::VFP_ERROR, // TODO: log the error,
-        InitResult::Pass => vfp_status::VFP_END,
+        InitResult::Err(_) => VfpStatus::Error, // TODO: log the error,
+        InitResult::Pass => VfpStatus::End,
     }
 }
 
@@ -203,7 +189,7 @@ pub unsafe extern "C" fn wrap_vfp_pull<T: VFP>(
     vfep: *mut vfp_entry,
     ptr: *mut c_void,
     len: *mut isize,
-) -> vfp_status {
+) -> VfpStatus {
     let ctx = validate_vfp_ctx(ctxp);
     let vfe = validate_vfp_entry(vfep);
     let mut empty_buffer: [u8; 0] = [0; 0];
@@ -214,14 +200,14 @@ pub unsafe extern "C" fn wrap_vfp_pull<T: VFP>(
     };
     let obj = vfe.priv1.cast::<T>().as_mut().unwrap();
     match obj.pull(&mut VFPCtx::new(ctx), buf) {
-        PullResult::Err => vfp_status::VFP_ERROR, // TODO: log error
+        PullResult::Err => VfpStatus::Error, // TODO: log error
         PullResult::Ok(l) => {
             *len = l as isize;
-            vfp_status::VFP_OK
+            VfpStatus::Ok
         }
         PullResult::End(l) => {
             *len = l as isize;
-            vfp_status::VFP_END
+            VfpStatus::End
         }
     }
 }
@@ -272,22 +258,22 @@ impl<'a> VFPCtx<'a> {
         let max_len = len;
 
         match unsafe { ffi::VFP_Suck(self.raw, buf.as_ptr() as *mut c_void, &mut len) } {
-            vfp_status::VFP_OK => {
+            VfpStatus::Ok => {
                 assert!(len <= max_len);
                 assert!(len >= 0);
                 PullResult::Ok(len as usize)
             }
-            vfp_status::VFP_END => {
+            VfpStatus::End => {
                 assert!(len <= max_len);
                 assert!(len >= 0);
                 PullResult::End(len as usize)
             }
-            vfp_status::VFP_ERROR => PullResult::Err,
-            vfp_status::VFP_NULL => panic!("VFP_Suck() was never supposed to return VFP_NULL!"),
+            VfpStatus::Error => PullResult::Err,
+            VfpStatus::Null => panic!("VFP_Suck() was never supposed to return VFP_NULL!"),
             // In the future, there might be more enum values, so we should ensure it continues
             // to compile, but we do want a warning when developing locally to add the new one.
             #[expect(unreachable_patterns)]
-            n => panic!("unknown vfp_status {n:?}"),
+            n => panic!("unknown VfpStatus {n:?}"),
         }
     }
 }

@@ -72,9 +72,9 @@ use std::os::unix::io::FromRawFd;
 use std::ptr::{null, null_mut};
 use std::time::SystemTime;
 
-use crate::ffi::{vfp_status, VCL_BACKEND, VCL_BOOL, VCL_IP, VCL_TIME};
+use crate::ffi::{VclEvent, VfpStatus, VCL_BACKEND, VCL_BOOL, VCL_IP, VCL_TIME};
 use crate::utils::get_backend;
-use crate::vcl::{Ctx, Event, IntoVCL, LogTag, VclError, VclResult, Vsb, WS};
+use crate::vcl::{Ctx, IntoVCL, LogTag, VclError, VclResult, Vsb, WS};
 use crate::{
     ffi, validate_director, validate_vdir, validate_vfp_ctx, validate_vfp_entry, validate_vrt_ctx,
 };
@@ -202,7 +202,7 @@ pub trait Serve<T: Transfer> {
 
     /// The method will get called when the VCL changes temperature or is discarded. It's notably a
     /// chance to start/stop probes to consume fewer resources.
-    fn event(&self, _event: Event) {}
+    fn event(&self, _event: VclEvent) {}
 
     fn panic(&self, _vsb: &mut Vsb) {}
 
@@ -277,14 +277,14 @@ unsafe extern "C" fn vfp_pull<T: Transfer>(
     vfep: *mut ffi::vfp_entry,
     ptr: *mut c_void,
     len: *mut isize,
-) -> vfp_status {
+) -> VfpStatus {
     let ctx = validate_vfp_ctx(ctxp);
     let vfe = validate_vfp_entry(vfep);
 
     let buf = std::slice::from_raw_parts_mut(ptr.cast::<u8>(), *len as usize);
     if buf.is_empty() {
         *len = 0;
-        return vfp_status::VFP_OK;
+        return VfpStatus::Ok;
     }
 
     let reader = vfe.priv1.cast::<T>().as_mut().unwrap();
@@ -293,25 +293,23 @@ unsafe extern "C" fn vfp_pull<T: Transfer>(
             // TODO: we should grow a VSL object
             // SAFETY: we assume ffi::VSLbt() will not store the pointer to the string's content
             let msg = ffi::txt::from_str(e.as_ref());
-            ffi::VSLbt(ctx.req.as_ref().unwrap().vsl, ffi::VSL_tag_e_SLT_Error, msg);
-            vfp_status::VFP_ERROR
+            ffi::VSLbt(ctx.req.as_ref().unwrap().vsl, ffi::VslTag::Error, msg);
+            VfpStatus::Error
         }
         Ok(0) => {
             *len = 0;
-            vfp_status::VFP_END
+            VfpStatus::End
         }
         Ok(l) => {
             *len = l as isize;
-            vfp_status::VFP_OK
+            VfpStatus::Ok
         }
     }
 }
 
-unsafe extern "C" fn wrap_event<S: Serve<T>, T: Transfer>(be: VCL_BACKEND, ev: ffi::vcl_event_e) {
+unsafe extern "C" fn wrap_event<S: Serve<T>, T: Transfer>(be: VCL_BACKEND, ev: VclEvent) {
     let backend: &S = get_backend(validate_director(be));
-    backend.event(ev.try_into().unwrap_or_else(|e| {
-        panic!("{e}: value={ev:?} for backend {}", backend.get_type());
-    }));
+    backend.event(ev);
 }
 
 unsafe extern "C" fn wrap_list<S: Serve<T>, T: Transfer>(
