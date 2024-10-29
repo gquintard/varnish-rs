@@ -9,7 +9,7 @@ pub struct VclError {
 impl VclError {
     /// Create a new `Error` from a string
     pub fn new(s: String) -> Self {
-        VclError { s }
+        Self { s }
     }
 }
 
@@ -29,13 +29,13 @@ impl std::error::Error for VclError {}
 
 impl From<String> for VclError {
     fn from(s: String) -> Self {
-        VclError { s }
+        Self { s }
     }
 }
 
 impl From<&str> for VclError {
     fn from(s: &str) -> Self {
-        VclError { s: s.into() }
+        Self { s: s.into() }
     }
 }
 

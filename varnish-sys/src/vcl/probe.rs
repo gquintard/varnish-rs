@@ -5,14 +5,14 @@ use std::time::Duration;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub enum COWRequest<'a> {
+pub enum CowRequest<'a> {
     URL(Cow<'a, str>),
     Text(Cow<'a, str>),
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct COWProbe<'a> {
-    pub request: COWRequest<'a>,
+pub struct CowProbe<'a> {
+    pub request: CowRequest<'a>,
     pub timeout: Duration,
     pub interval: Duration,
     pub exp_status: c_uint,
@@ -38,12 +38,12 @@ pub struct Probe {
     pub initial: c_uint,
 }
 
-impl<'a> COWProbe<'a> {
+impl<'a> CowProbe<'a> {
     pub fn to_owned(&self) -> Probe {
         Probe {
             request: match &self.request {
-                COWRequest::URL(cow) => Request::URL(cow.to_string()),
-                COWRequest::Text(cow) => Request::Text(cow.to_string()),
+                CowRequest::URL(cow) => Request::URL(cow.to_string()),
+                CowRequest::Text(cow) => Request::Text(cow.to_string()),
             },
             timeout: self.timeout,
             interval: self.interval,

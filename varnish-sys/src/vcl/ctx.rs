@@ -4,7 +4,7 @@ use std::ffi::{c_int, c_uint, c_void};
 
 use crate::ffi;
 use crate::ffi::{vrt_ctx, VRT_fail, VRT_CTX_MAGIC};
-use crate::vcl::{LogTag, TestWS, VclError, Workspace, HTTP};
+use crate::vcl::{HttpHeaders, LogTag, TestWS, VclError, Workspace};
 
 /// VCL context
 ///
@@ -31,11 +31,11 @@ use crate::vcl::{LogTag, TestWS, VclError, Workspace, HTTP};
 #[derive(Debug)]
 pub struct Ctx<'a> {
     pub raw: &'a mut vrt_ctx,
-    pub http_req: Option<HTTP<'a>>,
-    pub http_req_top: Option<HTTP<'a>>,
-    pub http_resp: Option<HTTP<'a>>,
-    pub http_bereq: Option<HTTP<'a>>,
-    pub http_beresp: Option<HTTP<'a>>,
+    pub http_req: Option<HttpHeaders<'a>>,
+    pub http_req_top: Option<HttpHeaders<'a>>,
+    pub http_resp: Option<HttpHeaders<'a>>,
+    pub http_bereq: Option<HttpHeaders<'a>>,
+    pub http_beresp: Option<HttpHeaders<'a>>,
     pub ws: Workspace<'a>,
 }
 
@@ -51,11 +51,11 @@ impl<'a> Ctx<'a> {
     pub fn from_ref(raw: &'a mut vrt_ctx) -> Self {
         assert_eq!(raw.magic, VRT_CTX_MAGIC);
         Self {
-            http_req: HTTP::new(raw.http_req),
-            http_req_top: HTTP::new(raw.http_req_top),
-            http_resp: HTTP::new(raw.http_resp),
-            http_bereq: HTTP::new(raw.http_bereq),
-            http_beresp: HTTP::new(raw.http_beresp),
+            http_req: HttpHeaders::new(raw.http_req),
+            http_req_top: HttpHeaders::new(raw.http_req_top),
+            http_resp: HttpHeaders::new(raw.http_resp),
+            http_bereq: HttpHeaders::new(raw.http_bereq),
+            http_beresp: HttpHeaders::new(raw.http_beresp),
             ws: Workspace::new(raw.ws),
             raw,
         }

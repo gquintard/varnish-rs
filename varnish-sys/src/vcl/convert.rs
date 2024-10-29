@@ -25,7 +25,7 @@
 //! | `std::time::Duration` | <-> | `VCL_DURATION` |
 //! | `&str` | <-> | `VCL_STRING` |
 //! | `String` | -> | `VCL_STRING` |
-//! | `Option<COWProbe>` | <-> | `VCL_PROBE` |
+//! | `Option<CowProbe>` | <-> | `VCL_PROBE` |
 //! | `Option<Probe>` | <-> | `VCL_PROBE` |
 //! | `Option<std::net::SockAdd>` | -> | `VCL_IP` |
 //!
@@ -55,7 +55,7 @@ use crate::ffi::{
     VCL_DURATION, VCL_ENUM, VCL_HEADER, VCL_HTTP, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL, VCL_REGEX,
     VCL_STEVEDORE, VCL_STRANDS, VCL_STRING, VCL_SUB, VCL_TIME, VCL_VCL, VRT_BACKEND_PROBE_MAGIC,
 };
-use crate::vcl::{COWProbe, COWRequest, Probe, Request, VclError, Workspace};
+use crate::vcl::{CowProbe, CowRequest, Probe, Request, VclError, Workspace};
 
 /// Convert a Rust type into a VCL one
 ///
@@ -246,7 +246,7 @@ impl From<VCL_IP> for Option<SocketAddr> {
 // VCL_PROBE
 //
 default_null_ptr!(VCL_PROBE);
-impl<'a> IntoVCL<VCL_PROBE> for COWProbe<'a> {
+impl<'a> IntoVCL<VCL_PROBE> for CowProbe<'a> {
     fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_PROBE, VclError> {
         let p = ws
             .alloc(size_of::<vrt_backend_probe>())?
@@ -255,10 +255,10 @@ impl<'a> IntoVCL<VCL_PROBE> for COWProbe<'a> {
         let probe = unsafe { p.as_mut().unwrap() };
         probe.magic = VRT_BACKEND_PROBE_MAGIC;
         match self.request {
-            COWRequest::URL(ref s) => {
+            CowRequest::URL(ref s) => {
                 probe.url = s.into_vcl(ws)?.0;
             }
-            COWRequest::Text(ref s) => {
+            CowRequest::Text(ref s) => {
                 probe.request = s.into_vcl(ws)?.0;
             }
         }
@@ -294,18 +294,18 @@ impl IntoVCL<VCL_PROBE> for Probe {
         Ok(VCL_PROBE(probe))
     }
 }
-impl<'a> From<VCL_PROBE> for Option<COWProbe<'a>> {
+impl<'a> From<VCL_PROBE> for Option<CowProbe<'a>> {
     fn from(value: VCL_PROBE) -> Self {
         let pr = unsafe { value.0.as_ref()? };
         assert!(
             (pr.url.is_null() && !pr.request.is_null())
                 || pr.request.is_null() && !pr.url.is_null()
         );
-        Some(COWProbe {
+        Some(CowProbe {
             request: if pr.url.is_null() {
-                COWRequest::Text(from_str(pr.request))
+                CowRequest::Text(from_str(pr.request))
             } else {
-                COWRequest::URL(from_str(pr.url))
+                CowRequest::URL(from_str(pr.url))
             },
             timeout: VCL_DURATION(pr.timeout).into(),
             interval: VCL_DURATION(pr.interval).into(),

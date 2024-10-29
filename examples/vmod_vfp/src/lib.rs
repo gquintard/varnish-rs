@@ -1,6 +1,6 @@
 use std::ffi::CStr;
 
-use varnish::vcl::{Ctx, FetchProcessor, InitResult, PullResult, VFPCtx};
+use varnish::vcl::{Ctx, FetchProcCtx, FetchProcessor, InitResult, PullResult};
 
 varnish::run_vtc_tests!("tests/*.vtc");
 
@@ -54,11 +54,11 @@ impl FetchProcessor for Lower {
     }
 
     // `new` is called when the VCL specifies "lower" in `beresp.filters`
-    fn new(_: &mut Ctx, _: &mut VFPCtx) -> InitResult<Self> {
+    fn new(_: &mut Ctx, _: &mut FetchProcCtx) -> InitResult<Self> {
         InitResult::Ok(Lower {})
     }
 
-    fn pull(&mut self, ctx: &mut VFPCtx, buf: &mut [u8]) -> PullResult {
+    fn pull(&mut self, ctx: &mut FetchProcCtx, buf: &mut [u8]) -> PullResult {
         let pull_res = ctx.pull(buf);
         let (PullResult::End(len) | PullResult::Ok(len)) = pull_res else {
             return pull_res;

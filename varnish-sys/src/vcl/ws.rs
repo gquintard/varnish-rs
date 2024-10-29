@@ -37,7 +37,7 @@ impl<'a> Workspace<'a> {
     /// Wrap a raw pointer into an object we can use.
     pub fn new(raw: *mut ffi::ws) -> Self {
         assert!(!raw.is_null(), "raw pointer was null");
-        Workspace {
+        Self {
             raw,
             phantom_a: PhantomData,
         }
@@ -242,7 +242,7 @@ impl TestWS {
         let aligned_sz = (sz / al) * al;
         let mut v: Vec<c_char> = vec![0; sz];
         let s = v.as_mut_ptr();
-        TestWS {
+        Self {
             c_ws: ffi::ws {
                 magic: ffi::WS_MAGIC,
                 id: ['t' as c_char, 's' as c_char, 't' as c_char, '\0' as c_char],
