@@ -2,7 +2,7 @@
 
 use std::ffi::CStr;
 
-use varnish::vcl::{Ctx, InitResult, PullResult, VFPCtx, VFP};
+use varnish::vcl::{Ctx, FetchProcessor, InitResult, PullResult, VFPCtx};
 use varnish::vmod;
 
 varnish::run_vtc_tests!("tests/*.vtc");
@@ -189,7 +189,7 @@ struct VFPTest {
 }
 
 // Force a pass here to test to make sure that fini does not panic due to a null priv1 member
-impl VFP for VFPTest {
+impl FetchProcessor for VFPTest {
     fn name() -> &'static CStr {
         c"vfptest"
     }

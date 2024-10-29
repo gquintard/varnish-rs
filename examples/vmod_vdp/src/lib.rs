@@ -1,7 +1,7 @@
 use std::ffi::CStr;
 
 use varnish::ffi::VdpAction;
-use varnish::vcl::{Ctx, InitResult, PushResult, VDPCtx, VDP};
+use varnish::vcl::{Ctx, DeliveryProcessor, InitResult, PushResult, VDPCtx};
 
 varnish::run_vtc_tests!("tests/*.vtc");
 
@@ -9,7 +9,8 @@ varnish::run_vtc_tests!("tests/*.vtc");
 ///
 /// Varnish Delivery Processors allow a vmod writer to insert themselves into a delivery
 /// pipeline and alter an object body as it is being delivered to a client.  In this vmod,
-/// the transformation is very simple: we simply send the body backwards using a VDP named "flipper".
+/// the transformation is very simple: we simply send the body backwards using a delivery
+/// processor (VDP) named "flipper".
 #[varnish::vmod(docs = "README.md")]
 mod vdp {
     use varnish::ffi;
@@ -53,7 +54,7 @@ struct Flipper {
 }
 
 // implement the actual behavior of the VDP
-impl VDP for Flipper {
+impl DeliveryProcessor for Flipper {
     // return our id
     fn name() -> &'static CStr {
         c"flipper"

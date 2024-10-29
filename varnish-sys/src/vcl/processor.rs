@@ -1,5 +1,5 @@
 //! Varnish has the ability to modify the body of object leaving its cache using delivery
-//! processors, named `VDP` in the C API, and implemented here using the [`VDP`] trait.
+//! processors, named `VDP` in the C API, and implemented here using the [`DeliveryProcessor`] trait.
 //! Processors are linked together and will read, modify and push data down the delivery pipeline.
 //!
 //! *Note:* The rust wrapper here is pretty thin and the vmod writer will most probably need to have to
@@ -12,7 +12,7 @@ use crate::ffi::{vdp_ctx, vfp_ctx, vfp_entry, VdpAction, VfpStatus};
 use crate::vcl::{Ctx, VclError};
 use crate::{ffi, validate_vfp_ctx, validate_vfp_entry};
 
-/// The return type for [`VDP::push`]
+/// The return type for [`DeliveryProcessor::push`]
 #[derive(Debug, Copy, Clone)]
 pub enum PushResult {
     /// Indicates a failure, the pipeline will be stopped with an error
@@ -23,7 +23,7 @@ pub enum PushResult {
     End,
 }
 
-/// The return type for [`VFP::pull`]
+/// The return type for [`FetchProcessor::pull`]
 #[derive(Debug, Copy, Clone)]
 pub enum PullResult {
     /// Indicates a failure, the pipeline will be stopped with an error
@@ -35,7 +35,7 @@ pub enum PullResult {
     End(usize),
 }
 
-/// The return type for [`VDP::new`] and [`VFP::new`]
+/// The return type for [`DeliveryProcessor::new`] and [`FetchProcessor::new`]
 #[derive(Debug)]
 pub enum InitResult<T> {
     Err(VclError),
@@ -43,8 +43,8 @@ pub enum InitResult<T> {
     Pass,
 }
 
-/// Describes a VDP
-pub trait VDP: Sized {
+/// Describes a Varnish Delivery Processor (VDP)
+pub trait DeliveryProcessor: Sized {
     /// The name of the processor.
     fn name() -> &'static CStr;
     /// Create a new processor, possibly using knowledge from the pipeline, or from the current
@@ -55,7 +55,7 @@ pub trait VDP: Sized {
     fn push(&mut self, ctx: &mut VDPCtx, act: VdpAction, buf: &[u8]) -> PushResult;
 }
 
-pub unsafe extern "C" fn gen_vdp_init<T: VDP>(
+pub unsafe extern "C" fn gen_vdp_init<T: DeliveryProcessor>(
     vrt_ctx: *const ffi::vrt_ctx,
     ctx_raw: *mut vdp_ctx,
     priv_: *mut *mut c_void,
@@ -73,7 +73,10 @@ pub unsafe extern "C" fn gen_vdp_init<T: VDP>(
     }
 }
 
-pub unsafe extern "C" fn gen_vdp_fini<T: VDP>(_: *mut vdp_ctx, priv_: *mut *mut c_void) -> c_int {
+pub unsafe extern "C" fn gen_vdp_fini<T: DeliveryProcessor>(
+    _: *mut vdp_ctx,
+    priv_: *mut *mut c_void,
+) -> c_int {
     if priv_.is_null() {
         return 0;
     }
@@ -83,7 +86,7 @@ pub unsafe extern "C" fn gen_vdp_fini<T: VDP>(_: *mut vdp_ctx, priv_: *mut *mut 
     0
 }
 
-pub unsafe extern "C" fn gen_vdp_push<T: VDP>(
+pub unsafe extern "C" fn gen_vdp_push<T: DeliveryProcessor>(
     ctx_raw: *mut vdp_ctx,
     act: VdpAction,
     priv_: *mut *mut c_void,
@@ -111,7 +114,7 @@ pub unsafe extern "C" fn gen_vdp_push<T: VDP>(
 }
 
 /// Create a `ffi::vdp` that can be fed to `ffi::VRT_AddVDP`
-pub fn new_vdp<T: VDP>() -> ffi::vdp {
+pub fn new_vdp<T: DeliveryProcessor>() -> ffi::vdp {
     ffi::vdp {
         name: T::name().as_ptr(),
         init: Some(gen_vdp_init::<T>),
@@ -156,8 +159,8 @@ impl<'a> VDPCtx<'a> {
     }
 }
 
-/// Describes a VFP
-pub trait VFP: Sized {
+/// Describes a Varnish Fetch Processor (VFP)
+pub trait FetchProcessor: Sized {
     /// The name of the processor.
     fn name() -> &'static CStr;
     /// Create a new processor, possibly using knowledge from the pipeline
@@ -167,7 +170,7 @@ pub trait VFP: Sized {
     fn pull(&mut self, ctx: &mut VFPCtx, buf: &mut [u8]) -> PullResult;
 }
 
-unsafe extern "C" fn wrap_vfp_init<T: VFP>(
+unsafe extern "C" fn wrap_vfp_init<T: FetchProcessor>(
     vrt_ctx: *const ffi::vrt_ctx,
     ctxp: *mut vfp_ctx,
     vfep: *mut vfp_entry,
@@ -184,7 +187,7 @@ unsafe extern "C" fn wrap_vfp_init<T: VFP>(
     }
 }
 
-pub unsafe extern "C" fn wrap_vfp_pull<T: VFP>(
+pub unsafe extern "C" fn wrap_vfp_pull<T: FetchProcessor>(
     ctxp: *mut vfp_ctx,
     vfep: *mut vfp_entry,
     ptr: *mut c_void,
@@ -212,7 +215,10 @@ pub unsafe extern "C" fn wrap_vfp_pull<T: VFP>(
     }
 }
 
-pub unsafe extern "C" fn wrap_vfp_fini<T: VFP>(ctxp: *mut vfp_ctx, vfep: *mut vfp_entry) {
+pub unsafe extern "C" fn wrap_vfp_fini<T: FetchProcessor>(
+    ctxp: *mut vfp_ctx,
+    vfep: *mut vfp_entry,
+) {
     validate_vfp_ctx(ctxp);
     let vfe = validate_vfp_entry(vfep);
     if vfe.priv1.is_null() {
@@ -224,7 +230,7 @@ pub unsafe extern "C" fn wrap_vfp_fini<T: VFP>(ctxp: *mut vfp_ctx, vfep: *mut vf
 }
 
 /// Create a `ffi::vfp` that can be fed to `ffi::VRT_AddVFP`
-pub fn new_vfp<T: VFP>() -> ffi::vfp {
+pub fn new_vfp<T: FetchProcessor>() -> ffi::vfp {
     ffi::vfp {
         name: T::name().as_ptr(),
         init: Some(wrap_vfp_init::<T>),

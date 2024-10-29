@@ -11,6 +11,9 @@
   - supports `VARNISHTEST_DURATION` env var, defaulting to "5s"
   - supports debug mode - keeps the temporary files and always prints the output: `run_vtc_tests!!("tests/*.vtc", true)`
 - Multi-version support for `libvarnish` headers now allows the same code to be used with Varnish v7.4, v7.5, and v7.6
+- Renamed a few types for clarity and to be more consistent:
+  - `VDP` trait to `DeliveryProcessor`
+  - `VFP` trait to `FetchProcessor`
 
 # 0.0.19 (2024-03-24)
 

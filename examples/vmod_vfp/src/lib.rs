@@ -1,6 +1,6 @@
 use std::ffi::CStr;
 
-use varnish::vcl::{Ctx, InitResult, PullResult, VFPCtx, VFP};
+use varnish::vcl::{Ctx, FetchProcessor, InitResult, PullResult, VFPCtx};
 
 varnish::run_vtc_tests!("tests/*.vtc");
 
@@ -8,7 +8,7 @@ varnish::run_vtc_tests!("tests/*.vtc");
 ///
 /// Varnish Fetch Processors allow a vmod writer to insert themselves into a delivery
 /// pipeline and alter an object body as it is being received from the backend.
-/// In this vmod, we simply lowercase the ascii letters using a VFP named "lower".
+/// In this vmod, we simply lowercase the ascii letters using a filter processor (VFP) named "lower".
 #[varnish::vmod(docs = "README.md")]
 mod vfp {
     use varnish::ffi;
@@ -47,7 +47,7 @@ mod vfp {
 struct Lower {}
 
 // implement the actual behavior of the VFP
-impl VFP for Lower {
+impl FetchProcessor for Lower {
     // return our id
     fn name() -> &'static CStr {
         c"lower"

@@ -12,7 +12,8 @@ Manipulate `resp.body`
 
 Varnish Delivery Processors allow a vmod writer to insert themselves into a delivery
 pipeline and alter an object body as it is being delivered to a client.  In this vmod,
-the transformation is very simple: we simply send the body backwards using a VDP named "flipper".
+the transformation is very simple: we simply send the body backwards using a delivery
+processor (VDP) named "flipper".
 
 ```vcl
 // Place import statement at the top of your VCL file

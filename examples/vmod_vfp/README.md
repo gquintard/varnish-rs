@@ -12,7 +12,7 @@ Manipulate `resp.body`
 
 Varnish Fetch Processors allow a vmod writer to insert themselves into a delivery
 pipeline and alter an object body as it is being received from the backend.
-In this vmod, we simply lowercase the ascii letters using a VFP named "lower".
+In this vmod, we simply lowercase the ascii letters using a filter processor (VFP) named "lower".
 
 ```vcl
 // Place import statement at the top of your VCL file
