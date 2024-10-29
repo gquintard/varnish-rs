@@ -49,10 +49,10 @@ pub trait DeliveryProcessor: Sized {
     fn name() -> &'static CStr;
     /// Create a new processor, possibly using knowledge from the pipeline, or from the current
     /// request.
-    fn new(vrt_ctx: &mut Ctx, vdp_ctx: &mut VDPCtx) -> InitResult<Self>;
+    fn new(vrt_ctx: &mut Ctx, vdp_ctx: &mut DeliveryProcCtx) -> InitResult<Self>;
     /// Handle the data buffer from the previous processor. This function generally uses
-    /// [`VDPCtx::push`] to push data to the next processor.
-    fn push(&mut self, ctx: &mut VDPCtx, act: VdpAction, buf: &[u8]) -> PushResult;
+    /// [`DeliveryProcCtx::push`] to push data to the next processor.
+    fn push(&mut self, ctx: &mut DeliveryProcCtx, act: VdpAction, buf: &[u8]) -> PushResult;
 }
 
 pub unsafe extern "C" fn gen_vdp_init<T: DeliveryProcessor>(
@@ -63,7 +63,10 @@ pub unsafe extern "C" fn gen_vdp_init<T: DeliveryProcessor>(
 ) -> c_int {
     assert_ne!(priv_, ptr::null_mut());
     assert_eq!(*priv_, ptr::null_mut());
-    match T::new(&mut Ctx::from_ptr(vrt_ctx), &mut VDPCtx::new(ctx_raw)) {
+    match T::new(
+        &mut Ctx::from_ptr(vrt_ctx),
+        &mut DeliveryProcCtx::new(ctx_raw),
+    ) {
         InitResult::Ok(proc) => {
             *priv_ = Box::into_raw(Box::new(proc)).cast::<c_void>();
             0
@@ -106,7 +109,7 @@ pub unsafe extern "C" fn gen_vdp_push<T: DeliveryProcessor>(
         std::slice::from_raw_parts(ptr.cast::<u8>(), len as usize)
     };
 
-    match (*(*priv_).cast::<T>()).push(&mut VDPCtx::new(ctx_raw), act, buf) {
+    match (*(*priv_).cast::<T>()).push(&mut DeliveryProcCtx::new(ctx_raw), act, buf) {
         PushResult::Err => -1, // TODO: log error
         PushResult::Ok => 0,
         PushResult::End => 1,
@@ -126,11 +129,11 @@ pub fn new_vdp<T: DeliveryProcessor>() -> ffi::vdp {
 
 /// A thin wrapper around a `*mut ffi::vdp_ctx`
 #[derive(Debug)]
-pub struct VDPCtx<'a> {
+pub struct DeliveryProcCtx<'a> {
     pub raw: &'a mut vdp_ctx,
 }
 
-impl<'a> VDPCtx<'a> {
+impl<'a> DeliveryProcCtx<'a> {
     /// Check the pointer validity and returns the rust equivalent.
     ///
     /// # Safety
@@ -139,7 +142,7 @@ impl<'a> VDPCtx<'a> {
     pub unsafe fn new(raw: *mut vdp_ctx) -> Self {
         let raw = raw.as_mut().unwrap();
         assert_eq!(raw.magic, ffi::VDP_CTX_MAGIC);
-        VDPCtx { raw }
+        Self { raw }
     }
 
     /// Send buffer down the pipeline
@@ -164,10 +167,10 @@ pub trait FetchProcessor: Sized {
     /// The name of the processor.
     fn name() -> &'static CStr;
     /// Create a new processor, possibly using knowledge from the pipeline
-    fn new(vrt_ctx: &mut Ctx, vfp_ctx: &mut VFPCtx) -> InitResult<Self>;
+    fn new(vrt_ctx: &mut Ctx, vfp_ctx: &mut FetchProcCtx) -> InitResult<Self>;
     /// Write data into `buf`, generally using `VFP_Suck` to collect data from the previous
     /// processor.
-    fn pull(&mut self, ctx: &mut VFPCtx, buf: &mut [u8]) -> PullResult;
+    fn pull(&mut self, ctx: &mut FetchProcCtx, buf: &mut [u8]) -> PullResult;
 }
 
 unsafe extern "C" fn wrap_vfp_init<T: FetchProcessor>(
@@ -177,7 +180,7 @@ unsafe extern "C" fn wrap_vfp_init<T: FetchProcessor>(
 ) -> VfpStatus {
     let ctx = validate_vfp_ctx(ctxp);
     let vfe = validate_vfp_entry(vfep);
-    match T::new(&mut Ctx::from_ptr(vrt_ctx), &mut VFPCtx::new(ctx)) {
+    match T::new(&mut Ctx::from_ptr(vrt_ctx), &mut FetchProcCtx::new(ctx)) {
         InitResult::Ok(proc) => {
             vfe.priv1 = Box::into_raw(Box::new(proc)).cast::<c_void>();
             VfpStatus::Ok
@@ -202,7 +205,7 @@ pub unsafe extern "C" fn wrap_vfp_pull<T: FetchProcessor>(
         std::slice::from_raw_parts_mut(ptr.cast::<u8>(), *len as usize)
     };
     let obj = vfe.priv1.cast::<T>().as_mut().unwrap();
-    match obj.pull(&mut VFPCtx::new(ctx), buf) {
+    match obj.pull(&mut FetchProcCtx::new(ctx), buf) {
         PullResult::Err => VfpStatus::Error, // TODO: log error
         PullResult::Ok(l) => {
             *len = l as isize;
@@ -242,18 +245,18 @@ pub fn new_vfp<T: FetchProcessor>() -> ffi::vfp {
 
 /// A thin wrapper around a `*mut ffi::vfp_ctx`
 #[derive(Debug)]
-pub struct VFPCtx<'a> {
+pub struct FetchProcCtx<'a> {
     pub raw: &'a mut vfp_ctx,
 }
 
-impl<'a> VFPCtx<'a> {
+impl<'a> FetchProcCtx<'a> {
     /// Check the pointer validity and returns the rust equivalent.
     ///
     /// # Safety
     ///
     /// The caller is in charge of making sure the structure doesn't outlive the pointer.
     pub unsafe fn new(raw: *mut vfp_ctx) -> Self {
-        VFPCtx {
+        Self {
             raw: validate_vfp_ctx(raw),
         }
     }

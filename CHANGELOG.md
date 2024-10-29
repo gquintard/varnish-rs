@@ -12,8 +12,17 @@
   - supports debug mode - keeps the temporary files and always prints the output: `run_vtc_tests!!("tests/*.vtc", true)`
 - Multi-version support for `libvarnish` headers now allows the same code to be used with Varnish v7.4, v7.5, and v7.6
 - Renamed a few types for clarity and to be more consistent:
+  - `COWProbe` struct to `CowProbe`
+  - `COWRequest` struct to `CowRequest`
+  - `HTTP` struct to `HttpHeaders`
+  - `HTTPIter` struct to `HttpHeadersIter`
+  - `VDPCtx` struct to `DeliveryProcCtx`
   - `VDP` trait to `DeliveryProcessor`
+  - `VFPCtx` struct to `FetchProcCtx`
   - `VFP` trait to `FetchProcessor`
+  - `VSB` struct to `Buffer`
+  - `VSB::cat` function to `Buffer::write`
+  - `WS` struct to `Workspace`
 
 # 0.0.19 (2024-03-24)
 

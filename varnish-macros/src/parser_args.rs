@@ -300,7 +300,7 @@ impl ParamTy {
             }
         }
 
-        if let Some(GenericArgument::Lifetime(_)) = as_one_gen_arg(ty, "COWProbe") {
+        if let Some(GenericArgument::Lifetime(_)) = as_one_gen_arg(ty, "CowProbe") {
             return Some(Self::ProbeCow);
         }
 

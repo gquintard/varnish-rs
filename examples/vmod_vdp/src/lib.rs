@@ -1,7 +1,7 @@
 use std::ffi::CStr;
 
 use varnish::ffi::VdpAction;
-use varnish::vcl::{Ctx, DeliveryProcessor, InitResult, PushResult, VDPCtx};
+use varnish::vcl::{Ctx, DeliveryProcCtx, DeliveryProcessor, InitResult, PushResult};
 
 varnish::run_vtc_tests!("tests/*.vtc");
 
@@ -62,12 +62,12 @@ impl DeliveryProcessor for Flipper {
 
     // `new` is called when the VCL specifies "flipper" in `resp.filters`
     // just return a default struct, thanks to the derive macro
-    fn new(_: &mut Ctx, _: &mut VDPCtx) -> InitResult<Self> {
+    fn new(_: &mut Ctx, _: &mut DeliveryProcCtx) -> InitResult<Self> {
         InitResult::Ok(Flipper::default())
     }
 
     // buffer everything, then reverse the buffer, and send it, easy
-    fn push(&mut self, ctx: &mut VDPCtx, act: VdpAction, buf: &[u8]) -> PushResult {
+    fn push(&mut self, ctx: &mut DeliveryProcCtx, act: VdpAction, buf: &[u8]) -> PushResult {
         // ingest everything we're given
         self.body.extend_from_slice(buf);
 

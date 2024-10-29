@@ -477,7 +477,7 @@ mod types {
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
-            let __var0: Option<COWProbe> = if __args.valid__v != 0 {
+            let __var0: Option<CowProbe> = if __args.valid__v != 0 {
                 __args._v.into()
             } else {
                 None
@@ -489,7 +489,7 @@ mod types {
             _v: VCL_PROBE,
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __var0: Option<COWProbe> = _v.into();
+            let __var0: Option<CowProbe> = _v.into();
             let __result = super::type_cow_probe_req(__var0);
         }
         unsafe extern "C" fn vmod_c_to_cow_probe(__ctx: *mut vrt_ctx) -> VCL_PROBE {
@@ -879,7 +879,7 @@ mod types {
     use std::net::SocketAddr;
     use std::time::Duration;
     use varnish::ffi::VCL_STRING;
-    use varnish::vcl::{COWProbe, Probe, Workspace};
+    use varnish::vcl::{CowProbe, Probe, Workspace};
     use varnish_sys::vcl::VclError;
     pub fn to_void() {
         panic!()
@@ -955,12 +955,12 @@ mod types {
     pub fn to_res_probe() -> Result<Probe, &'static str> {
         panic!()
     }
-    pub fn type_cow_probe(_v: Option<COWProbe<'_>>) {}
-    pub fn type_cow_probe_req(_v: Option<COWProbe<'_>>) {}
-    pub fn to_cow_probe() -> COWProbe<'static> {
+    pub fn type_cow_probe(_v: Option<CowProbe<'_>>) {}
+    pub fn type_cow_probe_req(_v: Option<CowProbe<'_>>) {}
+    pub fn to_cow_probe() -> CowProbe<'static> {
         panic!()
     }
-    pub fn to_res_cow_probe() -> Result<COWProbe<'static>, &'static str> {
+    pub fn to_res_cow_probe() -> Result<CowProbe<'static>, &'static str> {
         panic!()
     }
     pub fn type_ip(_v: Option<SocketAddr>) {}

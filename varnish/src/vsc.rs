@@ -48,7 +48,7 @@ impl<'a> VSCBuilder<'a> {
             assert!(!vsc.is_null());
             // get raw value, we can always clamp them later
             ffi::VSC_Arg(vsc, 'r' as c_char, ptr::null());
-            VSCBuilder {
+            Self {
                 vsm,
                 vsc,
                 phantom: PhantomData,

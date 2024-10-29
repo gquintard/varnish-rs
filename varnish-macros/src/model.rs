@@ -150,7 +150,7 @@ impl ParamTy {
             Self::F64 => quote! { f64 },
             Self::I64 => quote! { i64 },
             Self::Probe => quote! { Probe },
-            Self::ProbeCow => quote! { COWProbe },
+            Self::ProbeCow => quote! { CowProbe },
             Self::SocketAddr => quote! { SocketAddr },
             Self::Str => quote! { Cow<'_, str> },
         }

@@ -9,7 +9,7 @@ mod types {
     use std::net::SocketAddr;
     use std::time::Duration;
     use varnish::ffi::VCL_STRING;
-    use varnish::vcl::{COWProbe, Probe, Workspace};
+    use varnish::vcl::{CowProbe, Probe, Workspace};
     use varnish_sys::vcl::VclError;
 
     // void
@@ -102,14 +102,14 @@ mod types {
         panic!()
     }
 
-    // COWProbe<'_
-    pub fn type_cow_probe(_v: Option<COWProbe<'_>>) {}
-    pub fn type_cow_probe_req(#[required] _v: Option<COWProbe<'_>>) {}
-    // FIXME: is it correct to return a COWProbe? If it has a lifetime, it must be tied to something else...
-    pub fn to_cow_probe() -> COWProbe<'static> {
+    // CowProbe<'_
+    pub fn type_cow_probe(_v: Option<CowProbe<'_>>) {}
+    pub fn type_cow_probe_req(#[required] _v: Option<CowProbe<'_>>) {}
+    // FIXME: is it correct to return a CowProbe? If it has a lifetime, it must be tied to something else...
+    pub fn to_cow_probe() -> CowProbe<'static> {
         panic!()
     }
-    pub fn to_res_cow_probe() -> Result<COWProbe<'static>, &'static str> {
+    pub fn to_res_cow_probe() -> Result<CowProbe<'static>, &'static str> {
         panic!()
     }
 

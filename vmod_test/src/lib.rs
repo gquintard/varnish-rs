@@ -2,7 +2,7 @@
 
 use std::ffi::CStr;
 
-use varnish::vcl::{Ctx, FetchProcessor, InitResult, PullResult, VFPCtx};
+use varnish::vcl::{Ctx, FetchProcCtx, FetchProcessor, InitResult, PullResult};
 use varnish::vmod;
 
 varnish::run_vtc_tests!("tests/*.vtc");
@@ -17,7 +17,7 @@ mod rustest {
     use varnish::ffi;
     use varnish::ffi::VCL_STRING;
     use varnish::vcl::{
-        new_vfp, COWProbe, COWRequest, Ctx, Event, Probe, Request, VclError, Workspace,
+        new_vfp, CowProbe, CowRequest, Ctx, Event, Probe, Request, VclError, Workspace,
     };
 
     use super::VFPTest;
@@ -121,13 +121,13 @@ mod rustest {
         arg
     }
 
-    pub fn cowprobe_prop(probe: Option<COWProbe<'_>>) -> String {
+    pub fn cowprobe_prop(probe: Option<CowProbe<'_>>) -> String {
         match probe {
             Some(probe) => format!(
                 "{}-{}-{}-{}-{}-{}",
                 match probe.request {
-                    COWRequest::URL(url) => format!("url:{url}"),
-                    COWRequest::Text(text) => format!("text:{text}"),
+                    CowRequest::URL(url) => format!("url:{url}"),
+                    CowRequest::Text(text) => format!("text:{text}"),
                 },
                 probe.threshold,
                 probe.timeout.as_secs(),
@@ -196,11 +196,11 @@ impl FetchProcessor for VFPTest {
         c"vfptest"
     }
 
-    fn new(_: &mut Ctx, _: &mut VFPCtx) -> InitResult<Self> {
+    fn new(_: &mut Ctx, _: &mut FetchProcCtx) -> InitResult<Self> {
         InitResult::Pass
     }
 
-    fn pull(&mut self, _: &mut VFPCtx, _: &mut [u8]) -> PullResult {
+    fn pull(&mut self, _: &mut FetchProcCtx, _: &mut [u8]) -> PullResult {
         PullResult::Err
     }
 }

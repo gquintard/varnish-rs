@@ -74,7 +74,7 @@ use std::time::SystemTime;
 
 use crate::ffi::{VclEvent, VfpStatus, VCL_BACKEND, VCL_BOOL, VCL_IP, VCL_TIME};
 use crate::utils::get_backend;
-use crate::vcl::{Ctx, IntoVCL, LogTag, VclError, VclResult, Vsb, Workspace};
+use crate::vcl::{Buffer, Ctx, IntoVCL, LogTag, VclError, VclResult, Workspace};
 use crate::{
     ffi, validate_director, validate_vdir, validate_vfp_ctx, validate_vfp_entry, validate_vrt_ctx,
 };
@@ -204,11 +204,11 @@ pub trait Serve<T: Transfer> {
     /// chance to start/stop probes to consume fewer resources.
     fn event(&self, _event: VclEvent) {}
 
-    fn panic(&self, _vsb: &mut Vsb) {}
+    fn panic(&self, _vsb: &mut Buffer) {}
 
     /// Convenience function for the implementors to call if they don't have a probe. This one is
     /// not used by Varnish directly.
-    fn list_without_probe(&self, ctx: &mut Ctx, vsb: &mut Vsb, detailed: bool, json: bool) {
+    fn list_without_probe(&self, ctx: &mut Ctx, vsb: &mut Buffer, detailed: bool, json: bool) {
         if detailed {
             return;
         }
@@ -218,18 +218,18 @@ pub trait Serve<T: Transfer> {
             "sick"
         };
         if json {
-            vsb.cat(&"[0, 0, ").unwrap();
-            vsb.cat(&state).unwrap();
-            vsb.cat(&"]").unwrap();
+            vsb.write(&"[0, 0, ").unwrap();
+            vsb.write(&state).unwrap();
+            vsb.write(&"]").unwrap();
         } else {
-            vsb.cat(&"0/0\t").unwrap();
-            vsb.cat(&state).unwrap();
+            vsb.write(&"0/0\t").unwrap();
+            vsb.write(&state).unwrap();
         }
     }
 
     /// Used to generate the output of `varnishadm backend.list`. `detailed` means the `-p`
     /// argument was passed and `json` means `-j` was passed.
-    fn list(&self, ctx: &mut Ctx, vsb: &mut Vsb, detailed: bool, json: bool) {
+    fn list(&self, ctx: &mut Ctx, vsb: &mut Buffer, detailed: bool, json: bool) {
         self.list_without_probe(ctx, vsb, detailed, json);
     }
 }
@@ -320,13 +320,13 @@ unsafe extern "C" fn wrap_list<S: Serve<T>, T: Transfer>(
     json: i32,
 ) {
     let mut ctx = Ctx::from_ptr(ctxp);
-    let mut vsb = Vsb::new(vsbp);
+    let mut vsb = Buffer::new(vsbp);
     let backend: &S = get_backend(validate_director(be));
     backend.list(&mut ctx, &mut vsb, detailed != 0, json != 0);
 }
 
 unsafe extern "C" fn wrap_panic<S: Serve<T>, T: Transfer>(be: VCL_BACKEND, vsbp: *mut ffi::vsb) {
-    let mut vsb = Vsb::new(vsbp);
+    let mut vsb = Buffer::new(vsbp);
     let backend: &S = get_backend(validate_director(be));
     backend.panic(&mut vsb);
 }

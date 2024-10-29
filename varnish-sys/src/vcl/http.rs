@@ -1,6 +1,6 @@
 //! Headers and top line of an HTTP object
 //!
-//! Depending on the VCL subroutine, the `Ctx` will give access to various [`HTTP`] object which
+//! Depending on the VCL subroutine, the `Ctx` will give access to various [`HttpHeaders`] object which
 //! expose the request line (`req`, `req_top` and `bereq`), response line (`resp`, `beresp`) and
 //! headers of the objects Varnish is manipulating.
 //!
@@ -29,16 +29,16 @@ const HDR_STATUS: u16 = ffi::HTTP_HDR_STATUS as u16;
 const HDR_UNSET: u16 = ffi::HTTP_HDR_UNSET as u16;
 const HDR_URL: u16 = ffi::HTTP_HDR_URL as u16;
 
-/// HTTP headers of an object
+/// HTTP headers of an object, wrapping `HTTP` from Varnish
 #[derive(Debug)]
-pub struct HTTP<'a> {
+pub struct HttpHeaders<'a> {
     pub raw: &'a mut ffi::http,
 }
 
-impl<'a> HTTP<'a> {
+impl<'a> HttpHeaders<'a> {
     /// Wrap a raw pointer into an object we can use.
     pub fn new(p: ffi::VCL_HTTP) -> Option<Self> {
-        Some(HTTP {
+        Some(HttpHeaders {
             raw: unsafe { p.0.as_mut()? },
         })
     }
@@ -192,24 +192,24 @@ impl<'a> HTTP<'a> {
     }
 }
 
-impl<'a> IntoIterator for &'a HTTP<'a> {
+impl<'a> IntoIterator for &'a HttpHeaders<'a> {
     type Item = (&'a str, &'a str);
-    type IntoIter = HTTPIter<'a>;
+    type IntoIter = HttpHeadersIter<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
-        HTTPIter {
+        Self::IntoIter {
             http: self,
             cursor: HDR_FIRST as isize,
         }
     }
 }
 
-impl<'a> IntoIterator for &'a mut HTTP<'a> {
+impl<'a> IntoIterator for &'a mut HttpHeaders<'a> {
     type Item = (&'a str, &'a str);
-    type IntoIter = HTTPIter<'a>;
+    type IntoIter = HttpHeadersIter<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
-        HTTPIter {
+        Self::IntoIter {
             http: self,
             cursor: HDR_FIRST as isize,
         }
@@ -217,12 +217,12 @@ impl<'a> IntoIterator for &'a mut HTTP<'a> {
 }
 
 #[derive(Debug)]
-pub struct HTTPIter<'a> {
-    http: &'a HTTP<'a>,
+pub struct HttpHeadersIter<'a> {
+    http: &'a HttpHeaders<'a>,
     cursor: isize,
 }
 
-impl<'a> Iterator for HTTPIter<'a> {
+impl<'a> Iterator for HttpHeadersIter<'a> {
     type Item = (&'a str, &'a str);
 
     fn next(&mut self) -> Option<Self::Item> {
