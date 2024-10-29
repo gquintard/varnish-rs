@@ -4138,8 +4138,12 @@ const _: () = {
     ["Offset of field: max_align_t::__clang_max_align_nonce2"]
         [::std::mem::offset_of!(max_align_t, __clang_max_align_nonce2) - 16usize];
 };
-pub type vtim_mono = f64;
-pub type vtim_real = f64;
+#[repr(transparent)]
+#[derive(Debug, Default, Copy, Clone)]
+pub struct vtim_mono(pub f64);
+#[repr(transparent)]
+#[derive(Debug, Default, Copy, Clone)]
+pub struct vtim_real(pub f64);
 #[repr(transparent)]
 #[derive(Debug, Default, Copy, Clone)]
 pub struct vtim_dur(pub f64);
