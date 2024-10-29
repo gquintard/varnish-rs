@@ -50,10 +50,10 @@ use std::ptr::{null, null_mut};
 use std::time::{Duration, SystemTime};
 
 use crate::ffi::{
-    sa_family_t, suckaddr, vrt_backend_probe, vsa_suckaddr_len, vtim_dur, VSA_BuildFAP, VSA_GetPtr,
-    VSA_Port, PF_INET, PF_INET6, VCL_ACL, VCL_BACKEND, VCL_BLOB, VCL_BODY, VCL_BOOL, VCL_DURATION,
-    VCL_ENUM, VCL_HEADER, VCL_HTTP, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL, VCL_REGEX, VCL_STEVEDORE,
-    VCL_STRANDS, VCL_STRING, VCL_SUB, VCL_TIME, VCL_VCL, VRT_BACKEND_PROBE_MAGIC,
+    sa_family_t, suckaddr, vrt_backend_probe, vsa_suckaddr_len, vtim_dur, vtim_real, VSA_BuildFAP,
+    VSA_GetPtr, VSA_Port, PF_INET, PF_INET6, VCL_ACL, VCL_BACKEND, VCL_BLOB, VCL_BODY, VCL_BOOL,
+    VCL_DURATION, VCL_ENUM, VCL_HEADER, VCL_HTTP, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL, VCL_REGEX,
+    VCL_STEVEDORE, VCL_STRANDS, VCL_STRING, VCL_SUB, VCL_TIME, VCL_VCL, VRT_BACKEND_PROBE_MAGIC,
 };
 use crate::vcl::{COWProbe, COWRequest, Probe, Request, VclError, WS};
 
@@ -424,12 +424,12 @@ impl TryFrom<SystemTime> for VCL_TIME {
     type Error = VclError;
 
     fn try_from(value: SystemTime) -> Result<Self, Self::Error> {
-        Ok(VCL_TIME(
+        Ok(VCL_TIME(vtim_real(
             value
                 .duration_since(SystemTime::UNIX_EPOCH)
                 .map_err(|e| VclError::new(e.to_string()))?
                 .as_secs_f64(),
-        ))
+        )))
     }
 }
 
