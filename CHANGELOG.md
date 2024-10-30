@@ -20,9 +20,23 @@
   - `VDP` trait to `DeliveryProcessor`
   - `VFPCtx` struct to `FetchProcCtx`
   - `VFP` trait to `FetchProcessor`
-  - `VSB` struct to `Buffer`
-  - `VSB::cat` function to `Buffer::write`
+  - `Vsb` struct to `Buffer`
+  - `Vsb::cat` function to `Buffer::write`
   - `WS` struct to `Workspace`
+- Renamed auto-generated C enums to be more consistent and easier to use in Rust:
+  - `enum VSL_tag_e` → `VslTag`, removing `SLT_` prefix on enum values, e.g. `SLT_Debug` -> `Debug`
+  - `enum boc_state_e` → `BocState`, removing `BOS_` prefix on enum values, e.g. `BOS_INVALID` -> `Invalid`
+  - `enum director_state_e` → `DirectorState`, removing `DIR_S_` prefix on enum values, e.g. `DIR_S_NULL` -> `Null`
+  - `enum gethdr_e` → `GetHeader`, removing `HDR_` prefix on enum values, e.g. `HDR_REQ_TOP` -> `ReqTop`
+  - `enum lbody_e` → `Body`, removing `LBODY_` prefix on enum values, e.g. `LBODY_SET_STRING` -> `SetString`
+  - `enum sess_attr` → `SessionAttr`, removing `SA_` prefix on enum values, e.g. `SA_TRANSPORT` -> `Transport`
+  - `enum task_prio` → `TaskPriority`, removing `TASK_QUEUE_` prefix on enum values, e.g. `BO` -> `TaskQueueBo`
+  - `enum vas_e` → `Vas`, removing `VAS_` prefix on enum values, e.g. `VAS_WRONG` -> `Wrong`
+  - `enum vcl_event_e` → `VclEvent`, removing `VCL_EVENT_` prefix on enum values, e.g. `VCL_EVENT_LOAD` -> `Load`
+  - `enum vcl_func_call_e` → `VclFuncCall`, removing `VSUB_` prefix on enum values, e.g. `VSUB_STATIC` -> `Static`
+  - `enum vcl_func_fail_e` → `VclFuncFail`, removing `VSUB_E_` prefix on enum values, e.g. `VSUB_E_OK` -> `Ok`
+  - `enum vdp_action` → `VdpAction`, removing `VDP_` prefix on enum values, e.g. `VDP_NULL` -> `Null`
+  - `enum vfp_status` → `VfpStatus`, removing `VFP_` prefix on enum values, e.g. `VFP_ERROR` -> `Error`
 
 # 0.0.19 (2024-03-24)
 
