@@ -101,7 +101,7 @@ pub struct ParamTypeInfo {
 /// Represents the type of the function argument.
 #[derive(Debug, Clone)]
 pub enum ParamType {
-    /// An argument representing Varnish context (VRT_CTX) wrapper
+    /// An argument representing Varnish context (`VRT_CTX`) wrapper
     Context { is_mut: bool },
     /// An argument representing Varnish Workspace wrapper
     Workspace { is_mut: bool },

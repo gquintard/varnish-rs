@@ -40,6 +40,7 @@ pub struct VSCBuilder<'a> {
 
 impl<'a> VSCBuilder<'a> {
     /// Create a new `VSCBuilder`
+    #[expect(clippy::new_without_default)] // TODO: consider implementing
     pub fn new() -> Self {
         unsafe {
             let vsm = ffi::VSM_New();
@@ -130,7 +131,7 @@ impl<'a> VSCBuilder<'a> {
                     self.vsc,
                     Some(add_point),
                     Some(del_point),
-                    (&mut *internal as *mut VSCInternal).cast::<c_void>(),
+                    ptr::from_mut::<VSCInternal>(&mut *internal).cast::<c_void>(),
                 );
             }
             let vsm = self.vsm;
@@ -310,7 +311,7 @@ impl<'a> Stat<'a> {
         // the pointer is valid as long as VSC exist, and
         // VSC.update() isn't called (which uses `&mut self`)
         let v = unsafe { *self.value };
-        if v <= i64::MAX as u64 {
+        if i64::try_from(v).is_ok() {
             v
         } else {
             0

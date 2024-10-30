@@ -19,6 +19,7 @@ impl<'a> Buffer<'a> {
     }
 
     /// Push a buffer into the buffer
+    #[expect(clippy::result_unit_err)] // FIXME: what should the error be? VclError?
     pub fn write<T: AsRef<[u8]>>(&mut self, src: &T) -> Result<(), ()> {
         let buf = src.as_ref().as_ptr().cast::<c_void>();
         let l = src.as_ref().len();

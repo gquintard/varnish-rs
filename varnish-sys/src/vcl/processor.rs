@@ -80,12 +80,12 @@ pub unsafe extern "C" fn gen_vdp_fini<T: DeliveryProcessor>(
     _: *mut vdp_ctx,
     priv_: *mut *mut c_void,
 ) -> c_int {
-    if priv_.is_null() {
-        return 0;
+    if !priv_.is_null() {
+        assert_ne!(*priv_, ptr::null_mut());
+        drop(Box::from_raw((*priv_).cast::<T>()));
+        *priv_ = ptr::null_mut();
     }
-    assert_ne!(*priv_, ptr::null_mut());
-    drop(Box::from_raw((*priv_).cast::<T>()));
-    *priv_ = ptr::null_mut();
+
     0
 }
 

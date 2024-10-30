@@ -46,6 +46,7 @@
 use std::borrow::Cow;
 use std::ffi::{c_char, c_void, CStr};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
+use std::ptr;
 use std::ptr::{null, null_mut};
 use std::time::{Duration, SystemTime};
 
@@ -191,7 +192,7 @@ impl IntoVCL<VCL_IP> for SocketAddr {
                         PF_INET as sa_family_t,
                         sa.ip().octets().as_slice().as_ptr().cast::<c_void>(),
                         4,
-                        (&sa.port().to_be() as *const u16).cast::<c_void>(),
+                        ptr::from_ref::<u16>(&sa.port().to_be()).cast::<c_void>(),
                         2
                     )
                     .is_null());
@@ -202,7 +203,7 @@ impl IntoVCL<VCL_IP> for SocketAddr {
                         PF_INET6 as sa_family_t,
                         sa.ip().octets().as_slice().as_ptr().cast::<c_void>(),
                         16,
-                        (&sa.port().to_be() as *const u16).cast::<c_void>(),
+                        ptr::from_ref::<u16>(&sa.port().to_be()).cast::<c_void>(),
                         2
                     )
                     .is_null());
@@ -248,6 +249,8 @@ impl From<VCL_IP> for Option<SocketAddr> {
 default_null_ptr!(VCL_PROBE);
 impl<'a> IntoVCL<VCL_PROBE> for CowProbe<'a> {
     fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_PROBE, VclError> {
+        // FIXME!  We need to rethink the alloc API to not be byte-aligned
+        #[expect(clippy::cast_ptr_alignment)]
         let p = ws
             .alloc(size_of::<vrt_backend_probe>())?
             .as_mut_ptr()
@@ -272,6 +275,8 @@ impl<'a> IntoVCL<VCL_PROBE> for CowProbe<'a> {
 }
 impl IntoVCL<VCL_PROBE> for Probe {
     fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_PROBE, VclError> {
+        // FIXME!  We need to rethink the alloc API to not be byte-aligned
+        #[expect(clippy::cast_ptr_alignment)]
         let p = ws
             .alloc(size_of::<vrt_backend_probe>())?
             .as_mut_ptr()

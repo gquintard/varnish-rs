@@ -13,49 +13,51 @@ use crate::model::FuncType;
 #[derive(Debug, Default)]
 pub struct Names {
     /// Name of the user's `mod`
-    mod_name: String,
-    obj_name: Option<String>,
-    fn_name: Option<(FuncType, String)>,
+    module: String,
+    /// In case this is an object, its name
+    object: Option<String>,
+    /// In case this is a function, its name
+    function: Option<(FuncType, String)>,
 }
 
 impl Names {
     pub fn new(mod_name: &str) -> Self {
         Self {
-            mod_name: mod_name.to_string(),
-            obj_name: None,
-            fn_name: None,
+            module: mod_name.to_string(),
+            object: None,
+            function: None,
         }
     }
 
     pub fn to_obj(&self, obj_name: &str) -> Self {
-        assert!(self.obj_name.is_none());
-        assert!(self.fn_name.is_none());
+        assert!(self.object.is_none());
+        assert!(self.function.is_none());
         Self {
-            mod_name: self.mod_name.clone(),
-            obj_name: Some(obj_name.to_string()),
-            fn_name: None,
+            module: self.module.clone(),
+            object: Some(obj_name.to_string()),
+            function: None,
         }
     }
 
     pub fn to_func(&self, func_type: FuncType, fn_name: &str) -> Self {
-        assert!(self.fn_name.is_none());
+        assert!(self.function.is_none());
         Self {
-            mod_name: self.mod_name.clone(),
-            obj_name: self.obj_name.clone(),
-            fn_name: Some((func_type, fn_name.to_string())),
+            module: self.module.clone(),
+            object: self.object.clone(),
+            function: Some((func_type, fn_name.to_string())),
         }
     }
 
     pub fn mod_name(&self) -> &str {
-        &self.mod_name
+        &self.module
     }
 
     pub fn obj_name(&self) -> &str {
-        self.obj_name.as_ref().unwrap()
+        self.object.as_ref().unwrap()
     }
 
     pub fn fn_name(&self) -> &str {
-        let (ty, name) = self.fn_name.as_ref().unwrap();
+        let (ty, name) = self.function.as_ref().unwrap();
         match *ty {
             FuncType::Constructor => "_init",
             FuncType::Destructor => "_fini",
@@ -64,7 +66,7 @@ impl Names {
     }
 
     pub fn fn_name_user(&self) -> &str {
-        self.fn_name.as_ref().unwrap().1.as_str()
+        self.function.as_ref().unwrap().1.as_str()
     }
 
     pub fn fn_callable_name(&self, func: FuncType) -> TokenStream {
@@ -85,15 +87,15 @@ impl Names {
     }
 
     pub fn func_struct_name(&self) -> String {
-        format!("Vmod_vmod_{}_Func", self.mod_name)
+        format!("Vmod_vmod_{}_Func", self.module)
     }
 
     pub fn data_struct_name(&self) -> String {
-        format!("Vmod_{}_Data", self.mod_name)
+        format!("Vmod_{}_Data", self.module)
     }
 
     pub fn struct_obj_name(&self) -> String {
-        format!("struct vmod_{}_{}", self.mod_name, self.obj_name())
+        format!("struct vmod_{}_{}", self.module, self.obj_name())
     }
 
     pub fn wrapper_fn_name(&self) -> String {
@@ -106,7 +108,7 @@ impl Names {
         let (underscore, obj_name) = self.obj_name_parts();
         format!(
             "arg_vmod_{}{underscore}{obj_name}_{}",
-            self.mod_name,
+            self.module,
             self.fn_name()
         )
     }
@@ -115,7 +117,7 @@ impl Names {
         let (underscore, obj_name) = self.obj_name_parts();
         format!(
             "td_vmod_{}{underscore}{obj_name}_{}",
-            self.mod_name,
+            self.module,
             self.fn_name()
         )
     }
@@ -128,8 +130,8 @@ impl Names {
     // Helper utils
 
     fn obj_name_parts(&self) -> (&str, &str) {
-        let underscore = self.obj_name.as_ref().map_or("", |_| "_");
-        let obj_name = self.obj_name.as_ref().map_or("", |v| v.as_str());
+        let underscore = self.object.as_ref().map_or("", |_| "_");
+        let obj_name = self.object.as_ref().map_or("", |v| v.as_str());
         (underscore, obj_name)
     }
 }

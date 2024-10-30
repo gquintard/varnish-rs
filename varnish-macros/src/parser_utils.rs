@@ -11,7 +11,7 @@ use crate::errors::error;
 use crate::model::{FuncInfo, ObjInfo};
 use crate::ProcResult;
 
-/// iterator to go over all functions in a ObjInfo, including constructor and destructor
+/// iterator to go over all functions in a [`ObjInfo`], including constructor and destructor
 pub struct ObjFuncIter<'a> {
     obj: &'a ObjInfo,
     idx: usize,

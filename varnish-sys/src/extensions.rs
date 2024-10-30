@@ -41,8 +41,7 @@ impl vmod_priv {
     ///
     /// SAFETY: `priv_` must be a valid pointer to a `T` object or `NULL`.
     pub unsafe extern "C" fn on_fini<T>(_ctx: *const vrt_ctx, mut priv_: *mut c_void) {
-        // we get the ownership and don't do anything with it, so it gets dropped at the end of this fn
-        get_owned_bbox::<T>(&mut priv_);
+        drop(get_owned_bbox::<T>(&mut priv_));
     }
 }
 
