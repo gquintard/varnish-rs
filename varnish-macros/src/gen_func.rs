@@ -347,16 +347,15 @@ impl FuncProcessor {
         arg_name: String,
         is_optional_arg: bool,
         vcc_type: &str,
-        default: Value,
+        mut default: Value,
     ) -> Vec<Value> {
         // JSON data for each argument:
         //   [VCC_type, arg_name, default_value, spec(?), is_optional]
-        let default = if default == Value::Null {
-            Value::Null
-        } else {
+        if !default.is_null() {
+            // The default value must be a string containing C code (?)
             // This ensures the string is properly escaped and surrounded by quotes
-            default.to_string().into()
-        };
+            default = default.to_string().into();
+        }
         let mut json_arg: Vec<Value> = vec![
             vcc_type.into(),
             arg_name.into(),

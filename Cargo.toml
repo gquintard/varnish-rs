@@ -43,35 +43,16 @@ similar.opt-level = 3
 unused_qualifications = "warn"
 
 [workspace.lints.clippy]
-# regular warnings - these should probably be fixed first
+# FIXME: safety doc lints are disabled for now, but should be enabled eventually
 missing_safety_doc = "allow"
-new_without_default = "allow"
-len_without_is_empty = "allow"
-not_unsafe_ptr_arg_deref = "allow"  # this one seems pretty bad
-result_unit_err = "allow"
 
 # Pedantic lints - these are more subjective, and some might stay disabled permanently
 pedantic = { level = "warn", priority = -1 }
-bool_to_int_with_if = "allow"
-cast_lossless = "allow"
 cast_possible_truncation = "allow"
 cast_possible_wrap = "allow"
-cast_ptr_alignment = "allow"  # this one is really suspicious
 cast_sign_loss = "allow"
-checked_conversions = "allow"
-derive_partial_eq_without_eq = "allow"
-doc_markdown = "allow"
-implicit_hasher = "allow"
-into_iter_without_iter = "allow"
 missing_errors_doc = "allow"
 missing_panics_doc = "allow"
 module_name_repetitions = "allow"
 must_use_candidate = "allow"
-needless_pass_by_value = "allow"
-ptr_as_ptr = "allow"
-ptr_cast_constness = "allow"
-redundant_closure_for_method_calls = "allow"
-ref_as_ptr = "allow"
 similar_names = "allow"
-struct_field_names = "allow"
-wildcard_imports = "allow"

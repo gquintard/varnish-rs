@@ -138,8 +138,7 @@ fn fn_sig(func: &FuncInfo, user_args: &Vec<(&ParamTypeInfo, &ParamInfo)>) -> Str
         wrt!(res, "`");
     }
     if matches!(func.func_type, FuncType::Function | FuncType::Method) {
-        let ret = func.returns.value_type().to_vcc_type();
-        wrt!(res, "{ret} ");
+        wrt!(res, "{} ", func.returns.value_type().to_vcc_type());
     }
     wrt!(res, "{}(", func.ident);
     let mut first = true;
@@ -149,7 +148,7 @@ fn fn_sig(func: &FuncInfo, user_args: &Vec<(&ParamTypeInfo, &ParamInfo)>) -> Str
         } else {
             wrt!(res, ", ");
         }
-        wrt!(res, "{}", bracketed_name(arg, ty));
+        res.push_str(&bracketed_name(arg, ty));
         if !ty.default.is_null() {
             wrt!(res, " = {}", ty.default);
         }

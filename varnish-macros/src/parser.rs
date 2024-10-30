@@ -79,7 +79,7 @@ impl ObjInfo {
     /// Parse an `impl` block and treat all public functions as object methods
     fn parse(item_impl: &mut ItemImpl, shared_types: &mut SharedTypes) -> ProcResult<Self> {
         let mut errors = Errors::new();
-        let ident = parser_utils::as_simple_ty(item_impl.self_ty.as_ref()).map(|v| v.to_string());
+        let ident = parser_utils::as_simple_ty(item_impl.self_ty.as_ref()).map(ToString::to_string);
 
         // Add only one error per object impl declaration
         if item_impl.trait_.as_ref().is_some() {

@@ -72,7 +72,7 @@ impl<'a> HttpHeaders<'a> {
             unsafe {
                 ffi::VSLbt(
                     self.raw.vsl,
-                    transmute::<u32, VslTag>((self.raw.logtag as u32) + (HDR_FIRST as u32)),
+                    transmute::<u32, VslTag>((self.raw.logtag as u32) + u32::from(HDR_FIRST)),
                     *self.raw.hd.add(idx as usize),
                 );
             }
@@ -95,7 +95,7 @@ impl<'a> HttpHeaders<'a> {
                     ffi::VSLbt(
                         self.raw.vsl,
                         transmute::<u32, VslTag>(
-                            (self.raw.logtag as u32) + (HDR_UNSET as u32) + (HDR_METHOD as u32),
+                            (self.raw.logtag as u32) + u32::from(HDR_UNSET) + u32::from(HDR_METHOD),
                         ),
                         *self.raw.hd.add(HDR_FIRST as usize + idx),
                     );
@@ -186,9 +186,16 @@ impl<'a> HttpHeaders<'a> {
     ///
     /// The header names are compared in a case-insensitive manner
     pub fn header(&self, name: &str) -> Option<&str> {
-        self.into_iter()
+        self.iter()
             .find(|hdr| name.eq_ignore_ascii_case(hdr.0))
             .map(|hdr| hdr.1)
+    }
+
+    pub fn iter(&self) -> HttpHeadersIter<'_> {
+        HttpHeadersIter {
+            http: self,
+            cursor: HDR_FIRST as isize,
+        }
     }
 }
 
@@ -197,22 +204,7 @@ impl<'a> IntoIterator for &'a HttpHeaders<'a> {
     type IntoIter = HttpHeadersIter<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
-        Self::IntoIter {
-            http: self,
-            cursor: HDR_FIRST as isize,
-        }
-    }
-}
-
-impl<'a> IntoIterator for &'a mut HttpHeaders<'a> {
-    type Item = (&'a str, &'a str);
-    type IntoIter = HttpHeadersIter<'a>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        Self::IntoIter {
-            http: self,
-            cursor: HDR_FIRST as isize,
-        }
+        self.iter()
     }
 }
 

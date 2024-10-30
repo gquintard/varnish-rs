@@ -43,7 +43,8 @@ mod object {
                 .lock() // lock the mutex to access the hashmap
                 .unwrap() // panic if unlocking went wrong
                 .get(key) // look for key
-                .map_or(String::new(), |v| v.to_string()) // used EMPTY_STRING if key isn't found
+                .cloned() // create a copy of the value
+                .unwrap_or_default() // used EMPTY_STRING if key isn't found
         }
 
         /// Insert a key-value pair into the store.

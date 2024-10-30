@@ -69,6 +69,7 @@ use std::ffi::{c_char, c_int, c_void, CString};
 use std::marker::PhantomData;
 use std::net::{SocketAddr, TcpStream};
 use std::os::unix::io::FromRawFd;
+use std::ptr;
 use std::ptr::{null, null_mut};
 use std::time::SystemTime;
 
@@ -138,7 +139,7 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
             ffi::VRT_AddDirector(
                 ctx.raw,
                 &*methods,
-                &mut *inner as *mut S as *mut c_void,
+                ptr::from_mut::<S>(&mut *inner).cast::<c_void>(),
                 c"%.*s".as_ptr(),
                 name.len(),
                 name.as_ptr().cast::<c_char>(),
@@ -161,14 +162,14 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
 /// The trait to implement to "be" a backend
 ///
 /// `Serve` maps to the `vdi_methods` structure of the C api, but presented in a more
-/// "rusty" form. Apart from [Serve::get_type] and [Serve::get_headers] all methods are optional.
+/// "rusty" form. Apart from [`Serve::get_type`] and [`Serve::get_headers`] all methods are optional.
 ///
 /// If your backend doesn't return any content body, you can implement `Serve<()>` as `()` has a default
 /// `Transfer` implementation.
 pub trait Serve<T: Transfer> {
     /// What kind of backend this is, for example, pick a descriptive name, possibly linked to the
     /// vmod which creates it. Pick an ASCII string, otherwise building the [`Backend`] via
-    /// [Backend::new] will fail.
+    /// [`Backend::new`] will fail.
     fn get_type(&self) -> &str;
 
     /// If the VCL pick this backend (or a director ended up choosing it), this method gets called
@@ -243,6 +244,7 @@ pub trait Serve<T: Transfer> {
 /// - `Ok(None)`: headers are set, but the response as no content body.
 /// - `Ok(Some(Transfer))`: headers are set, and Varnish will use the `Transfer` object to build
 ///   the response body.
+#[expect(clippy::len_without_is_empty)] // FIXME: should there be an is_empty() method?
 pub trait Transfer {
     /// The only mandatory method, it will be called repeated so that the `Transfer` object can
     /// fill `buf`. The transfer will stop if any of its calls returns an error, and it will
@@ -515,11 +517,11 @@ impl<S: Serve<T>, T: Transfer> Drop for Backend<S, T> {
     }
 }
 
-/// Return type for [Serve::pipe]
+/// Return type for [`Serve::pipe`]
 ///
 /// When piping a response, the backend is in charge of closing the file descriptor (which is done
 /// automatically by the rust layer), but also to provide how/why it got closed.
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum StreamClose {
     RemClose,
     ReqClose,

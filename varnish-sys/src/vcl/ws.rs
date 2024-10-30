@@ -258,7 +258,7 @@ impl TestWS {
     /// Return a pointer to the underlying C ws struct. As usual, the caller needs to ensure that
     /// self doesn't outlive the returned pointer.
     pub fn as_ptr(&mut self) -> *mut ffi::ws {
-        &mut self.c_ws as *mut ffi::ws
+        ptr::from_mut::<ffi::ws>(&mut self.c_ws)
     }
 
     /// build a `Workspace`
