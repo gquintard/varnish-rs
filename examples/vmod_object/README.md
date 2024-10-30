@@ -43,3 +43,6 @@ to avoid this double-copy.
 #### Method `VOID set(STRING key, STRING value)`
 
 Insert a key-value pair into the store.
+
+Note that varnish-accessible functions use readonly `&self`,
+so the interior mutability pattern should be used to store data.

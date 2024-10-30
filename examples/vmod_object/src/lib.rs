@@ -3,13 +3,12 @@ varnish::run_vtc_tests!("tests/*.vtc");
 /// A simple string dictionary in your VCL
 #[varnish::vmod(docs = "README.md")]
 mod object {
-    use std::collections::HashMap;
-    use std::sync::Mutex;
+    use dashmap::DashMap;
 
-    /// kv only contains one element: a mutex wrapping a String->String hashmap
+    /// kv only contains one element: a String->String hashmap that can be used in parallel
     #[allow(non_camel_case_types)]
     pub struct kv {
-        mutexed_hash_map: Mutex<HashMap<String, String>>,
+        storage: DashMap<String, String>,
     }
 
     // implementation needs the same methods as defined in the vcc, plus "new()"
@@ -21,15 +20,13 @@ mod object {
         pub fn new(cap: Option<i64>) -> Self {
             // depending on whether cap was actually passed, and on its value,
             // call a different constructor
-            let h = match cap {
-                None => HashMap::new(),
-                Some(n) if n <= 0 => HashMap::new(),
-                Some(n) => HashMap::with_capacity(n as usize),
+            let storage = match cap {
+                None => DashMap::new(),
+                Some(n) if n <= 0 => DashMap::new(),
+                Some(n) => DashMap::with_capacity(n as usize),
             };
 
-            Self {
-                mutexed_hash_map: Mutex::new(h),
-            }
+            Self { storage }
         }
 
         /// Retrieve the value associated `key`, or an empty string if `key` didn't exist.
@@ -39,20 +36,19 @@ mod object {
         /// copied into an internal Varnish workspace. In the future, we will provide a way
         /// to avoid this double-copy.
         pub fn get(&self, key: &str) -> String {
-            self.mutexed_hash_map // access our member field
-                .lock() // lock the mutex to access the hashmap
-                .unwrap() // panic if unlocking went wrong
+            self.storage // access our member field
                 .get(key) // look for key
-                .cloned() // create a copy of the value
-                .unwrap_or_default() // used EMPTY_STRING if key isn't found
+                // If not found, create a new empty string (no memory allocation, so can use without lambda)
+                // If found, convert the &str to a String
+                .map_or(String::new(), |v| v.value().to_string())
         }
 
         /// Insert a key-value pair into the store.
+        ///
+        /// Note that varnish-accessible functions use readonly `&self`,
+        /// so the interior mutability pattern should be used to store data.
         pub fn set(&self, key: &str, value: &str) {
-            self.mutexed_hash_map
-                .lock()
-                .unwrap()
-                .insert(key.to_owned(), value.to_owned());
+            self.storage.insert(key.to_owned(), value.to_owned());
         }
     }
 }
