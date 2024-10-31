@@ -1,3 +1,5 @@
+use std::str::Utf8Error;
+
 /// custom vcl `Error` type
 ///
 /// The C errors aren't typed and are just C strings, so we just wrap them into a proper rust
@@ -30,6 +32,12 @@ impl std::error::Error for VclError {}
 impl From<String> for VclError {
     fn from(s: String) -> Self {
         Self { s }
+    }
+}
+
+impl From<Utf8Error> for VclError {
+    fn from(s: Utf8Error) -> Self {
+        Self { s: s.to_string() }
     }
 }
 

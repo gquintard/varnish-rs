@@ -4,8 +4,8 @@ snapshot_kind: text
 ---
 mod types {
     #[allow(non_snake_case, unused_imports, unused_qualifications, unused_variables)]
+    #[allow(clippy::needless_question_mark)]
     mod varnish_generated {
-        use std::borrow::Cow;
         use std::ffi::{c_char, c_int, c_uint, c_void, CStr};
         use std::ptr::null;
         use varnish::ffi::{
@@ -18,46 +18,53 @@ mod types {
         unsafe extern "C" fn vmod_c_to_void(__ctx: *mut vrt_ctx) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __result = super::to_void();
+            __result
         }
         unsafe extern "C" fn vmod_c_to_res_void_err(__ctx: *mut vrt_ctx) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_res_void_err();
-            match __result {
-                Ok(__result) => {}
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_res_void_err()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_to_res_str_err(__ctx: *mut vrt_ctx) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_res_str_err();
-            match __result {
-                Ok(__result) => {}
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_res_str_err()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_to_res_box_err(__ctx: *mut vrt_ctx) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_res_box_err();
-            match __result {
-                Ok(__result) => {}
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_res_box_err()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_type_bool(__ctx: *mut vrt_ctx, _v: VCL_BOOL) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __var0: bool = _v.into();
-            let __result = super::type_bool(__var0);
+            let __result = super::type_bool(_v.into());
+            __result
         }
         unsafe extern "C" fn vmod_c_type_bool_dflt(__ctx: *mut vrt_ctx, _v: VCL_BOOL) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __var0: bool = _v.into();
-            let __result = super::type_bool_dflt(__var0);
+            let __result = super::type_bool_dflt(_v.into());
+            __result
         }
         #[repr(C)]
         struct arg_vmod_types_opt_bool {
@@ -70,47 +77,43 @@ mod types {
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
-            let __var0: Option<bool> = if __args.valid__v != 0 {
-                __args._v.into()
-            } else {
-                None
-            };
-            let __result = super::opt_bool(__var0);
+            let __result = super::opt_bool(
+                if __args.valid__v != 0 { __args._v.into() } else { None },
+            );
+            __result
         }
         unsafe extern "C" fn vmod_c_to_bool(__ctx: *mut vrt_ctx) -> VCL_BOOL {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_bool();
-            match __result.into_vcl(&mut __ctx.ws) {
-                Ok(v) => v,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_bool();
+                let __result = __result.into_vcl(&mut __ctx.ws)?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_to_res_bool(__ctx: *mut vrt_ctx) -> VCL_BOOL {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_res_bool();
-            match __result {
-                Ok(__result) => {
-                    match __result.into_vcl(&mut __ctx.ws) {
-                        Ok(v) => v,
-                        Err(err) => {
-                            __ctx.fail(err);
-                            Default::default()
-                        }
-                    }
-                }
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_res_bool()?;
+                let __result = __result.into_vcl(&mut __ctx.ws)?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_type_cstr(__ctx: *mut vrt_ctx, _v: VCL_STRING) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __var0: &CStr = _v.into();
-            let __result = super::type_cstr(__var0);
+            let __result = super::type_cstr(_v.into());
+            __result
         }
         #[repr(C)]
         struct arg_vmod_types_opt_cstr {
@@ -123,30 +126,28 @@ mod types {
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
-            let __var0: Option<&CStr> = if __args.valid__v != 0 {
-                __args._v.into()
-            } else {
-                None
-            };
-            let __result = super::opt_cstr(__var0);
+            let __result = super::opt_cstr(
+                if __args.valid__v != 0 { __args._v.into() } else { None },
+            );
+            __result
         }
         unsafe extern "C" fn vmod_c_opt_cstr_req(__ctx: *mut vrt_ctx, _v: VCL_STRING) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __var0: Option<&CStr> = _v.into();
-            let __result = super::opt_cstr_req(__var0);
+            let __result = super::opt_cstr_req(_v.into());
+            __result
         }
         unsafe extern "C" fn vmod_c_type_cstr_dflt(__ctx: *mut vrt_ctx, _v: VCL_STRING) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __var0: &CStr = _v.into();
-            let __result = super::type_cstr_dflt(__var0);
+            let __result = super::type_cstr_dflt(_v.into());
+            __result
         }
         unsafe extern "C" fn vmod_c_type_cstr_dflt2(
             __ctx: *mut vrt_ctx,
             _v: VCL_STRING,
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __var0: &CStr = _v.into();
-            let __result = super::type_cstr_dflt2(__var0);
+            let __result = super::type_cstr_dflt2(_v.into());
+            __result
         }
         #[repr(C)]
         struct arg_vmod_types_opt_cstr_dflt {
@@ -159,25 +160,23 @@ mod types {
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
-            let __var0: Option<&CStr> = if __args.valid__v != 0 {
-                __args._v.into()
-            } else {
-                None
-            };
-            let __result = super::opt_cstr_dflt(__var0);
+            let __result = super::opt_cstr_dflt(
+                if __args.valid__v != 0 { __args._v.into() } else { None },
+            );
+            __result
         }
         unsafe extern "C" fn vmod_c_opt_cstr_dflt2(__ctx: *mut vrt_ctx, _v: VCL_STRING) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __var0: &CStr = _v.into();
-            let __result = super::opt_cstr_dflt2(__var0);
+            let __result = super::opt_cstr_dflt2(_v.into());
+            __result
         }
         unsafe extern "C" fn vmod_c_type_duration(
             __ctx: *mut vrt_ctx,
             _v: VCL_DURATION,
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __var0: Duration = _v.into();
-            let __result = super::type_duration(__var0);
+            let __result = super::type_duration(_v.into());
+            __result
         }
         #[repr(C)]
         struct arg_vmod_types_opt_duration {
@@ -190,54 +189,50 @@ mod types {
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
-            let __var0: Option<Duration> = if __args.valid__v != 0 {
-                __args._v.into()
-            } else {
-                None
-            };
-            let __result = super::opt_duration(__var0);
+            let __result = super::opt_duration(
+                if __args.valid__v != 0 { __args._v.into() } else { None },
+            );
+            __result
         }
         unsafe extern "C" fn vmod_c_to_duration(__ctx: *mut vrt_ctx) -> VCL_DURATION {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_duration();
-            match __result.into_vcl(&mut __ctx.ws) {
-                Ok(v) => v,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_duration();
+                let __result = __result.into_vcl(&mut __ctx.ws)?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_to_res_duration(
             __ctx: *mut vrt_ctx,
         ) -> VCL_DURATION {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_res_duration();
-            match __result {
-                Ok(__result) => {
-                    match __result.into_vcl(&mut __ctx.ws) {
-                        Ok(v) => v,
-                        Err(err) => {
-                            __ctx.fail(err);
-                            Default::default()
-                        }
-                    }
-                }
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_res_duration()?;
+                let __result = __result.into_vcl(&mut __ctx.ws)?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_type_f64(__ctx: *mut vrt_ctx, _v: VCL_REAL) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __var0: f64 = _v.into();
-            let __result = super::type_f64(__var0);
+            let __result = super::type_f64(_v.into());
+            __result
         }
         unsafe extern "C" fn vmod_c_type_f64_dflt(__ctx: *mut vrt_ctx, _v: VCL_REAL) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __var0: f64 = _v.into();
-            let __result = super::type_f64_dflt(__var0);
+            let __result = super::type_f64_dflt(_v.into());
+            __result
         }
         #[repr(C)]
         struct arg_vmod_types_opt_f64 {
@@ -250,52 +245,48 @@ mod types {
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
-            let __var0: Option<f64> = if __args.valid__v != 0 {
-                __args._v.into()
-            } else {
-                None
-            };
-            let __result = super::opt_f64(__var0);
+            let __result = super::opt_f64(
+                if __args.valid__v != 0 { __args._v.into() } else { None },
+            );
+            __result
         }
         unsafe extern "C" fn vmod_c_to_f64(__ctx: *mut vrt_ctx) -> VCL_REAL {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_f64();
-            match __result.into_vcl(&mut __ctx.ws) {
-                Ok(v) => v,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_f64();
+                let __result = __result.into_vcl(&mut __ctx.ws)?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_to_res_f64(__ctx: *mut vrt_ctx) -> VCL_REAL {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_res_f64();
-            match __result {
-                Ok(__result) => {
-                    match __result.into_vcl(&mut __ctx.ws) {
-                        Ok(v) => v,
-                        Err(err) => {
-                            __ctx.fail(err);
-                            Default::default()
-                        }
-                    }
-                }
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_res_f64()?;
+                let __result = __result.into_vcl(&mut __ctx.ws)?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_type_i64(__ctx: *mut vrt_ctx, _v: VCL_INT) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __var0: i64 = _v.into();
-            let __result = super::type_i64(__var0);
+            let __result = super::type_i64(_v.into());
+            __result
         }
         unsafe extern "C" fn vmod_c_type_i64_dflt(__ctx: *mut vrt_ctx, _v: VCL_INT) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __var0: i64 = _v.into();
-            let __result = super::type_i64_dflt(__var0);
+            let __result = super::type_i64_dflt(_v.into());
+            __result
         }
         #[repr(C)]
         struct arg_vmod_types_opt_i64 {
@@ -308,48 +299,50 @@ mod types {
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
-            let __var0: Option<i64> = if __args.valid__v != 0 {
-                __args._v.into()
-            } else {
-                None
-            };
-            let __result = super::opt_i64(__var0);
+            let __result = super::opt_i64(
+                if __args.valid__v != 0 { __args._v.into() } else { None },
+            );
+            __result
         }
         unsafe extern "C" fn vmod_c_to_i64(__ctx: *mut vrt_ctx) -> VCL_INT {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_i64();
-            match __result.into_vcl(&mut __ctx.ws) {
-                Ok(v) => v,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_i64();
+                let __result = __result.into_vcl(&mut __ctx.ws)?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_to_res_i64(__ctx: *mut vrt_ctx) -> VCL_INT {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_res_i64();
-            match __result {
-                Ok(__result) => {
-                    match __result.into_vcl(&mut __ctx.ws) {
-                        Ok(v) => v,
-                        Err(err) => {
-                            __ctx.fail(err);
-                            Default::default()
-                        }
-                    }
-                }
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_res_i64()?;
+                let __result = __result.into_vcl(&mut __ctx.ws)?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_type_str(__ctx: *mut vrt_ctx, _v: VCL_STRING) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __var0: Cow<'_, str> = _v.into();
-            let __var0 = __var0.as_ref();
-            let __result = super::type_str(__var0);
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::type_str(_v.try_into()?);
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
+                    __ctx.fail(err);
+                })
         }
         #[repr(C)]
         struct arg_vmod_types_opt_str {
@@ -362,25 +355,41 @@ mod types {
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
-            let __var0: Option<Cow<'_, str>> = if __args.valid__v != 0 {
-                __args._v.into()
-            } else {
-                None
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::opt_str(
+                    if __args.valid__v != 0 { __args._v.try_into()? } else { None },
+                );
+                Ok(__result)
             };
-            let __var0 = __var0.as_deref();
-            let __result = super::opt_str(__var0);
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
+                    __ctx.fail(err);
+                })
         }
         unsafe extern "C" fn vmod_c_opt_str_req(__ctx: *mut vrt_ctx, _v: VCL_STRING) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __var0: Option<Cow<'_, str>> = _v.into();
-            let __var0 = __var0.as_deref();
-            let __result = super::opt_str_req(__var0);
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::opt_str_req(_v.try_into()?);
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
+                    __ctx.fail(err);
+                })
         }
         unsafe extern "C" fn vmod_c_type_str_dflt(__ctx: *mut vrt_ctx, _v: VCL_STRING) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __var0: Cow<'_, str> = _v.into();
-            let __var0 = __var0.as_ref();
-            let __result = super::type_str_dflt(__var0);
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::type_str_dflt(_v.try_into()?);
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
+                    __ctx.fail(err);
+                })
         }
         #[repr(C)]
         struct arg_vmod_types_opt_str_dflt {
@@ -393,105 +402,103 @@ mod types {
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
-            let __var0: Option<Cow<'_, str>> = if __args.valid__v != 0 {
-                __args._v.into()
-            } else {
-                None
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::opt_str_dflt(
+                    if __args.valid__v != 0 { __args._v.try_into()? } else { None },
+                );
+                Ok(__result)
             };
-            let __var0 = __var0.as_deref();
-            let __result = super::opt_str_dflt(__var0);
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
+                    __ctx.fail(err);
+                })
         }
         unsafe extern "C" fn vmod_c_to_str(__ctx: *mut vrt_ctx) -> VCL_STRING {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_str();
-            match __result.into_vcl(&mut __ctx.ws) {
-                Ok(v) => v,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_str();
+                let __result = __result.into_vcl(&mut __ctx.ws)?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_to_res_str(__ctx: *mut vrt_ctx) -> VCL_STRING {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_res_str();
-            match __result {
-                Ok(__result) => {
-                    match __result.into_vcl(&mut __ctx.ws) {
-                        Ok(v) => v,
-                        Err(err) => {
-                            __ctx.fail(err);
-                            Default::default()
-                        }
-                    }
-                }
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_res_str()?;
+                let __result = __result.into_vcl(&mut __ctx.ws)?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_to_string(__ctx: *mut vrt_ctx) -> VCL_STRING {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_string();
-            match __result.into_vcl(&mut __ctx.ws) {
-                Ok(v) => v,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_string();
+                let __result = __result.into_vcl(&mut __ctx.ws)?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_to_opt_string(__ctx: *mut vrt_ctx) -> VCL_STRING {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_opt_string();
-            match __result.into_vcl(&mut __ctx.ws) {
-                Ok(v) => v,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_opt_string();
+                let __result = __result.into_vcl(&mut __ctx.ws)?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_to_res_string(__ctx: *mut vrt_ctx) -> VCL_STRING {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_res_string();
-            match __result {
-                Ok(__result) => {
-                    match __result.into_vcl(&mut __ctx.ws) {
-                        Ok(v) => v,
-                        Err(err) => {
-                            __ctx.fail(err);
-                            Default::default()
-                        }
-                    }
-                }
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_res_string()?;
+                let __result = __result.into_vcl(&mut __ctx.ws)?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_to_res_opt_string(
             __ctx: *mut vrt_ctx,
         ) -> VCL_STRING {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_res_opt_string();
-            match __result {
-                Ok(__result) => {
-                    match __result.into_vcl(&mut __ctx.ws) {
-                        Ok(v) => v,
-                        Err(err) => {
-                            __ctx.fail(err);
-                            Default::default()
-                        }
-                    }
-                }
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_res_opt_string()?;
+                let __result = __result.into_vcl(&mut __ctx.ws)?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         #[repr(C)]
         struct arg_vmod_types_type_probe {
@@ -504,47 +511,43 @@ mod types {
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
-            let __var0: Option<Probe> = if __args.valid__v != 0 {
-                __args._v.into()
-            } else {
-                None
-            };
-            let __result = super::type_probe(__var0);
+            let __result = super::type_probe(
+                if __args.valid__v != 0 { __args._v.into() } else { None },
+            );
+            __result
         }
         unsafe extern "C" fn vmod_c_type_probe_req(__ctx: *mut vrt_ctx, _v: VCL_PROBE) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __var0: Option<Probe> = _v.into();
-            let __result = super::type_probe_req(__var0);
+            let __result = super::type_probe_req(_v.into());
+            __result
         }
         unsafe extern "C" fn vmod_c_to_probe(__ctx: *mut vrt_ctx) -> VCL_PROBE {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_probe();
-            match __result.into_vcl(&mut __ctx.ws) {
-                Ok(v) => v,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_probe();
+                let __result = __result.into_vcl(&mut __ctx.ws)?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_to_res_probe(__ctx: *mut vrt_ctx) -> VCL_PROBE {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_res_probe();
-            match __result {
-                Ok(__result) => {
-                    match __result.into_vcl(&mut __ctx.ws) {
-                        Ok(v) => v,
-                        Err(err) => {
-                            __ctx.fail(err);
-                            Default::default()
-                        }
-                    }
-                }
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_res_probe()?;
+                let __result = __result.into_vcl(&mut __ctx.ws)?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         #[repr(C)]
         struct arg_vmod_types_type_cow_probe {
@@ -557,50 +560,46 @@ mod types {
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
-            let __var0: Option<CowProbe> = if __args.valid__v != 0 {
-                __args._v.into()
-            } else {
-                None
-            };
-            let __result = super::type_cow_probe(__var0);
+            let __result = super::type_cow_probe(
+                if __args.valid__v != 0 { __args._v.into() } else { None },
+            );
+            __result
         }
         unsafe extern "C" fn vmod_c_type_cow_probe_req(
             __ctx: *mut vrt_ctx,
             _v: VCL_PROBE,
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __var0: Option<CowProbe> = _v.into();
-            let __result = super::type_cow_probe_req(__var0);
+            let __result = super::type_cow_probe_req(_v.into());
+            __result
         }
         unsafe extern "C" fn vmod_c_to_cow_probe(__ctx: *mut vrt_ctx) -> VCL_PROBE {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_cow_probe();
-            match __result.into_vcl(&mut __ctx.ws) {
-                Ok(v) => v,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_cow_probe();
+                let __result = __result.into_vcl(&mut __ctx.ws)?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_to_res_cow_probe(__ctx: *mut vrt_ctx) -> VCL_PROBE {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_res_cow_probe();
-            match __result {
-                Ok(__result) => {
-                    match __result.into_vcl(&mut __ctx.ws) {
-                        Ok(v) => v,
-                        Err(err) => {
-                            __ctx.fail(err);
-                            Default::default()
-                        }
-                    }
-                }
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_res_cow_probe()?;
+                let __result = __result.into_vcl(&mut __ctx.ws)?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         #[repr(C)]
         struct arg_vmod_types_type_ip {
@@ -613,47 +612,43 @@ mod types {
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
-            let __var0: Option<SocketAddr> = if __args.valid__v != 0 {
-                __args._v.into()
-            } else {
-                None
-            };
-            let __result = super::type_ip(__var0);
+            let __result = super::type_ip(
+                if __args.valid__v != 0 { __args._v.into() } else { None },
+            );
+            __result
         }
         unsafe extern "C" fn vmod_c_type_ip_req(__ctx: *mut vrt_ctx, _v: VCL_IP) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __var0: Option<SocketAddr> = _v.into();
-            let __result = super::type_ip_req(__var0);
+            let __result = super::type_ip_req(_v.into());
+            __result
         }
         unsafe extern "C" fn vmod_c_to_ip(__ctx: *mut vrt_ctx) -> VCL_IP {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_ip();
-            match __result.into_vcl(&mut __ctx.ws) {
-                Ok(v) => v,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_ip();
+                let __result = __result.into_vcl(&mut __ctx.ws)?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_to_res_ip(__ctx: *mut vrt_ctx) -> VCL_IP {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_res_ip();
-            match __result {
-                Ok(__result) => {
-                    match __result.into_vcl(&mut __ctx.ws) {
-                        Ok(v) => v,
-                        Err(err) => {
-                            __ctx.fail(err);
-                            Default::default()
-                        }
-                    }
-                }
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_res_ip()?;
+                let __result = __result.into_vcl(&mut __ctx.ws)?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_to_vcl_string(__ctx: *mut vrt_ctx) -> VCL_STRING {
             let mut __ctx = Ctx::from_ptr(__ctx);
@@ -664,14 +659,16 @@ mod types {
             __ctx: *mut vrt_ctx,
         ) -> VCL_STRING {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::to_res_vcl_string();
-            match __result {
-                Ok(__result) => __result,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::to_res_vcl_string()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         #[repr(C)]
         struct arg_vmod_types_opt_i64_opt_i64 {
@@ -686,29 +683,31 @@ mod types {
         ) -> VCL_STRING {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
-            let __var0: i64 = __args.a1.into();
-            let __var1: Option<i64> = if __args.valid_a2 != 0 {
-                __args.a2.into()
-            } else {
-                None
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::opt_i64_opt_i64(
+                    __args.a1.into(),
+                    if __args.valid_a2 != 0 { __args.a2.into() } else { None },
+                    __args.a3.into(),
+                );
+                let __result = __result.into_vcl(&mut __ctx.ws)?;
+                Ok(__result)
             };
-            let __var2: i64 = __args.a3.into();
-            let __result = super::opt_i64_opt_i64(__var0, __var1, __var2);
-            match __result.into_vcl(&mut __ctx.ws) {
-                Ok(v) => v,
-                Err(err) => {
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_get_ws_mut(__ctx: *mut vrt_ctx) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __result = super::get_ws_mut(&mut __ctx.ws);
+            __result
         }
         unsafe extern "C" fn vmod_c_get_ws_ref(__ctx: *mut vrt_ctx) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __result = super::get_ws_ref(&__ctx.ws);
+            __result
         }
         #[repr(C)]
         pub struct VmodExports {

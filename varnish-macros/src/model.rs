@@ -2,8 +2,6 @@
 //! Once fully parsed and vetted, the data model is used to generate the Varnish VMOD code.
 
 use darling::FromMeta;
-use proc_macro2::TokenStream;
-use quote::quote;
 
 /// Represents the entire VMOD. A single instance of this struct is parsed for each VMOD.
 #[derive(Debug, Default)]
@@ -95,8 +93,8 @@ pub enum ParamType {
     SelfType,
     /// An argument is an event type
     Event,
-    /// A `&str` argument automatically passed for object creation representing a VCL name
-    VclName,
+    /// A `&str` or `&CStr` argument automatically passed for object creation representing a VCL name.
+    VclName(ParamInfo),
     /// An argument `&mut Option<Box<T>>` representing any Rust name and type shared across tasks (i.e. `PRIV_TASK`)
     SharedPerTask,
     /// A readonly argument `Option<&T>` representing any Rust name and type shared across VCL load (i.e. `PRIV_VCL`)
@@ -141,22 +139,6 @@ pub enum ParamTy {
 }
 
 impl ParamTy {
-    pub fn to_rust_type(self) -> TokenStream {
-        match self {
-            Self::Bool => quote! { bool },
-            Self::Duration => quote! { Duration },
-            Self::F64 => quote! { f64 },
-            Self::I64 => quote! { i64 },
-            Self::Probe => quote! { Probe },
-            Self::ProbeCow => quote! { CowProbe },
-            Self::SocketAddr => quote! { SocketAddr },
-            Self::Str => quote! { Cow<'_, str> },
-            Self::CStr => quote! { &CStr },
-        }
-    }
-}
-
-impl ParamTy {
     pub fn to_vcc_type(self) -> &'static str {
         match self {
             Self::Bool => "BOOL",
@@ -188,6 +170,22 @@ impl ParamTy {
         match self {
             Self::Bool | Self::Duration | Self::F64 | Self::I64 | Self::Str | Self::CStr => false,
             Self::Probe | Self::ProbeCow | Self::SocketAddr => true,
+        }
+    }
+
+    /// Some VCL->Rust conversions require `TryFrom` instead of `From`,
+    /// e.g. if `&CStr` contains invalid UTF-8 characters and cannot be converted to `&str`.
+    pub fn use_try_from(self) -> bool {
+        match self {
+            Self::Probe
+            | Self::ProbeCow
+            | Self::SocketAddr
+            | Self::Bool
+            | Self::Duration
+            | Self::F64
+            | Self::I64
+            | Self::CStr => false,
+            Self::Str => true,
         }
     }
 }

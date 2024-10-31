@@ -78,8 +78,6 @@ impl FuncProcessor {
     }
 
     fn init(&mut self, info: &FuncInfo) {
-        self.do_fn_return(info);
-
         if matches!(info.func_type, Destructor) {
             self.func_pre_call
                 .push(quote! { drop(Box::from_raw(*__objp)); *__objp = ::std::ptr::null_mut(); });
@@ -122,6 +120,7 @@ impl FuncProcessor {
         for arg in &info.args {
             self.do_fn_param(info, arg);
         }
+        self.do_fn_return(info);
 
         let wrapper_fn_name = self.names.wrapper_fn_name().to_ident();
         let signature = self.get_wrapper_fn_sig(false);
@@ -187,7 +186,6 @@ impl FuncProcessor {
     #[allow(clippy::too_many_lines)]
     fn do_fn_param(&mut self, func_info: &FuncInfo, arg_info: &ParamTypeInfo) {
         let arg_name_ident = arg_info.ident.to_ident();
-        let temp_var = format_ident!("__var{}", arg_info.idx);
 
         // Access to the input value, either from the args struct or directly
         let input_val = if func_info.has_optional_args {
@@ -220,13 +218,18 @@ impl FuncProcessor {
                 let json = Self::arg_to_json(arg_info.ident.clone(), false, "EVENT", Value::Null);
                 self.args_json.push(json);
             }
-            ParamType::VclName => {
-                self.func_pre_call
-                    .push(quote! { let #temp_var: Cow<'_, str> = VCL_STRING(__vcl_name).into(); });
-                self.func_call_vars.push(quote! { &#temp_var });
+            ParamType::VclName(pi) => {
+                let input_val = quote! { VCL_STRING(__vcl_name) };
+                let input_expr = if pi.ty_info.use_try_from() {
+                    quote! { #input_val.try_into()? }
+                } else {
+                    quote! { #input_val.into() }
+                };
+                self.func_call_vars.push(quote! { #input_expr });
             }
             ParamType::SharedPerTask => {
                 self.add_wrapper_arg(func_info, quote! { #arg_name_ident: *mut vmod_priv });
+                let temp_var = format_ident!("__var{}", arg_info.idx);
                 self.func_pre_call
                     .push(quote! { let mut #temp_var = (* #input_val).take(); });
                 self.func_call_vars.push(quote! { &mut #temp_var });
@@ -244,6 +247,7 @@ impl FuncProcessor {
             }
             ParamType::SharedPerVclRef => {
                 self.add_wrapper_arg(func_info, quote! { #arg_name_ident: *const vmod_priv });
+                let temp_var = format_ident!("__var{}", arg_info.idx);
                 self.func_pre_call.push(quote! {
                     // defensive programming: *vmod_priv should never be NULL,
                     // but might as well just treat it as None rather than crashing - its readonly anyway
@@ -257,6 +261,7 @@ impl FuncProcessor {
             }
             ParamType::SharedPerVclMut => {
                 self.add_wrapper_arg(func_info, quote! { #arg_name_ident: *mut vmod_priv });
+                let temp_var = format_ident!("__var{}", arg_info.idx);
                 let input_val = if matches!(func_info.func_type, Event) {
                     quote! { __vp } // Event input vars are hardcoded (for now), use `__vp`
                 } else {
@@ -277,9 +282,12 @@ impl FuncProcessor {
                 self.add_cproto_arg(func_info, "struct vmod_priv *", &arg_info.ident);
             }
             ParamType::Value(pi) => {
-                // Convert C arg into Rust arg and pass it to the user's function
-                let mut input_expr = quote! { #input_val.into() };
-                let mut temp_var_ty = pi.ty_info.to_rust_type();
+                // Convert all other C arg types into a Rust arg, and pass it to the user's function
+                let mut input_expr = if pi.ty_info.use_try_from() {
+                    quote! { #input_val.try_into()? }
+                } else {
+                    quote! { #input_val.into() }
+                };
                 if matches!(pi.kind, ParamKind::Optional) {
                     let input_valid = format_ident!("valid_{}", arg_info.ident);
                     let is_input_valid = quote! { __args.#input_valid != 0 };
@@ -287,29 +295,10 @@ impl FuncProcessor {
                     self.add_wrapper_arg(func_info, quote! { #input_valid: c_char });
                     self.cproto_opt_arg_decl.push(format!("char {input_valid}"));
                 }
-                if matches!(pi.kind, ParamKind::Optional | ParamKind::Required) {
-                    temp_var_ty = quote! { Option<#temp_var_ty> };
-                }
-
-                let mut init_var = quote! { let #temp_var: #temp_var_ty = #input_expr; };
-
-                // For `str`, we now have a Cow or an Option<Cow> which need additional parsing.
-                // We cannot do this on the same statement because we need a ref to it without dropping the temp var.
-                if matches!(pi.ty_info, ParamTy::Str) {
-                    init_var = match pi.kind {
-                        ParamKind::Optional | ParamKind::Required => {
-                            quote! { #init_var let #temp_var = #temp_var.as_deref(); }
-                        }
-                        ParamKind::Regular => {
-                            quote! { #init_var let #temp_var = #temp_var.as_ref(); }
-                        }
-                    };
-                }
-                self.func_pre_call.push(init_var);
 
                 let c_type = pi.ty_info.to_c_type().to_ident();
                 self.add_wrapper_arg(func_info, quote! { #arg_name_ident: #c_type });
-                self.func_call_vars.push(quote! { #temp_var });
+                self.func_call_vars.push(quote! { #input_expr });
 
                 let json = Self::arg_to_json(
                     arg_info.ident.clone(),
@@ -427,19 +416,79 @@ impl FuncProcessor {
         let opt_param_struct = self.gen_opt_param_struct(info);
         let signature = self.get_wrapper_fn_sig(true);
         let func_pre_call = &self.func_pre_call;
-        let call_user_fn = self.gen_user_fn_call(info);
         let func_post_call = &self.func_post_call;
-        let unwrap_result = self.gen_result_handler_code(info);
+
+        let is_void = self.output_hdr == "VCL_VOID";
+        let mut func_steps = Vec::new();
+
+        if matches!(info.func_type, Destructor) {
+            func_steps.push(quote! { let __result = (); });
+        } else {
+            let user_fn_name = self.names.fn_callable_name(info.func_type);
+            let var_args = &self.func_call_vars;
+            func_steps.push(quote! { let __result = #user_fn_name(#(#var_args),*) });
+            if info.out_result {
+                func_steps.push(quote! { ? });
+            }
+            func_steps.push(quote! { ; });
+            if matches!(info.func_type, Constructor) {
+                func_steps.push(quote! {
+                    let __result = Box::new( __result );
+                    *__objp = Box::into_raw(__result);
+                    let __result = ();
+                });
+            } else if matches!(info.func_type, Event) {
+                // Ignore the result of the event function, override it with 0
+                func_steps.push(quote! { let __result = VCL_INT(0); });
+            } else if !is_void && !matches!(info.output_ty, OutputTy::VclType(_)) {
+                func_steps.push(quote! { let __result = __result.into_vcl(&mut __ctx.ws)?; });
+            };
+        }
+
+        let result = if self.func_may_fail(info) {
+            let error_value = if self.output_hdr == "VCL_VOID" {
+                quote! {}
+            } else if matches!(info.func_type, Event) {
+                // Events require special handling - convert errors into 1, otherwise 0
+                quote! { VCL_INT(1) }
+            } else {
+                quote! { Default::default() }
+            };
+
+            func_steps = vec![quote! {
+                let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                    #(#func_steps)*
+                    Ok( __result )
+                };
+            }];
+            func_steps.push(quote! { let __result = __call_user_func(); });
+            quote! {
+                __result.unwrap_or_else(|err| {
+                    __ctx.fail(err);
+                    #error_value
+                })
+            }
+        } else {
+            quote! { __result }
+        };
 
         quote! {
             #opt_param_struct
             #signature {
                 #(#func_pre_call)*
-                #call_user_fn
+                #(#func_steps)*
                 #(#func_post_call)*
-                #unwrap_result
+                #result
             }
         }
+    }
+
+    /// Will be true if the wrapper uses `try_from`, or the user function returns a `Result<T, E>`, or the output may fail conversion to a VCL type
+    fn func_may_fail(&self, info: &FuncInfo) -> bool {
+        info.args.iter().any(|arg| matches!(&arg.ty, ParamType::VclName(p) | ParamType::Value(p) if p.ty_info.use_try_from()))
+            || info.out_result
+            || (self.output_hdr != "VCL_VOID"
+                && !matches!(info.output_ty, OutputTy::Default | OutputTy::VclType(_)))
     }
 
     /// Get the signature of the wrapper function:  `unsafe extern "C" fn name(ctx: *mut vrt_ctx, ...) -> VCL_STRING`
@@ -464,83 +513,6 @@ impl FuncProcessor {
             }
         } else {
             quote! {}
-        }
-    }
-
-    fn gen_user_fn_call(&self, info: &FuncInfo) -> TokenStream {
-        if let Destructor = info.func_type {
-            quote! {}
-        } else {
-            let user_fn_name = self.names.fn_callable_name(info.func_type);
-            let var_args = &self.func_call_vars;
-            quote! {
-                let __result = #user_fn_name(#(#var_args),*);
-            }
-        }
-    }
-
-    fn gen_result_handler_code(&self, info: &FuncInfo) -> TokenStream {
-        let on_error = if info.out_result {
-            quote! { __ctx.fail(err); }
-        } else {
-            quote! {}
-        };
-
-        // Events require special handling - convert errors into 1, otherwise 0
-        if matches!(info.func_type, Event) {
-            return if info.out_result {
-                quote! {
-                    match __result {
-                        Ok(_) => VCL_INT(0),
-                        Err(err) => { #on_error; VCL_INT(1) },
-                    }
-                }
-            } else {
-                quote! { VCL_INT(0) }
-            };
-        }
-
-        let default_expr = if self.output_hdr == "VCL_VOID" {
-            quote! {}
-        } else {
-            quote! { Default::default() }
-        };
-
-        let on_success = if matches!(info.func_type, Constructor) {
-            quote! {
-                let __result = Box::new(__result);
-                *__objp = Box::into_raw(__result);
-            }
-        } else if self.output_hdr == "VCL_VOID" {
-            quote! {}
-        } else if matches!(info.output_ty, OutputTy::VclType(_)) {
-            quote! { __result }
-        } else {
-            quote! {
-                match __result.into_vcl(&mut __ctx.ws) {
-                    Ok(v) => v,
-                    Err(err) => {
-                        __ctx.fail(err);
-                        #default_expr
-                    }
-                }
-            }
-        };
-
-        if info.out_result {
-            quote! {
-                match __result {
-                    Ok(__result) => {
-                        #on_success
-                    },
-                    Err(err) => {
-                        #on_error;
-                        #default_expr
-                    }
-                }
-            }
-        } else {
-            on_success
         }
     }
 }

@@ -4,8 +4,8 @@ snapshot_kind: text
 ---
 mod vcl_returns {
     #[allow(non_snake_case, unused_imports, unused_qualifications, unused_variables)]
+    #[allow(clippy::needless_question_mark)]
     mod varnish_generated {
-        use std::borrow::Cow;
         use std::ffi::{c_char, c_int, c_uint, c_void, CStr};
         use std::ptr::null;
         use varnish::ffi::{
@@ -22,14 +22,16 @@ mod vcl_returns {
         }
         unsafe extern "C" fn vmod_c_res_acl(__ctx: *mut vrt_ctx) -> VCL_ACL {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::res_acl();
-            match __result {
-                Ok(__result) => __result,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::res_acl()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_val_backend(__ctx: *mut vrt_ctx) -> VCL_BACKEND {
             let mut __ctx = Ctx::from_ptr(__ctx);
@@ -38,14 +40,16 @@ mod vcl_returns {
         }
         unsafe extern "C" fn vmod_c_res_backend(__ctx: *mut vrt_ctx) -> VCL_BACKEND {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::res_backend();
-            match __result {
-                Ok(__result) => __result,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::res_backend()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_val_blob(__ctx: *mut vrt_ctx) -> VCL_BLOB {
             let mut __ctx = Ctx::from_ptr(__ctx);
@@ -54,14 +58,16 @@ mod vcl_returns {
         }
         unsafe extern "C" fn vmod_c_res_blob(__ctx: *mut vrt_ctx) -> VCL_BLOB {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::res_blob();
-            match __result {
-                Ok(__result) => __result,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::res_blob()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_val_body(__ctx: *mut vrt_ctx) -> VCL_BODY {
             let mut __ctx = Ctx::from_ptr(__ctx);
@@ -70,14 +76,16 @@ mod vcl_returns {
         }
         unsafe extern "C" fn vmod_c_res_body(__ctx: *mut vrt_ctx) -> VCL_BODY {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::res_body();
-            match __result {
-                Ok(__result) => __result,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::res_body()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_val_bool(__ctx: *mut vrt_ctx) -> VCL_BOOL {
             let mut __ctx = Ctx::from_ptr(__ctx);
@@ -86,14 +94,16 @@ mod vcl_returns {
         }
         unsafe extern "C" fn vmod_c_res_bool(__ctx: *mut vrt_ctx) -> VCL_BOOL {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::res_bool();
-            match __result {
-                Ok(__result) => __result,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::res_bool()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_val_bytes(__ctx: *mut vrt_ctx) -> VCL_BYTES {
             let mut __ctx = Ctx::from_ptr(__ctx);
@@ -102,14 +112,16 @@ mod vcl_returns {
         }
         unsafe extern "C" fn vmod_c_res_bytes(__ctx: *mut vrt_ctx) -> VCL_BYTES {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::res_bytes();
-            match __result {
-                Ok(__result) => __result,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::res_bytes()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_val_duration(__ctx: *mut vrt_ctx) -> VCL_DURATION {
             let mut __ctx = Ctx::from_ptr(__ctx);
@@ -118,14 +130,16 @@ mod vcl_returns {
         }
         unsafe extern "C" fn vmod_c_res_duration(__ctx: *mut vrt_ctx) -> VCL_DURATION {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::res_duration();
-            match __result {
-                Ok(__result) => __result,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::res_duration()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_val_enum(__ctx: *mut vrt_ctx) -> VCL_ENUM {
             let mut __ctx = Ctx::from_ptr(__ctx);
@@ -134,14 +148,16 @@ mod vcl_returns {
         }
         unsafe extern "C" fn vmod_c_res_enum(__ctx: *mut vrt_ctx) -> VCL_ENUM {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::res_enum();
-            match __result {
-                Ok(__result) => __result,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::res_enum()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_val_header(__ctx: *mut vrt_ctx) -> VCL_HEADER {
             let mut __ctx = Ctx::from_ptr(__ctx);
@@ -150,14 +166,16 @@ mod vcl_returns {
         }
         unsafe extern "C" fn vmod_c_res_header(__ctx: *mut vrt_ctx) -> VCL_HEADER {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::res_header();
-            match __result {
-                Ok(__result) => __result,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::res_header()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_val_http(__ctx: *mut vrt_ctx) -> VCL_HTTP {
             let mut __ctx = Ctx::from_ptr(__ctx);
@@ -166,14 +184,16 @@ mod vcl_returns {
         }
         unsafe extern "C" fn vmod_c_res_http(__ctx: *mut vrt_ctx) -> VCL_HTTP {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::res_http();
-            match __result {
-                Ok(__result) => __result,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::res_http()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_val_instance(__ctx: *mut vrt_ctx) -> VCL_INSTANCE {
             let mut __ctx = Ctx::from_ptr(__ctx);
@@ -187,14 +207,16 @@ mod vcl_returns {
         }
         unsafe extern "C" fn vmod_c_res_int(__ctx: *mut vrt_ctx) -> VCL_INT {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::res_int();
-            match __result {
-                Ok(__result) => __result,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::res_int()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_val_ip(__ctx: *mut vrt_ctx) -> VCL_IP {
             let mut __ctx = Ctx::from_ptr(__ctx);
@@ -203,14 +225,16 @@ mod vcl_returns {
         }
         unsafe extern "C" fn vmod_c_res_ip(__ctx: *mut vrt_ctx) -> VCL_IP {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::res_ip();
-            match __result {
-                Ok(__result) => __result,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::res_ip()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_val_probe(__ctx: *mut vrt_ctx) -> VCL_PROBE {
             let mut __ctx = Ctx::from_ptr(__ctx);
@@ -219,14 +243,16 @@ mod vcl_returns {
         }
         unsafe extern "C" fn vmod_c_res_probe(__ctx: *mut vrt_ctx) -> VCL_PROBE {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::res_probe();
-            match __result {
-                Ok(__result) => __result,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::res_probe()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_val_real(__ctx: *mut vrt_ctx) -> VCL_REAL {
             let mut __ctx = Ctx::from_ptr(__ctx);
@@ -235,14 +261,16 @@ mod vcl_returns {
         }
         unsafe extern "C" fn vmod_c_res_real(__ctx: *mut vrt_ctx) -> VCL_REAL {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::res_real();
-            match __result {
-                Ok(__result) => __result,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::res_real()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_val_regex(__ctx: *mut vrt_ctx) -> VCL_REGEX {
             let mut __ctx = Ctx::from_ptr(__ctx);
@@ -251,14 +279,16 @@ mod vcl_returns {
         }
         unsafe extern "C" fn vmod_c_res_regex(__ctx: *mut vrt_ctx) -> VCL_REGEX {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::res_regex();
-            match __result {
-                Ok(__result) => __result,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::res_regex()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_val_stevedore(__ctx: *mut vrt_ctx) -> VCL_STEVEDORE {
             let mut __ctx = Ctx::from_ptr(__ctx);
@@ -267,14 +297,16 @@ mod vcl_returns {
         }
         unsafe extern "C" fn vmod_c_res_stevedore(__ctx: *mut vrt_ctx) -> VCL_STEVEDORE {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::res_stevedore();
-            match __result {
-                Ok(__result) => __result,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::res_stevedore()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_val_strands(__ctx: *mut vrt_ctx) -> VCL_STRANDS {
             let mut __ctx = Ctx::from_ptr(__ctx);
@@ -283,14 +315,16 @@ mod vcl_returns {
         }
         unsafe extern "C" fn vmod_c_res_strands(__ctx: *mut vrt_ctx) -> VCL_STRANDS {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::res_strands();
-            match __result {
-                Ok(__result) => __result,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::res_strands()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_val_string(__ctx: *mut vrt_ctx) -> VCL_STRING {
             let mut __ctx = Ctx::from_ptr(__ctx);
@@ -299,14 +333,16 @@ mod vcl_returns {
         }
         unsafe extern "C" fn vmod_c_res_string(__ctx: *mut vrt_ctx) -> VCL_STRING {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::res_string();
-            match __result {
-                Ok(__result) => __result,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::res_string()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_val_sub(__ctx: *mut vrt_ctx) -> VCL_SUB {
             let mut __ctx = Ctx::from_ptr(__ctx);
@@ -315,14 +351,16 @@ mod vcl_returns {
         }
         unsafe extern "C" fn vmod_c_res_sub(__ctx: *mut vrt_ctx) -> VCL_SUB {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::res_sub();
-            match __result {
-                Ok(__result) => __result,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::res_sub()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_val_time(__ctx: *mut vrt_ctx) -> VCL_TIME {
             let mut __ctx = Ctx::from_ptr(__ctx);
@@ -331,14 +369,16 @@ mod vcl_returns {
         }
         unsafe extern "C" fn vmod_c_res_time(__ctx: *mut vrt_ctx) -> VCL_TIME {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::res_time();
-            match __result {
-                Ok(__result) => __result,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::res_time()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         unsafe extern "C" fn vmod_c_val_vcl(__ctx: *mut vrt_ctx) -> VCL_VCL {
             let mut __ctx = Ctx::from_ptr(__ctx);
@@ -347,14 +387,16 @@ mod vcl_returns {
         }
         unsafe extern "C" fn vmod_c_res_vcl(__ctx: *mut vrt_ctx) -> VCL_VCL {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::res_vcl();
-            match __result {
-                Ok(__result) => __result,
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::res_vcl()?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         #[repr(C)]
         pub struct VmodExports {

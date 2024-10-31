@@ -4,8 +4,8 @@ snapshot_kind: text
 ---
 mod tuple {
     #[allow(non_snake_case, unused_imports, unused_qualifications, unused_variables)]
+    #[allow(clippy::needless_question_mark)]
     mod varnish_generated {
-        use std::borrow::Cow;
         use std::ffi::{c_char, c_int, c_uint, c_void, CStr};
         use std::ptr::null;
         use varnish::ffi::{
@@ -26,17 +26,20 @@ mod tuple {
         ) -> VCL_STRING {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let mut __var0 = (*tsk_vals).take();
-            let __result = super::ref_to_slice_lifetime(&mut __var0);
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::ref_to_slice_lifetime(&mut __var0);
+                let __result = __result.into_vcl(&mut __ctx.ws)?;
+                Ok(__result)
+            };
+            let __result = __call_user_func();
             if let Some(obj) = __var0 {
                 (*tsk_vals).put(obj, &PRIV_TASK_METHODS);
             }
-            match __result.into_vcl(&mut __ctx.ws) {
-                Ok(v) => v,
-                Err(err) => {
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     Default::default()
-                }
-            }
+                })
         }
         #[repr(C)]
         pub struct VmodExports {

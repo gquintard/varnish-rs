@@ -44,3 +44,14 @@ sub vcl_init {
 ```
 
 #### Method `VOID set(STRING key, [STRING value])`
+
+### Object `kv3`
+
+```vcl
+// Create a new instance of the object in your VCL init function
+sub vcl_init {
+    new new = kv3.new([INT cap]);
+}
+```
+
+#### Method `VOID set(STRING key, [STRING value])`
