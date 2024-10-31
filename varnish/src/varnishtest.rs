@@ -80,6 +80,9 @@ pub fn run_varnish_test(
 
     if output.status.success() {
         Ok(())
+    } else if output.status.code().unwrap_or_default() == 77 {
+        eprintln!("varnishtest exited with code 77, skipping");
+        Ok(())
     } else {
         Err(format!(
             "varnishtest {} failed\n{cmd:?}",

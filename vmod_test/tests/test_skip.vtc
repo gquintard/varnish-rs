@@ -1,0 +1,2 @@
+varnishtest "skip"
+feature cmd "non-existing command"
