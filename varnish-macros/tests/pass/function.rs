@@ -6,6 +6,7 @@ fn main() {}
 
 #[vmod]
 mod types {
+    use std::ffi::CStr;
     use std::net::SocketAddr;
     use std::time::Duration;
     use varnish::ffi::VCL_STRING;
@@ -33,6 +34,21 @@ mod types {
     pub fn to_res_bool() -> Result<bool, &'static str> {
         panic!()
     }
+
+    // CStr
+    pub fn type_cstr(_v: &CStr) {}
+    pub fn opt_cstr(_v: Option<&CStr>) {}
+    pub fn opt_cstr_req(#[required] _v: Option<&CStr>) {}
+    pub fn type_cstr_dflt(#[default("baz")] _v: &CStr) {}
+    pub fn type_cstr_dflt2(#[default(c"baz")] _v: &CStr) {}
+    pub fn opt_cstr_dflt(#[default(c"baz")] _v: Option<&CStr>) {}
+    pub fn opt_cstr_dflt2(#[default(c"baz")] _v: &CStr) {}
+    // pub fn to_cstr() -> &'static CStr {
+    //     panic!()
+    // }
+    // pub fn to_res_cstr() -> Result<&'static CStr, &'static CStr> {
+    //     panic!()
+    // }
 
     // Duration
     pub fn type_duration(_v: Duration) {}
@@ -69,6 +85,7 @@ mod types {
     // str
     pub fn type_str(_v: &str) {}
     pub fn opt_str(_v: Option<&str>) {}
+    pub fn opt_str_req(#[required] _v: Option<&str>) {}
     pub fn type_str_dflt(#[default("baz")] _v: &str) {}
     pub fn opt_str_dflt(#[default("baz")] _v: Option<&str>) {}
     pub fn to_str() -> &'static str {

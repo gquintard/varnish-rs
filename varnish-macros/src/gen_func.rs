@@ -7,7 +7,7 @@ use quote::{format_ident, quote};
 use serde_json::{json, Value};
 
 use crate::model::FuncType::{Constructor, Destructor, Event, Function, Method};
-use crate::model::{FuncInfo, ParamTy, ParamType, ParamTypeInfo, ReturnTy, ReturnType};
+use crate::model::{FuncInfo, ParamKind, ParamTy, ParamType, ParamTypeInfo, ReturnTy, ReturnType};
 use crate::names::{Names, ToIdent};
 
 #[derive(Debug, Default)]
@@ -218,7 +218,7 @@ impl FuncProcessor {
             ParamType::Event => {
                 self.func_call_vars.push(quote! { __ev });
                 let json = Self::arg_to_json(arg_info.ident.clone(), false, "EVENT", Value::Null);
-                self.args_json.push(json.into());
+                self.args_json.push(json);
             }
             ParamType::VclName => {
                 self.func_pre_call
@@ -239,7 +239,7 @@ impl FuncProcessor {
 
                 let json =
                     Self::arg_to_json(arg_info.ident.clone(), false, "PRIV_TASK", Value::Null);
-                self.args_json.push(json.into());
+                self.args_json.push(json);
                 self.add_cproto_arg(func_info, "struct vmod_priv *", &arg_info.ident);
             }
             ParamType::SharedPerVclRef => {
@@ -252,7 +252,7 @@ impl FuncProcessor {
                 self.func_call_vars.push(quote! { #temp_var });
                 let json =
                     Self::arg_to_json(arg_info.ident.clone(), false, "PRIV_VCL", Value::Null);
-                self.args_json.push(json.into());
+                self.args_json.push(json);
                 self.add_cproto_arg(func_info, "struct vmod_priv *", &arg_info.ident);
             }
             ParamType::SharedPerVclMut => {
@@ -273,25 +273,21 @@ impl FuncProcessor {
                 });
                 let json =
                     Self::arg_to_json(arg_info.ident.clone(), false, "PRIV_VCL", Value::Null);
-                self.args_json.push(json.into());
+                self.args_json.push(json);
                 self.add_cproto_arg(func_info, "struct vmod_priv *", &arg_info.ident);
             }
             ParamType::Value(pi) => {
                 // Convert C arg into Rust arg and pass it to the user's function
                 let mut input_expr = quote! { #input_val.into() };
                 let mut temp_var_ty = pi.ty_info.to_rust_type();
-                if pi.is_optional {
+                if matches!(pi.kind, ParamKind::Optional) {
                     let input_valid = format_ident!("valid_{}", arg_info.ident);
-                    if !pi.ty_info.must_be_optional() {
-                        input_expr = quote! { Some(#input_expr) };
-                        // else input_expr will be converted to option as is
-                    }
-                    input_expr =
-                        quote! { if __args.#input_valid != 0 { #input_expr } else { None } };
+                    let is_input_valid = quote! { __args.#input_valid != 0 };
+                    input_expr = quote! { if #is_input_valid { #input_expr } else { None } };
                     self.add_wrapper_arg(func_info, quote! { #input_valid: c_char });
                     self.cproto_opt_arg_decl.push(format!("char {input_valid}"));
                 }
-                if pi.is_optional || pi.ty_info.must_be_optional() {
+                if matches!(pi.kind, ParamKind::Optional | ParamKind::Required) {
                     temp_var_ty = quote! { Option<#temp_var_ty> };
                 }
 
@@ -300,11 +296,14 @@ impl FuncProcessor {
                 // For `str`, we now have a Cow or an Option<Cow> which need additional parsing.
                 // We cannot do this on the same statement because we need a ref to it without dropping the temp var.
                 if matches!(pi.ty_info, ParamTy::Str) {
-                    if pi.is_optional {
-                        init_var = quote! { #init_var let #temp_var = #temp_var.as_deref(); };
-                    } else {
-                        init_var = quote! { #init_var let #temp_var = #temp_var.as_ref(); };
-                    }
+                    init_var = match pi.kind {
+                        ParamKind::Optional | ParamKind::Required => {
+                            quote! { #init_var let #temp_var = #temp_var.as_deref(); }
+                        }
+                        ParamKind::Regular => {
+                            quote! { #init_var let #temp_var = #temp_var.as_ref(); }
+                        }
+                    };
                 }
                 self.func_pre_call.push(init_var);
 
@@ -314,11 +313,11 @@ impl FuncProcessor {
 
                 let json = Self::arg_to_json(
                     arg_info.ident.clone(),
-                    pi.is_optional,
+                    matches!(pi.kind, ParamKind::Optional),
                     pi.ty_info.to_vcc_type(),
                     pi.default.clone(),
                 );
-                self.args_json.push(json.into());
+                self.args_json.push(json);
                 self.add_cproto_arg(func_info, pi.ty_info.to_c_type(), &arg_info.ident);
             }
         };
@@ -348,7 +347,7 @@ impl FuncProcessor {
         is_optional_arg: bool,
         vcc_type: &str,
         mut default: Value,
-    ) -> Vec<Value> {
+    ) -> Value {
         // JSON data for each argument:
         //   [VCC_type, arg_name, default_value, spec(?), is_optional]
         if !default.is_null() {
@@ -372,7 +371,7 @@ impl FuncProcessor {
             }
         }
 
-        json_arg
+        json_arg.into()
     }
 
     fn do_fn_return(&mut self, info: &FuncInfo) {

@@ -9,7 +9,7 @@ VMOD_JSON_SPEC
     "1.0",
     "types",
     "Vmod_vmod_types_Func",
-    "9f0cee7ee24483cb522c2b6b3b3e4d1480b2c408d8d88cffbec365e9a7c7456b",
+    "1005238daaffe298f3de3dc1a2ca2cd3dc33ddc80d5fe31f791051f6f50205d3",
     "Varnish (version) (hash)",
     "0",
     "0"
@@ -55,6 +55,51 @@ typedef VCL_BOOL td_vmod_types_to_bool(
 
 typedef VCL_BOOL td_vmod_types_to_res_bool(
     VRT_CTX
+);
+
+typedef VCL_VOID td_vmod_types_type_cstr(
+    VRT_CTX,
+    VCL_STRING
+);
+
+struct arg_vmod_types_opt_cstr {
+  char valid__v;
+  VCL_STRING _v;
+};
+
+typedef VCL_VOID td_vmod_types_opt_cstr(
+    VRT_CTX,
+    struct arg_vmod_types_opt_cstr *
+);
+
+typedef VCL_VOID td_vmod_types_opt_cstr_req(
+    VRT_CTX,
+    VCL_STRING
+);
+
+typedef VCL_VOID td_vmod_types_type_cstr_dflt(
+    VRT_CTX,
+    VCL_STRING
+);
+
+typedef VCL_VOID td_vmod_types_type_cstr_dflt2(
+    VRT_CTX,
+    VCL_STRING
+);
+
+struct arg_vmod_types_opt_cstr_dflt {
+  char valid__v;
+  VCL_STRING _v;
+};
+
+typedef VCL_VOID td_vmod_types_opt_cstr_dflt(
+    VRT_CTX,
+    struct arg_vmod_types_opt_cstr_dflt *
+);
+
+typedef VCL_VOID td_vmod_types_opt_cstr_dflt2(
+    VRT_CTX,
+    VCL_STRING
 );
 
 typedef VCL_VOID td_vmod_types_type_duration(
@@ -149,6 +194,11 @@ struct arg_vmod_types_opt_str {
 typedef VCL_VOID td_vmod_types_opt_str(
     VRT_CTX,
     struct arg_vmod_types_opt_str *
+);
+
+typedef VCL_VOID td_vmod_types_opt_str_req(
+    VRT_CTX,
+    VCL_STRING
 );
 
 typedef VCL_VOID td_vmod_types_type_str_dflt(
@@ -296,6 +346,13 @@ struct Vmod_vmod_types_Func {
   td_vmod_types_opt_bool *f_opt_bool;
   td_vmod_types_to_bool *f_to_bool;
   td_vmod_types_to_res_bool *f_to_res_bool;
+  td_vmod_types_type_cstr *f_type_cstr;
+  td_vmod_types_opt_cstr *f_opt_cstr;
+  td_vmod_types_opt_cstr_req *f_opt_cstr_req;
+  td_vmod_types_type_cstr_dflt *f_type_cstr_dflt;
+  td_vmod_types_type_cstr_dflt2 *f_type_cstr_dflt2;
+  td_vmod_types_opt_cstr_dflt *f_opt_cstr_dflt;
+  td_vmod_types_opt_cstr_dflt2 *f_opt_cstr_dflt2;
   td_vmod_types_type_duration *f_type_duration;
   td_vmod_types_opt_duration *f_opt_duration;
   td_vmod_types_to_duration *f_to_duration;
@@ -312,6 +369,7 @@ struct Vmod_vmod_types_Func {
   td_vmod_types_to_res_i64 *f_to_res_i64;
   td_vmod_types_type_str *f_type_str;
   td_vmod_types_opt_str *f_opt_str;
+  td_vmod_types_opt_str_req *f_opt_str_req;
   td_vmod_types_type_str_dflt *f_type_str_dflt;
   td_vmod_types_opt_str_dflt *f_opt_str_dflt;
   td_vmod_types_to_str *f_to_str;
@@ -443,6 +501,120 @@ static struct Vmod_vmod_types_Func Vmod_vmod_types_Func;"
       ],
       "Vmod_vmod_types_Func.f_to_res_bool",
       ""
+    ]
+  ],
+  [
+    "$FUNC",
+    "type_cstr",
+    [
+      [
+        "VOID"
+      ],
+      "Vmod_vmod_types_Func.f_type_cstr",
+      "",
+      [
+        "STRING",
+        "_v"
+      ]
+    ]
+  ],
+  [
+    "$FUNC",
+    "opt_cstr",
+    [
+      [
+        "VOID"
+      ],
+      "Vmod_vmod_types_Func.f_opt_cstr",
+      "struct arg_vmod_types_opt_cstr",
+      [
+        "STRING",
+        "_v",
+        null,
+        null,
+        true
+      ]
+    ]
+  ],
+  [
+    "$FUNC",
+    "opt_cstr_req",
+    [
+      [
+        "VOID"
+      ],
+      "Vmod_vmod_types_Func.f_opt_cstr_req",
+      "",
+      [
+        "STRING",
+        "_v"
+      ]
+    ]
+  ],
+  [
+    "$FUNC",
+    "type_cstr_dflt",
+    [
+      [
+        "VOID"
+      ],
+      "Vmod_vmod_types_Func.f_type_cstr_dflt",
+      "",
+      [
+        "STRING",
+        "_v",
+        "\"baz\""
+      ]
+    ]
+  ],
+  [
+    "$FUNC",
+    "type_cstr_dflt2",
+    [
+      [
+        "VOID"
+      ],
+      "Vmod_vmod_types_Func.f_type_cstr_dflt2",
+      "",
+      [
+        "STRING",
+        "_v",
+        "\"baz\""
+      ]
+    ]
+  ],
+  [
+    "$FUNC",
+    "opt_cstr_dflt",
+    [
+      [
+        "VOID"
+      ],
+      "Vmod_vmod_types_Func.f_opt_cstr_dflt",
+      "struct arg_vmod_types_opt_cstr_dflt",
+      [
+        "STRING",
+        "_v",
+        "\"baz\"",
+        null,
+        true
+      ]
+    ]
+  ],
+  [
+    "$FUNC",
+    "opt_cstr_dflt2",
+    [
+      [
+        "VOID"
+      ],
+      "Vmod_vmod_types_Func.f_opt_cstr_dflt2",
+      "",
+      [
+        "STRING",
+        "_v",
+        "\"baz\""
+      ]
     ]
   ],
   [
@@ -672,6 +844,21 @@ static struct Vmod_vmod_types_Func Vmod_vmod_types_Func;"
         null,
         null,
         true
+      ]
+    ]
+  ],
+  [
+    "$FUNC",
+    "opt_str_req",
+    [
+      [
+        "VOID"
+      ],
+      "Vmod_vmod_types_Func.f_opt_str_req",
+      "",
+      [
+        "STRING",
+        "_v"
       ]
     ]
   ],

@@ -25,7 +25,7 @@ VmodInfo {
                         idx: 0,
                         ty: Value(
                             ParamInfo {
-                                is_optional: true,
+                                kind: Optional,
                                 default: Null,
                                 ty_info: I64,
                             },
@@ -65,7 +65,7 @@ VmodInfo {
                             idx: 1,
                             ty: Value(
                                 ParamInfo {
-                                    is_optional: false,
+                                    kind: Regular,
                                     default: Null,
                                     ty_info: Str,
                                 },
@@ -77,7 +77,7 @@ VmodInfo {
                             idx: 2,
                             ty: Value(
                                 ParamInfo {
-                                    is_optional: false,
+                                    kind: Regular,
                                     default: Null,
                                     ty_info: Str,
                                 },
@@ -106,7 +106,7 @@ VmodInfo {
                             idx: 1,
                             ty: Value(
                                 ParamInfo {
-                                    is_optional: false,
+                                    kind: Regular,
                                     default: Null,
                                     ty_info: Str,
                                 },
@@ -134,7 +134,7 @@ VmodInfo {
                         idx: 0,
                         ty: Value(
                             ParamInfo {
-                                is_optional: true,
+                                kind: Optional,
                                 default: Null,
                                 ty_info: I64,
                             },
@@ -180,7 +180,7 @@ VmodInfo {
                             idx: 1,
                             ty: Value(
                                 ParamInfo {
-                                    is_optional: false,
+                                    kind: Regular,
                                     default: Null,
                                     ty_info: Str,
                                 },
@@ -192,7 +192,7 @@ VmodInfo {
                             idx: 2,
                             ty: Value(
                                 ParamInfo {
-                                    is_optional: true,
+                                    kind: Optional,
                                     default: Null,
                                     ty_info: Str,
                                 },

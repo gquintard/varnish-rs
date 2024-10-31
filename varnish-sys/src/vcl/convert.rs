@@ -101,11 +101,11 @@ macro_rules! from_rust_to_vcl {
     };
 }
 
-macro_rules! from_vcl_to_rust {
+macro_rules! from_vcl_to_opt_rust {
     ($vcl_ty:ident, $rust_ty:ty) => {
-        impl From<$vcl_ty> for $rust_ty {
+        impl From<$vcl_ty> for Option<$rust_ty> {
             fn from(b: $vcl_ty) -> Self {
-                <Self>::from(b.0)
+                Some(b.into())
             }
         }
     };
@@ -128,6 +128,7 @@ default_null_ptr!(VCL_BODY);
 //
 into_vcl_using_from!(bool, VCL_BOOL);
 from_rust_to_vcl!(bool, VCL_BOOL);
+from_vcl_to_opt_rust!(VCL_BOOL, bool);
 impl From<VCL_BOOL> for bool {
     fn from(b: VCL_BOOL) -> Self {
         b.0 != 0
@@ -138,6 +139,7 @@ impl From<VCL_BOOL> for bool {
 // VCL_DURATION
 //
 into_vcl_using_from!(Duration, VCL_DURATION);
+from_vcl_to_opt_rust!(VCL_DURATION, Duration);
 impl From<VCL_DURATION> for Duration {
     fn from(value: VCL_DURATION) -> Self {
         value.0.into()
@@ -175,7 +177,12 @@ default_null_ptr!(mut VCL_HTTP);
 //
 into_vcl_using_from!(i64, VCL_INT);
 from_rust_to_vcl!(i64, VCL_INT);
-from_vcl_to_rust!(VCL_INT, i64);
+from_vcl_to_opt_rust!(VCL_INT, i64);
+impl From<VCL_INT> for i64 {
+    fn from(b: VCL_INT) -> Self {
+        b.0
+    }
+}
 
 //
 // VCL_IP
@@ -349,7 +356,12 @@ impl From<VCL_PROBE> for Option<Probe> {
 //
 into_vcl_using_from!(f64, VCL_REAL);
 from_rust_to_vcl!(f64, VCL_REAL);
-from_vcl_to_rust!(VCL_REAL, f64);
+from_vcl_to_opt_rust!(VCL_REAL, f64);
+impl From<VCL_REAL> for f64 {
+    fn from(b: VCL_REAL) -> Self {
+        b.0
+    }
+}
 
 // VCL_REGEX
 default_null_ptr!(VCL_REGEX);
@@ -394,9 +406,31 @@ impl<T: IntoVCL<VCL_STRING> + AsRef<[u8]>> IntoVCL<VCL_STRING> for Option<T> {
         }
     }
 }
+impl From<VCL_STRING> for Option<&CStr> {
+    fn from(value: VCL_STRING) -> Self {
+        if value.0.is_null() {
+            None
+        } else {
+            Some(unsafe { CStr::from_ptr(value.0) })
+        }
+    }
+}
+impl From<VCL_STRING> for &CStr {
+    fn from(value: VCL_STRING) -> Self {
+        // Treat a null pointer as an empty string
+        <Option<&CStr>>::from(value).unwrap_or_default()
+    }
+}
+impl<'a> From<VCL_STRING> for Option<Cow<'a, str>> {
+    fn from(value: VCL_STRING) -> Self {
+        // Lossy string in case of any non-unicode characters
+        <Option<&CStr>>::from(value).map(CStr::to_string_lossy)
+    }
+}
 impl<'a> From<VCL_STRING> for Cow<'a, str> {
     fn from(value: VCL_STRING) -> Self {
-        from_str(value.0)
+        // Lossy string and also convert null to ""
+        <Option<Cow<'a, str>>>::from(value).unwrap_or(Cow::Borrowed(""))
     }
 }
 

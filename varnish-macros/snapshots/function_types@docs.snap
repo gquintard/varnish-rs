@@ -37,6 +37,20 @@ import types from "path/to/libtypes.so";
 
 ### Function `BOOL to_res_bool()`
 
+### Function `VOID type_cstr(STRING _v)`
+
+### Function `VOID opt_cstr([STRING _v])`
+
+### Function `VOID opt_cstr_req(STRING _v)`
+
+### Function `VOID type_cstr_dflt(STRING _v = "baz")`
+
+### Function `VOID type_cstr_dflt2(STRING _v = "baz")`
+
+### Function `VOID opt_cstr_dflt([STRING _v] = "baz")`
+
+### Function `VOID opt_cstr_dflt2(STRING _v = "baz")`
+
 ### Function `VOID type_duration(DURATION _v)`
 
 ### Function `VOID opt_duration([DURATION _v])`
@@ -68,6 +82,8 @@ import types from "path/to/libtypes.so";
 ### Function `VOID type_str(STRING _v)`
 
 ### Function `VOID opt_str([STRING _v])`
+
+### Function `VOID opt_str_req(STRING _v)`
 
 ### Function `VOID type_str_dflt(STRING _v = "baz")`
 
