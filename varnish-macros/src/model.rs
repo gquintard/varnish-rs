@@ -121,10 +121,21 @@ pub enum ParamType {
     Value(ParamInfo),
 }
 
+#[derive(Debug, Clone)]
+pub enum ParamKind {
+    /// Type is declared without the `Option<...>`
+    Regular,
+    /// Type is declared with the `Option<...>`
+    Optional,
+    /// Type is declared with the `Option<...>`, but has a `#[required]` attribute.
+    /// This means it must be present when calling the function, but it could be `NULL`.
+    Required,
+}
+
 /// Represents the information about the common function argument types
 #[derive(Debug, Clone)]
 pub struct ParamInfo {
-    pub is_optional: bool,
+    pub kind: ParamKind,
     pub default: serde_json::Value,
     pub ty_info: ParamTy,
 }
@@ -140,6 +151,7 @@ pub enum ParamTy {
     ProbeCow,
     SocketAddr,
     Str,
+    CStr,
 }
 
 impl ParamTy {
@@ -153,6 +165,7 @@ impl ParamTy {
             Self::ProbeCow => quote! { CowProbe },
             Self::SocketAddr => quote! { SocketAddr },
             Self::Str => quote! { Cow<'_, str> },
+            Self::CStr => quote! { &CStr },
         }
     }
 }
@@ -166,7 +179,7 @@ impl ParamTy {
             Self::I64 => "INT",
             Self::Probe | Self::ProbeCow => "PROBE",
             Self::SocketAddr => "IP",
-            Self::Str => "STRING",
+            Self::Str | Self::CStr => "STRING",
         }
     }
 
@@ -180,14 +193,14 @@ impl ParamTy {
             Self::I64 => "VCL_INT",
             Self::Probe | Self::ProbeCow => "VCL_PROBE",
             Self::SocketAddr => "VCL_IP",
-            Self::Str => "VCL_STRING",
+            Self::Str | Self::CStr => "VCL_STRING",
         }
     }
 
+    /// User MUST use some types with `Option`
     pub fn must_be_optional(self) -> bool {
         match self {
-            // &str is a special case(?), it can be non-optional
-            Self::Bool | Self::Duration | Self::F64 | Self::I64 | Self::Str => false,
+            Self::Bool | Self::Duration | Self::F64 | Self::I64 | Self::Str | Self::CStr => false,
             Self::Probe | Self::ProbeCow | Self::SocketAddr => true,
         }
     }

@@ -6,7 +6,8 @@ use syn::{FnArg, GenericArgument, Lit, Meta, Pat, PatType, Type, TypeParamBound}
 use crate::errors::error;
 use crate::model::FuncType::{Constructor, Event, Function, Method};
 use crate::model::{
-    FuncType, ParamInfo, ParamTy, ParamType, ParamTypeInfo, ReturnTy, ReturnType, SharedTypes,
+    FuncType, ParamInfo, ParamKind, ParamTy, ParamType, ParamTypeInfo, ReturnTy, ReturnType,
+    SharedTypes,
 };
 use crate::parser_utils::{
     as_one_gen_arg, as_option_type, as_ref_mut_ty, as_ref_ty, as_simple_ty, as_slice_ty,
@@ -202,12 +203,14 @@ impl ParamType {
                 if !opt {
                     error! { "The `required` attribute is only allowed on Option<...> arguments" }
                 }
-                if !arg_ty.must_be_optional() {
-                    error! { "The `required` attribute is only allowed on Probe, ProbeCow, and SocketAddr arguments" }
+                if !arg_ty.must_be_optional() && !matches!(arg_ty, ParamTy::CStr | ParamTy::Str) {
+                    error! { "The `required` attribute is only allowed on CStr, str, Probe, ProbeCow, and SocketAddr arguments" }
                 }
-                false
+                ParamKind::Required
+            } else if opt {
+                ParamKind::Optional
             } else {
-                opt
+                ParamKind::Regular
             };
             Self::Value(ParamInfo::new(arg_ty, default, opt))
         })
@@ -236,8 +239,12 @@ impl ParamType {
 
         Ok(match lit {
             Lit::Str(v) => {
-                only! { ParamTy::Str, "Only `&str` arguments can have a default string value" }
+                only! { ParamTy::Str | ParamTy::CStr, "Only `&str` and `&CStr` arguments can have a default string value" }
                 Value::String(v.value())
+            }
+            Lit::CStr(v) => {
+                only! { ParamTy::Str | ParamTy::CStr, "Only `&str` and `&CStr` arguments can have a default string value" }
+                Value::String(v.value().to_str().unwrap().to_string())
             }
             Lit::Int(v) => {
                 only! { ParamTy::I64, "Only `i64` arguments can have a default integer value" }
@@ -272,9 +279,9 @@ impl ParamType {
 }
 
 impl ParamInfo {
-    fn new(ty_info: ParamTy, default: Value, is_optional: bool) -> Self {
+    fn new(ty_info: ParamTy, default: Value, optional: ParamKind) -> Self {
         Self {
-            is_optional,
+            kind: optional,
             default,
             ty_info,
         }
@@ -307,6 +314,8 @@ impl ParamTy {
         if let Some(ident) = as_ref_ty(ty).and_then(as_simple_ty) {
             if ident == "str" {
                 return Some(Self::Str);
+            } else if ident == "CStr" {
+                return Some(Self::CStr);
             }
         }
 

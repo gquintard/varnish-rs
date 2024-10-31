@@ -55,7 +55,7 @@ VmodInfo {
                     idx: 0,
                     ty: Value(
                         ParamInfo {
-                            is_optional: false,
+                            kind: Regular,
                             default: Null,
                             ty_info: Bool,
                         },
@@ -78,7 +78,7 @@ VmodInfo {
                     idx: 0,
                     ty: Value(
                         ParamInfo {
-                            is_optional: false,
+                            kind: Regular,
                             default: Number(1),
                             ty_info: Bool,
                         },
@@ -101,7 +101,7 @@ VmodInfo {
                     idx: 0,
                     ty: Value(
                         ParamInfo {
-                            is_optional: true,
+                            kind: Optional,
                             default: Null,
                             ty_info: Bool,
                         },
@@ -141,6 +141,167 @@ VmodInfo {
         },
         FuncInfo {
             func_type: Function,
+            ident: "type_cstr",
+            docs: "",
+            has_optional_args: false,
+            args: [
+                ParamTypeInfo {
+                    ident: "_v",
+                    docs: "",
+                    idx: 0,
+                    ty: Value(
+                        ParamInfo {
+                            kind: Regular,
+                            default: Null,
+                            ty_info: CStr,
+                        },
+                    ),
+                },
+            ],
+            returns: Value(
+                Default,
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "opt_cstr",
+            docs: "",
+            has_optional_args: true,
+            args: [
+                ParamTypeInfo {
+                    ident: "_v",
+                    docs: "",
+                    idx: 0,
+                    ty: Value(
+                        ParamInfo {
+                            kind: Optional,
+                            default: Null,
+                            ty_info: CStr,
+                        },
+                    ),
+                },
+            ],
+            returns: Value(
+                Default,
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "opt_cstr_req",
+            docs: "",
+            has_optional_args: false,
+            args: [
+                ParamTypeInfo {
+                    ident: "_v",
+                    docs: "",
+                    idx: 0,
+                    ty: Value(
+                        ParamInfo {
+                            kind: Required,
+                            default: Null,
+                            ty_info: CStr,
+                        },
+                    ),
+                },
+            ],
+            returns: Value(
+                Default,
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "type_cstr_dflt",
+            docs: "",
+            has_optional_args: false,
+            args: [
+                ParamTypeInfo {
+                    ident: "_v",
+                    docs: "",
+                    idx: 0,
+                    ty: Value(
+                        ParamInfo {
+                            kind: Regular,
+                            default: String("baz"),
+                            ty_info: CStr,
+                        },
+                    ),
+                },
+            ],
+            returns: Value(
+                Default,
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "type_cstr_dflt2",
+            docs: "",
+            has_optional_args: false,
+            args: [
+                ParamTypeInfo {
+                    ident: "_v",
+                    docs: "",
+                    idx: 0,
+                    ty: Value(
+                        ParamInfo {
+                            kind: Regular,
+                            default: String("baz"),
+                            ty_info: CStr,
+                        },
+                    ),
+                },
+            ],
+            returns: Value(
+                Default,
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "opt_cstr_dflt",
+            docs: "",
+            has_optional_args: true,
+            args: [
+                ParamTypeInfo {
+                    ident: "_v",
+                    docs: "",
+                    idx: 0,
+                    ty: Value(
+                        ParamInfo {
+                            kind: Optional,
+                            default: String("baz"),
+                            ty_info: CStr,
+                        },
+                    ),
+                },
+            ],
+            returns: Value(
+                Default,
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "opt_cstr_dflt2",
+            docs: "",
+            has_optional_args: false,
+            args: [
+                ParamTypeInfo {
+                    ident: "_v",
+                    docs: "",
+                    idx: 0,
+                    ty: Value(
+                        ParamInfo {
+                            kind: Regular,
+                            default: String("baz"),
+                            ty_info: CStr,
+                        },
+                    ),
+                },
+            ],
+            returns: Value(
+                Default,
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
             ident: "type_duration",
             docs: "",
             has_optional_args: false,
@@ -151,7 +312,7 @@ VmodInfo {
                     idx: 0,
                     ty: Value(
                         ParamInfo {
-                            is_optional: false,
+                            kind: Regular,
                             default: Null,
                             ty_info: Duration,
                         },
@@ -174,7 +335,7 @@ VmodInfo {
                     idx: 0,
                     ty: Value(
                         ParamInfo {
-                            is_optional: true,
+                            kind: Optional,
                             default: Null,
                             ty_info: Duration,
                         },
@@ -224,7 +385,7 @@ VmodInfo {
                     idx: 0,
                     ty: Value(
                         ParamInfo {
-                            is_optional: false,
+                            kind: Regular,
                             default: Null,
                             ty_info: F64,
                         },
@@ -247,7 +408,7 @@ VmodInfo {
                     idx: 0,
                     ty: Value(
                         ParamInfo {
-                            is_optional: false,
+                            kind: Regular,
                             default: Number(42.3),
                             ty_info: F64,
                         },
@@ -270,7 +431,7 @@ VmodInfo {
                     idx: 0,
                     ty: Value(
                         ParamInfo {
-                            is_optional: true,
+                            kind: Optional,
                             default: Null,
                             ty_info: F64,
                         },
@@ -320,7 +481,7 @@ VmodInfo {
                     idx: 0,
                     ty: Value(
                         ParamInfo {
-                            is_optional: false,
+                            kind: Regular,
                             default: Null,
                             ty_info: I64,
                         },
@@ -343,7 +504,7 @@ VmodInfo {
                     idx: 0,
                     ty: Value(
                         ParamInfo {
-                            is_optional: false,
+                            kind: Regular,
                             default: Number(10),
                             ty_info: I64,
                         },
@@ -366,7 +527,7 @@ VmodInfo {
                     idx: 0,
                     ty: Value(
                         ParamInfo {
-                            is_optional: true,
+                            kind: Optional,
                             default: Null,
                             ty_info: I64,
                         },
@@ -416,7 +577,7 @@ VmodInfo {
                     idx: 0,
                     ty: Value(
                         ParamInfo {
-                            is_optional: false,
+                            kind: Regular,
                             default: Null,
                             ty_info: Str,
                         },
@@ -439,7 +600,30 @@ VmodInfo {
                     idx: 0,
                     ty: Value(
                         ParamInfo {
-                            is_optional: true,
+                            kind: Optional,
+                            default: Null,
+                            ty_info: Str,
+                        },
+                    ),
+                },
+            ],
+            returns: Value(
+                Default,
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "opt_str_req",
+            docs: "",
+            has_optional_args: false,
+            args: [
+                ParamTypeInfo {
+                    ident: "_v",
+                    docs: "",
+                    idx: 0,
+                    ty: Value(
+                        ParamInfo {
+                            kind: Required,
                             default: Null,
                             ty_info: Str,
                         },
@@ -462,7 +646,7 @@ VmodInfo {
                     idx: 0,
                     ty: Value(
                         ParamInfo {
-                            is_optional: false,
+                            kind: Regular,
                             default: String("baz"),
                             ty_info: Str,
                         },
@@ -485,7 +669,7 @@ VmodInfo {
                     idx: 0,
                     ty: Value(
                         ParamInfo {
-                            is_optional: true,
+                            kind: Optional,
                             default: String("baz"),
                             ty_info: Str,
                         },
@@ -581,7 +765,7 @@ VmodInfo {
                     idx: 0,
                     ty: Value(
                         ParamInfo {
-                            is_optional: true,
+                            kind: Optional,
                             default: Null,
                             ty_info: Probe,
                         },
@@ -604,7 +788,7 @@ VmodInfo {
                     idx: 0,
                     ty: Value(
                         ParamInfo {
-                            is_optional: false,
+                            kind: Required,
                             default: Null,
                             ty_info: Probe,
                         },
@@ -654,7 +838,7 @@ VmodInfo {
                     idx: 0,
                     ty: Value(
                         ParamInfo {
-                            is_optional: true,
+                            kind: Optional,
                             default: Null,
                             ty_info: ProbeCow,
                         },
@@ -677,7 +861,7 @@ VmodInfo {
                     idx: 0,
                     ty: Value(
                         ParamInfo {
-                            is_optional: false,
+                            kind: Required,
                             default: Null,
                             ty_info: ProbeCow,
                         },
@@ -727,7 +911,7 @@ VmodInfo {
                     idx: 0,
                     ty: Value(
                         ParamInfo {
-                            is_optional: true,
+                            kind: Optional,
                             default: Null,
                             ty_info: SocketAddr,
                         },
@@ -750,7 +934,7 @@ VmodInfo {
                     idx: 0,
                     ty: Value(
                         ParamInfo {
-                            is_optional: false,
+                            kind: Required,
                             default: Null,
                             ty_info: SocketAddr,
                         },
@@ -827,7 +1011,7 @@ VmodInfo {
                     idx: 0,
                     ty: Value(
                         ParamInfo {
-                            is_optional: false,
+                            kind: Regular,
                             default: Null,
                             ty_info: I64,
                         },
@@ -839,7 +1023,7 @@ VmodInfo {
                     idx: 1,
                     ty: Value(
                         ParamInfo {
-                            is_optional: true,
+                            kind: Optional,
                             default: Null,
                             ty_info: I64,
                         },
@@ -851,7 +1035,7 @@ VmodInfo {
                     idx: 2,
                     ty: Value(
                         ParamInfo {
-                            is_optional: false,
+                            kind: Regular,
                             default: Null,
                             ty_info: I64,
                         },

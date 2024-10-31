@@ -4,7 +4,7 @@ use std::fmt::Write;
 use std::fs;
 use std::path::Path;
 
-use crate::model::{FuncInfo, FuncType, ParamInfo, ParamType, ParamTypeInfo, VmodInfo};
+use crate::model::{FuncInfo, FuncType, ParamInfo, ParamKind, ParamType, ParamTypeInfo, VmodInfo};
 
 // Small helpers to write to a string without checking the result
 
@@ -176,7 +176,7 @@ fn get_user_args(func: &FuncInfo) -> Vec<(&ParamTypeInfo, &ParamInfo)> {
 fn bracketed_name(arg: &ParamTypeInfo, ty: &ParamInfo) -> String {
     let vcc = ty.ty_info.to_vcc_type();
     let ident = &arg.ident;
-    if ty.is_optional {
+    if matches!(ty.kind, ParamKind::Optional) {
         format!("[{vcc} {ident}]")
     } else {
         format!("{vcc} {ident}")

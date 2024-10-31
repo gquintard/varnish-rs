@@ -9,8 +9,8 @@ use syn::{Attribute, ImplItem, Item, ItemImpl, ItemMod, Signature, Visibility};
 
 use crate::errors::Errors;
 use crate::model::{
-    FuncInfo, FuncType, ObjInfo, ParamType, ParamTypeInfo, ReturnTy, ReturnType, SharedTypes,
-    VmodInfo, VmodParams,
+    FuncInfo, FuncType, ObjInfo, ParamKind, ParamType, ParamTypeInfo, ReturnTy, ReturnType,
+    SharedTypes, VmodInfo, VmodParams,
 };
 use crate::parser_args::FuncStatus;
 use crate::{parser_utils, ProcResult};
@@ -193,9 +193,9 @@ impl FuncInfo {
             }
         }
 
-        let has_optional_args = args
-            .iter()
-            .any(|arg| matches!(&arg.ty, ParamType::Value(v) if v.is_optional));
+        let has_optional_args = args.iter().any(
+            |arg| matches!(&arg.ty, ParamType::Value(v) if matches!(v.kind, ParamKind::Optional)),
+        );
 
         errors.into_result()?;
         Ok(Self {
