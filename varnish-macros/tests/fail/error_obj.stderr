@@ -46,7 +46,7 @@ error: Object must have a constructor called `new`
 15 |     impl Obj {
    |          ^^^
 
-error: #[vcl_name] params must be declared as `&str`
+error: #[vcl_name] params must be declared as `&str` or `&CStr`
   --> tests/fail/error_obj.rs:25:32
    |
 25 |         pub fn new(#[vcl_name] a: String) {}

@@ -4,8 +4,8 @@ snapshot_kind: text
 ---
 mod task {
     #[allow(non_snake_case, unused_imports, unused_qualifications, unused_variables)]
+    #[allow(clippy::needless_question_mark)]
     mod varnish_generated {
-        use std::borrow::Cow;
         use std::ffi::{c_char, c_int, c_uint, c_void, CStr};
         use std::ptr::null;
         use varnish::ffi::{
@@ -33,10 +33,11 @@ mod task {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let mut __var2 = (*__vp).take();
             let __result = super::on_event(__ev, &mut __ctx, &mut __var2);
+            let __result = VCL_INT(0);
             if let Some(obj) = __var2 {
                 (*__vp).put(obj, &PRIV_VCL_METHODS);
             }
-            VCL_INT(0)
+            __result
         }
         unsafe extern "C" fn vmod_c_per_vcl_val(
             __ctx: *mut vrt_ctx,
@@ -45,6 +46,7 @@ mod task {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __var0 = vcl.as_ref().and_then(|v| v.get_ref());
             let __result = super::per_vcl_val(__var0);
+            __result
         }
         #[repr(C)]
         struct arg_vmod_task_per_vcl_opt {
@@ -59,12 +61,11 @@ mod task {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
             let __var0 = __args.vcl.as_ref().and_then(|v| v.get_ref());
-            let __var1: Option<i64> = if __args.valid_op != 0 {
-                __args.op.into()
-            } else {
-                None
-            };
-            let __result = super::per_vcl_opt(__var0, __var1);
+            let __result = super::per_vcl_opt(
+                __var0,
+                if __args.valid_op != 0 { __args.op.into() } else { None },
+            );
+            __result
         }
         unsafe extern "C" fn vmod_c_per_tsk_val(
             __ctx: *mut vrt_ctx,
@@ -76,6 +77,7 @@ mod task {
             if let Some(obj) = __var0 {
                 (*tsk).put(obj, &PRIV_TASK_METHODS);
             }
+            __result
         }
         #[repr(C)]
         struct arg_vmod_task_per_tsk_opt {
@@ -90,15 +92,14 @@ mod task {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
             let mut __var0 = (*__args.tsk).take();
-            let __var1: Option<i64> = if __args.valid_op != 0 {
-                __args.op.into()
-            } else {
-                None
-            };
-            let __result = super::per_tsk_opt(&mut __var0, __var1);
+            let __result = super::per_tsk_opt(
+                &mut __var0,
+                if __args.valid_op != 0 { __args.op.into() } else { None },
+            );
             if let Some(obj) = __var0 {
                 (*__args.tsk).put(obj, &PRIV_TASK_METHODS);
             }
+            __result
         }
         unsafe extern "C" fn vmod_c_PerVcl__init(
             __ctx: *mut vrt_ctx,
@@ -109,15 +110,19 @@ mod task {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let mut __var0 = (*vcl).take();
             let __result = super::PerVcl::new(&mut __var0);
+            let __result = Box::new(__result);
+            *__objp = Box::into_raw(__result);
+            let __result = ();
             if let Some(obj) = __var0 {
                 (*vcl).put(obj, &PRIV_VCL_METHODS);
             }
-            let __result = Box::new(__result);
-            *__objp = Box::into_raw(__result);
+            __result
         }
         unsafe extern "C" fn vmod_c_PerVcl__fini(__objp: *mut *mut PerVcl) {
             drop(Box::from_raw(*__objp));
             *__objp = ::std::ptr::null_mut();
+            let __result = ();
+            __result
         }
         unsafe extern "C" fn vmod_c_PerVcl_both(
             __ctx: *mut vrt_ctx,
@@ -133,6 +138,7 @@ mod task {
             if let Some(obj) = __var1 {
                 (*tsk).put(obj, &PRIV_TASK_METHODS);
             }
+            __result
         }
         unsafe extern "C" fn vmod_c_PerVcl_both_pos(
             __ctx: *mut vrt_ctx,
@@ -145,11 +151,11 @@ mod task {
             let __obj = __obj.as_ref().unwrap();
             let mut __var1 = (*tsk).take();
             let __var2 = vcl.as_ref().and_then(|v| v.get_ref());
-            let __var3: i64 = val.into();
-            let __result = __obj.both_pos(&mut __var1, __var2, __var3);
+            let __result = __obj.both_pos(&mut __var1, __var2, val.into());
             if let Some(obj) = __var1 {
                 (*tsk).put(obj, &PRIV_TASK_METHODS);
             }
+            __result
         }
         #[repr(C)]
         struct arg_vmod_task_PerVcl_both_opt {
@@ -168,15 +174,16 @@ mod task {
             let __obj = __obj.as_ref().unwrap();
             let mut __var1 = (*__args.tsk).take();
             let __var2 = __args.vcl.as_ref().and_then(|v| v.get_ref());
-            let __var3: Option<i64> = if __args.valid_opt != 0 {
-                __args.opt.into()
-            } else {
-                None
-            };
-            let __result = __obj.both_opt(&mut __var1, __var2, __var3);
+            let __result = __obj
+                .both_opt(
+                    &mut __var1,
+                    __var2,
+                    if __args.valid_opt != 0 { __args.opt.into() } else { None },
+                );
             if let Some(obj) = __var1 {
                 (*__args.tsk).put(obj, &PRIV_TASK_METHODS);
             }
+            __result
         }
         #[repr(C)]
         pub struct VmodExports {

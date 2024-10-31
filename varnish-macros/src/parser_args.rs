@@ -151,10 +151,11 @@ impl ParamType {
         } else if is_vcl_name.is_some() {
             only_in! { Constructor, "#[vcl_name] params are only allowed in object constructors" }
             unique! { has_vcl_name, "#[vcl_name] param is allowed only once in a function args list" }
-            if !matches!(ParamTy::try_parse(arg_ty), Some(ParamTy::Str)) {
-                error! { "#[vcl_name] params must be declared as `&str`" }
-            }
-            Self::VclName
+            let arg_ty = match ParamTy::try_parse(arg_ty) {
+                Some(ty) if matches!(ty, ParamTy::Str | ParamTy::CStr) => ty,
+                _ => error! { "#[vcl_name] params must be declared as `&str` or `&CStr`" },
+            };
+            Self::VclName(ParamInfo::new(arg_ty, Value::Null, ParamKind::Regular))
         } else if as_simple_ty(arg_ty)
             .filter(|ident| *ident == "Event")
             .is_some()

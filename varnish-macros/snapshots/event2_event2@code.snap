@@ -4,8 +4,8 @@ snapshot_kind: text
 ---
 mod event2 {
     #[allow(non_snake_case, unused_imports, unused_qualifications, unused_variables)]
+    #[allow(clippy::needless_question_mark)]
     mod varnish_generated {
-        use std::borrow::Cow;
         use std::ffi::{c_char, c_int, c_uint, c_void, CStr};
         use std::ptr::null;
         use varnish::ffi::{
@@ -21,14 +21,17 @@ mod event2 {
             __ev: VclEvent,
         ) -> VCL_INT {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::on_event(&__ctx, __ev);
-            match __result {
-                Ok(_) => VCL_INT(0),
-                Err(err) => {
+            let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
+                let __result = super::on_event(&__ctx, __ev)?;
+                let __result = VCL_INT(0);
+                Ok(__result)
+            };
+            let __result = __call_user_func();
+            __result
+                .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     VCL_INT(1)
-                }
-            }
+                })
         }
         #[repr(C)]
         pub struct VmodExports {

@@ -421,16 +421,16 @@ impl From<VCL_STRING> for &CStr {
         <Option<&CStr>>::from(value).unwrap_or_default()
     }
 }
-impl<'a> From<VCL_STRING> for Option<Cow<'a, str>> {
-    fn from(value: VCL_STRING) -> Self {
-        // Lossy string in case of any non-unicode characters
-        <Option<&CStr>>::from(value).map(CStr::to_string_lossy)
+impl<'a> TryFrom<VCL_STRING> for Option<&'a str> {
+    type Error = VclError;
+    fn try_from(value: VCL_STRING) -> Result<Self, Self::Error> {
+        Ok(<Option<&CStr>>::from(value).map(CStr::to_str).transpose()?)
     }
 }
-impl<'a> From<VCL_STRING> for Cow<'a, str> {
-    fn from(value: VCL_STRING) -> Self {
-        // Lossy string and also convert null to ""
-        <Option<Cow<'a, str>>>::from(value).unwrap_or(Cow::Borrowed(""))
+impl<'a> TryFrom<VCL_STRING> for &'a str {
+    type Error = VclError;
+    fn try_from(value: VCL_STRING) -> Result<Self, Self::Error> {
+        Ok(<Option<&'a str>>::try_from(value)?.unwrap_or(""))
     }
 }
 

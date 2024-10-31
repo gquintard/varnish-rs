@@ -169,8 +169,10 @@ impl Generator {
                 unused_qualifications,
                 unused_variables,
             )]
+            #[allow(
+                clippy::needless_question_mark,
+            )]
             mod varnish_generated {
-                use std::borrow::Cow;
                 use std::ffi::{c_char, c_int, c_uint, c_void, CStr};
                 use std::ptr::null;
                 use varnish::ffi::{
