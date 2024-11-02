@@ -24,7 +24,7 @@ version = "7.6"
 
 [build-dependencies]
 bindgen.workspace = true
-convert_case.workspace = true
+bindgen_helpers.workspace = true
 pkg-config.workspace = true
 
 [dependencies]

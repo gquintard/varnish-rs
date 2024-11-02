@@ -1,65 +1,6 @@
-use std::collections::HashMap;
+use bindgen_helpers::{rename_enum, Renamer};
 use std::path::PathBuf;
 use std::{env, fs};
-
-use convert_case::Case::Pascal;
-use convert_case::Casing;
-
-#[derive(Debug, Default)]
-struct ParseCallbacks {
-    /// C items and their Rust names
-    item_names: HashMap<&'static str, &'static str>,
-    /// C enums (i.e. "enum foo"),  the prefix to remove from their values,
-    /// and explicit renames for some values without prefix
-    enum_renames: HashMap<&'static str, (&'static str, HashMap<&'static str, &'static str>)>,
-}
-
-impl ParseCallbacks {
-    fn get_regex_str(&self) -> String {
-        self.item_names.keys().fold(String::new(), |mut acc, x| {
-            if !acc.is_empty() {
-                acc.push('|');
-            }
-            acc.push_str(x);
-            acc
-        })
-    }
-}
-
-impl bindgen::callbacks::ParseCallbacks for ParseCallbacks {
-    fn enum_variant_name(
-        &self,
-        enum_name: Option<&str>,
-        value: &str,
-        _variant_value: bindgen::callbacks::EnumVariantValue,
-    ) -> Option<String> {
-        self.enum_renames.get(enum_name?).map(|v| {
-            let val = value.trim_start_matches(v.0);
-            v.1.get(val)
-                .map(|x| (*x).to_string())
-                .unwrap_or(val.to_case(Pascal))
-        })
-        // // Print unrecognized enum values for debugging
-        // .or_else(|| {
-        //     let name = enum_name.unwrap();
-        //     println!("cargo::warning=Unrecognized {name} - {value}");
-        //     None
-        // })
-    }
-
-    fn item_name(&self, item_name: &str) -> Option<String> {
-        self.item_names.get(item_name).map(|x| (*x).to_string())
-    }
-}
-
-macro_rules! rename {
-    ( $cb:expr, $name_c:literal, $name_rs:literal, $rm_prefix:literal $(, $itm:literal => $ren:literal)* $(,)? ) => {
-        $cb.item_names.insert($name_c, $name_rs);
-        $cb.enum_renames.insert(concat!("enum ", $name_c), (
-            $rm_prefix,
-            vec![$( ($itm, $ren), )*].into_iter().collect()));
-    };
-}
 
 fn main() {
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
@@ -69,20 +10,20 @@ fn main() {
         return;
     };
 
-    let mut cb = ParseCallbacks::default();
-    rename!(cb, "VSL_tag_e", "VslTag", "SLT_"); // SLT_Debug
-    rename!(cb, "boc_state_e", "BocState", "BOS_"); // BOS_INVALID
-    rename!(cb, "director_state_e", "DirectorState", "DIR_S_", "HDRS" => "Headers"); // DIR_S_NULL
-    rename!(cb, "gethdr_e", "GetHeader", "HDR_"); // HDR_REQ_TOP
-    rename!(cb, "sess_attr", "SessionAttr", "SA_"); // SA_TRANSPORT
-    rename!(cb, "lbody_e", "Body", "LBODY_"); // LBODY_SET_STRING
-    rename!(cb, "task_prio", "TaskPriority", "TASK_QUEUE_"); // TASK_QUEUE_BO
-    rename!(cb, "vas_e", "Vas", "VAS_"); // VAS_WRONG
-    rename!(cb, "vcl_event_e", "VclEvent", "VCL_EVENT_"); // VCL_EVENT_LOAD
-    rename!(cb, "vcl_func_call_e", "VclFuncCall", "VSUB_"); // VSUB_STATIC
-    rename!(cb, "vcl_func_fail_e", "VclFuncFail", "VSUB_E_"); // VSUB_E_OK
-    rename!(cb, "vdp_action", "VdpAction", "VDP_"); // VDP_NULL
-    rename!(cb, "vfp_status", "VfpStatus", "VFP_"); // VFP_ERROR
+    let mut ren = Renamer::default();
+    rename_enum!(ren, "VSL_tag_e" => "VslTag", prefix: "SLT_"); // SLT_Debug
+    rename_enum!(ren, "boc_state_e" => "BocState", prefix: "BOS_"); // BOS_INVALID
+    rename_enum!(ren, "director_state_e" => "DirectorState", prefix: "DIR_S_", "HDRS" => "Headers"); // DIR_S_NULL
+    rename_enum!(ren, "gethdr_e" => "GetHeader", prefix: "HDR_"); // HDR_REQ_TOP
+    rename_enum!(ren, "sess_attr" => "SessionAttr", prefix: "SA_"); // SA_TRANSPORT
+    rename_enum!(ren, "lbody_e" => "Body", prefix: "LBODY_"); // LBODY_SET_STRING
+    rename_enum!(ren, "task_prio" => "TaskPriority", prefix: "TASK_QUEUE_"); // TASK_QUEUE_BO
+    rename_enum!(ren, "vas_e" => "Vas", prefix: "VAS_"); // VAS_WRONG
+    rename_enum!(ren, "vcl_event_e" => "VclEvent", prefix: "VCL_EVENT_"); // VCL_EVENT_LOAD
+    rename_enum!(ren, "vcl_func_call_e" => "VclFuncCall", prefix: "VSUB_"); // VSUB_STATIC
+    rename_enum!(ren, "vcl_func_fail_e" => "VclFuncFail", prefix: "VSUB_E_"); // VSUB_E_OK
+    rename_enum!(ren, "vdp_action" => "VdpAction", prefix: "VDP_"); // VDP_NULL
+    rename_enum!(ren, "vfp_status" => "VfpStatus", prefix: "VFP_"); // VFP_ERROR
 
     println!("cargo:rustc-link-lib=varnishapi");
     println!("cargo:rerun-if-changed=src/wrapper.h");
@@ -109,8 +50,8 @@ fn main() {
         .new_type_alias("vtim_.*") // VCL_DURATION = vtim_dur = f64
         //
         // FIXME: some enums should probably be done as rustified_enum (exhaustive)
-        .rustified_non_exhaustive_enum(cb.get_regex_str())
-        .parse_callbacks(Box::new(cb))
+        .rustified_non_exhaustive_enum(ren.get_regex_str())
+        .parse_callbacks(Box::new(ren))
         //
         .generate()
         .expect("Unable to generate bindings");
