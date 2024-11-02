@@ -43,8 +43,7 @@ test: build
 
 # Run tests, and accept their results. Requires insta to be installed.
 bless:
-    rm -rf varnish-macros/snapshots
-    TRYBUILD=overwrite cargo insta test -p varnish-macros --accept
+    TRYBUILD=overwrite cargo insta test -p varnish-macros --accept --unreferenced=delete
 
 # Test documentation
 test-doc:
