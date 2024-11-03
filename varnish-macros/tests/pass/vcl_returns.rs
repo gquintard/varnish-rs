@@ -15,135 +15,135 @@ mod vcl_returns {
     };
 
     pub fn val_acl() -> VCL_ACL {
-        panic!()
+        VCL_ACL::default()
     }
     pub fn res_acl() -> Result<VCL_ACL, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn val_backend() -> VCL_BACKEND {
-        panic!()
+        VCL_BACKEND::default()
     }
     pub fn res_backend() -> Result<VCL_BACKEND, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn val_blob() -> VCL_BLOB {
-        panic!()
+        VCL_BLOB::default()
     }
     pub fn res_blob() -> Result<VCL_BLOB, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn val_body() -> VCL_BODY {
-        panic!()
+        VCL_BODY::default()
     }
     pub fn res_body() -> Result<VCL_BODY, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn val_bool() -> VCL_BOOL {
-        panic!()
+        VCL_BOOL::default()
     }
     pub fn res_bool() -> Result<VCL_BOOL, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn val_bytes() -> VCL_BYTES {
-        panic!()
+        VCL_BYTES::default()
     }
     pub fn res_bytes() -> Result<VCL_BYTES, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn val_duration() -> VCL_DURATION {
-        panic!()
+        VCL_DURATION::default()
     }
     pub fn res_duration() -> Result<VCL_DURATION, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn val_enum() -> VCL_ENUM {
-        panic!()
+        VCL_ENUM::default()
     }
     pub fn res_enum() -> Result<VCL_ENUM, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn val_header() -> VCL_HEADER {
-        panic!()
+        VCL_HEADER::default()
     }
     pub fn res_header() -> Result<VCL_HEADER, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn val_http() -> VCL_HTTP {
-        panic!()
+        VCL_HTTP::default()
     }
     pub fn res_http() -> Result<VCL_HTTP, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn val_instance() -> VCL_INSTANCE {
         panic!()
     }
     // pub fn res_instance() -> Result<VCL_INSTANCE, &'static str> {
-    //     panic!()
+    //     Err("")
     // }
     pub fn val_int() -> VCL_INT {
-        panic!()
+        VCL_INT::default()
     }
     pub fn res_int() -> Result<VCL_INT, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn val_ip() -> VCL_IP {
-        panic!()
+        VCL_IP::default()
     }
     pub fn res_ip() -> Result<VCL_IP, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn val_probe() -> VCL_PROBE {
-        panic!()
+        VCL_PROBE::default()
     }
     pub fn res_probe() -> Result<VCL_PROBE, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn val_real() -> VCL_REAL {
-        panic!()
+        VCL_REAL::default()
     }
     pub fn res_real() -> Result<VCL_REAL, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn val_regex() -> VCL_REGEX {
-        panic!()
+        VCL_REGEX::default()
     }
     pub fn res_regex() -> Result<VCL_REGEX, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn val_stevedore() -> VCL_STEVEDORE {
-        panic!()
+        VCL_STEVEDORE::default()
     }
     pub fn res_stevedore() -> Result<VCL_STEVEDORE, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn val_strands() -> VCL_STRANDS {
-        panic!()
+        VCL_STRANDS::default()
     }
     pub fn res_strands() -> Result<VCL_STRANDS, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn val_string() -> VCL_STRING {
-        panic!()
+        VCL_STRING::default()
     }
     pub fn res_string() -> Result<VCL_STRING, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn val_sub() -> VCL_SUB {
-        panic!()
+        VCL_SUB::default()
     }
     pub fn res_sub() -> Result<VCL_SUB, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn val_time() -> VCL_TIME {
-        panic!()
+        VCL_TIME::default()
     }
     pub fn res_time() -> Result<VCL_TIME, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn val_vcl() -> VCL_VCL {
-        panic!()
+        VCL_VCL::default()
     }
     pub fn res_vcl() -> Result<VCL_VCL, &'static str> {
-        panic!()
+        Err("")
     }
 }

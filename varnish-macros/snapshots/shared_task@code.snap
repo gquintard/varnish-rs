@@ -284,43 +284,27 @@ mod task {
     }
     use super::{PerTask, PerVcl};
     use varnish::vcl::{Ctx, Event};
-    pub fn on_event(evt: Event, ctx: &mut Ctx, vcl: &mut Option<Box<PerVcl>>) {
-        panic!()
-    }
-    pub fn per_vcl_val(vcl: Option<&PerVcl>) {
-        panic!()
-    }
-    pub fn per_vcl_opt(vcl: Option<&PerVcl>, op: Option<i64>) {
-        panic!()
-    }
+    pub fn on_event(evt: Event, ctx: &mut Ctx, vcl: &mut Option<Box<PerVcl>>) {}
+    pub fn per_vcl_val(vcl: Option<&PerVcl>) {}
+    pub fn per_vcl_opt(vcl: Option<&PerVcl>, op: Option<i64>) {}
     impl PerVcl {
         pub fn new(vcl: &mut Option<Box<PerVcl>>) -> Self {
-            panic!()
+            PerVcl
         }
-        pub fn both(&self, tsk: &mut Option<Box<PerTask>>, vcl: Option<&PerVcl>) {
-            panic!()
-        }
+        pub fn both(&self, tsk: &mut Option<Box<PerTask>>, vcl: Option<&PerVcl>) {}
         pub fn both_pos(
             &self,
             tsk: &mut Option<Box<PerTask>>,
             vcl: Option<&PerVcl>,
             val: i64,
-        ) {
-            panic!()
-        }
+        ) {}
         pub fn both_opt(
             &self,
             tsk: &mut Option<Box<PerTask>>,
             vcl: Option<&PerVcl>,
             opt: Option<i64>,
-        ) {
-            panic!()
-        }
+        ) {}
     }
-    pub fn per_tsk_val(tsk: &mut Option<Box<PerTask>>) {
-        panic!()
-    }
-    pub fn per_tsk_opt(tsk: &mut Option<Box<PerTask>>, op: Option<i64>) {
-        panic!()
-    }
+    pub fn per_tsk_val(tsk: &mut Option<Box<PerTask>>) {}
+    pub fn per_tsk_opt(tsk: &mut Option<Box<PerTask>>, op: Option<i64>) {}
 }

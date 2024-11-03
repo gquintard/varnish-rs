@@ -58,7 +58,7 @@ mod types {
             /// doc comment for `cap`
             cap: Option<i64>,
         ) -> Self {
-            panic!()
+            DocStruct
         }
         /// doctest for the object function
         #[rustfmt::skip]

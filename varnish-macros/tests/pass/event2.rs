@@ -10,6 +10,6 @@ mod event2 {
 
     #[event]
     pub fn on_event(ctx: &Ctx, event: Event) -> Result<(), &'static str> {
-        panic!()
+        Ok(())
     }
 }

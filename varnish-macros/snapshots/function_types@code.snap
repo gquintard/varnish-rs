@@ -1003,26 +1003,24 @@ mod types {
     use varnish::ffi::VCL_STRING;
     use varnish::vcl::{CowProbe, Probe, Workspace};
     use varnish_sys::vcl::VclError;
-    pub fn to_void() {
-        panic!()
-    }
+    pub fn to_void() {}
     pub fn to_res_void_err() -> Result<(), VclError> {
-        panic!()
+        Ok(())
     }
     pub fn to_res_str_err() -> Result<(), &'static str> {
-        panic!()
+        Ok(())
     }
     pub fn to_res_box_err() -> Result<(), Box<dyn Error>> {
-        panic!()
+        Ok(())
     }
     pub fn type_bool(_v: bool) {}
     pub fn type_bool_dflt(_v: bool) {}
     pub fn opt_bool(_v: Option<bool>) {}
     pub fn to_bool() -> bool {
-        panic!()
+        false
     }
     pub fn to_res_bool() -> Result<bool, &'static str> {
-        panic!()
+        Ok(false)
     }
     pub fn type_cstr(_v: &CStr) {}
     pub fn opt_cstr(_v: Option<&CStr>) {}
@@ -1034,28 +1032,28 @@ mod types {
     pub fn type_duration(_v: Duration) {}
     pub fn opt_duration(_v: Option<Duration>) {}
     pub fn to_duration() -> Duration {
-        panic!()
+        Duration::default()
     }
     pub fn to_res_duration() -> Result<Duration, &'static str> {
-        panic!()
+        Ok(Duration::default())
     }
     pub fn type_f64(_v: f64) {}
     pub fn type_f64_dflt(_v: f64) {}
     pub fn opt_f64(_v: Option<f64>) {}
     pub fn to_f64() -> f64 {
-        panic!()
+        0.0
     }
     pub fn to_res_f64() -> Result<f64, &'static str> {
-        panic!()
+        Ok(0.0)
     }
     pub fn type_i64(_v: i64) {}
     pub fn type_i64_dflt(_v: i64) {}
     pub fn opt_i64(_v: Option<i64>) {}
     pub fn to_i64() -> i64 {
-        panic!()
+        0
     }
     pub fn to_res_i64() -> Result<i64, &'static str> {
-        panic!()
+        Ok(0)
     }
     pub fn type_str(_v: &str) {}
     pub fn opt_str(_v: Option<&str>) {}
@@ -1063,22 +1061,22 @@ mod types {
     pub fn type_str_dflt(_v: &str) {}
     pub fn opt_str_dflt(_v: Option<&str>) {}
     pub fn to_str() -> &'static str {
-        panic!()
+        ""
     }
     pub fn to_res_str() -> Result<&'static str, &'static str> {
-        panic!()
+        Ok("")
     }
     pub fn to_string() -> String {
-        panic!()
+        String::default()
     }
     pub fn to_opt_string() -> Option<String> {
-        panic!()
+        None
     }
     pub fn to_res_string() -> Result<String, &'static str> {
-        panic!()
+        Ok(String::default())
     }
     pub fn to_res_opt_string() -> Result<Option<String>, &'static str> {
-        panic!()
+        Ok(None)
     }
     pub fn type_probe(_v: Option<Probe>) {}
     pub fn type_probe_req(_v: Option<Probe>) {}
@@ -1086,7 +1084,7 @@ mod types {
         panic!()
     }
     pub fn to_res_probe() -> Result<Probe, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn type_cow_probe(_v: Option<CowProbe<'_>>) {}
     pub fn type_cow_probe_req(_v: Option<CowProbe<'_>>) {}
@@ -1094,24 +1092,27 @@ mod types {
         panic!()
     }
     pub fn to_res_cow_probe() -> Result<CowProbe<'static>, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn type_ip(_v: Option<SocketAddr>) {}
     pub fn type_ip_req(_v: Option<SocketAddr>) {}
     pub fn to_ip() -> SocketAddr {
-        panic!()
+        SocketAddr::new(
+            std::net::IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1)),
+            8080,
+        )
     }
     pub fn to_res_ip() -> Result<SocketAddr, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn to_vcl_string() -> VCL_STRING {
-        panic!()
+        VCL_STRING::default()
     }
     pub fn to_res_vcl_string() -> Result<VCL_STRING, &'static str> {
-        panic!()
+        Err("")
     }
     pub fn opt_i64_opt_i64(a1: i64, a2: Option<i64>, a3: i64) -> String {
-        panic!()
+        String::default()
     }
     pub fn get_ws_mut(ws: &mut Workspace) {}
     pub fn get_ws_ref(ws: &Workspace) {}
