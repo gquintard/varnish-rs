@@ -1,19 +1,18 @@
 use darling::ast::NestedMeta;
 use serde_json::Value;
 use syn::Type::Tuple;
-use syn::{FnArg, GenericArgument, Lit, Meta, Pat, PatType, Type, TypeParamBound};
+use syn::{FnArg, GenericArgument, Lit, Meta, Pat, PatType, Type};
 
 use crate::errors::error;
 use crate::model::FuncType::{Constructor, Event, Function, Method};
 use crate::model::{
-    FuncType, ParamInfo, ParamKind, ParamTy, ParamType, ParamTypeInfo, ReturnTy, ReturnType,
-    SharedTypes,
+    FuncType, OutputTy, ParamInfo, ParamKind, ParamTy, ParamType, ParamTypeInfo, SharedTypes,
 };
 use crate::parser_utils::{
     as_one_gen_arg, as_option_type, as_ref_mut_ty, as_ref_ty, as_simple_ty, as_slice_ty,
     parse_and_rm_doc, parse_shared_mut, parse_shared_ref, remove_attr,
 };
-use crate::{parser_utils, ProcResult};
+use crate::ProcResult;
 
 /// Parser state for a function parser. This is not part of the model, but helps with error detection.
 #[derive(Debug, Default)]
@@ -323,41 +322,18 @@ impl ParamTy {
     }
 }
 
-impl ReturnType {
-    /// Parse the function's return type
-    pub fn parse(return_type: &syn::ReturnType, func_type: FuncType) -> ProcResult<Self> {
-        Ok(match &return_type {
-            syn::ReturnType::Default => ReturnType::Value(ReturnTy::Default),
-            syn::ReturnType::Type(_, ty) => {
-                if let Some((ok_ty, err_ty)) = parser_utils::as_result_type(ty.as_ref()) {
-                    Self::Result(
-                        ReturnTy::parse(ok_ty, func_type, true)?,
-                        ReturnTy::parse(err_ty, func_type, false)?,
-                    )
-                } else {
-                    Self::Value(ReturnTy::parse(ty.as_ref(), func_type, true)?)
-                }
-            }
-        })
-    }
-}
-
-impl ReturnTy {
-    fn parse(ty: &Type, func_type: FuncType, is_value: bool) -> ProcResult<Self> {
+impl OutputTy {
+    pub fn parse(ty: &Type, func_type: FuncType) -> ProcResult<Self> {
         let Some(ret_ty) = Self::try_parse(ty) else {
-            if is_value {
-                Err(error(&ty, "This content type is not supported"))?
-            } else {
-                Err(error(&ty, "Result error type is not supported"))?
-            }
+            Err(error(&ty, "This content type is not supported"))?
         };
 
-        if matches!(func_type, Event) && !matches!(ret_ty, Self::Default) && is_value {
+        if matches!(func_type, Event) && !matches!(ret_ty, Self::Default) {
             Err(error(
                 &ty,
                 "Event functions must not return a value, or return a Result<(), _>",
             ))?;
-        } else if matches!(ret_ty, Self::SelfType) && !matches!(func_type, Constructor) {
+        } else if !matches!(func_type, Constructor) && matches!(ret_ty, Self::SelfType) {
             Err(error(
                 ty,
                 "`Self` return type is only allowed in object constructors named `new`",
@@ -376,8 +352,6 @@ impl ReturnTy {
                 return Some(Self::String);
             } else if ident == "Self" {
                 return Some(Self::SelfType);
-            } else if ident == "VclError" {
-                return Some(Self::VclError);
             }
             let ident = ident.to_string();
             if ident.starts_with("VCL_")
@@ -396,12 +370,9 @@ impl ReturnTy {
                 }
             }
             if let Some(ty) = as_ref_ty(ty).and_then(as_slice_ty).and_then(as_simple_ty) {
-                // panic!("ident: {:?}", ty);
-                // if let Some(ident) = as_simple_ty(ty) {
                 if ty == "u8" {
                     // `&[u8]`
                     return Some(Self::Bytes);
-                    // }
                 }
             }
         }
@@ -409,18 +380,6 @@ impl ReturnTy {
             if v.elems.is_empty() {
                 // `()`
                 return Some(Self::Default);
-            }
-        }
-        if let Some(Type::TraitObject(v)) = parser_utils::as_box_type(ty) {
-            // `Box<dyn Error>`
-            if v.bounds.len() == 1 {
-                if let Some(TypeParamBound::Trait(bound)) = v.bounds.first() {
-                    if let Some(v) = bound.path.get_ident() {
-                        if v == "Error" {
-                            return Some(Self::BoxDynError);
-                        }
-                    }
-                }
             }
         }
 

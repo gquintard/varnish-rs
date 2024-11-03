@@ -22,9 +22,8 @@ VmodInfo {
                     ty: SharedPerVclMut,
                 },
             ],
-            returns: Value(
-                Default,
-            ),
+            output_ty: Default,
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -45,9 +44,8 @@ VmodInfo {
                     ty: SharedPerVclRef,
                 },
             ],
-            returns: Value(
-                Default,
-            ),
+            output_ty: Default,
+            out_result: false,
         },
     ],
     objects: [],

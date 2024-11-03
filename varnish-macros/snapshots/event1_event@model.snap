@@ -22,9 +22,8 @@ VmodInfo {
                     ty: Event,
                 },
             ],
-            returns: Value(
-                Default,
-            ),
+            output_ty: Default,
+            out_result: false,
         },
     ],
     objects: [],

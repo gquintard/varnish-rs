@@ -91,7 +91,7 @@ mod tuple {
         pub static Vmod_tuple_Data: VmodData = VmodData {
             vrt_major: 0,
             vrt_minor: 0,
-            file_id: c"e5bea4170c37d3b58727c522dba1121d879d0b838e218b619f4c04d85a3b9843"
+            file_id: c"5b65727e391b473720d27116d47e804a9625e6d3e510bc6bea4f900185681125"
                 .as_ptr(),
             name: c"tuple".as_ptr(),
             func_name: c"Vmod_vmod_tuple_Func".as_ptr(),
@@ -101,7 +101,7 @@ mod tuple {
             json: JSON.as_ptr(),
             proto: null(),
         };
-        const JSON: &CStr = c"VMOD_JSON_SPEC\u{2}\n[\n  [\n    \"$VMOD\",\n    \"1.0\",\n    \"tuple\",\n    \"Vmod_vmod_tuple_Func\",\n    \"e5bea4170c37d3b58727c522dba1121d879d0b838e218b619f4c04d85a3b9843\",\n    \"Varnish (version) (hash)\",\n    \"0\",\n    \"0\"\n  ],\n  [\n    \"$CPROTO\",\n    \"\\ntypedef VCL_VOID td_vmod_tuple_per_tsk_val(\\n    VRT_CTX,\\n    struct vmod_priv *,\\n    struct vmod_priv *\\n);\\n\\nstruct Vmod_vmod_tuple_Func {\\n  vmod_event_f *f_on_event;\\n  td_vmod_tuple_per_tsk_val *f_per_tsk_val;\\n};\\n\\nstatic struct Vmod_vmod_tuple_Func Vmod_vmod_tuple_Func;\"\n  ],\n  [\n    \"$EVENT\",\n    \"Vmod_vmod_tuple_Func.f_on_event\"\n  ],\n  [\n    \"$FUNC\",\n    \"per_tsk_val\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_tuple_Func.f_per_tsk_val\",\n      \"\",\n      [\n        \"PRIV_TASK\",\n        \"tsk_vals\"\n      ],\n      [\n        \"PRIV_VCL\",\n        \"vcl_vals\"\n      ]\n    ]\n  ]\n]\n\u{3}";
+        const JSON: &CStr = c"VMOD_JSON_SPEC\u{2}\n[\n  [\n    \"$VMOD\",\n    \"1.0\",\n    \"tuple\",\n    \"Vmod_vmod_tuple_Func\",\n    \"5b65727e391b473720d27116d47e804a9625e6d3e510bc6bea4f900185681125\",\n    \"Varnish (version) (hash)\",\n    \"0\",\n    \"0\"\n  ],\n  [\n    \"$CPROTO\",\n    \"\\ntypedef VCL_VOID td_vmod_tuple_per_tsk_val(\\n    VRT_CTX,\\n    struct vmod_priv *,\\n    struct vmod_priv *\\n);\\n\\nstruct Vmod_vmod_tuple_Func {\\n  vmod_event_f *f_on_event;\\n  td_vmod_tuple_per_tsk_val *f_per_tsk_val;\\n};\\n\\nstatic struct Vmod_vmod_tuple_Func Vmod_vmod_tuple_Func;\"\n  ],\n  [\n    \"$EVENT\",\n    \"Vmod_vmod_tuple_Func.f_on_event\"\n  ],\n  [\n    \"$FUNC\",\n    \"per_tsk_val\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_tuple_Func.f_per_tsk_val\",\n      \"\",\n      [\n        \"PRIV_TASK\",\n        \"tsk_vals\"\n      ],\n      [\n        \"PRIV_VCL\",\n        \"vcl_vals\"\n      ]\n    ]\n  ]\n]\n\u{3}";
     }
     use super::{PerTask1, PerTask2, PerVcl1, PerVcl2};
     pub fn on_event(vcl_vals: &mut Option<Box<(PerVcl1, PerVcl2)>>) {

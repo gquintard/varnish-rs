@@ -1,6 +1,7 @@
-use bindgen_helpers::{rename_enum, Renamer};
 use std::path::PathBuf;
 use std::{env, fs};
+
+use bindgen_helpers::{rename_enum, Renamer};
 
 fn main() {
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");

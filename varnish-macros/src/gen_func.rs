@@ -7,7 +7,7 @@ use quote::{format_ident, quote};
 use serde_json::{json, Value};
 
 use crate::model::FuncType::{Constructor, Destructor, Event, Function, Method};
-use crate::model::{FuncInfo, ParamKind, ParamTy, ParamType, ParamTypeInfo, ReturnTy, ReturnType};
+use crate::model::{FuncInfo, OutputTy, ParamKind, ParamTy, ParamType, ParamTypeInfo};
 use crate::names::{Names, ToIdent};
 
 #[derive(Debug, Default)]
@@ -377,9 +377,9 @@ impl FuncProcessor {
     fn do_fn_return(&mut self, info: &FuncInfo) {
         let ty = if matches!(info.func_type, Event) {
             // Rust event functions do not return value, but their C wrappers must return an int
-            &ReturnTy::ParamType(ParamTy::I64)
+            &OutputTy::ParamType(ParamTy::I64)
         } else {
-            info.returns.value_type()
+            &info.output_ty
         };
         self.output_hdr = ty.to_c_type();
         self.wrap_fn_output = if self.output_hdr == "VCL_VOID" {
@@ -481,27 +481,15 @@ impl FuncProcessor {
     }
 
     fn gen_result_handler_code(&self, info: &FuncInfo) -> TokenStream {
-        let is_result;
-        let on_error = match &info.returns {
-            ReturnType::Result(_, err) => {
-                is_result = true;
-                let err = if matches!(err, ReturnTy::BoxDynError) {
-                    quote! { &err.to_string() }
-                } else {
-                    quote! { err }
-                };
-                quote! { __ctx.fail(#err); }
-            }
-            ReturnType::Value(_) => {
-                is_result = false;
-                quote! {}
-            }
+        let on_error = if info.out_result {
+            quote! { __ctx.fail(err); }
+        } else {
+            quote! {}
         };
-        let is_vcl_type = matches!(info.returns.value_type(), ReturnTy::VclType(_));
 
         // Events require special handling - convert errors into 1, otherwise 0
         if matches!(info.func_type, Event) {
-            return if is_result {
+            return if info.out_result {
                 quote! {
                     match __result {
                         Ok(_) => VCL_INT(0),
@@ -526,7 +514,7 @@ impl FuncProcessor {
             }
         } else if self.output_hdr == "VCL_VOID" {
             quote! {}
-        } else if is_vcl_type {
+        } else if matches!(info.output_ty, OutputTy::VclType(_)) {
             quote! { __result }
         } else {
             quote! {
@@ -540,7 +528,7 @@ impl FuncProcessor {
             }
         };
 
-        if is_result {
+        if info.out_result {
             quote! {
                 match __result {
                     Ok(__result) => {

@@ -36,9 +36,8 @@ VmodInfo {
                     ty: SharedPerVclMut,
                 },
             ],
-            returns: Value(
-                Default,
-            ),
+            output_ty: Default,
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -53,9 +52,8 @@ VmodInfo {
                     ty: SharedPerVclRef,
                 },
             ],
-            returns: Value(
-                Default,
-            ),
+            output_ty: Default,
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -82,9 +80,8 @@ VmodInfo {
                     ),
                 },
             ],
-            returns: Value(
-                Default,
-            ),
+            output_ty: Default,
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -99,9 +96,8 @@ VmodInfo {
                     ty: SharedPerTask,
                 },
             ],
-            returns: Value(
-                Default,
-            ),
+            output_ty: Default,
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -128,9 +124,8 @@ VmodInfo {
                     ),
                 },
             ],
-            returns: Value(
-                Default,
-            ),
+            output_ty: Default,
+            out_result: false,
         },
     ],
     objects: [
@@ -150,9 +145,8 @@ VmodInfo {
                         ty: SharedPerVclMut,
                     },
                 ],
-                returns: Value(
-                    SelfType,
-                ),
+                output_ty: SelfType,
+                out_result: false,
             },
             destructor: FuncInfo {
                 func_type: Destructor,
@@ -160,9 +154,8 @@ VmodInfo {
                 docs: "",
                 has_optional_args: false,
                 args: [],
-                returns: Value(
-                    Default,
-                ),
+                output_ty: Default,
+                out_result: false,
             },
             funcs: [
                 FuncInfo {
@@ -190,9 +183,8 @@ VmodInfo {
                             ty: SharedPerVclRef,
                         },
                     ],
-                    returns: Value(
-                        Default,
-                    ),
+                    output_ty: Default,
+                    out_result: false,
                 },
                 FuncInfo {
                     func_type: Method,
@@ -231,9 +223,8 @@ VmodInfo {
                             ),
                         },
                     ],
-                    returns: Value(
-                        Default,
-                    ),
+                    output_ty: Default,
+                    out_result: false,
                 },
                 FuncInfo {
                     func_type: Method,
@@ -272,9 +263,8 @@ VmodInfo {
                             ),
                         },
                     ],
-                    returns: Value(
-                        Default,
-                    ),
+                    output_ty: Default,
+                    out_result: false,
                 },
             ],
         },

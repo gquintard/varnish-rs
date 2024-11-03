@@ -30,12 +30,8 @@ VmodInfo {
                     ty: Event,
                 },
             ],
-            returns: Result(
-                Default,
-                ParamType(
-                    Str,
-                ),
-            ),
+            output_ty: Default,
+            out_result: true,
         },
     ],
     objects: [],

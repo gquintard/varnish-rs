@@ -138,7 +138,7 @@ fn fn_sig(func: &FuncInfo, user_args: &Vec<(&ParamTypeInfo, &ParamInfo)>) -> Str
         wrt!(res, "`");
     }
     if matches!(func.func_type, FuncType::Function | FuncType::Method) {
-        wrt!(res, "{} ", func.returns.value_type().to_vcc_type());
+        wrt!(res, "{} ", func.output_ty.to_vcc_type());
     }
     wrt!(res, "{}(", func.ident);
     let mut first = true;
