@@ -48,7 +48,8 @@ pub struct FuncInfo {
     pub docs: String,
     pub has_optional_args: bool,
     pub args: Vec<ParamTypeInfo>,
-    pub returns: ReturnType,
+    pub output_ty: OutputTy,
+    pub out_result: bool,
 }
 
 /// What kind of function is this?
@@ -70,21 +71,6 @@ impl FuncType {
             Self::Destructor => "$FINI",
             Self::Method => "$METHOD",
             Self::Event => "$EVENT",
-        }
-    }
-}
-
-/// Represents the return type of function - either the value itself, or a `Result` with an error.
-#[derive(Debug, Clone)]
-pub enum ReturnType {
-    Value(ReturnTy),
-    Result(ReturnTy, ReturnTy),
-}
-
-impl ReturnType {
-    pub fn value_type(&self) -> &ReturnTy {
-        match self {
-            Self::Value(ty) | Self::Result(ty, _) => ty,
         }
     }
 }
@@ -208,18 +194,16 @@ impl ParamTy {
 
 /// Represents all return types of functions.
 #[derive(Debug, Clone)]
-pub enum ReturnTy {
+pub enum OutputTy {
     Default, // Nothing is returned
     SelfType,
     ParamType(ParamTy),
     String,
     Bytes,
-    BoxDynError,     // Error type only
-    VclError,        // Error type only
     VclType(String), // Raw VCL type, stored as original "VCL_..." string
 }
 
-impl ReturnTy {
+impl OutputTy {
     pub fn to_vcc_type(&self) -> String {
         match self {
             // Self is returned by obj constructors which are void in VCC
@@ -227,7 +211,6 @@ impl ReturnTy {
             Self::ParamType(ty) => ty.to_vcc_type().into(),
             Self::Bytes | Self::String => "STRING".into(),
             Self::VclType(ty) => ty[4..].to_string(), // remove "VCL_" prefix
-            Self::BoxDynError | Self::VclError => "VCC-SomeError".into(), // internal to the generator
         }
     }
 
@@ -238,7 +221,6 @@ impl ReturnTy {
             Self::ParamType(ty) => ty.to_c_type().into(),
             Self::Bytes | Self::String => "VCL_STRING".into(),
             Self::SelfType | Self::Default => "VCL_VOID".into(),
-            Self::BoxDynError | Self::VclError => "C-BoxDynError".into(), // internal to the generator
             Self::VclType(ty) => ty.into(),
         }
     }

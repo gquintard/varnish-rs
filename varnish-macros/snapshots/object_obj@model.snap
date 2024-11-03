@@ -32,9 +32,8 @@ VmodInfo {
                         ),
                     },
                 ],
-                returns: Value(
-                    SelfType,
-                ),
+                output_ty: SelfType,
+                out_result: false,
             },
             destructor: FuncInfo {
                 func_type: Destructor,
@@ -42,9 +41,8 @@ VmodInfo {
                 docs: "",
                 has_optional_args: false,
                 args: [],
-                returns: Value(
-                    Default,
-                ),
+                output_ty: Default,
+                out_result: false,
             },
             funcs: [
                 FuncInfo {
@@ -84,9 +82,8 @@ VmodInfo {
                             ),
                         },
                     ],
-                    returns: Value(
-                        Default,
-                    ),
+                    output_ty: Default,
+                    out_result: false,
                 },
                 FuncInfo {
                     func_type: Method,
@@ -113,9 +110,8 @@ VmodInfo {
                             ),
                         },
                     ],
-                    returns: Value(
-                        String,
-                    ),
+                    output_ty: String,
+                    out_result: false,
                 },
             ],
         },
@@ -147,9 +143,8 @@ VmodInfo {
                         ty: VclName,
                     },
                 ],
-                returns: Value(
-                    SelfType,
-                ),
+                output_ty: SelfType,
+                out_result: false,
             },
             destructor: FuncInfo {
                 func_type: Destructor,
@@ -157,9 +152,8 @@ VmodInfo {
                 docs: "",
                 has_optional_args: false,
                 args: [],
-                returns: Value(
-                    Default,
-                ),
+                output_ty: Default,
+                out_result: false,
             },
             funcs: [
                 FuncInfo {
@@ -199,9 +193,8 @@ VmodInfo {
                             ),
                         },
                     ],
-                    returns: Value(
-                        Default,
-                    ),
+                    output_ty: Default,
+                    out_result: false,
                 },
             ],
         },

@@ -22,9 +22,8 @@ VmodInfo {
                     ty: SharedPerTask,
                 },
             ],
-            returns: Value(
-                Bytes,
-            ),
+            output_ty: Bytes,
+            out_result: false,
         },
     ],
     objects: [],

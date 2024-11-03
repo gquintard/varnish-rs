@@ -15,11 +15,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                VclType(
-                    "VCL_ACL",
-                ),
+            output_ty: VclType(
+                "VCL_ACL",
             ),
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -27,14 +26,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Result(
-                VclType(
-                    "VCL_ACL",
-                ),
-                ParamType(
-                    Str,
-                ),
+            output_ty: VclType(
+                "VCL_ACL",
             ),
+            out_result: true,
         },
         FuncInfo {
             func_type: Function,
@@ -42,11 +37,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                VclType(
-                    "VCL_BACKEND",
-                ),
+            output_ty: VclType(
+                "VCL_BACKEND",
             ),
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -54,14 +48,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Result(
-                VclType(
-                    "VCL_BACKEND",
-                ),
-                ParamType(
-                    Str,
-                ),
+            output_ty: VclType(
+                "VCL_BACKEND",
             ),
+            out_result: true,
         },
         FuncInfo {
             func_type: Function,
@@ -69,11 +59,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                VclType(
-                    "VCL_BLOB",
-                ),
+            output_ty: VclType(
+                "VCL_BLOB",
             ),
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -81,14 +70,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Result(
-                VclType(
-                    "VCL_BLOB",
-                ),
-                ParamType(
-                    Str,
-                ),
+            output_ty: VclType(
+                "VCL_BLOB",
             ),
+            out_result: true,
         },
         FuncInfo {
             func_type: Function,
@@ -96,11 +81,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                VclType(
-                    "VCL_BODY",
-                ),
+            output_ty: VclType(
+                "VCL_BODY",
             ),
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -108,14 +92,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Result(
-                VclType(
-                    "VCL_BODY",
-                ),
-                ParamType(
-                    Str,
-                ),
+            output_ty: VclType(
+                "VCL_BODY",
             ),
+            out_result: true,
         },
         FuncInfo {
             func_type: Function,
@@ -123,11 +103,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                VclType(
-                    "VCL_BOOL",
-                ),
+            output_ty: VclType(
+                "VCL_BOOL",
             ),
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -135,14 +114,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Result(
-                VclType(
-                    "VCL_BOOL",
-                ),
-                ParamType(
-                    Str,
-                ),
+            output_ty: VclType(
+                "VCL_BOOL",
             ),
+            out_result: true,
         },
         FuncInfo {
             func_type: Function,
@@ -150,11 +125,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                VclType(
-                    "VCL_BYTES",
-                ),
+            output_ty: VclType(
+                "VCL_BYTES",
             ),
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -162,14 +136,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Result(
-                VclType(
-                    "VCL_BYTES",
-                ),
-                ParamType(
-                    Str,
-                ),
+            output_ty: VclType(
+                "VCL_BYTES",
             ),
+            out_result: true,
         },
         FuncInfo {
             func_type: Function,
@@ -177,11 +147,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                VclType(
-                    "VCL_DURATION",
-                ),
+            output_ty: VclType(
+                "VCL_DURATION",
             ),
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -189,14 +158,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Result(
-                VclType(
-                    "VCL_DURATION",
-                ),
-                ParamType(
-                    Str,
-                ),
+            output_ty: VclType(
+                "VCL_DURATION",
             ),
+            out_result: true,
         },
         FuncInfo {
             func_type: Function,
@@ -204,11 +169,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                VclType(
-                    "VCL_ENUM",
-                ),
+            output_ty: VclType(
+                "VCL_ENUM",
             ),
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -216,14 +180,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Result(
-                VclType(
-                    "VCL_ENUM",
-                ),
-                ParamType(
-                    Str,
-                ),
+            output_ty: VclType(
+                "VCL_ENUM",
             ),
+            out_result: true,
         },
         FuncInfo {
             func_type: Function,
@@ -231,11 +191,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                VclType(
-                    "VCL_HEADER",
-                ),
+            output_ty: VclType(
+                "VCL_HEADER",
             ),
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -243,14 +202,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Result(
-                VclType(
-                    "VCL_HEADER",
-                ),
-                ParamType(
-                    Str,
-                ),
+            output_ty: VclType(
+                "VCL_HEADER",
             ),
+            out_result: true,
         },
         FuncInfo {
             func_type: Function,
@@ -258,11 +213,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                VclType(
-                    "VCL_HTTP",
-                ),
+            output_ty: VclType(
+                "VCL_HTTP",
             ),
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -270,14 +224,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Result(
-                VclType(
-                    "VCL_HTTP",
-                ),
-                ParamType(
-                    Str,
-                ),
+            output_ty: VclType(
+                "VCL_HTTP",
             ),
+            out_result: true,
         },
         FuncInfo {
             func_type: Function,
@@ -285,11 +235,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                VclType(
-                    "VCL_INSTANCE",
-                ),
+            output_ty: VclType(
+                "VCL_INSTANCE",
             ),
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -297,11 +246,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                VclType(
-                    "VCL_INT",
-                ),
+            output_ty: VclType(
+                "VCL_INT",
             ),
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -309,14 +257,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Result(
-                VclType(
-                    "VCL_INT",
-                ),
-                ParamType(
-                    Str,
-                ),
+            output_ty: VclType(
+                "VCL_INT",
             ),
+            out_result: true,
         },
         FuncInfo {
             func_type: Function,
@@ -324,11 +268,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                VclType(
-                    "VCL_IP",
-                ),
+            output_ty: VclType(
+                "VCL_IP",
             ),
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -336,14 +279,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Result(
-                VclType(
-                    "VCL_IP",
-                ),
-                ParamType(
-                    Str,
-                ),
+            output_ty: VclType(
+                "VCL_IP",
             ),
+            out_result: true,
         },
         FuncInfo {
             func_type: Function,
@@ -351,11 +290,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                VclType(
-                    "VCL_PROBE",
-                ),
+            output_ty: VclType(
+                "VCL_PROBE",
             ),
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -363,14 +301,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Result(
-                VclType(
-                    "VCL_PROBE",
-                ),
-                ParamType(
-                    Str,
-                ),
+            output_ty: VclType(
+                "VCL_PROBE",
             ),
+            out_result: true,
         },
         FuncInfo {
             func_type: Function,
@@ -378,11 +312,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                VclType(
-                    "VCL_REAL",
-                ),
+            output_ty: VclType(
+                "VCL_REAL",
             ),
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -390,14 +323,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Result(
-                VclType(
-                    "VCL_REAL",
-                ),
-                ParamType(
-                    Str,
-                ),
+            output_ty: VclType(
+                "VCL_REAL",
             ),
+            out_result: true,
         },
         FuncInfo {
             func_type: Function,
@@ -405,11 +334,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                VclType(
-                    "VCL_REGEX",
-                ),
+            output_ty: VclType(
+                "VCL_REGEX",
             ),
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -417,14 +345,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Result(
-                VclType(
-                    "VCL_REGEX",
-                ),
-                ParamType(
-                    Str,
-                ),
+            output_ty: VclType(
+                "VCL_REGEX",
             ),
+            out_result: true,
         },
         FuncInfo {
             func_type: Function,
@@ -432,11 +356,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                VclType(
-                    "VCL_STEVEDORE",
-                ),
+            output_ty: VclType(
+                "VCL_STEVEDORE",
             ),
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -444,14 +367,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Result(
-                VclType(
-                    "VCL_STEVEDORE",
-                ),
-                ParamType(
-                    Str,
-                ),
+            output_ty: VclType(
+                "VCL_STEVEDORE",
             ),
+            out_result: true,
         },
         FuncInfo {
             func_type: Function,
@@ -459,11 +378,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                VclType(
-                    "VCL_STRANDS",
-                ),
+            output_ty: VclType(
+                "VCL_STRANDS",
             ),
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -471,14 +389,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Result(
-                VclType(
-                    "VCL_STRANDS",
-                ),
-                ParamType(
-                    Str,
-                ),
+            output_ty: VclType(
+                "VCL_STRANDS",
             ),
+            out_result: true,
         },
         FuncInfo {
             func_type: Function,
@@ -486,11 +400,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                VclType(
-                    "VCL_STRING",
-                ),
+            output_ty: VclType(
+                "VCL_STRING",
             ),
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -498,14 +411,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Result(
-                VclType(
-                    "VCL_STRING",
-                ),
-                ParamType(
-                    Str,
-                ),
+            output_ty: VclType(
+                "VCL_STRING",
             ),
+            out_result: true,
         },
         FuncInfo {
             func_type: Function,
@@ -513,11 +422,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                VclType(
-                    "VCL_SUB",
-                ),
+            output_ty: VclType(
+                "VCL_SUB",
             ),
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -525,14 +433,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Result(
-                VclType(
-                    "VCL_SUB",
-                ),
-                ParamType(
-                    Str,
-                ),
+            output_ty: VclType(
+                "VCL_SUB",
             ),
+            out_result: true,
         },
         FuncInfo {
             func_type: Function,
@@ -540,11 +444,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                VclType(
-                    "VCL_TIME",
-                ),
+            output_ty: VclType(
+                "VCL_TIME",
             ),
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -552,14 +455,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Result(
-                VclType(
-                    "VCL_TIME",
-                ),
-                ParamType(
-                    Str,
-                ),
+            output_ty: VclType(
+                "VCL_TIME",
             ),
+            out_result: true,
         },
         FuncInfo {
             func_type: Function,
@@ -567,11 +466,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                VclType(
-                    "VCL_VCL",
-                ),
+            output_ty: VclType(
+                "VCL_VCL",
             ),
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -579,14 +477,10 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Result(
-                VclType(
-                    "VCL_VCL",
-                ),
-                ParamType(
-                    Str,
-                ),
+            output_ty: VclType(
+                "VCL_VCL",
             ),
+            out_result: true,
         },
     ],
     objects: [],

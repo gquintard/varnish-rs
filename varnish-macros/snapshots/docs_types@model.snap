@@ -15,9 +15,8 @@ VmodInfo {
             docs: "doctest on a function\nwith multiple lines\n# Big header\n## sub header\n* foo\n* bar",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                Default,
-            ),
+            output_ty: Default,
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -25,9 +24,8 @@ VmodInfo {
             docs: "",
             has_optional_args: false,
             args: [],
-            returns: Value(
-                Default,
-            ),
+            output_ty: Default,
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -60,9 +58,8 @@ VmodInfo {
                     ),
                 },
             ],
-            returns: Value(
-                Default,
-            ),
+            output_ty: Default,
+            out_result: false,
         },
         FuncInfo {
             func_type: Function,
@@ -83,9 +80,8 @@ VmodInfo {
                     ),
                 },
             ],
-            returns: Value(
-                Default,
-            ),
+            output_ty: Default,
+            out_result: false,
         },
     ],
     objects: [
@@ -111,9 +107,8 @@ VmodInfo {
                         ),
                     },
                 ],
-                returns: Value(
-                    SelfType,
-                ),
+                output_ty: SelfType,
+                out_result: false,
             },
             destructor: FuncInfo {
                 func_type: Destructor,
@@ -121,9 +116,8 @@ VmodInfo {
                 docs: "",
                 has_optional_args: false,
                 args: [],
-                returns: Value(
-                    Default,
-                ),
+                output_ty: Default,
+                out_result: false,
             },
             funcs: [
                 FuncInfo {
@@ -151,9 +145,8 @@ VmodInfo {
                             ),
                         },
                     ],
-                    returns: Value(
-                        Default,
-                    ),
+                    output_ty: Default,
+                    out_result: false,
                 },
             ],
         },

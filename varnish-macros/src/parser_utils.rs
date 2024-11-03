@@ -46,16 +46,15 @@ pub fn remove_attr(attrs: &mut Vec<Attribute>, name: &str) -> Option<Attribute> 
 }
 
 /// Try to get the inner types of the `Result<Ok, Err>` type, or return None if it's not a `Result<Ok, Err>`.
-pub fn as_result_type(ty: &Type) -> Option<(&Type, &Type)> {
+pub fn as_result_type(ty: &Type) -> Option<&Type> {
     if let Path(type_path) = ty {
         if let Some(PathSegment { ident, arguments }) = type_path.path.segments.last() {
             if ident == "Result" {
                 if let AngleBracketed(args) = &arguments {
                     if args.args.len() == 2 {
                         if let Some(GenericArgument::Type(ok_ty)) = args.args.first() {
-                            if let Some(GenericArgument::Type(err_ty)) = args.args.last() {
-                                return Some((ok_ty, err_ty));
-                            }
+                            // Compiler will check if Err type can be coerced into VclError
+                            return Some(ok_ty);
                         }
                     }
                 }

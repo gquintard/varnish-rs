@@ -39,6 +39,12 @@ impl From<&str> for VclError {
     }
 }
 
+impl From<Box<dyn std::error::Error>> for VclError {
+    fn from(s: Box<dyn std::error::Error>) -> Self {
+        Self { s: s.to_string() }
+    }
+}
+
 impl AsRef<str> for VclError {
     fn as_ref(&self) -> &str {
         &self.s

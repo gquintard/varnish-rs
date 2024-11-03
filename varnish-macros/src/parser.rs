@@ -5,12 +5,12 @@
 use darling::ast::NestedMeta;
 use darling::FromMeta;
 use proc_macro2::TokenStream;
-use syn::{Attribute, ImplItem, Item, ItemImpl, ItemMod, Signature, Visibility};
+use syn::{Attribute, ImplItem, Item, ItemImpl, ItemMod, ReturnType, Signature, Visibility};
 
 use crate::errors::Errors;
 use crate::model::{
-    FuncInfo, FuncType, ObjInfo, ParamKind, ParamType, ParamTypeInfo, ReturnTy, ReturnType,
-    SharedTypes, VmodInfo, VmodParams,
+    FuncInfo, FuncType, ObjInfo, OutputTy, ParamKind, ParamType, ParamTypeInfo, SharedTypes,
+    VmodInfo, VmodParams,
 };
 use crate::parser_args::FuncStatus;
 use crate::{parser_utils, ProcResult};
@@ -135,7 +135,8 @@ impl ObjInfo {
                 docs: String::new(),
                 has_optional_args: false,
                 args: Vec::new(),
-                returns: ReturnType::Value(ReturnTy::Default),
+                output_ty: OutputTy::Default,
+                out_result: false,
             },
             funcs,
         })
@@ -182,7 +183,17 @@ impl FuncInfo {
             FuncType::Function
         };
 
-        let returns = errors.on_err(ReturnType::parse(&signature.output, func_type));
+        let (output_ty, out_result) = match &signature.output {
+            ReturnType::Default => (OutputTy::Default, false),
+            ReturnType::Type(_, ty) => {
+                if let Some(ty) = parser_utils::as_result_type(ty.as_ref()) {
+                    (OutputTy::parse(ty, func_type)?, true)
+                } else {
+                    (OutputTy::parse(ty.as_ref(), func_type)?, false)
+                }
+            }
+        };
+
         let mut status = FuncStatus::new(func_type);
         let mut args = Vec::new();
 
@@ -203,7 +214,8 @@ impl FuncInfo {
             ident: signature.ident.to_string(),
             docs: parser_utils::parse_doc_str(attrs),
             has_optional_args,
-            returns: returns.expect("returns err already reported"),
+            output_ty,
+            out_result,
             args,
         })
     }

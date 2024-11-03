@@ -65,7 +65,8 @@ impl<'a> Ctx<'a> {
     ///
     /// Once the control goes back to Varnish, it will see that the transaction was marked as fail
     /// and will return a synthetic error to the client.
-    pub fn fail(&mut self, msg: impl AsRef<str>) {
+    pub fn fail(&mut self, msg: impl Into<VclError>) {
+        let msg = msg.into();
         let msg = msg.as_ref();
         unsafe {
             VRT_fail(self.raw, c"%.*s".as_ptr(), msg.len(), msg.as_ptr());
