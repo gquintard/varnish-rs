@@ -185,14 +185,9 @@ impl ParamType {
         } else {
             // Only standard types left, possibly optional
             not_in! { Event, "Event functions can only have `Ctx`, `#[event] Event`, and `#[shared_per_vcl] &mut Option<Box<T>>` arguments." }
-            let (opt, arg_ty) =
-                if let Some(arg_ty) = as_option_type(arg_ty).and_then(ParamTy::try_parse) {
-                    (true, arg_ty)
-                } else if let Some(arg_ty) = ParamTy::try_parse(arg_ty) {
-                    (false, arg_ty)
-                } else {
-                    Err(error(&pat_ty, "unsupported argument type"))?
-                };
+            let Some((opt, arg_ty)) = ParamTy::try_parse_or_optional(arg_ty) else {
+                error! {"unsupported argument type" }
+            };
             if !opt && arg_ty.must_be_optional() {
                 error! { "This type of argument must be declared as optional with `Option<...>`" }
             }
@@ -288,6 +283,15 @@ impl ParamInfo {
 }
 
 impl ParamTy {
+    /// Tries parsing supported VCL types like `i64`, `Probe`, `Duration`, or Option-wrapped like `Option<&str>`.
+    pub fn try_parse_or_optional(ty: &Type) -> Option<(bool, Self)> {
+        if let Some(ty) = as_option_type(ty).and_then(Self::try_parse) {
+            Some((true, ty))
+        } else {
+            Self::try_parse(ty).map(|ty| (false, ty))
+        }
+    }
+
     /// Tries parsing regular VCL types as `i64`, `bool`, `Duration`, `&str`, ...
     pub fn try_parse(ty: &Type) -> Option<Self> {
         if let Some(ident) = as_simple_ty(ty) {
