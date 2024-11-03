@@ -9,7 +9,7 @@ VMOD_JSON_SPEC
     "1.0",
     "types",
     "Vmod_vmod_types_Func",
-    "eb1991bf18259a72eab2c23dc259b65c1890659a876fec01282dd3e4a32dcb25",
+    "dc6571c10aa0083a83d0ea0cef4845b8dd72a9ec066a8915c151ef01039eccca",
     "Varnish (version) (hash)",
     "0",
     "0"
@@ -19,11 +19,11 @@ VMOD_JSON_SPEC
     "
 struct vmod_types_DocStruct;
 
-typedef VCL_VOID td_vmod_types_no_docs(
+typedef VCL_VOID td_vmod_types_with_docs(
     VRT_CTX
 );
 
-typedef VCL_VOID td_vmod_types_with_docs(
+typedef VCL_VOID td_vmod_types_no_docs(
     VRT_CTX
 );
 
@@ -61,8 +61,8 @@ typedef VCL_VOID td_vmod_types_DocStruct_function(
 );
 
 struct Vmod_vmod_types_Func {
-  td_vmod_types_no_docs *f_no_docs;
   td_vmod_types_with_docs *f_with_docs;
+  td_vmod_types_no_docs *f_no_docs;
   td_vmod_types_doctest *f_doctest;
   td_vmod_types_arg_only *f_arg_only;
   td_vmod_types_DocStruct__init *f_DocStruct__init;
@@ -74,23 +74,23 @@ static struct Vmod_vmod_types_Func Vmod_vmod_types_Func;"
   ],
   [
     "$FUNC",
-    "no_docs",
-    [
-      [
-        "VOID"
-      ],
-      "Vmod_vmod_types_Func.f_no_docs",
-      ""
-    ]
-  ],
-  [
-    "$FUNC",
     "with_docs",
     [
       [
         "VOID"
       ],
       "Vmod_vmod_types_Func.f_with_docs",
+      ""
+    ]
+  ],
+  [
+    "$FUNC",
+    "no_docs",
+    [
+      [
+        "VOID"
+      ],
+      "Vmod_vmod_types_Func.f_no_docs",
       ""
     ]
   ],

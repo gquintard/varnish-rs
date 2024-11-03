@@ -16,6 +16,10 @@ main docs
 ## Big header
 ### sub header
 foo bar
+Multiline
+* comment per https://github.com/rust-lang/rust/issues/32088
+*
+* The end
 
 ```vcl
 // Place import statement at the top of your VCL file
@@ -26,15 +30,16 @@ import types;
 import types from "path/to/libtypes.so";
 ```
 
-### Function `VOID no_docs()`
-
 ### Function `VOID with_docs()`
 
 doctest on a function
 with multiple lines
 #### Big header
 ##### sub header
-foo bar
+* foo
+* bar
+
+### Function `VOID no_docs()`
 
 ### Function `VOID doctest(INT _no_docs, INT _v)`
 

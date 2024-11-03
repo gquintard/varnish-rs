@@ -10,14 +10,21 @@ fn main() {}
 /// foo bar
 #[vmod]
 mod types {
-    pub fn no_docs() {}
+    /*! Multiline
+     * comment per https://github.com/rust-lang/rust/issues/32088
+     *
+     * The end
+     */
 
     /// doctest on a function
     /// with multiple lines
     /// # Big header
     /// ## sub header
-    /// foo bar
+    /// * foo
+    /// * bar
     pub fn with_docs() {}
+
+    pub fn no_docs() {}
 
     /// doctest on a function
     pub fn doctest(
