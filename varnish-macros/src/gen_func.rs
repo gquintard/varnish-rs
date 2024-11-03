@@ -469,15 +469,14 @@ impl FuncProcessor {
 
     fn gen_user_fn_call(&self, info: &FuncInfo) -> TokenStream {
         if let Destructor = info.func_type {
-            return quote! {};
+            quote! {}
+        } else {
+            let user_fn_name = self.names.fn_callable_name(info.func_type);
+            let var_args = &self.func_call_vars;
+            quote! {
+                let __result = #user_fn_name(#(#var_args),*);
+            }
         }
-
-        let user_fn_name = self.names.fn_callable_name(info.func_type);
-        let var_args = &self.func_call_vars;
-        let call_user_fn = quote! {
-            let __result = #user_fn_name(#(#var_args),*);
-        };
-        call_user_fn
     }
 
     fn gen_result_handler_code(&self, info: &FuncInfo) -> TokenStream {
