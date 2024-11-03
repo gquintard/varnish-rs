@@ -14,6 +14,5 @@ mod event {
         /// Event argument - the comment is ignored
         event: Event,
     ) {
-        panic!()
     }
 }

@@ -70,7 +70,5 @@ mod event {
     }
     use varnish::vcl::Event;
     /// Event function - the comment is ignored
-    pub fn on_event(event: Event) {
-        panic!()
-    }
+    pub fn on_event(event: Event) {}
 }
