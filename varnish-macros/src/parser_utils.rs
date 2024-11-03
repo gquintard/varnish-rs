@@ -208,6 +208,15 @@ fn store_shared(
     Ok(())
 }
 
+/// Parse the doc string from the `#[doc]` attributes, and remove them from the list of attributes.
+/// This is required for the argument docs because they are not supported by Rust compiler
+pub fn parse_and_rm_doc(attrs: &mut Vec<Attribute>) -> String {
+    let docs = parse_doc_str(attrs);
+    // there can be more than one doc attribute, so we need to remove all of them
+    while remove_attr(attrs, "doc").is_some() {}
+    docs
+}
+
 /// Parse the doc string from the `#[doc]` attributes, and return it as a string.
 pub fn parse_doc_str(attrs: &[Attribute]) -> String {
     // Adapted from https://github.com/hasura/graphql-engine/blob/a29101a3e9fe8c624fb09ec892c21da4b2bdaaba/v3/crates/utils/opendds-derive/src/helpers.rs#L35

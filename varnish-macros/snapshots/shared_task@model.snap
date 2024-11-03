@@ -48,7 +48,7 @@ VmodInfo {
             args: [
                 ParamTypeInfo {
                     ident: "vcl",
-                    docs: "",
+                    docs: "This comment is ignored",
                     idx: 0,
                     ty: SharedPerVclRef,
                 },
@@ -179,7 +179,7 @@ VmodInfo {
                         },
                         ParamTypeInfo {
                             ident: "tsk",
-                            docs: "",
+                            docs: "this comment is ignored too",
                             idx: 1,
                             ty: SharedPerTask,
                         },

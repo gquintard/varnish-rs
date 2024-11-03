@@ -11,7 +11,7 @@ use crate::model::{
 };
 use crate::parser_utils::{
     as_one_gen_arg, as_option_type, as_ref_mut_ty, as_ref_ty, as_simple_ty, as_slice_ty,
-    parse_doc_str, parse_shared_mut, parse_shared_ref, remove_attr,
+    parse_and_rm_doc, parse_shared_mut, parse_shared_ref, remove_attr,
 };
 use crate::{parser_utils, ProcResult};
 
@@ -62,7 +62,7 @@ impl ParamTypeInfo {
                     }
                     Ok(Self {
                         ident: "self".to_string(),
-                        docs: parse_doc_str(&recv.attrs),
+                        docs: parse_and_rm_doc(&mut recv.attrs),
                         idx,
                         ty: ParamType::SelfType,
                     })
@@ -77,7 +77,7 @@ impl ParamTypeInfo {
                 };
                 Ok(Self {
                     ident: ident.ident.to_string(),
-                    docs: parse_doc_str(&pat_ty.attrs),
+                    docs: parse_and_rm_doc(&mut pat_ty.attrs),
                     idx,
                     ty,
                 })
