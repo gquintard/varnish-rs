@@ -9,7 +9,7 @@ VMOD_JSON_SPEC
     "1.0",
     "types",
     "Vmod_vmod_types_Func",
-    "1005238daaffe298f3de3dc1a2ca2cd3dc33ddc80d5fe31f791051f6f50205d3",
+    "2e36f2e7f8cf299c7808eb33d4835f616536d0ed45399f90d6a27db5c5fab4bf",
     "Varnish (version) (hash)",
     "0",
     "0"
@@ -26,6 +26,10 @@ typedef VCL_VOID td_vmod_types_to_res_void_err(
 );
 
 typedef VCL_VOID td_vmod_types_to_res_str_err(
+    VRT_CTX
+);
+
+typedef VCL_VOID td_vmod_types_to_res_box_err(
     VRT_CTX
 );
 
@@ -341,6 +345,7 @@ struct Vmod_vmod_types_Func {
   td_vmod_types_to_void *f_to_void;
   td_vmod_types_to_res_void_err *f_to_res_void_err;
   td_vmod_types_to_res_str_err *f_to_res_str_err;
+  td_vmod_types_to_res_box_err *f_to_res_box_err;
   td_vmod_types_type_bool *f_type_bool;
   td_vmod_types_type_bool_dflt *f_type_bool_dflt;
   td_vmod_types_opt_bool *f_opt_bool;
@@ -429,6 +434,17 @@ static struct Vmod_vmod_types_Func Vmod_vmod_types_Func;"
         "VOID"
       ],
       "Vmod_vmod_types_Func.f_to_res_str_err",
+      ""
+    ]
+  ],
+  [
+    "$FUNC",
+    "to_res_box_err",
+    [
+      [
+        "VOID"
+      ],
+      "Vmod_vmod_types_Func.f_to_res_box_err",
       ""
     ]
   ],

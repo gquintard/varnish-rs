@@ -6,6 +6,7 @@ fn main() {}
 
 #[vmod]
 mod types {
+    use std::error::Error;
     use std::ffi::CStr;
     use std::net::SocketAddr;
     use std::time::Duration;
@@ -21,6 +22,9 @@ mod types {
         panic!()
     }
     pub fn to_res_str_err() -> Result<(), &'static str> {
+        panic!()
+    }
+    pub fn to_res_box_err() -> Result<(), Box<dyn Error>> {
         panic!()
     }
 

@@ -45,6 +45,17 @@ VmodInfo {
         },
         FuncInfo {
             func_type: Function,
+            ident: "to_res_box_err",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            returns: Result(
+                Default,
+                BoxDynError,
+            ),
+        },
+        FuncInfo {
+            func_type: Function,
             ident: "type_bool",
             docs: "",
             has_optional_args: false,
