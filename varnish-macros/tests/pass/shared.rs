@@ -17,7 +17,11 @@ mod task {
         panic!()
     }
 
-    pub fn per_vcl_val(#[shared_per_vcl] vcl: Option<&PerVcl>) {
+    pub fn per_vcl_val(
+        /// This comment is ignored
+        #[shared_per_vcl]
+        vcl: Option<&PerVcl>,
+    ) {
         panic!()
     }
 
@@ -32,7 +36,9 @@ mod task {
 
         pub fn both(
             &self,
-            #[shared_per_task] tsk: &mut Option<Box<PerTask>>,
+            /// this comment is ignored too
+            #[shared_per_task]
+            tsk: &mut Option<Box<PerTask>>,
             #[shared_per_vcl] vcl: Option<&PerVcl>,
         ) {
             panic!()

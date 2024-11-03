@@ -9,7 +9,10 @@ mod example {
     /// This will tell you if a number is even, isn't that odd?
     ///
     /// A simple function that returns true if the number is even, false otherwise.
-    pub fn is_even(n: i64) -> bool {
+    pub fn is_even(
+        /// The number to check for evenness
+        n: i64,
+    ) -> bool {
         n % 2 == 0
     }
 
@@ -21,7 +24,10 @@ mod example {
     /// set resp.http.Obvious = example.captain_obvious();
     /// set resp.http.Obvious-Number = example.captain_obvious(42);
     /// ```
-    pub fn captain_obvious(opt: Option<i64>) -> String {
+    pub fn captain_obvious(
+        /// Optional number to provide as argument
+        opt: Option<i64>,
+    ) -> String {
         // we need to first "match" to know if a number was provided, if not,
         // return a default message, otherwise, build a custom one
         match opt {

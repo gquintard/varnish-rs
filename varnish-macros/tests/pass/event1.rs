@@ -8,8 +8,12 @@ fn main() {}
 mod event {
     use varnish::vcl::Event;
 
+    /// Event function - the comment is ignored
     #[event]
-    pub fn on_event(event: Event) {
+    pub fn on_event(
+        /// Event argument - the comment is ignored
+        event: Event,
+    ) {
         panic!()
     }
 }

@@ -30,6 +30,9 @@ This will tell you if a number is even, isn't that odd?
 
 A simple function that returns true if the number is even, false otherwise.
 
+* `INT n`:
+The number to check for evenness
+
 ### Function `STRING captain_obvious([INT opt])`
 
 Produce a string explaining which number you provided as argument.
@@ -40,3 +43,6 @@ This function can be called without arguments, or with an integer:
 set resp.http.Obvious = example.captain_obvious();
 set resp.http.Obvious-Number = example.captain_obvious(42);
 ```
+
+* `[INT opt]`:
+Optional number to provide as argument
