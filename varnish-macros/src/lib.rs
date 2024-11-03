@@ -49,8 +49,6 @@ pub fn vmod(args: pm::TokenStream, input: pm::TokenStream) -> pm::TokenStream {
     let args = pm2::TokenStream::from(args);
     let mut item_mod = parse_macro_input!(input as ItemMod);
 
-    // return test(item_mod).into();
-
     let info = match tokens_to_model(args, &mut item_mod) {
         Ok(v) => v,
         Err(err) => return err.into_compile_error().into(),

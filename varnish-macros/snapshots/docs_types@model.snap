@@ -7,12 +7,12 @@ VmodInfo {
         docs: None,
     },
     ident: "types",
-    docs: "main docs\n# Big header\n## sub header\nfoo bar",
+    docs: "main docs\n# Big header\n## sub header\nfoo bar\nMultiline\n* comment per https://github.com/rust-lang/rust/issues/32088\n*\n* The end",
     funcs: [
         FuncInfo {
             func_type: Function,
-            ident: "no_docs",
-            docs: "",
+            ident: "with_docs",
+            docs: "doctest on a function\nwith multiple lines\n# Big header\n## sub header\n* foo\n* bar",
             has_optional_args: false,
             args: [],
             returns: Value(
@@ -21,8 +21,8 @@ VmodInfo {
         },
         FuncInfo {
             func_type: Function,
-            ident: "with_docs",
-            docs: "doctest on a function\nwith multiple lines\n# Big header\n## sub header\nfoo bar",
+            ident: "no_docs",
+            docs: "",
             has_optional_args: false,
             args: [],
             returns: Value(

@@ -60,6 +60,7 @@ ci-test: rust-info test-fmt clippy test test-doc
 # Verify that the current version of the crate is not the same as the one published on crates.io
 check-if-published:
     #!/usr/bin/env bash
+    set -euo pipefail
     LOCAL_VERSION="$(grep '^version =' Cargo.toml | sed -E 's/version = "([^"]*)".*/\1/')"
     echo "Detected crate version:  $LOCAL_VERSION"
     CRATE_NAME="$(grep '^name =' Cargo.toml | head -1 | sed -E 's/name = "(.*)"/\1/')"
@@ -72,3 +73,16 @@ check-if-published:
     else
         echo "The current crate version has not yet been published."
     fi
+
+# Generate and show coverage report. Requires grcov to be installed.
+grcov:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    find . -name '*.profraw' | xargs rm
+    rm -rf ./target/debug/coverage
+    export LLVM_PROFILE_FILE="varnish-%p-%m.profraw"
+    export RUSTFLAGS="-Cinstrument-coverage"
+    cargo build --workspace --all-targets
+    cargo test --workspace --all-targets
+    grcov . -s . --binary-path ./target/debug/ -t html --branch --ignore-not-existing -o ./target/debug/coverage/
+    open ./target/debug/coverage/index.html
