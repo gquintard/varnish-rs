@@ -67,7 +67,7 @@ impl<'a> Ctx<'a> {
     /// and will return a synthetic error to the client.
     pub fn fail(&mut self, msg: impl Into<VclError>) {
         let msg = msg.into();
-        let msg = msg.as_ref();
+        let msg = msg.as_str();
         unsafe {
             VRT_fail(self.raw, c"%.*s".as_ptr(), msg.len(), msg.as_ptr());
         }

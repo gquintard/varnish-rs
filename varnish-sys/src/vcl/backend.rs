@@ -294,7 +294,7 @@ unsafe extern "C" fn vfp_pull<T: Transfer>(
         Err(e) => {
             // TODO: we should grow a VSL object
             // SAFETY: we assume ffi::VSLbt() will not store the pointer to the string's content
-            let msg = ffi::txt::from_str(e.as_ref());
+            let msg = ffi::txt::from_str(e.as_str().as_ref());
             ffi::VSLbt(ctx.req.as_ref().unwrap().vsl, ffi::VslTag::Error, msg);
             VfpStatus::Error
         }

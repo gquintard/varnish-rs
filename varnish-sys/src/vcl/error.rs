@@ -1,61 +1,55 @@
+use std::borrow::Cow;
 use std::str::Utf8Error;
 
-/// custom vcl `Error` type
+// TODO: at some point we may want to add a `txt` variant - e.g. if user wants to handle error creation directly.
+
+/// An `Error` describing all issues with the VCL module
 ///
-/// The C errors aren't typed and are just C strings, so we just wrap them into a proper rust
-/// `Error`
-pub struct VclError {
-    s: String,
+/// This enum is used to describe all the possible errors that can happen when working with the VCL module,
+/// or converting between Rust and C types.
+#[derive(thiserror::Error, Debug)]
+pub enum VclError {
+    /// Create a new `Error` from a string
+    #[error("{0}")]
+    String(String),
+    /// Create a new `Error` from a UTF-8 error
+    #[error("{0}")]
+    Utf8Error(#[from] Utf8Error),
+    /// Create a new `Error` from a string slice
+    #[error("{0}")]
+    Str(&'static str),
+    /// Create a new `Error` from a boxed error
+    #[error("{0}")]
+    Box(#[from] Box<dyn std::error::Error>),
 }
 
 impl VclError {
     /// Create a new `Error` from a string
     pub fn new(s: String) -> Self {
-        Self { s }
+        Self::String(s)
+    }
+
+    pub fn as_str(&self) -> Cow<str> {
+        match self {
+            Self::String(s) => Cow::Borrowed(s.as_str()),
+            Self::Utf8Error(e) => Cow::Owned(e.to_string()),
+            Self::Str(s) => Cow::Borrowed(s),
+            Self::Box(e) => Cow::Owned(e.to_string()),
+        }
     }
 }
 
-impl std::fmt::Debug for VclError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Debug::fmt(&self.s, f)
-    }
-}
-
-impl std::fmt::Display for VclError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(&self.s, f)
-    }
-}
-
-impl std::error::Error for VclError {}
+// Any error types are done with the #[from] attribute, so we don't need to implement From for them
 
 impl From<String> for VclError {
     fn from(s: String) -> Self {
-        Self { s }
+        Self::String(s)
     }
 }
 
-impl From<Utf8Error> for VclError {
-    fn from(s: Utf8Error) -> Self {
-        Self { s: s.to_string() }
-    }
-}
-
-impl From<&str> for VclError {
-    fn from(s: &str) -> Self {
-        Self { s: s.into() }
-    }
-}
-
-impl From<Box<dyn std::error::Error>> for VclError {
-    fn from(s: Box<dyn std::error::Error>) -> Self {
-        Self { s: s.to_string() }
-    }
-}
-
-impl AsRef<str> for VclError {
-    fn as_ref(&self) -> &str {
-        &self.s
+impl From<&'static str> for VclError {
+    fn from(s: &'static str) -> Self {
+        Self::Str(s)
     }
 }
 
