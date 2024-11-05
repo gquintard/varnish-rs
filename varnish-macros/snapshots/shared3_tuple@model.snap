@@ -18,7 +18,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "tsk_vals",
                     docs: "",
-                    idx: 0,
                     ty: SharedPerTask,
                 },
             ],

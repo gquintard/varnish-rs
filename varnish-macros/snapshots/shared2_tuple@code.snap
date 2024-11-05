@@ -31,10 +31,10 @@ mod tuple {
             __ev: VclEvent,
         ) -> VCL_INT {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let mut __var0 = (*__vp).take();
-            let __result = super::on_event(&mut __var0);
+            let mut __obj_per_vcl = (*__vp).take();
+            super::on_event(&mut __obj_per_vcl);
             let __result = VCL_INT(0);
-            if let Some(obj) = __var0 {
+            if let Some(obj) = __obj_per_vcl {
                 (*__vp).put(obj, &PRIV_VCL_METHODS);
             }
             __result
@@ -45,10 +45,12 @@ mod tuple {
             vcl_vals: *const vmod_priv,
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let mut __var0 = (*tsk_vals).take();
-            let __var1 = vcl_vals.as_ref().and_then(|v| v.get_ref());
-            let __result = super::per_tsk_val(&mut __var0, __var1);
-            if let Some(obj) = __var0 {
+            let mut __obj_per_task = (*tsk_vals).take();
+            let __result = super::per_tsk_val(
+                &mut __obj_per_task,
+                vcl_vals.as_ref().and_then(|v| v.get_ref()),
+            );
+            if let Some(obj) = __obj_per_task {
                 (*tsk_vals).put(obj, &PRIV_TASK_METHODS);
             }
             __result
@@ -93,7 +95,7 @@ mod tuple {
         pub static Vmod_tuple_Data: VmodData = VmodData {
             vrt_major: 0,
             vrt_minor: 0,
-            file_id: c"5b65727e391b473720d27116d47e804a9625e6d3e510bc6bea4f900185681125"
+            file_id: c"41c8f93b128c17e6327da85165e29dc663acf100bf5bfb80ffce76925121d6fe"
                 .as_ptr(),
             name: c"tuple".as_ptr(),
             func_name: c"Vmod_vmod_tuple_Func".as_ptr(),
@@ -103,7 +105,7 @@ mod tuple {
             json: JSON.as_ptr(),
             proto: null(),
         };
-        const JSON: &CStr = c"VMOD_JSON_SPEC\u{2}\n[\n  [\n    \"$VMOD\",\n    \"1.0\",\n    \"tuple\",\n    \"Vmod_vmod_tuple_Func\",\n    \"5b65727e391b473720d27116d47e804a9625e6d3e510bc6bea4f900185681125\",\n    \"Varnish (version) (hash)\",\n    \"0\",\n    \"0\"\n  ],\n  [\n    \"$CPROTO\",\n    \"\\ntypedef VCL_VOID td_vmod_tuple_per_tsk_val(\\n    VRT_CTX,\\n    struct vmod_priv *,\\n    struct vmod_priv *\\n);\\n\\nstruct Vmod_vmod_tuple_Func {\\n  vmod_event_f *f_on_event;\\n  td_vmod_tuple_per_tsk_val *f_per_tsk_val;\\n};\\n\\nstatic struct Vmod_vmod_tuple_Func Vmod_vmod_tuple_Func;\"\n  ],\n  [\n    \"$EVENT\",\n    \"Vmod_vmod_tuple_Func.f_on_event\"\n  ],\n  [\n    \"$FUNC\",\n    \"per_tsk_val\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_tuple_Func.f_per_tsk_val\",\n      \"\",\n      [\n        \"PRIV_TASK\",\n        \"tsk_vals\"\n      ],\n      [\n        \"PRIV_VCL\",\n        \"vcl_vals\"\n      ]\n    ]\n  ]\n]\n\u{3}";
+        const JSON: &CStr = c"VMOD_JSON_SPEC\u{2}\n[\n  [\n    \"$VMOD\",\n    \"1.0\",\n    \"tuple\",\n    \"Vmod_vmod_tuple_Func\",\n    \"41c8f93b128c17e6327da85165e29dc663acf100bf5bfb80ffce76925121d6fe\",\n    \"Varnish (version) (hash)\",\n    \"0\",\n    \"0\"\n  ],\n  [\n    \"$CPROTO\",\n    \"\\ntypedef VCL_VOID td_vmod_tuple_per_tsk_val(\\n    VRT_CTX,\\n    struct vmod_priv *,\\n    struct vmod_priv *\\n);\\n\\nstruct Vmod_vmod_tuple_Func {\\n  vmod_event_f *f_on_event;\\n  td_vmod_tuple_per_tsk_val *f_per_tsk_val;\\n};\\n\\nstatic struct Vmod_vmod_tuple_Func Vmod_vmod_tuple_Func;\"\n  ],\n  [\n    \"$EVENT\",\n    \"Vmod_vmod_tuple_Func.f_on_event\"\n  ],\n  [\n    \"$FUNC\",\n    \"per_tsk_val\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_tuple_Func.f_per_tsk_val\",\n      \"\",\n      [\n        \"PRIV_TASK\",\n        \"tsk_vals\"\n      ],\n      [\n        \"PRIV_VCL\",\n        \"vcl_vals\"\n      ]\n    ]\n  ]\n]\n\u{3}";
     }
     use super::{PerTask1, PerTask2, PerVcl1, PerVcl2};
     pub fn on_event(vcl_vals: &mut Option<Box<(PerVcl1, PerVcl2)>>) {}

@@ -22,12 +22,10 @@ mod event2 {
         ) -> VCL_INT {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
-                let __result = super::on_event(&__ctx, __ev)?;
-                let __result = VCL_INT(0);
-                Ok(__result)
+                super::on_event(&__ctx, __ev)?;
+                Ok(VCL_INT(0))
             };
-            let __result = __call_user_func();
-            __result
+            __call_user_func()
                 .unwrap_or_else(|err| {
                     __ctx.fail(err);
                     VCL_INT(1)
@@ -65,7 +63,7 @@ mod event2 {
         pub static Vmod_event2_Data: VmodData = VmodData {
             vrt_major: 0,
             vrt_minor: 0,
-            file_id: c"0ed642a125e82318dca886758e96f5bfd4539e56b5258d1f4428ccdcfbb34053"
+            file_id: c"12c0145150bdb078f1e8f5f2186f8beaf799d5163796db1e68583cf35e74472e"
                 .as_ptr(),
             name: c"event2".as_ptr(),
             func_name: c"Vmod_vmod_event2_Func".as_ptr(),
@@ -75,7 +73,7 @@ mod event2 {
             json: JSON.as_ptr(),
             proto: null(),
         };
-        const JSON: &CStr = c"VMOD_JSON_SPEC\u{2}\n[\n  [\n    \"$VMOD\",\n    \"1.0\",\n    \"event2\",\n    \"Vmod_vmod_event2_Func\",\n    \"0ed642a125e82318dca886758e96f5bfd4539e56b5258d1f4428ccdcfbb34053\",\n    \"Varnish (version) (hash)\",\n    \"0\",\n    \"0\"\n  ],\n  [\n    \"$CPROTO\",\n    \"\\nstruct Vmod_vmod_event2_Func {\\n  vmod_event_f *f_on_event;\\n};\\n\\nstatic struct Vmod_vmod_event2_Func Vmod_vmod_event2_Func;\"\n  ],\n  [\n    \"$EVENT\",\n    \"Vmod_vmod_event2_Func.f_on_event\"\n  ]\n]\n\u{3}";
+        const JSON: &CStr = c"VMOD_JSON_SPEC\u{2}\n[\n  [\n    \"$VMOD\",\n    \"1.0\",\n    \"event2\",\n    \"Vmod_vmod_event2_Func\",\n    \"12c0145150bdb078f1e8f5f2186f8beaf799d5163796db1e68583cf35e74472e\",\n    \"Varnish (version) (hash)\",\n    \"0\",\n    \"0\"\n  ],\n  [\n    \"$CPROTO\",\n    \"\\nstruct Vmod_vmod_event2_Func {\\n  vmod_event_f *f_on_event;\\n};\\n\\nstatic struct Vmod_vmod_event2_Func Vmod_vmod_event2_Func;\"\n  ],\n  [\n    \"$EVENT\",\n    \"Vmod_vmod_event2_Func.f_on_event\"\n  ]\n]\n\u{3}";
     }
     use varnish::vcl::{Ctx, Event};
     pub fn on_event(ctx: &Ctx, event: Event) -> Result<(), &'static str> {

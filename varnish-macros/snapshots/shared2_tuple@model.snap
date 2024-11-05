@@ -18,7 +18,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "vcl_vals",
                     docs: "",
-                    idx: 0,
                     ty: SharedPerVclMut,
                 },
             ],
@@ -34,13 +33,11 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "tsk_vals",
                     docs: "",
-                    idx: 0,
                     ty: SharedPerTask,
                 },
                 ParamTypeInfo {
                     ident: "vcl_vals",
                     docs: "",
-                    idx: 1,
                     ty: SharedPerVclRef,
                 },
             ],

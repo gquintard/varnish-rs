@@ -21,8 +21,8 @@ pub struct FuncProcessor {
     func_pre_call: Vec<TokenStream>,
     /// Arguments as passed to the user function from the Rust wrapper: `[ {&ctx}, {__var1;} ]`
     func_call_vars: Vec<TokenStream>,
-    /// Rust wrapper steps to take after calling user function, e.g. `[ { if ... { ... } } ]`
-    func_post_call: Vec<TokenStream>,
+    /// Rust wrapper steps to be executed after the user function call even if it fails, e.g. releasing ownership of shared objects.
+    func_always_after_call: Vec<TokenStream>,
 
     /// C function list of arguments for funcs with no optional args, e.g. `["VCL_INT", "VCL_STRING"]`
     cproto_wrapper_args: Vec<&'static str>,
@@ -229,11 +229,11 @@ impl FuncProcessor {
             }
             ParamType::SharedPerTask => {
                 self.add_wrapper_arg(func_info, quote! { #arg_name_ident: *mut vmod_priv });
-                let temp_var = format_ident!("__var{}", arg_info.idx);
+                let temp_var = format_ident!("__obj_per_task");
                 self.func_pre_call
                     .push(quote! { let mut #temp_var = (* #input_val).take(); });
                 self.func_call_vars.push(quote! { &mut #temp_var });
-                self.func_post_call.push(quote! {
+                self.func_always_after_call.push(quote! {
                     // Release ownership back to Varnish
                     if let Some(obj) = #temp_var {
                         (* #input_val).put(obj, &PRIV_TASK_METHODS);
@@ -247,13 +247,10 @@ impl FuncProcessor {
             }
             ParamType::SharedPerVclRef => {
                 self.add_wrapper_arg(func_info, quote! { #arg_name_ident: *const vmod_priv });
-                let temp_var = format_ident!("__var{}", arg_info.idx);
-                self.func_pre_call.push(quote! {
-                    // defensive programming: *vmod_priv should never be NULL,
-                    // but might as well just treat it as None rather than crashing - its readonly anyway
-                    let #temp_var = #input_val.as_ref().and_then(|v| v.get_ref());
-                });
-                self.func_call_vars.push(quote! { #temp_var });
+                // defensive programming: *vmod_priv should never be NULL,
+                // but might as well just treat it as None rather than crashing - its readonly anyway
+                self.func_call_vars
+                    .push(quote! { #input_val.as_ref().and_then(|v| v.get_ref()) });
                 let json =
                     Self::arg_to_json(arg_info.ident.clone(), false, "PRIV_VCL", Value::Null);
                 self.args_json.push(json);
@@ -261,7 +258,7 @@ impl FuncProcessor {
             }
             ParamType::SharedPerVclMut => {
                 self.add_wrapper_arg(func_info, quote! { #arg_name_ident: *mut vmod_priv });
-                let temp_var = format_ident!("__var{}", arg_info.idx);
+                let temp_var = format_ident!("__obj_per_vcl");
                 let input_val = if matches!(func_info.func_type, Event) {
                     quote! { __vp } // Event input vars are hardcoded (for now), use `__vp`
                 } else {
@@ -270,7 +267,7 @@ impl FuncProcessor {
                 self.func_pre_call
                     .push(quote! { let mut #temp_var = (* #input_val).take(); });
                 self.func_call_vars.push(quote! { &mut #temp_var });
-                self.func_post_call.push(quote! {
+                self.func_always_after_call.push(quote! {
                     // Release ownership back to Varnish
                     if let Some(obj) = #temp_var {
                         (* #input_val).put(obj, &PRIV_VCL_METHODS);
@@ -416,34 +413,40 @@ impl FuncProcessor {
         let opt_param_struct = self.gen_opt_param_struct(info);
         let signature = self.get_wrapper_fn_sig(true);
         let func_pre_call = &self.func_pre_call;
-        let func_post_call = &self.func_post_call;
+        let func_always_after_call = &self.func_always_after_call;
 
         let is_void = self.output_hdr == "VCL_VOID";
         let mut func_steps = Vec::new();
 
-        if matches!(info.func_type, Destructor) {
-            func_steps.push(quote! { let __result = (); });
+        let mut result_stmt = if matches!(info.func_type, Destructor) {
+            quote! {}
         } else {
             let user_fn_name = self.names.fn_callable_name(info.func_type);
             let var_args = &self.func_call_vars;
-            func_steps.push(quote! { let __result = #user_fn_name(#(#var_args),*) });
+
+            let mut func_call = quote! { #user_fn_name(#(#var_args),*) };
             if info.out_result {
-                func_steps.push(quote! { ? });
+                func_call.extend(quote! { ? });
             }
-            func_steps.push(quote! { ; });
+
+            if matches!(info.func_type, Event) {
+                // Ignore the result of the event function, override it with 0
+                func_steps.push(quote! { #func_call; });
+                func_call = quote! { VCL_INT(0) }
+            } else if !is_void && !matches!(info.output_ty, OutputTy::VclType(_)) {
+                func_call = quote! { #func_call.into_vcl(&mut __ctx.ws)? };
+            }
+
             if matches!(info.func_type, Constructor) {
                 func_steps.push(quote! {
-                    let __result = Box::new( __result );
+                    let __result = Box::new( #func_call );
                     *__objp = Box::into_raw(__result);
-                    let __result = ();
                 });
-            } else if matches!(info.func_type, Event) {
-                // Ignore the result of the event function, override it with 0
-                func_steps.push(quote! { let __result = VCL_INT(0); });
-            } else if !is_void && !matches!(info.output_ty, OutputTy::VclType(_)) {
-                func_steps.push(quote! { let __result = __result.into_vcl(&mut __ctx.ws)?; });
-            };
-        }
+                func_call = quote! {};
+            }
+
+            func_call
+        };
 
         let result = if self.func_may_fail(info) {
             let error_value = if self.output_hdr == "VCL_VOID" {
@@ -455,29 +458,54 @@ impl FuncProcessor {
                 quote! { Default::default() }
             };
 
-            func_steps = vec![quote! {
+            if result_stmt.is_empty() {
+                result_stmt = quote! { () };
+            }
+            let lambda = quote! {
                 let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
                     #(#func_steps)*
-                    Ok( __result )
-                };
-            }];
-            func_steps.push(quote! { let __result = __call_user_func(); });
+                    Ok( #result_stmt )
+                }
+            };
+            let res = if func_always_after_call.is_empty() {
+                quote! { #lambda; __call_user_func() }
+            } else {
+                quote! {
+                    #lambda;
+                    let __result = __call_user_func();
+                    #(#func_always_after_call)*
+                    __result
+                }
+            };
             quote! {
-                __result.unwrap_or_else(|err| {
+                #res.unwrap_or_else(|err| {
                     __ctx.fail(err);
                     #error_value
                 })
             }
+        } else if func_always_after_call.is_empty() {
+            quote! {
+                #(#func_steps)*
+                #result_stmt
+            }
+        } else if result_stmt.is_empty() {
+            quote! {
+                #(#func_steps)*
+                #(#func_always_after_call)*
+            }
         } else {
-            quote! { __result }
+            quote! {
+                #(#func_steps)*
+                let __result = #result_stmt;
+                #(#func_always_after_call)*
+                __result
+            }
         };
 
         quote! {
             #opt_param_struct
             #signature {
                 #(#func_pre_call)*
-                #(#func_steps)*
-                #(#func_post_call)*
                 #result
             }
         }
