@@ -1,15 +1,18 @@
+use dashmap::DashMap;
+
 varnish::run_vtc_tests!("tests/*.vtc");
+
+/// kv only contains one element: a String->String hashmap that can be used in parallel
+#[allow(non_camel_case_types)]
+pub struct kv {
+    storage: DashMap<String, String>,
+}
 
 /// A simple string dictionary in your VCL
 #[varnish::vmod(docs = "README.md")]
 mod object {
+    use super::kv;
     use dashmap::DashMap;
-
-    /// kv only contains one element: a String->String hashmap that can be used in parallel
-    #[allow(non_camel_case_types)]
-    pub struct kv {
-        storage: DashMap<String, String>,
-    }
 
     // implementation needs the same methods as defined in the vcc, plus "new()"
     // corresponding to the constructor, which requires the context (_ctx) , and the

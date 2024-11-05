@@ -1,6 +1,11 @@
-use varnish::vcl::{Ctx, Serve, Transfer, VclError};
+use varnish::vcl::{Backend, Ctx, Serve, Transfer, VclError};
 
 varnish::run_vtc_tests!("tests/*.vtc");
+
+#[allow(non_camel_case_types)]
+struct parrot {
+    be: Backend<Sentence, Body>,
+}
 
 /// a simple STRING dictionary in your VCL
 #[varnish::vmod(docs = "README.md")]
@@ -8,17 +13,12 @@ mod be {
     use varnish::ffi::VCL_BACKEND;
     use varnish::vcl::{Backend, Ctx, VclError};
 
-    use super::{Body, Sentence};
+    use super::{parrot, Sentence};
 
     /// parrot is our VCL object, which just holds a rust Backend,
     /// it only needs two functions:
     /// - new(), so that the VCL can instantiate it
     /// - backend(), so that we can produce a C pointer for varnish to use
-    #[allow(non_camel_case_types)]
-    pub struct parrot {
-        be: Backend<Sentence, Body>,
-    }
-
     impl parrot {
         pub fn new(
             ctx: &mut Ctx,

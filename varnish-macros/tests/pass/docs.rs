@@ -4,6 +4,10 @@ use varnish::vmod;
 
 fn main() {}
 
+/// doctest for `DocStruct`.
+/// This comment is ignored because we do not handle structs, only impl blocks.
+pub struct DocStruct;
+
 /// main docs
 /// # Big header
 /// ## sub header
@@ -15,6 +19,8 @@ mod types {
      *
      * The end
      */
+
+    use super::DocStruct;
 
     /// doctest on a function
     /// with multiple lines
@@ -46,10 +52,6 @@ mod types {
         _v: i64,
     ) {
     }
-
-    /// doctest for `DocStruct`.
-    /// This comment is ignored because we do not handle structs, only impl blocks.
-    pub struct DocStruct;
 
     /// doctest for `DocStruct` implementation
     impl DocStruct {

@@ -1,17 +1,18 @@
+use std::sync::atomic::AtomicI64;
+
 varnish::run_vtc_tests!("tests/*.vtc");
+
+/// Number of times `on_event()` was called with `Event::Load`.
+/// * `on_event()` will increment it and store it in the `PRIV_VCL`
+/// * `loaded()` will access it and return to the VCL
+static EVENT_LOADED_COUNT: AtomicI64 = AtomicI64::new(0);
 
 /// Listen to VCL event
 #[varnish::vmod(docs = "README.md")]
 mod event {
-    use std::sync::atomic::AtomicI64;
     use std::sync::atomic::Ordering::Relaxed;
 
     use varnish::vcl::{Ctx, Event, LogTag};
-
-    /// number of times on_event() was called with `Event::Load`
-    /// `on_event()` will increment it and store it in the `PRIV_VCL`
-    /// loaded() will access it and return to the VCL
-    static EVENT_LOADED_COUNT: AtomicI64 = AtomicI64::new(0);
 
     /// Return the number of VCL loads stored during when the event function ran.
     pub fn loaded(#[shared_per_vcl] shared: Option<&i64>) -> i64 {
@@ -34,7 +35,7 @@ mod event {
         // we only care about load events, which is why we don't use `match`
         if matches!(event, Event::Load) {
             // increment the count in a thread-safe way
-            let last_count = EVENT_LOADED_COUNT.fetch_add(1, Relaxed);
+            let last_count = super::EVENT_LOADED_COUNT.fetch_add(1, Relaxed);
             if last_count == 1 {
                 // Demo that we can fail on the second `load` event
                 return Err("second load always fail");
