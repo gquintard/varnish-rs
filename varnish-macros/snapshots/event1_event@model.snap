@@ -18,7 +18,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "event",
                     docs: "Event argument - the comment is ignored",
-                    idx: 0,
                     ty: Event,
                 },
             ],

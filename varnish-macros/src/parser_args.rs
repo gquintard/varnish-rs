@@ -62,7 +62,6 @@ impl ParamTypeInfo {
                     Ok(Self {
                         ident: "self".to_string(),
                         docs: parse_and_rm_doc(&mut recv.attrs),
-                        idx,
                         ty: ParamType::SelfType,
                     })
                 }
@@ -77,7 +76,6 @@ impl ParamTypeInfo {
                 Ok(Self {
                     ident: ident.ident.to_string(),
                     docs: parse_and_rm_doc(&mut pat_ty.attrs),
-                    idx,
                     ty,
                 })
             }

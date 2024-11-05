@@ -54,7 +54,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Regular,
@@ -76,7 +75,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Regular,
@@ -98,7 +96,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Optional,
@@ -142,7 +139,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Regular,
@@ -164,7 +160,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Optional,
@@ -186,7 +181,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Required,
@@ -208,7 +202,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Regular,
@@ -230,7 +223,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Regular,
@@ -252,7 +244,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Optional,
@@ -274,7 +265,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Regular,
@@ -296,7 +286,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Regular,
@@ -318,7 +307,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Optional,
@@ -362,7 +350,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Regular,
@@ -384,7 +371,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Regular,
@@ -406,7 +392,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Optional,
@@ -450,7 +435,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Regular,
@@ -472,7 +456,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Regular,
@@ -494,7 +477,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Optional,
@@ -538,7 +520,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Regular,
@@ -560,7 +541,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Optional,
@@ -582,7 +562,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Required,
@@ -604,7 +583,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Regular,
@@ -626,7 +604,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Optional,
@@ -706,7 +683,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Optional,
@@ -728,7 +704,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Required,
@@ -772,7 +747,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Optional,
@@ -794,7 +768,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Required,
@@ -838,7 +811,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Optional,
@@ -860,7 +832,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Required,
@@ -926,7 +897,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "a1",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Regular,
@@ -938,7 +908,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "a2",
                     docs: "",
-                    idx: 1,
                     ty: Value(
                         ParamInfo {
                             kind: Optional,
@@ -950,7 +919,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "a3",
                     docs: "",
-                    idx: 2,
                     ty: Value(
                         ParamInfo {
                             kind: Regular,
@@ -972,7 +940,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "ws",
                     docs: "",
-                    idx: 0,
                     ty: Workspace {
                         is_mut: true,
                     },
@@ -990,7 +957,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "ws",
                     docs: "",
-                    idx: 0,
                     ty: Workspace {
                         is_mut: false,
                     },

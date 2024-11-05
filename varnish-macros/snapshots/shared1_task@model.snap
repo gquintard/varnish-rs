@@ -18,13 +18,11 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "evt",
                     docs: "",
-                    idx: 0,
                     ty: Event,
                 },
                 ParamTypeInfo {
                     ident: "ctx",
                     docs: "",
-                    idx: 1,
                     ty: Context {
                         is_mut: true,
                     },
@@ -32,7 +30,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "vcl",
                     docs: "",
-                    idx: 2,
                     ty: SharedPerVclMut,
                 },
             ],
@@ -48,7 +45,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "vcl",
                     docs: "This comment is ignored",
-                    idx: 0,
                     ty: SharedPerVclRef,
                 },
             ],
@@ -64,13 +60,11 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "vcl",
                     docs: "",
-                    idx: 0,
                     ty: SharedPerVclRef,
                 },
                 ParamTypeInfo {
                     ident: "op",
                     docs: "",
-                    idx: 1,
                     ty: Value(
                         ParamInfo {
                             kind: Optional,
@@ -92,7 +86,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "tsk",
                     docs: "",
-                    idx: 0,
                     ty: SharedPerTask,
                 },
             ],
@@ -108,13 +101,11 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "tsk",
                     docs: "",
-                    idx: 0,
                     ty: SharedPerTask,
                 },
                 ParamTypeInfo {
                     ident: "op",
                     docs: "",
-                    idx: 1,
                     ty: Value(
                         ParamInfo {
                             kind: Optional,
@@ -141,7 +132,6 @@ VmodInfo {
                     ParamTypeInfo {
                         ident: "vcl",
                         docs: "",
-                        idx: 0,
                         ty: SharedPerVclMut,
                     },
                 ],
@@ -167,19 +157,16 @@ VmodInfo {
                         ParamTypeInfo {
                             ident: "self",
                             docs: "",
-                            idx: 0,
                             ty: SelfType,
                         },
                         ParamTypeInfo {
                             ident: "tsk",
                             docs: "this comment is ignored too",
-                            idx: 1,
                             ty: SharedPerTask,
                         },
                         ParamTypeInfo {
                             ident: "vcl",
                             docs: "",
-                            idx: 2,
                             ty: SharedPerVclRef,
                         },
                     ],
@@ -195,25 +182,21 @@ VmodInfo {
                         ParamTypeInfo {
                             ident: "self",
                             docs: "",
-                            idx: 0,
                             ty: SelfType,
                         },
                         ParamTypeInfo {
                             ident: "tsk",
                             docs: "",
-                            idx: 1,
                             ty: SharedPerTask,
                         },
                         ParamTypeInfo {
                             ident: "vcl",
                             docs: "",
-                            idx: 2,
                             ty: SharedPerVclRef,
                         },
                         ParamTypeInfo {
                             ident: "val",
                             docs: "",
-                            idx: 3,
                             ty: Value(
                                 ParamInfo {
                                     kind: Regular,
@@ -235,25 +218,21 @@ VmodInfo {
                         ParamTypeInfo {
                             ident: "self",
                             docs: "",
-                            idx: 0,
                             ty: SelfType,
                         },
                         ParamTypeInfo {
                             ident: "tsk",
                             docs: "",
-                            idx: 1,
                             ty: SharedPerTask,
                         },
                         ParamTypeInfo {
                             ident: "vcl",
                             docs: "",
-                            idx: 2,
                             ty: SharedPerVclRef,
                         },
                         ParamTypeInfo {
                             ident: "opt",
                             docs: "",
-                            idx: 3,
                             ty: Value(
                                 ParamInfo {
                                     kind: Optional,

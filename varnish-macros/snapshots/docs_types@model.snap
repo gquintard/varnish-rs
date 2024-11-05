@@ -36,7 +36,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_no_docs",
                     docs: "",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Regular,
@@ -48,7 +47,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "doc comment on *function arguments* are invalid in Rust,\nbut they are parsed by macros.\nwe can generate documentation for param `_v` here.\n\n## Example\nThis comment is multi-lined to ensure multiple `#[doc]` are parsed correctly.",
-                    idx: 1,
                     ty: Value(
                         ParamInfo {
                             kind: Regular,
@@ -70,7 +68,6 @@ VmodInfo {
                 ParamTypeInfo {
                     ident: "_v",
                     docs: "doc comment for `arg_only`",
-                    idx: 0,
                     ty: Value(
                         ParamInfo {
                             kind: Regular,
@@ -97,7 +94,6 @@ VmodInfo {
                     ParamTypeInfo {
                         ident: "cap",
                         docs: "doc comment for `cap`",
-                        idx: 0,
                         ty: Value(
                             ParamInfo {
                                 kind: Optional,
@@ -129,13 +125,11 @@ VmodInfo {
                         ParamTypeInfo {
                             ident: "self",
                             docs: "self docs - note that `rustfmt` will put `&self` right after this comment\non the same line, effectively removing the code!\nWe cannot really document it anyway, so we parse it but skip it later.",
-                            idx: 0,
                             ty: SelfType,
                         },
                         ParamTypeInfo {
                             ident: "key",
                             docs: "param docs",
-                            idx: 1,
                             ty: Value(
                                 ParamInfo {
                                     kind: Regular,

@@ -31,10 +31,10 @@ mod task {
             __ev: VclEvent,
         ) -> VCL_INT {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let mut __var2 = (*__vp).take();
-            let __result = super::on_event(__ev, &mut __ctx, &mut __var2);
+            let mut __obj_per_vcl = (*__vp).take();
+            super::on_event(__ev, &mut __ctx, &mut __obj_per_vcl);
             let __result = VCL_INT(0);
-            if let Some(obj) = __var2 {
+            if let Some(obj) = __obj_per_vcl {
                 (*__vp).put(obj, &PRIV_VCL_METHODS);
             }
             __result
@@ -44,9 +44,7 @@ mod task {
             vcl: *const vmod_priv,
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __var0 = vcl.as_ref().and_then(|v| v.get_ref());
-            let __result = super::per_vcl_val(__var0);
-            __result
+            super::per_vcl_val(vcl.as_ref().and_then(|v| v.get_ref()))
         }
         #[repr(C)]
         struct arg_vmod_task_per_vcl_opt {
@@ -60,21 +58,19 @@ mod task {
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
-            let __var0 = __args.vcl.as_ref().and_then(|v| v.get_ref());
-            let __result = super::per_vcl_opt(
-                __var0,
+            super::per_vcl_opt(
+                __args.vcl.as_ref().and_then(|v| v.get_ref()),
                 if __args.valid_op != 0 { __args.op.into() } else { None },
-            );
-            __result
+            )
         }
         unsafe extern "C" fn vmod_c_per_tsk_val(
             __ctx: *mut vrt_ctx,
             tsk: *mut vmod_priv,
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let mut __var0 = (*tsk).take();
-            let __result = super::per_tsk_val(&mut __var0);
-            if let Some(obj) = __var0 {
+            let mut __obj_per_task = (*tsk).take();
+            let __result = super::per_tsk_val(&mut __obj_per_task);
+            if let Some(obj) = __obj_per_task {
                 (*tsk).put(obj, &PRIV_TASK_METHODS);
             }
             __result
@@ -91,12 +87,12 @@ mod task {
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
-            let mut __var0 = (*__args.tsk).take();
+            let mut __obj_per_task = (*__args.tsk).take();
             let __result = super::per_tsk_opt(
-                &mut __var0,
+                &mut __obj_per_task,
                 if __args.valid_op != 0 { __args.op.into() } else { None },
             );
-            if let Some(obj) = __var0 {
+            if let Some(obj) = __obj_per_task {
                 (*__args.tsk).put(obj, &PRIV_TASK_METHODS);
             }
             __result
@@ -108,21 +104,16 @@ mod task {
             vcl: *mut vmod_priv,
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let mut __var0 = (*vcl).take();
-            let __result = super::PerVcl::new(&mut __var0);
-            let __result = Box::new(__result);
+            let mut __obj_per_vcl = (*vcl).take();
+            let __result = Box::new(super::PerVcl::new(&mut __obj_per_vcl));
             *__objp = Box::into_raw(__result);
-            let __result = ();
-            if let Some(obj) = __var0 {
+            if let Some(obj) = __obj_per_vcl {
                 (*vcl).put(obj, &PRIV_VCL_METHODS);
             }
-            __result
         }
         unsafe extern "C" fn vmod_c_PerVcl__fini(__objp: *mut *mut PerVcl) {
             drop(Box::from_raw(*__objp));
             *__objp = ::std::ptr::null_mut();
-            let __result = ();
-            __result
         }
         unsafe extern "C" fn vmod_c_PerVcl_both(
             __ctx: *mut vrt_ctx,
@@ -132,10 +123,10 @@ mod task {
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __obj = __obj.as_ref().unwrap();
-            let mut __var1 = (*tsk).take();
-            let __var2 = vcl.as_ref().and_then(|v| v.get_ref());
-            let __result = __obj.both(&mut __var1, __var2);
-            if let Some(obj) = __var1 {
+            let mut __obj_per_task = (*tsk).take();
+            let __result = __obj
+                .both(&mut __obj_per_task, vcl.as_ref().and_then(|v| v.get_ref()));
+            if let Some(obj) = __obj_per_task {
                 (*tsk).put(obj, &PRIV_TASK_METHODS);
             }
             __result
@@ -149,10 +140,14 @@ mod task {
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __obj = __obj.as_ref().unwrap();
-            let mut __var1 = (*tsk).take();
-            let __var2 = vcl.as_ref().and_then(|v| v.get_ref());
-            let __result = __obj.both_pos(&mut __var1, __var2, val.into());
-            if let Some(obj) = __var1 {
+            let mut __obj_per_task = (*tsk).take();
+            let __result = __obj
+                .both_pos(
+                    &mut __obj_per_task,
+                    vcl.as_ref().and_then(|v| v.get_ref()),
+                    val.into(),
+                );
+            if let Some(obj) = __obj_per_task {
                 (*tsk).put(obj, &PRIV_TASK_METHODS);
             }
             __result
@@ -172,15 +167,14 @@ mod task {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
             let __obj = __obj.as_ref().unwrap();
-            let mut __var1 = (*__args.tsk).take();
-            let __var2 = __args.vcl.as_ref().and_then(|v| v.get_ref());
+            let mut __obj_per_task = (*__args.tsk).take();
             let __result = __obj
                 .both_opt(
-                    &mut __var1,
-                    __var2,
+                    &mut __obj_per_task,
+                    __args.vcl.as_ref().and_then(|v| v.get_ref()),
                     if __args.valid_opt != 0 { __args.opt.into() } else { None },
                 );
-            if let Some(obj) = __var1 {
+            if let Some(obj) = __obj_per_task {
                 (*__args.tsk).put(obj, &PRIV_TASK_METHODS);
             }
             __result
@@ -277,7 +271,7 @@ mod task {
         pub static Vmod_task_Data: VmodData = VmodData {
             vrt_major: 0,
             vrt_minor: 0,
-            file_id: c"27c7c698ab850dd9c789bc820d31f1d0894650d4dabcc6f3c403991d625a3665"
+            file_id: c"d3254ccf9860c2c9a8db4e739800906db26805bc168f4b8f497e3685770707e1"
                 .as_ptr(),
             name: c"task".as_ptr(),
             func_name: c"Vmod_vmod_task_Func".as_ptr(),
@@ -287,7 +281,7 @@ mod task {
             json: JSON.as_ptr(),
             proto: null(),
         };
-        const JSON: &CStr = c"VMOD_JSON_SPEC\u{2}\n[\n  [\n    \"$VMOD\",\n    \"1.0\",\n    \"task\",\n    \"Vmod_vmod_task_Func\",\n    \"27c7c698ab850dd9c789bc820d31f1d0894650d4dabcc6f3c403991d625a3665\",\n    \"Varnish (version) (hash)\",\n    \"0\",\n    \"0\"\n  ],\n  [\n    \"$CPROTO\",\n    \"\\nstruct vmod_task_PerVcl;\\n\\ntypedef VCL_VOID td_vmod_task_per_vcl_val(\\n    VRT_CTX,\\n    struct vmod_priv *\\n);\\n\\nstruct arg_vmod_task_per_vcl_opt {\\n  struct vmod_priv * vcl;\\n  char valid_op;\\n  VCL_INT op;\\n};\\n\\ntypedef VCL_VOID td_vmod_task_per_vcl_opt(\\n    VRT_CTX,\\n    struct arg_vmod_task_per_vcl_opt *\\n);\\n\\ntypedef VCL_VOID td_vmod_task_per_tsk_val(\\n    VRT_CTX,\\n    struct vmod_priv *\\n);\\n\\nstruct arg_vmod_task_per_tsk_opt {\\n  struct vmod_priv * tsk;\\n  char valid_op;\\n  VCL_INT op;\\n};\\n\\ntypedef VCL_VOID td_vmod_task_per_tsk_opt(\\n    VRT_CTX,\\n    struct arg_vmod_task_per_tsk_opt *\\n);\\n\\ntypedef VCL_VOID td_vmod_task_PerVcl__init(\\n    VRT_CTX,\\n    struct vmod_task_PerVcl **,\\n    const char *,\\n    struct vmod_priv *\\n);\\n\\ntypedef VCL_VOID td_vmod_task_PerVcl__fini(\\n    struct vmod_task_PerVcl **\\n);\\n\\ntypedef VCL_VOID td_vmod_task_PerVcl_both(\\n    VRT_CTX,\\n    struct vmod_task_PerVcl *,\\n    struct vmod_priv *,\\n    struct vmod_priv *\\n);\\n\\ntypedef VCL_VOID td_vmod_task_PerVcl_both_pos(\\n    VRT_CTX,\\n    struct vmod_task_PerVcl *,\\n    struct vmod_priv *,\\n    struct vmod_priv *,\\n    VCL_INT\\n);\\n\\nstruct arg_vmod_task_PerVcl_both_opt {\\n  struct vmod_priv * tsk;\\n  struct vmod_priv * vcl;\\n  char valid_opt;\\n  VCL_INT opt;\\n};\\n\\ntypedef VCL_VOID td_vmod_task_PerVcl_both_opt(\\n    VRT_CTX,\\n    struct vmod_task_PerVcl *,\\n    struct arg_vmod_task_PerVcl_both_opt *\\n);\\n\\nstruct Vmod_vmod_task_Func {\\n  vmod_event_f *f_on_event;\\n  td_vmod_task_per_vcl_val *f_per_vcl_val;\\n  td_vmod_task_per_vcl_opt *f_per_vcl_opt;\\n  td_vmod_task_per_tsk_val *f_per_tsk_val;\\n  td_vmod_task_per_tsk_opt *f_per_tsk_opt;\\n  td_vmod_task_PerVcl__init *f_PerVcl__init;\\n  td_vmod_task_PerVcl__fini *f_PerVcl__fini;\\n  td_vmod_task_PerVcl_both *f_PerVcl_both;\\n  td_vmod_task_PerVcl_both_pos *f_PerVcl_both_pos;\\n  td_vmod_task_PerVcl_both_opt *f_PerVcl_both_opt;\\n};\\n\\nstatic struct Vmod_vmod_task_Func Vmod_vmod_task_Func;\"\n  ],\n  [\n    \"$EVENT\",\n    \"Vmod_vmod_task_Func.f_on_event\"\n  ],\n  [\n    \"$FUNC\",\n    \"per_vcl_val\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_task_Func.f_per_vcl_val\",\n      \"\",\n      [\n        \"PRIV_VCL\",\n        \"vcl\"\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"per_vcl_opt\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_task_Func.f_per_vcl_opt\",\n      \"struct arg_vmod_task_per_vcl_opt\",\n      [\n        \"PRIV_VCL\",\n        \"vcl\"\n      ],\n      [\n        \"INT\",\n        \"op\",\n        null,\n        null,\n        true\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"per_tsk_val\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_task_Func.f_per_tsk_val\",\n      \"\",\n      [\n        \"PRIV_TASK\",\n        \"tsk\"\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"per_tsk_opt\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_task_Func.f_per_tsk_opt\",\n      \"struct arg_vmod_task_per_tsk_opt\",\n      [\n        \"PRIV_TASK\",\n        \"tsk\"\n      ],\n      [\n        \"INT\",\n        \"op\",\n        null,\n        null,\n        true\n      ]\n    ]\n  ],\n  [\n    \"$OBJ\",\n    \"PerVcl\",\n    {\n      \"NULL_OK\": false\n    },\n    \"struct vmod_task_PerVcl\",\n    [\n      \"$INIT\",\n      [\n        [\n          \"VOID\"\n        ],\n        \"Vmod_vmod_task_Func.f_PerVcl__init\",\n        \"\",\n        [\n          \"PRIV_VCL\",\n          \"vcl\"\n        ]\n      ]\n    ],\n    [\n      \"$FINI\",\n      [\n        [\n          \"VOID\"\n        ],\n        \"Vmod_vmod_task_Func.f_PerVcl__fini\",\n        \"\"\n      ]\n    ],\n    [\n      \"$METHOD\",\n      \"both\",\n      [\n        [\n          \"VOID\"\n        ],\n        \"Vmod_vmod_task_Func.f_PerVcl_both\",\n        \"\",\n        [\n          \"PRIV_TASK\",\n          \"tsk\"\n        ],\n        [\n          \"PRIV_VCL\",\n          \"vcl\"\n        ]\n      ]\n    ],\n    [\n      \"$METHOD\",\n      \"both_pos\",\n      [\n        [\n          \"VOID\"\n        ],\n        \"Vmod_vmod_task_Func.f_PerVcl_both_pos\",\n        \"\",\n        [\n          \"PRIV_TASK\",\n          \"tsk\"\n        ],\n        [\n          \"PRIV_VCL\",\n          \"vcl\"\n        ],\n        [\n          \"INT\",\n          \"val\"\n        ]\n      ]\n    ],\n    [\n      \"$METHOD\",\n      \"both_opt\",\n      [\n        [\n          \"VOID\"\n        ],\n        \"Vmod_vmod_task_Func.f_PerVcl_both_opt\",\n        \"struct arg_vmod_task_PerVcl_both_opt\",\n        [\n          \"PRIV_TASK\",\n          \"tsk\"\n        ],\n        [\n          \"PRIV_VCL\",\n          \"vcl\"\n        ],\n        [\n          \"INT\",\n          \"opt\",\n          null,\n          null,\n          true\n        ]\n      ]\n    ]\n  ]\n]\n\u{3}";
+        const JSON: &CStr = c"VMOD_JSON_SPEC\u{2}\n[\n  [\n    \"$VMOD\",\n    \"1.0\",\n    \"task\",\n    \"Vmod_vmod_task_Func\",\n    \"d3254ccf9860c2c9a8db4e739800906db26805bc168f4b8f497e3685770707e1\",\n    \"Varnish (version) (hash)\",\n    \"0\",\n    \"0\"\n  ],\n  [\n    \"$CPROTO\",\n    \"\\nstruct vmod_task_PerVcl;\\n\\ntypedef VCL_VOID td_vmod_task_per_vcl_val(\\n    VRT_CTX,\\n    struct vmod_priv *\\n);\\n\\nstruct arg_vmod_task_per_vcl_opt {\\n  struct vmod_priv * vcl;\\n  char valid_op;\\n  VCL_INT op;\\n};\\n\\ntypedef VCL_VOID td_vmod_task_per_vcl_opt(\\n    VRT_CTX,\\n    struct arg_vmod_task_per_vcl_opt *\\n);\\n\\ntypedef VCL_VOID td_vmod_task_per_tsk_val(\\n    VRT_CTX,\\n    struct vmod_priv *\\n);\\n\\nstruct arg_vmod_task_per_tsk_opt {\\n  struct vmod_priv * tsk;\\n  char valid_op;\\n  VCL_INT op;\\n};\\n\\ntypedef VCL_VOID td_vmod_task_per_tsk_opt(\\n    VRT_CTX,\\n    struct arg_vmod_task_per_tsk_opt *\\n);\\n\\ntypedef VCL_VOID td_vmod_task_PerVcl__init(\\n    VRT_CTX,\\n    struct vmod_task_PerVcl **,\\n    const char *,\\n    struct vmod_priv *\\n);\\n\\ntypedef VCL_VOID td_vmod_task_PerVcl__fini(\\n    struct vmod_task_PerVcl **\\n);\\n\\ntypedef VCL_VOID td_vmod_task_PerVcl_both(\\n    VRT_CTX,\\n    struct vmod_task_PerVcl *,\\n    struct vmod_priv *,\\n    struct vmod_priv *\\n);\\n\\ntypedef VCL_VOID td_vmod_task_PerVcl_both_pos(\\n    VRT_CTX,\\n    struct vmod_task_PerVcl *,\\n    struct vmod_priv *,\\n    struct vmod_priv *,\\n    VCL_INT\\n);\\n\\nstruct arg_vmod_task_PerVcl_both_opt {\\n  struct vmod_priv * tsk;\\n  struct vmod_priv * vcl;\\n  char valid_opt;\\n  VCL_INT opt;\\n};\\n\\ntypedef VCL_VOID td_vmod_task_PerVcl_both_opt(\\n    VRT_CTX,\\n    struct vmod_task_PerVcl *,\\n    struct arg_vmod_task_PerVcl_both_opt *\\n);\\n\\nstruct Vmod_vmod_task_Func {\\n  vmod_event_f *f_on_event;\\n  td_vmod_task_per_vcl_val *f_per_vcl_val;\\n  td_vmod_task_per_vcl_opt *f_per_vcl_opt;\\n  td_vmod_task_per_tsk_val *f_per_tsk_val;\\n  td_vmod_task_per_tsk_opt *f_per_tsk_opt;\\n  td_vmod_task_PerVcl__init *f_PerVcl__init;\\n  td_vmod_task_PerVcl__fini *f_PerVcl__fini;\\n  td_vmod_task_PerVcl_both *f_PerVcl_both;\\n  td_vmod_task_PerVcl_both_pos *f_PerVcl_both_pos;\\n  td_vmod_task_PerVcl_both_opt *f_PerVcl_both_opt;\\n};\\n\\nstatic struct Vmod_vmod_task_Func Vmod_vmod_task_Func;\"\n  ],\n  [\n    \"$EVENT\",\n    \"Vmod_vmod_task_Func.f_on_event\"\n  ],\n  [\n    \"$FUNC\",\n    \"per_vcl_val\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_task_Func.f_per_vcl_val\",\n      \"\",\n      [\n        \"PRIV_VCL\",\n        \"vcl\"\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"per_vcl_opt\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_task_Func.f_per_vcl_opt\",\n      \"struct arg_vmod_task_per_vcl_opt\",\n      [\n        \"PRIV_VCL\",\n        \"vcl\"\n      ],\n      [\n        \"INT\",\n        \"op\",\n        null,\n        null,\n        true\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"per_tsk_val\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_task_Func.f_per_tsk_val\",\n      \"\",\n      [\n        \"PRIV_TASK\",\n        \"tsk\"\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"per_tsk_opt\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_task_Func.f_per_tsk_opt\",\n      \"struct arg_vmod_task_per_tsk_opt\",\n      [\n        \"PRIV_TASK\",\n        \"tsk\"\n      ],\n      [\n        \"INT\",\n        \"op\",\n        null,\n        null,\n        true\n      ]\n    ]\n  ],\n  [\n    \"$OBJ\",\n    \"PerVcl\",\n    {\n      \"NULL_OK\": false\n    },\n    \"struct vmod_task_PerVcl\",\n    [\n      \"$INIT\",\n      [\n        [\n          \"VOID\"\n        ],\n        \"Vmod_vmod_task_Func.f_PerVcl__init\",\n        \"\",\n        [\n          \"PRIV_VCL\",\n          \"vcl\"\n        ]\n      ]\n    ],\n    [\n      \"$FINI\",\n      [\n        [\n          \"VOID\"\n        ],\n        \"Vmod_vmod_task_Func.f_PerVcl__fini\",\n        \"\"\n      ]\n    ],\n    [\n      \"$METHOD\",\n      \"both\",\n      [\n        [\n          \"VOID\"\n        ],\n        \"Vmod_vmod_task_Func.f_PerVcl_both\",\n        \"\",\n        [\n          \"PRIV_TASK\",\n          \"tsk\"\n        ],\n        [\n          \"PRIV_VCL\",\n          \"vcl\"\n        ]\n      ]\n    ],\n    [\n      \"$METHOD\",\n      \"both_pos\",\n      [\n        [\n          \"VOID\"\n        ],\n        \"Vmod_vmod_task_Func.f_PerVcl_both_pos\",\n        \"\",\n        [\n          \"PRIV_TASK\",\n          \"tsk\"\n        ],\n        [\n          \"PRIV_VCL\",\n          \"vcl\"\n        ],\n        [\n          \"INT\",\n          \"val\"\n        ]\n      ]\n    ],\n    [\n      \"$METHOD\",\n      \"both_opt\",\n      [\n        [\n          \"VOID\"\n        ],\n        \"Vmod_vmod_task_Func.f_PerVcl_both_opt\",\n        \"struct arg_vmod_task_PerVcl_both_opt\",\n        [\n          \"PRIV_TASK\",\n          \"tsk\"\n        ],\n        [\n          \"PRIV_VCL\",\n          \"vcl\"\n        ],\n        [\n          \"INT\",\n          \"opt\",\n          null,\n          null,\n          true\n        ]\n      ]\n    ]\n  ]\n]\n\u{3}";
     }
     use super::{PerTask, PerVcl};
     use varnish::vcl::{Ctx, Event};

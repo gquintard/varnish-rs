@@ -78,7 +78,6 @@ impl FuncType {
 pub struct ParamTypeInfo {
     pub ident: String,
     pub docs: String,
-    pub idx: usize,
     pub ty: ParamType,
 }
 

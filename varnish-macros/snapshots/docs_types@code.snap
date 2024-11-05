@@ -26,13 +26,11 @@ mod types {
         use super::*;
         unsafe extern "C" fn vmod_c_with_docs(__ctx: *mut vrt_ctx) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::with_docs();
-            __result
+            super::with_docs()
         }
         unsafe extern "C" fn vmod_c_no_docs(__ctx: *mut vrt_ctx) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::no_docs();
-            __result
+            super::no_docs()
         }
         unsafe extern "C" fn vmod_c_doctest(
             __ctx: *mut vrt_ctx,
@@ -40,13 +38,11 @@ mod types {
             _v: VCL_INT,
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::doctest(_no_docs.into(), _v.into());
-            __result
+            super::doctest(_no_docs.into(), _v.into())
         }
         unsafe extern "C" fn vmod_c_arg_only(__ctx: *mut vrt_ctx, _v: VCL_INT) {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let __result = super::arg_only(_v.into());
-            __result
+            super::arg_only(_v.into())
         }
         #[repr(C)]
         struct arg_vmod_types_DocStruct__init {
@@ -61,19 +57,16 @@ mod types {
         ) {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
-            let __result = super::DocStruct::new(
-                if __args.valid_cap != 0 { __args.cap.into() } else { None },
+            let __result = Box::new(
+                super::DocStruct::new(
+                    if __args.valid_cap != 0 { __args.cap.into() } else { None },
+                ),
             );
-            let __result = Box::new(__result);
             *__objp = Box::into_raw(__result);
-            let __result = ();
-            __result
         }
         unsafe extern "C" fn vmod_c_DocStruct__fini(__objp: *mut *mut DocStruct) {
             drop(Box::from_raw(*__objp));
             *__objp = ::std::ptr::null_mut();
-            let __result = ();
-            __result
         }
         unsafe extern "C" fn vmod_c_DocStruct_function(
             __ctx: *mut vrt_ctx,
@@ -83,11 +76,9 @@ mod types {
             let mut __ctx = Ctx::from_ptr(__ctx);
             let __obj = __obj.as_ref().unwrap();
             let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
-                let __result = __obj.function(key.try_into()?);
-                Ok(__result)
+                Ok(__obj.function(key.try_into()?))
             };
-            let __result = __call_user_func();
-            __result
+            __call_user_func()
                 .unwrap_or_else(|err| {
                     __ctx.fail(err);
                 })
@@ -149,7 +140,7 @@ mod types {
         pub static Vmod_types_Data: VmodData = VmodData {
             vrt_major: 0,
             vrt_minor: 0,
-            file_id: c"bb99893659302cf723b84602b3345c6d02ea40fff954dd31d6e1dad92bc236b1"
+            file_id: c"84444b833e86e8a67f59228fa2634183f81f58c50e684ec4152fd478ab9875fe"
                 .as_ptr(),
             name: c"types".as_ptr(),
             func_name: c"Vmod_vmod_types_Func".as_ptr(),
@@ -159,7 +150,7 @@ mod types {
             json: JSON.as_ptr(),
             proto: null(),
         };
-        const JSON: &CStr = c"VMOD_JSON_SPEC\u{2}\n[\n  [\n    \"$VMOD\",\n    \"1.0\",\n    \"types\",\n    \"Vmod_vmod_types_Func\",\n    \"bb99893659302cf723b84602b3345c6d02ea40fff954dd31d6e1dad92bc236b1\",\n    \"Varnish (version) (hash)\",\n    \"0\",\n    \"0\"\n  ],\n  [\n    \"$CPROTO\",\n    \"\\nstruct vmod_types_DocStruct;\\n\\ntypedef VCL_VOID td_vmod_types_with_docs(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_VOID td_vmod_types_no_docs(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_VOID td_vmod_types_doctest(\\n    VRT_CTX,\\n    VCL_INT,\\n    VCL_INT\\n);\\n\\ntypedef VCL_VOID td_vmod_types_arg_only(\\n    VRT_CTX,\\n    VCL_INT\\n);\\n\\nstruct arg_vmod_types_DocStruct__init {\\n  char valid_cap;\\n  VCL_INT cap;\\n};\\n\\ntypedef VCL_VOID td_vmod_types_DocStruct__init(\\n    VRT_CTX,\\n    struct vmod_types_DocStruct **,\\n    const char *,\\n    struct arg_vmod_types_DocStruct__init *\\n);\\n\\ntypedef VCL_VOID td_vmod_types_DocStruct__fini(\\n    struct vmod_types_DocStruct **\\n);\\n\\ntypedef VCL_VOID td_vmod_types_DocStruct_function(\\n    VRT_CTX,\\n    struct vmod_types_DocStruct *,\\n    VCL_STRING\\n);\\n\\nstruct Vmod_vmod_types_Func {\\n  td_vmod_types_with_docs *f_with_docs;\\n  td_vmod_types_no_docs *f_no_docs;\\n  td_vmod_types_doctest *f_doctest;\\n  td_vmod_types_arg_only *f_arg_only;\\n  td_vmod_types_DocStruct__init *f_DocStruct__init;\\n  td_vmod_types_DocStruct__fini *f_DocStruct__fini;\\n  td_vmod_types_DocStruct_function *f_DocStruct_function;\\n};\\n\\nstatic struct Vmod_vmod_types_Func Vmod_vmod_types_Func;\"\n  ],\n  [\n    \"$FUNC\",\n    \"with_docs\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_with_docs\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"no_docs\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_no_docs\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"doctest\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_doctest\",\n      \"\",\n      [\n        \"INT\",\n        \"_no_docs\"\n      ],\n      [\n        \"INT\",\n        \"_v\"\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"arg_only\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_arg_only\",\n      \"\",\n      [\n        \"INT\",\n        \"_v\"\n      ]\n    ]\n  ],\n  [\n    \"$OBJ\",\n    \"DocStruct\",\n    {\n      \"NULL_OK\": false\n    },\n    \"struct vmod_types_DocStruct\",\n    [\n      \"$INIT\",\n      [\n        [\n          \"VOID\"\n        ],\n        \"Vmod_vmod_types_Func.f_DocStruct__init\",\n        \"struct arg_vmod_types_DocStruct__init\",\n        [\n          \"INT\",\n          \"cap\",\n          null,\n          null,\n          true\n        ]\n      ]\n    ],\n    [\n      \"$FINI\",\n      [\n        [\n          \"VOID\"\n        ],\n        \"Vmod_vmod_types_Func.f_DocStruct__fini\",\n        \"\"\n      ]\n    ],\n    [\n      \"$METHOD\",\n      \"function\",\n      [\n        [\n          \"VOID\"\n        ],\n        \"Vmod_vmod_types_Func.f_DocStruct_function\",\n        \"\",\n        [\n          \"STRING\",\n          \"key\"\n        ]\n      ]\n    ]\n  ]\n]\n\u{3}";
+        const JSON: &CStr = c"VMOD_JSON_SPEC\u{2}\n[\n  [\n    \"$VMOD\",\n    \"1.0\",\n    \"types\",\n    \"Vmod_vmod_types_Func\",\n    \"84444b833e86e8a67f59228fa2634183f81f58c50e684ec4152fd478ab9875fe\",\n    \"Varnish (version) (hash)\",\n    \"0\",\n    \"0\"\n  ],\n  [\n    \"$CPROTO\",\n    \"\\nstruct vmod_types_DocStruct;\\n\\ntypedef VCL_VOID td_vmod_types_with_docs(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_VOID td_vmod_types_no_docs(\\n    VRT_CTX\\n);\\n\\ntypedef VCL_VOID td_vmod_types_doctest(\\n    VRT_CTX,\\n    VCL_INT,\\n    VCL_INT\\n);\\n\\ntypedef VCL_VOID td_vmod_types_arg_only(\\n    VRT_CTX,\\n    VCL_INT\\n);\\n\\nstruct arg_vmod_types_DocStruct__init {\\n  char valid_cap;\\n  VCL_INT cap;\\n};\\n\\ntypedef VCL_VOID td_vmod_types_DocStruct__init(\\n    VRT_CTX,\\n    struct vmod_types_DocStruct **,\\n    const char *,\\n    struct arg_vmod_types_DocStruct__init *\\n);\\n\\ntypedef VCL_VOID td_vmod_types_DocStruct__fini(\\n    struct vmod_types_DocStruct **\\n);\\n\\ntypedef VCL_VOID td_vmod_types_DocStruct_function(\\n    VRT_CTX,\\n    struct vmod_types_DocStruct *,\\n    VCL_STRING\\n);\\n\\nstruct Vmod_vmod_types_Func {\\n  td_vmod_types_with_docs *f_with_docs;\\n  td_vmod_types_no_docs *f_no_docs;\\n  td_vmod_types_doctest *f_doctest;\\n  td_vmod_types_arg_only *f_arg_only;\\n  td_vmod_types_DocStruct__init *f_DocStruct__init;\\n  td_vmod_types_DocStruct__fini *f_DocStruct__fini;\\n  td_vmod_types_DocStruct_function *f_DocStruct_function;\\n};\\n\\nstatic struct Vmod_vmod_types_Func Vmod_vmod_types_Func;\"\n  ],\n  [\n    \"$FUNC\",\n    \"with_docs\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_with_docs\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"no_docs\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_no_docs\",\n      \"\"\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"doctest\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_doctest\",\n      \"\",\n      [\n        \"INT\",\n        \"_no_docs\"\n      ],\n      [\n        \"INT\",\n        \"_v\"\n      ]\n    ]\n  ],\n  [\n    \"$FUNC\",\n    \"arg_only\",\n    [\n      [\n        \"VOID\"\n      ],\n      \"Vmod_vmod_types_Func.f_arg_only\",\n      \"\",\n      [\n        \"INT\",\n        \"_v\"\n      ]\n    ]\n  ],\n  [\n    \"$OBJ\",\n    \"DocStruct\",\n    {\n      \"NULL_OK\": false\n    },\n    \"struct vmod_types_DocStruct\",\n    [\n      \"$INIT\",\n      [\n        [\n          \"VOID\"\n        ],\n        \"Vmod_vmod_types_Func.f_DocStruct__init\",\n        \"struct arg_vmod_types_DocStruct__init\",\n        [\n          \"INT\",\n          \"cap\",\n          null,\n          null,\n          true\n        ]\n      ]\n    ],\n    [\n      \"$FINI\",\n      [\n        [\n          \"VOID\"\n        ],\n        \"Vmod_vmod_types_Func.f_DocStruct__fini\",\n        \"\"\n      ]\n    ],\n    [\n      \"$METHOD\",\n      \"function\",\n      [\n        [\n          \"VOID\"\n        ],\n        \"Vmod_vmod_types_Func.f_DocStruct_function\",\n        \"\",\n        [\n          \"STRING\",\n          \"key\"\n        ]\n      ]\n    ]\n  ]\n]\n\u{3}";
     }
     /// doctest on a function
     /// with multiple lines

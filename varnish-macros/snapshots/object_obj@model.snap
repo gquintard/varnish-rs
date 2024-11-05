@@ -22,7 +22,6 @@ VmodInfo {
                     ParamTypeInfo {
                         ident: "cap",
                         docs: "",
-                        idx: 0,
                         ty: Value(
                             ParamInfo {
                                 kind: Optional,
@@ -54,13 +53,11 @@ VmodInfo {
                         ParamTypeInfo {
                             ident: "self",
                             docs: "",
-                            idx: 0,
                             ty: SelfType,
                         },
                         ParamTypeInfo {
                             ident: "key",
                             docs: "",
-                            idx: 1,
                             ty: Value(
                                 ParamInfo {
                                     kind: Regular,
@@ -72,7 +69,6 @@ VmodInfo {
                         ParamTypeInfo {
                             ident: "value",
                             docs: "",
-                            idx: 2,
                             ty: Value(
                                 ParamInfo {
                                     kind: Regular,
@@ -94,13 +90,11 @@ VmodInfo {
                         ParamTypeInfo {
                             ident: "self",
                             docs: "",
-                            idx: 0,
                             ty: SelfType,
                         },
                         ParamTypeInfo {
                             ident: "key",
                             docs: "",
-                            idx: 1,
                             ty: Value(
                                 ParamInfo {
                                     kind: Regular,
@@ -127,7 +121,6 @@ VmodInfo {
                     ParamTypeInfo {
                         ident: "cap",
                         docs: "",
-                        idx: 0,
                         ty: Value(
                             ParamInfo {
                                 kind: Optional,
@@ -139,7 +132,6 @@ VmodInfo {
                     ParamTypeInfo {
                         ident: "name",
                         docs: "",
-                        idx: 1,
                         ty: VclName(
                             ParamInfo {
                                 kind: Regular,
@@ -171,13 +163,11 @@ VmodInfo {
                         ParamTypeInfo {
                             ident: "self",
                             docs: "",
-                            idx: 0,
                             ty: SelfType,
                         },
                         ParamTypeInfo {
                             ident: "key",
                             docs: "",
-                            idx: 1,
                             ty: Value(
                                 ParamInfo {
                                     kind: Regular,
@@ -189,7 +179,6 @@ VmodInfo {
                         ParamTypeInfo {
                             ident: "value",
                             docs: "",
-                            idx: 2,
                             ty: Value(
                                 ParamInfo {
                                     kind: Optional,
@@ -216,7 +205,6 @@ VmodInfo {
                     ParamTypeInfo {
                         ident: "ctx",
                         docs: "",
-                        idx: 0,
                         ty: Context {
                             is_mut: true,
                         },
@@ -224,7 +212,6 @@ VmodInfo {
                     ParamTypeInfo {
                         ident: "cap",
                         docs: "",
-                        idx: 1,
                         ty: Value(
                             ParamInfo {
                                 kind: Optional,
@@ -236,7 +223,6 @@ VmodInfo {
                     ParamTypeInfo {
                         ident: "name",
                         docs: "",
-                        idx: 2,
                         ty: VclName(
                             ParamInfo {
                                 kind: Regular,
@@ -268,13 +254,11 @@ VmodInfo {
                         ParamTypeInfo {
                             ident: "self",
                             docs: "",
-                            idx: 0,
                             ty: SelfType,
                         },
                         ParamTypeInfo {
                             ident: "ctx",
                             docs: "",
-                            idx: 1,
                             ty: Context {
                                 is_mut: true,
                             },
@@ -282,7 +266,6 @@ VmodInfo {
                         ParamTypeInfo {
                             ident: "key",
                             docs: "",
-                            idx: 2,
                             ty: Value(
                                 ParamInfo {
                                     kind: Regular,
@@ -294,7 +277,6 @@ VmodInfo {
                         ParamTypeInfo {
                             ident: "value",
                             docs: "",
-                            idx: 3,
                             ty: Value(
                                 ParamInfo {
                                     kind: Optional,

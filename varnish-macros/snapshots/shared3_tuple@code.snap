@@ -25,14 +25,15 @@ mod tuple {
             tsk_vals: *mut vmod_priv,
         ) -> VCL_STRING {
             let mut __ctx = Ctx::from_ptr(__ctx);
-            let mut __var0 = (*tsk_vals).take();
+            let mut __obj_per_task = (*tsk_vals).take();
             let mut __call_user_func = || -> Result<_, ::varnish::vcl::VclError> {
-                let __result = super::ref_to_slice_lifetime(&mut __var0);
-                let __result = __result.into_vcl(&mut __ctx.ws)?;
-                Ok(__result)
+                Ok(
+                    super::ref_to_slice_lifetime(&mut __obj_per_task)
+                        .into_vcl(&mut __ctx.ws)?,
+                )
             };
             let __result = __call_user_func();
-            if let Some(obj) = __var0 {
+            if let Some(obj) = __obj_per_task {
                 (*tsk_vals).put(obj, &PRIV_TASK_METHODS);
             }
             __result
@@ -72,7 +73,7 @@ mod tuple {
         pub static Vmod_tuple_Data: VmodData = VmodData {
             vrt_major: 0,
             vrt_minor: 0,
-            file_id: c"a40747d863f47d9ecc1b4211f0359f8bb26e005aac1d11dd25d5e88a59efd99e"
+            file_id: c"fd153c857e1a4787114cd9261faa83d258aa10401348fb167822ff1c1467c4f1"
                 .as_ptr(),
             name: c"tuple".as_ptr(),
             func_name: c"Vmod_vmod_tuple_Func".as_ptr(),
@@ -82,7 +83,7 @@ mod tuple {
             json: JSON.as_ptr(),
             proto: null(),
         };
-        const JSON: &CStr = c"VMOD_JSON_SPEC\u{2}\n[\n  [\n    \"$VMOD\",\n    \"1.0\",\n    \"tuple\",\n    \"Vmod_vmod_tuple_Func\",\n    \"a40747d863f47d9ecc1b4211f0359f8bb26e005aac1d11dd25d5e88a59efd99e\",\n    \"Varnish (version) (hash)\",\n    \"0\",\n    \"0\"\n  ],\n  [\n    \"$CPROTO\",\n    \"\\ntypedef VCL_STRING td_vmod_tuple_ref_to_slice_lifetime(\\n    VRT_CTX,\\n    struct vmod_priv *\\n);\\n\\nstruct Vmod_vmod_tuple_Func {\\n  td_vmod_tuple_ref_to_slice_lifetime *f_ref_to_slice_lifetime;\\n};\\n\\nstatic struct Vmod_vmod_tuple_Func Vmod_vmod_tuple_Func;\"\n  ],\n  [\n    \"$FUNC\",\n    \"ref_to_slice_lifetime\",\n    [\n      [\n        \"STRING\"\n      ],\n      \"Vmod_vmod_tuple_Func.f_ref_to_slice_lifetime\",\n      \"\",\n      [\n        \"PRIV_TASK\",\n        \"tsk_vals\"\n      ]\n    ]\n  ]\n]\n\u{3}";
+        const JSON: &CStr = c"VMOD_JSON_SPEC\u{2}\n[\n  [\n    \"$VMOD\",\n    \"1.0\",\n    \"tuple\",\n    \"Vmod_vmod_tuple_Func\",\n    \"fd153c857e1a4787114cd9261faa83d258aa10401348fb167822ff1c1467c4f1\",\n    \"Varnish (version) (hash)\",\n    \"0\",\n    \"0\"\n  ],\n  [\n    \"$CPROTO\",\n    \"\\ntypedef VCL_STRING td_vmod_tuple_ref_to_slice_lifetime(\\n    VRT_CTX,\\n    struct vmod_priv *\\n);\\n\\nstruct Vmod_vmod_tuple_Func {\\n  td_vmod_tuple_ref_to_slice_lifetime *f_ref_to_slice_lifetime;\\n};\\n\\nstatic struct Vmod_vmod_tuple_Func Vmod_vmod_tuple_Func;\"\n  ],\n  [\n    \"$FUNC\",\n    \"ref_to_slice_lifetime\",\n    [\n      [\n        \"STRING\"\n      ],\n      \"Vmod_vmod_tuple_Func.f_ref_to_slice_lifetime\",\n      \"\",\n      [\n        \"PRIV_TASK\",\n        \"tsk_vals\"\n      ]\n    ]\n  ]\n]\n\u{3}";
     }
     use super::PerTask;
     pub fn ref_to_slice_lifetime<'a>(
