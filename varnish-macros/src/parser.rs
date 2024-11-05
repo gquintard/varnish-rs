@@ -24,6 +24,7 @@ pub fn tokens_to_model(args: TokenStream, item_mod: &mut ItemMod) -> ProcResult<
 
 impl VmodInfo {
     /// Parse the `mod` item and generate the model of everything
+    #[expect(clippy::too_many_lines)]
     fn parse(params: VmodParams, item: &mut ItemMod) -> ProcResult<Self> {
         let mut errors = Errors::new();
         let mut funcs = Vec::<FuncInfo>::new();
@@ -32,29 +33,86 @@ impl VmodInfo {
         let mut has_event = false;
         if let Some((_, content)) = &mut item.content {
             for item in content {
-                if let Item::Fn(fn_item) = item {
-                    // a function or an event handler
-                    let func = FuncInfo::parse(
-                        &mut shared_types,
-                        &mut fn_item.sig,
-                        &fn_item.vis,
-                        &mut fn_item.attrs,
-                        false,
-                    );
-                    if let Some(func) = errors.on_err(func) {
-                        if matches!(func.func_type, FuncType::Event) {
-                            if has_event {
-                                errors.add(&fn_item.sig.ident, "Only one event handler is allowed");
-                                continue;
+                match item {
+                    Item::Fn(fn_item) => {
+                        // a function or an event handler
+                        let func = FuncInfo::parse(
+                            &mut shared_types,
+                            &mut fn_item.sig,
+                            &fn_item.vis,
+                            &mut fn_item.attrs,
+                            false,
+                        );
+                        if let Some(func) = errors.on_err(func) {
+                            if matches!(func.func_type, FuncType::Event) {
+                                if has_event {
+                                    errors.add(
+                                        &fn_item.sig.ident,
+                                        "Only one event handler is allowed",
+                                    );
+                                    continue;
+                                }
+                                has_event = true;
                             }
-                            has_event = true;
+                            funcs.push(func);
                         }
-                        funcs.push(func);
                     }
-                } else if let Item::Impl(impl_item) = item {
-                    // an object
-                    if let Some(obj) = errors.on_err(ObjInfo::parse(impl_item, &mut shared_types)) {
-                        objects.push(obj);
+                    Item::Impl(impl_item) => {
+                        // an object
+                        if let Some(obj) =
+                            errors.on_err(ObjInfo::parse(impl_item, &mut shared_types))
+                        {
+                            objects.push(obj);
+                        }
+                    }
+                    Item::Use(_) => { /* ignore */ }
+                    Item::Struct { .. } => {
+                        errors.add(item, &err_msg_item_not_allowed("Structs"));
+                    }
+                    Item::Enum { .. } => {
+                        errors.add(item, &err_msg_item_not_allowed("Enums"));
+                    }
+                    Item::Const(_) => {
+                        errors.add(
+                            item,
+                            "Constants are not allowed in a `mod` tagged with `#[varnish::vmod]",
+                        );
+                    }
+                    Item::Macro(_) => {
+                        errors.add(
+                            item,
+                            "Macros are not allowed in a `mod` tagged with `#[varnish::vmod]",
+                        );
+                    }
+                    Item::Mod(_) => {
+                        errors.add(item, "Nested modules are not allowed in a `mod` tagged with `#[varnish::vmod]");
+                    }
+                    Item::Static(_) => {
+                        errors.add(item, "Static variables are not allowed in a `mod` tagged with `#[varnish::vmod]");
+                    }
+                    Item::Trait(_) => {
+                        errors.add(
+                            item,
+                            "Traits are not allowed in a `mod` tagged with `#[varnish::vmod]",
+                        );
+                    }
+                    Item::TraitAlias(_) => {
+                        errors.add(item, "Trait aliases are not allowed in a `mod` tagged with `#[varnish::vmod]");
+                    }
+                    Item::Type(_) => {
+                        errors.add(
+                            item,
+                            "Type aliases are not allowed in a `mod` tagged with `#[varnish::vmod]",
+                        );
+                    }
+                    Item::Union(_) => {
+                        errors.add(
+                            item,
+                            "Unions are not allowed in a `mod` tagged with `#[varnish::vmod]",
+                        );
+                    }
+                    _ => {
+                        errors.add(item, "Only functions and impl blocks are allowed inside a `mod` tagged with `#[varnish::vmod]`");
                     }
                 }
             }
@@ -73,6 +131,10 @@ impl VmodInfo {
             objects,
         })
     }
+}
+
+fn err_msg_item_not_allowed(typ: &str) -> String {
+    format!("{typ} are not allowed inside a `mod` tagged with `#[varnish::vmod]`.  Move it to an outer scope and keep just the `impl` block. More than one `impl` blocks are allowed.")
 }
 
 impl ObjInfo {
