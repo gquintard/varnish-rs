@@ -29,6 +29,7 @@ pkg-config.workspace = true
 
 [dependencies]
 serde.workspace = true
+thiserror.workspace = true
 
 [lints]
 workspace = true
