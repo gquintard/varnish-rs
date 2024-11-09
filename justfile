@@ -37,6 +37,10 @@ check:
 build:
     cargo build --workspace --all-targets
 
+# build all
+build-all-features:
+    cargo build --workspace --all-targets --features "ffi,vsc"
+
 # Run all tests
 test: build
     cargo test --workspace --all-targets
@@ -55,7 +59,7 @@ rust-info:
     cargo --version
 
 # Run all tests as expected by CI
-ci-test: rust-info test-fmt clippy test test-doc
+ci-test: rust-info test-fmt clippy test test-doc build-all-features
 
 # Verify that the current version of the crate is not the same as the one published on crates.io
 check-if-published:

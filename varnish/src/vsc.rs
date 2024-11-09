@@ -12,9 +12,8 @@ use std::path::Path;
 use std::ptr;
 use std::time::Duration;
 
+use varnish_sys::ffi;
 use varnish_sys::vcl::{VclError, VclResult};
-
-use crate::ffi;
 
 /// A statistics set, created using a [`VSCBuilder`]
 #[derive(Debug)]

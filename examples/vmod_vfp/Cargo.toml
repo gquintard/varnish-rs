@@ -5,7 +5,7 @@ publish = false
 edition.workspace = true
 
 [dependencies]
-varnish.workspace = true
+varnish = { workspace = true, features = ["ffi"]}
 
 [lib]
 crate-type = ["cdylib"]

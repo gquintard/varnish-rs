@@ -162,6 +162,25 @@ impl Generator {
         let export_decls: Vec<_> = self.iter_all_funcs().map(|f| &f.export_decl).collect();
         let export_inits: Vec<_> = self.iter_all_funcs().map(|f| &f.export_init).collect();
 
+        // This list must match the list in varnish-macros/src/lib.rs
+        let use_ffi_items = quote![
+            VCL_BACKEND,
+            VCL_BOOL,
+            VCL_DURATION,
+            VCL_INT,
+            VCL_IP,
+            VCL_PROBE,
+            VCL_REAL,
+            VCL_STRING,
+            VCL_VOID,
+            VMOD_ABI_Version,
+            VMOD_PRIV_METHODS_MAGIC,
+            VclEvent,
+            vmod_priv,
+            vmod_priv_methods,
+            vrt_ctx,
+        ];
+
         quote!(
             #[allow(
                 non_snake_case,
@@ -175,23 +194,7 @@ impl Generator {
             mod varnish_generated {
                 use std::ffi::{c_char, c_int, c_uint, c_void, CStr};
                 use std::ptr::null;
-                use varnish::ffi::{
-                    VCL_BACKEND,
-                    VCL_BOOL,
-                    VCL_DURATION,
-                    VCL_INT,
-                    VCL_IP,
-                    VCL_PROBE,
-                    VCL_REAL,
-                    VCL_STRING,
-                    VCL_VOID,
-                    VMOD_ABI_Version,
-                    VMOD_PRIV_METHODS_MAGIC,
-                    VclEvent,
-                    vmod_priv,
-                    vmod_priv_methods,
-                    vrt_ctx,
-                };
+                use varnish::ffi::{#use_ffi_items};
                 use varnish::vcl::{Ctx, IntoVCL, Workspace};
                 use super::*;
 

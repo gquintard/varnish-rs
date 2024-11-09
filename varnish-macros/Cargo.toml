@@ -25,7 +25,7 @@ glob.workspace = true
 insta.workspace = true
 regex.workspace = true
 trybuild.workspace = true
-varnish.workspace = true
+varnish = { workspace = true, features = ["ffi"]}
 
 [lints]
 workspace = true

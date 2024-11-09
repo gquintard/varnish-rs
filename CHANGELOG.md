@@ -11,6 +11,8 @@
   - supports `VARNISHTEST_DURATION` env var, defaulting to "5s"
   - supports debug mode - keeps the temporary files and always prints the output: `run_vtc_tests!!("tests/*.vtc", true)`
 - Multi-version support for `libvarnish` headers now allows the same code to be used with Varnish v7.4, v7.5, and v7.6
+- Most FFI objects are public only if the user enables the `ffi` feature. This is to prevent users from using the FFI directly and to encourage them to use the safe Rust API.  SemVer guarantees that the public API will not change, but the FFI API may change without warning.
+- Introduce `vsc` feature to enable the `varnish::vsc` module
 - Renamed a few types for clarity and to be more consistent:
   - `COWProbe` struct to `CowProbe`
   - `COWRequest` struct to `CowRequest`

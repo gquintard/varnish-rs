@@ -17,3 +17,8 @@ varnish-sys.workspace = true
 
 [lints]
 workspace = true
+
+[features]
+default = []
+ffi = []
+vsc = []
