@@ -78,10 +78,25 @@
 //!     expect resp.status == 200
 //! ```
 
-// Re-publish varnish_sys::ffi and vcl
-pub use varnish_sys::{ffi, vcl};
+// Re-publish some varnish_sys modules
+pub use varnish_sys::vcl;
+
+#[cfg(not(feature = "ffi"))]
+pub mod ffi {
+    // This list must match the `use_ffi_items` in generator.rs
+    pub use varnish_sys::ffi::{
+        vmod_priv, vmod_priv_methods, vrt_ctx, VMOD_ABI_Version, VclEvent, VCL_BACKEND, VCL_BOOL,
+        VCL_DURATION, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL, VCL_STRING, VCL_VOID,
+        VMOD_PRIV_METHODS_MAGIC,
+    };
+}
+
+#[cfg(feature = "ffi")]
+pub use varnish_sys::ffi;
 
 pub mod varnishtest;
+
+#[cfg(feature = "vsc")]
 pub mod vsc;
 
 pub use varnish_macros::vmod;

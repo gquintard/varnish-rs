@@ -11,8 +11,9 @@ pub struct kv {
 /// A simple string dictionary in your VCL
 #[varnish::vmod(docs = "README.md")]
 mod object {
-    use super::kv;
     use dashmap::DashMap;
+
+    use super::kv;
 
     // implementation needs the same methods as defined in the vcc, plus "new()"
     // corresponding to the constructor, which requires the context (_ctx) , and the
