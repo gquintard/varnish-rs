@@ -7,7 +7,7 @@ fn main() {
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
 
     println!("cargo:rerun-if-env-changed=VARNISH_INCLUDE_PATHS");
-    let Some(varnish_paths) = find_include_dir(&out_path) else {
+    let Some((varnish_paths, varnish_ver)) = find_include_dir(&out_path) else {
         return;
     };
 
@@ -65,22 +65,25 @@ fn main() {
     // Compare generated `out_path` file to the checked-in `bindings.for-docs` file,
     // and if they differ, raise a warning.
     let generated = fs::read_to_string(&out_path).unwrap();
-    let checked_in = fs::read_to_string("bindings.for-docs").unwrap();
+    let checked_in = fs::read_to_string("bindings.for-docs").unwrap_or_default();
     if generated != checked_in {
         println!(
-            "cargo::warning=Generated bindings differ from checked-in bindings.for-docs. Update with   cp {} varnish-sys/bindings.for-docs",
+            "cargo::warning=Generated bindings from Varnish {varnish_ver} differ from checked-in bindings.for-docs. Update with   cp {} varnish-sys/bindings.for-docs",
             out_path.display()
         );
     }
 }
 
-fn find_include_dir(out_path: &PathBuf) -> Option<Vec<PathBuf>> {
+fn find_include_dir(out_path: &PathBuf) -> Option<(Vec<PathBuf>, String)> {
     if let Ok(s) = env::var("VARNISH_INCLUDE_PATHS") {
         // FIXME: If the user has set the VARNISH_INCLUDE_PATHS environment variable, use that.
         //    At the moment we have no way to detect which version it is.
         //    vmod_abi.h  seems to have this line, which can be used in the future.
         //    #define VMOD_ABI_Version "Varnish 7.5.0 eef25264e5ca5f96a77129308edb83ccf84cb1b1"
-        return Some(s.split(':').map(PathBuf::from).collect());
+        return Some((
+            s.split(':').map(PathBuf::from).collect(),
+            "version unknown".into(),
+        ));
     }
 
     let pkg = pkg_config::Config::new();
@@ -102,7 +105,7 @@ fn find_include_dir(out_path: &PathBuf) -> Option<Vec<PathBuf>> {
             if major == 7 && minor <= 5 {
                 println!("cargo::rustc-cfg=feature=\"_objcore_in_init\"");
             }
-            Some(l.include_paths)
+            Some((l.include_paths, l.version))
         }
         Err(e) => {
             // See https://docs.rs/about/builds#detecting-docsrs
