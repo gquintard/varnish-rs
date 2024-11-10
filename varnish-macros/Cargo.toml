@@ -5,6 +5,7 @@ authors = ["Yuri Astrakhan <YuriAstrakhan@gmail.com>", "Guillaume Quintard <guil
 # FIXME: need categories and keywords
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 license.workspace = true
 
 [lib]

@@ -9,6 +9,7 @@ members = ["varnish", "varnish-macros", "varnish-sys", "vmod_test", "examples/vm
 version = "0.1.0"
 repository = "https://github.com/gquintard/varnish-rs"
 edition = "2021"
+rust-version = "1.77.0"
 license = "BSD-3-Clause"
 
 [workspace.dependencies]
