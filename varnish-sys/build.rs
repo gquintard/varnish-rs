@@ -20,7 +20,7 @@ fn main() {
     rename_enum!(ren, "lbody_e" => "Body", prefix: "LBODY_"); // LBODY_SET_STRING
     rename_enum!(ren, "task_prio" => "TaskPriority", prefix: "TASK_QUEUE_"); // TASK_QUEUE_BO
     rename_enum!(ren, "vas_e" => "Vas", prefix: "VAS_"); // VAS_WRONG
-    rename_enum!(ren, "vcl_event_e" => "VclEvent", prefix: "VCL_EVENT_"); // VCL_EVENT_LOAD
+    rename_enum!(ren, "vcl_event_e" => "VclEvent", prefix: "VCL_EVENT_", "VDI_EVENT_SICK" => "Sick"); // VCL_EVENT_LOAD
     rename_enum!(ren, "vcl_func_call_e" => "VclFuncCall", prefix: "VSUB_"); // VSUB_STATIC
     rename_enum!(ren, "vcl_func_fail_e" => "VclFuncFail", prefix: "VSUB_E_"); // VSUB_E_OK
     rename_enum!(ren, "vdp_action" => "VdpAction", prefix: "VDP_"); // VDP_NULL

@@ -512,7 +512,7 @@ pub const PTHREAD_BARRIER_SERIAL_THREAD: i32 = -1;
 pub const VRT_INTEGER_MAX: u64 = 999999999999999;
 pub const VRT_INTEGER_MIN: i64 = -999999999999999;
 pub const VRT_MAJOR_VERSION: u32 = 20;
-pub const VRT_MINOR_VERSION: u32 = 0;
+pub const VRT_MINOR_VERSION: u32 = 1;
 pub const _STDINT_H: u32 = 1;
 pub const _BITS_WCHAR_H: u32 = 1;
 pub const _BITS_STDINT_UINTN_H: u32 = 1;
@@ -772,7 +772,7 @@ pub const VDP_CTX_MAGIC: u32 = 3998227959;
 #[allow(unsafe_code)]
 pub const VMOD_ABI_Version: &::std::ffi::CStr = unsafe {
     ::std::ffi::CStr::from_bytes_with_nul_unchecked(
-        b"Varnish 7.6.0 ed1243ca162a7b1d975bc0332f0d66d33f0bc78e\0",
+        b"Varnish 7.6.1 c3d5882003eb87e5e93dc09fb9513ca96db3ca3c\0",
     )
 };
 pub const VSB_MAGIC: u32 = 1250090378;
@@ -4497,13 +4497,14 @@ impl Default for vmod_data {
 }
 #[repr(u32)]
 #[non_exhaustive]
-#[doc = " VCL events sent to VMODs"]
+#[doc = " Events sent to VMODs and directors:\n - VCL: VCL temperature events\n - VDI: director events"]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum VclEvent {
     Load = 0,
     Warm = 1,
     Cold = 2,
     Discard = 3,
+    Sick = 4,
 }
 pub type vmod_event_f = ::std::option::Option<
     unsafe extern "C" fn(
