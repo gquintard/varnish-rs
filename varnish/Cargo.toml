@@ -16,6 +16,9 @@ glob.workspace = true
 varnish-macros.workspace = true
 varnish-sys.workspace = true
 
+[dev-dependencies]
+trybuild.workspace = true
+
 [lints]
 workspace = true
 
