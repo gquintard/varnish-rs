@@ -12,6 +12,7 @@
 //! [`crate::vcl::vpriv::VPriv`].
 use std::ffi::{c_char, c_void, CStr};
 use std::marker::PhantomData;
+use std::mem::align_of;
 use std::ptr;
 use std::slice::from_raw_parts_mut;
 use std::str::from_utf8;

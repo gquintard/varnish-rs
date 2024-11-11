@@ -45,6 +45,16 @@ build-all-features:
 test: build
     cargo test --workspace --all-targets
 
+# Find the minimum supported Rust version
+msrv:
+    cargo msrv find --min 1.77 --component rustfmt -- {{just_executable()}} ci-test-msrv
+
+# Publish crates to crates.io in the right order
+publish:
+    cargo publish -p varnish-sys
+    cargo publish -p varnish-macros
+    cargo publish -p varnish
+
 # Run tests, and accept their results. Requires insta to be installed.
 bless:
     TRYBUILD=overwrite cargo insta test -p varnish-macros --accept --unreferenced=delete
@@ -60,6 +70,9 @@ rust-info:
 
 # Run all tests as expected by CI
 ci-test: rust-info test-fmt clippy test test-doc build-all-features
+
+# Run minimal subset of tests to ensure compatibility with MSRV
+ci-test-msrv: rust-info test
 
 # Verify that the current version of the crate is not the same as the one published on crates.io
 check-if-published:

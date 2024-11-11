@@ -45,6 +45,7 @@
 
 use std::borrow::Cow;
 use std::ffi::{c_char, c_void, CStr};
+use std::mem::size_of;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::ptr;
 use std::ptr::{null, null_mut};
@@ -257,7 +258,7 @@ default_null_ptr!(VCL_PROBE);
 impl<'a> IntoVCL<VCL_PROBE> for CowProbe<'a> {
     fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_PROBE, VclError> {
         // FIXME!  We need to rethink the alloc API to not be byte-aligned
-        #[expect(clippy::cast_ptr_alignment)]
+        #[allow(clippy::cast_ptr_alignment)]
         let p = ws
             .alloc(size_of::<vrt_backend_probe>())?
             .as_mut_ptr()
@@ -283,7 +284,7 @@ impl<'a> IntoVCL<VCL_PROBE> for CowProbe<'a> {
 impl IntoVCL<VCL_PROBE> for Probe {
     fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_PROBE, VclError> {
         // FIXME!  We need to rethink the alloc API to not be byte-aligned
-        #[expect(clippy::cast_ptr_alignment)]
+        #[allow(clippy::cast_ptr_alignment)]
         let p = ws
             .alloc(size_of::<vrt_backend_probe>())?
             .as_mut_ptr()

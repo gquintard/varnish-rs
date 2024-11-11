@@ -67,6 +67,7 @@
 //! ```
 use std::ffi::{c_char, c_int, c_void, CString};
 use std::marker::PhantomData;
+use std::mem::size_of;
 use std::net::{SocketAddr, TcpStream};
 use std::os::unix::io::FromRawFd;
 use std::ptr;
@@ -244,7 +245,7 @@ pub trait Serve<T: Transfer> {
 /// - `Ok(None)`: headers are set, but the response as no content body.
 /// - `Ok(Some(Transfer))`: headers are set, and Varnish will use the `Transfer` object to build
 ///   the response body.
-#[expect(clippy::len_without_is_empty)] // FIXME: should there be an is_empty() method?
+#[allow(clippy::len_without_is_empty)] // FIXME: should there be an is_empty() method?
 pub trait Transfer {
     /// The only mandatory method, it will be called repeated so that the `Transfer` object can
     /// fill `buf`. The transfer will stop if any of its calls returns an error, and it will

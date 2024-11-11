@@ -281,7 +281,7 @@ impl<'a> FetchProcCtx<'a> {
             VfpStatus::Null => panic!("VFP_Suck() was never supposed to return VFP_NULL!"),
             // In the future, there might be more enum values, so we should ensure it continues
             // to compile, but we do want a warning when developing locally to add the new one.
-            #[expect(unreachable_patterns)]
+            #[allow(unreachable_patterns)]
             n => panic!("unknown VfpStatus {n:?}"),
         }
     }

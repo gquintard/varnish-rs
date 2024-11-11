@@ -1,6 +1,5 @@
 use std::fs::read_to_string;
 use std::path::PathBuf;
-use std::sync::LazyLock;
 
 use insta::{assert_snapshot, with_settings};
 use proc_macro2::TokenStream;
@@ -12,11 +11,6 @@ use crate::gen_docs::gen_doc_content;
 use crate::generator::render_model;
 use crate::parser::tokens_to_model;
 use crate::parser_utils::remove_attr;
-
-/// Use regex to remove "Varnish 7.5.0 eef25264e5ca5f96a77129308edb83ccf84cb1b1" and similar.
-/// Also removes any pre-builds and other versions because we assume a double-quote at the end.
-static RE_VARNISH_VER: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"Varnish \d+\.[-+. 0-9a-z]+").unwrap());
 
 /// Read content of the ../tests/pass directory that should also pass full compilation tests,
 /// parse them and create snapshots of the model and the generated code.
@@ -73,7 +67,12 @@ fn test(name: &str, args: TokenStream, mut item_mod: ItemMod) {
         };
 
         let generated = prettyplease::unparse(&parsed);
-        let code = RE_VARNISH_VER.replace_all(&generated, "Varnish (version) (hash)");
+
+        // Use regex to remove "Varnish 7.5.0 eef25264e5ca5f96a77129308edb83ccf84cb1b1" and similar.
+        // Also removes any pre-builds and other versions because we assume a double-quote at the end.
+        // TODO: Once MSRV is higher than 1.80, use static LazyLock<Regex>
+        let re_varnish_ver = Regex::new(r"Varnish \d+\.[-+. 0-9a-z]+").unwrap();
+        let code = re_varnish_ver.replace_all(&generated, "Varnish (version) (hash)");
         with_settings!({ snapshot_suffix => "code" }, { assert_snapshot!(name, code) });
 
         // Extract JSON string

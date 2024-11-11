@@ -99,7 +99,7 @@ mod tuple {
                 .as_ptr(),
             name: c"tuple".as_ptr(),
             func_name: c"Vmod_vmod_tuple_Func".as_ptr(),
-            func_len: size_of::<VmodExports>() as c_int,
+            func_len: ::std::mem::size_of::<VmodExports>() as c_int,
             func: &VMOD_EXPORTS as *const _ as *const c_void,
             abi: VMOD_ABI_Version.as_ptr(),
             json: JSON.as_ptr(),
