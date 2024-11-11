@@ -12,19 +12,19 @@ fn main() {
     };
 
     let mut ren = Renamer::default();
-    rename_enum!(ren, "VSL_tag_e" => "VslTag", prefix: "SLT_"); // SLT_Debug
-    rename_enum!(ren, "boc_state_e" => "BocState", prefix: "BOS_"); // BOS_INVALID
-    rename_enum!(ren, "director_state_e" => "DirectorState", prefix: "DIR_S_", "HDRS" => "Headers"); // DIR_S_NULL
-    rename_enum!(ren, "gethdr_e" => "GetHeader", prefix: "HDR_"); // HDR_REQ_TOP
-    rename_enum!(ren, "sess_attr" => "SessionAttr", prefix: "SA_"); // SA_TRANSPORT
-    rename_enum!(ren, "lbody_e" => "Body", prefix: "LBODY_"); // LBODY_SET_STRING
-    rename_enum!(ren, "task_prio" => "TaskPriority", prefix: "TASK_QUEUE_"); // TASK_QUEUE_BO
-    rename_enum!(ren, "vas_e" => "Vas", prefix: "VAS_"); // VAS_WRONG
-    rename_enum!(ren, "vcl_event_e" => "VclEvent", prefix: "VCL_EVENT_", "VDI_EVENT_SICK" => "Sick"); // VCL_EVENT_LOAD
-    rename_enum!(ren, "vcl_func_call_e" => "VclFuncCall", prefix: "VSUB_"); // VSUB_STATIC
-    rename_enum!(ren, "vcl_func_fail_e" => "VclFuncFail", prefix: "VSUB_E_"); // VSUB_E_OK
-    rename_enum!(ren, "vdp_action" => "VdpAction", prefix: "VDP_"); // VDP_NULL
-    rename_enum!(ren, "vfp_status" => "VfpStatus", prefix: "VFP_"); // VFP_ERROR
+    rename_enum!(ren, "VSL_tag_e" => "VslTag", remove: "SLT_"); // SLT_Debug
+    rename_enum!(ren, "boc_state_e" => "BocState", remove: "BOS_"); // BOS_INVALID
+    rename_enum!(ren, "director_state_e" => "DirectorState", remove: "DIR_S_", "HDRS" => "Headers"); // DIR_S_NULL
+    rename_enum!(ren, "gethdr_e" => "GetHeader", remove: "HDR_"); // HDR_REQ_TOP
+    rename_enum!(ren, "sess_attr" => "SessionAttr", remove: "SA_"); // SA_TRANSPORT
+    rename_enum!(ren, "lbody_e" => "Body", remove: "LBODY_"); // LBODY_SET_STRING
+    rename_enum!(ren, "task_prio" => "TaskPriority", remove: "TASK_QUEUE_"); // TASK_QUEUE_BO
+    rename_enum!(ren, "vas_e" => "Vas", remove: "VAS_"); // VAS_WRONG
+    rename_enum!(ren, "vcl_event_e" => "VclEvent", remove: "V(CL|DI)_EVENT_"); // VCL_EVENT_LOAD
+    rename_enum!(ren, "vcl_func_call_e" => "VclFuncCall", remove: "VSUB_"); // VSUB_STATIC
+    rename_enum!(ren, "vcl_func_fail_e" => "VclFuncFail", remove: "VSUB_E_"); // VSUB_E_OK
+    rename_enum!(ren, "vdp_action" => "VdpAction", remove: "VDP_"); // VDP_NULL
+    rename_enum!(ren, "vfp_status" => "VfpStatus", remove: "VFP_"); // VFP_ERROR
 
     println!("cargo:rustc-link-lib=varnishapi");
     println!("cargo:rerun-if-changed=src/wrapper.h");

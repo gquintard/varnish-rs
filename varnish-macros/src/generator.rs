@@ -236,7 +236,7 @@ impl Generator {
                     file_id: #file_id.as_ptr(),
                     name: #c_name.as_ptr(),
                     func_name: #c_func_name.as_ptr(),
-                    func_len: size_of::<VmodExports>() as c_int,
+                    func_len: ::std::mem::size_of::<VmodExports>() as c_int,
                     func: &VMOD_EXPORTS as *const _ as *const c_void,
                     abi: VMOD_ABI_Version.as_ptr(),
                     json: JSON.as_ptr(),
