@@ -13,3 +13,10 @@ fn compile_valid_code() {
     let t = trybuild::TestCases::new();
     t.pass("tests/pass/*.rs");
 }
+
+#[cfg(feature = "ffi")]
+#[test]
+fn compile_valid_ffi_code() {
+    let t = trybuild::TestCases::new();
+    t.pass("tests/pass_ffi/*.rs");
+}

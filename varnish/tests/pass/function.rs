@@ -45,12 +45,15 @@ mod types {
     pub fn type_cstr_dflt2(#[default(c"baz")] _v: &CStr) {}
     pub fn opt_cstr_dflt(#[default(c"baz")] _v: Option<&CStr>) {}
     pub fn opt_cstr_dflt2(#[default(c"baz")] _v: &CStr) {}
-    // pub fn to_cstr() -> &'static CStr {
-    //     c""
-    // }
-    // pub fn to_res_cstr() -> Result<&'static CStr, &'static CStr> {
-    //     Ok(c""
-    // }
+    pub fn to_cstr() -> &'static CStr {
+        c""
+    }
+    pub fn to_res_cstr() -> Result<&'static CStr, VclError> {
+        Ok(c"")
+    }
+    pub fn to_res_cstr_err() -> Result<&'static CStr, &'static CStr> {
+        Ok(c"")
+    }
 
     // Duration
     pub fn type_duration(_v: Duration) {}

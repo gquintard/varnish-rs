@@ -57,7 +57,7 @@ publish:
 
 # Run tests, and accept their results. Requires insta to be installed.
 bless:
-    TRYBUILD=overwrite cargo insta test -p varnish-macros --accept --unreferenced=delete
+    TRYBUILD=overwrite cargo insta test -p varnish-macros -p varnish --accept --unreferenced=delete
 
 # Test documentation
 test-doc:

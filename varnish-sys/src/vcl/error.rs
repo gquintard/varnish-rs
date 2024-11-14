@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::ffi::CStr;
 use std::str::Utf8Error;
 
 // TODO: at some point we may want to add a `txt` variant - e.g. if user wants to handle error creation directly.
@@ -12,13 +13,16 @@ pub enum VclError {
     /// Create a new `Error` from a string
     #[error("{0}")]
     String(String),
-    /// Create a new `Error` from a UTF-8 error
-    #[error("{0}")]
-    Utf8Error(#[from] Utf8Error),
     /// Create a new `Error` from a string slice
     #[error("{0}")]
     Str(&'static str),
-    /// Create a new `Error` from a boxed error
+    /// Create a new `VclError` from a C string
+    #[error("{}", cstr_to_string(.0))]
+    CStr(&'static CStr),
+    /// Create a new `VclError` from a UTF-8 error
+    #[error("{0}")]
+    Utf8Error(#[from] Utf8Error),
+    /// Create a new `VclError` from a boxed error
     #[error("{0}")]
     Box(#[from] Box<dyn std::error::Error>),
 }
@@ -35,6 +39,16 @@ impl VclError {
             Self::Utf8Error(e) => Cow::Owned(e.to_string()),
             Self::Str(s) => Cow::Borrowed(s),
             Self::Box(e) => Cow::Owned(e.to_string()),
+            Self::CStr(s) => Cow::Owned(cstr_to_string(s)),
+        }
+    }
+}
+
+fn cstr_to_string(value: &CStr) -> String {
+    match value.to_string_lossy() {
+        Cow::Borrowed(s) => s.to_string(),
+        Cow::Owned(s) => {
+            format!("{s} (error is not exact because it contains non-utf8 characters)")
         }
     }
 }
@@ -50,6 +64,12 @@ impl From<String> for VclError {
 impl From<&'static str> for VclError {
     fn from(s: &'static str) -> Self {
         Self::Str(s)
+    }
+}
+
+impl From<&'static CStr> for VclError {
+    fn from(s: &'static CStr) -> Self {
+        Self::CStr(s)
     }
 }
 

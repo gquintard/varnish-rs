@@ -1,5 +1,13 @@
 # Unpublished
 
+- All `Workspace` functions now return `VclError` rather than error strings
+- User functions can return `&CStr` as a return value or a `&'static CStr` error
+- Mark `Workspace::alloc` as unsafe because the allocated array is not
+  initialized
+- Rename `VSC` &rarr; `Stats`, `VSCBuilder` &rarr; `StatsBuilder`, and `VSCInternal` into `StatsImpl`
+
+# 0.1.0 (2024-11-12)
+
 - Introduce a new, vastly improved system of generating boilerplate code using a procedural macro `#[varnish(vmod)]` by @nyurik
   - The macro will generate all the boilerplate code for a Varnish VMOD
   - The macro attribute must be used on a `mod` block that contains the VMOD functions

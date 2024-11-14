@@ -259,11 +259,13 @@ impl<'a> IntoVCL<VCL_PROBE> for CowProbe<'a> {
     fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_PROBE, VclError> {
         // FIXME!  We need to rethink the alloc API to not be byte-aligned
         #[allow(clippy::cast_ptr_alignment)]
-        let p = ws
-            .alloc(size_of::<vrt_backend_probe>())?
-            .as_mut_ptr()
-            .cast::<vrt_backend_probe>();
-        let probe = unsafe { p.as_mut().unwrap() };
+        let probe = unsafe {
+            ws.alloc(size_of::<vrt_backend_probe>())?
+                .as_mut_ptr()
+                .cast::<vrt_backend_probe>()
+                .as_mut()
+                .unwrap()
+        };
         probe.magic = VRT_BACKEND_PROBE_MAGIC;
         match self.request {
             CowRequest::URL(ref s) => {
@@ -285,11 +287,13 @@ impl IntoVCL<VCL_PROBE> for Probe {
     fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_PROBE, VclError> {
         // FIXME!  We need to rethink the alloc API to not be byte-aligned
         #[allow(clippy::cast_ptr_alignment)]
-        let p = ws
-            .alloc(size_of::<vrt_backend_probe>())?
-            .as_mut_ptr()
-            .cast::<vrt_backend_probe>();
-        let probe = unsafe { p.as_mut().unwrap() };
+        let probe = unsafe {
+            ws.alloc(size_of::<vrt_backend_probe>())?
+                .as_mut_ptr()
+                .cast::<vrt_backend_probe>()
+                .as_mut()
+                .unwrap()
+        };
         probe.magic = VRT_BACKEND_PROBE_MAGIC;
         match self.request {
             Request::URL(ref s) => {
@@ -387,6 +391,11 @@ impl IntoVCL<VCL_STRING> for &[u8] {
 impl IntoVCL<VCL_STRING> for &str {
     fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_STRING, VclError> {
         self.as_bytes().into_vcl(ws)
+    }
+}
+impl IntoVCL<VCL_STRING> for &CStr {
+    fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_STRING, VclError> {
+        ws.copy_cstr(&self)
     }
 }
 impl IntoVCL<VCL_STRING> for &Cow<'_, str> {

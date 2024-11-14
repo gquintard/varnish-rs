@@ -12,11 +12,20 @@ use crate::generator::render_model;
 use crate::parser::tokens_to_model;
 use crate::parser_utils::remove_attr;
 
-/// Read content of the ../tests/pass directory that should also pass full compilation tests,
+/// Read content of the ../../varnish/tests/pass directory that should also pass full compilation tests,
 /// parse them and create snapshots of the model and the generated code.
 #[test]
-fn parse_passing_tests() {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/pass/*.rs");
+fn parse_pass_tests() {
+    run_parse_tests("../varnish/tests/pass/*.rs");
+}
+
+#[test]
+fn parse_pass_ffi_tests() {
+    run_parse_tests("../varnish/tests/pass_ffi/*.rs");
+}
+
+fn run_parse_tests(path: &str) {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(path);
     for file in glob::glob(path.to_str().unwrap()).unwrap() {
         let filepath = file.unwrap();
         let file = filepath.to_str().unwrap();
