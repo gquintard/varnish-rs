@@ -31,7 +31,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! varnish = "0.1.0"
+//! varnish = "0.2.0"
 //! ```
 //!
 //! ## src/lib.rs

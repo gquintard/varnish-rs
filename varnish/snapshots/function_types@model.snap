@@ -279,6 +279,39 @@ VmodInfo {
         },
         FuncInfo {
             func_type: Function,
+            ident: "to_cstr",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            output_ty: ParamType(
+                CStr,
+            ),
+            out_result: false,
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "to_res_cstr",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            output_ty: ParamType(
+                CStr,
+            ),
+            out_result: true,
+        },
+        FuncInfo {
+            func_type: Function,
+            ident: "to_res_cstr_err",
+            docs: "",
+            has_optional_args: false,
+            args: [],
+            output_ty: ParamType(
+                CStr,
+            ),
+            out_result: true,
+        },
+        FuncInfo {
+            func_type: Function,
             ident: "type_duration",
             docs: "",
             has_optional_args: false,

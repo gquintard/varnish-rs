@@ -53,6 +53,12 @@ import types from "path/to/libtypes.so";
 
 ### Function `VOID opt_cstr_dflt2(STRING _v = "baz")`
 
+### Function `STRING to_cstr()`
+
+### Function `STRING to_res_cstr()`
+
+### Function `STRING to_res_cstr_err()`
+
 ### Function `VOID type_duration(DURATION _v)`
 
 ### Function `VOID opt_duration([DURATION _v])`

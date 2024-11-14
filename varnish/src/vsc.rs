@@ -15,29 +15,29 @@ use std::time::Duration;
 use varnish_sys::ffi;
 use varnish_sys::vcl::{VclError, VclResult};
 
-/// A statistics set, created using a [`VSCBuilder`]
+/// A statistics set, created using a [`StatsBuilder`]
 #[derive(Debug)]
-pub struct VSC<'a> {
+pub struct Stats<'a> {
     vsm: *mut ffi::vsm,
     vsc: *mut ffi::vsc,
-    internal: Box<VSCInternal<'a>>,
+    internal: Box<StatsImpl<'a>>,
 }
 
 #[derive(Debug, Default)]
-struct VSCInternal<'a> {
+struct StatsImpl<'a> {
     points: HashMap<usize, Stat<'a>>,
     added: Vec<usize>,
     deleted: Vec<usize>,
 }
 
-/// Initialize and configure a [`VSC`] but do not attach it to a running `varnishd` instance
-pub struct VSCBuilder<'a> {
+/// Initialize and configure a [`Stats`] but do not attach it to a running `varnishd` instance
+pub struct StatsBuilder<'a> {
     vsm: *mut ffi::vsm,
     vsc: *mut ffi::vsc,
     phantom: PhantomData<&'a ()>,
 }
 
-impl<'a> VSCBuilder<'a> {
+impl<'a> StatsBuilder<'a> {
     /// Create a new `VSCBuilder`
     #[allow(clippy::new_without_default)] // TODO: consider implementing
     pub fn new() -> Self {
@@ -69,7 +69,7 @@ impl<'a> VSCBuilder<'a> {
 
     /// How long to wait when attaching
     ///
-    /// When [`VSCBuilder::build()`] is called, it'll internally call `VSM_Attach`, hoping to find a running
+    /// When [`StatsBuilder::build()`] is called, it'll internally call `VSM_Attach`, hoping to find a running
     /// `varnishd` instance. If `None`, the function will not return until it connects, otherwise
     /// it specifies the timeout to use.
     pub fn patience(self, t: Option<Duration>) -> VclResult<Self> {
@@ -96,14 +96,14 @@ impl<'a> VSCBuilder<'a> {
 
     /// Provide a globbing pattern of statistics names to include.
     ///
-    /// May be called multiple times, interleaved with [`VSCBuilder::exclude()`], the order matters.
+    /// May be called multiple times, interleaved with [`StatsBuilder::exclude()`], the order matters.
     pub fn include(self, s: &str) -> Result<Self, NulError> {
         self.vsc_arg('I', s)
     }
 
     /// Provide a globbing pattern of statistics names to exclude.
     ///
-    /// May be called multiple times, interleaved with [`VSCBuilder::include()`], the order matters.
+    /// May be called multiple times, interleaved with [`StatsBuilder::include()`], the order matters.
     pub fn exclude(self, s: &str) -> Result<Self, NulError> {
         self.vsc_arg('X', s)
     }
@@ -114,8 +114,8 @@ impl<'a> VSCBuilder<'a> {
         self.vsc_arg('R', s)
     }
 
-    /// Build the [`VSC`], attaching to a running `varnishd` instance
-    pub fn build(mut self) -> VclResult<VSC<'a>> {
+    /// Build the [`Stats`], attaching to a running `varnishd` instance
+    pub fn build(mut self) -> VclResult<Stats<'a>> {
         let ret = unsafe { ffi::VSM_Attach(self.vsm, 0) };
         if ret != 0 {
             let err = vsm_error(self.vsm);
@@ -124,13 +124,13 @@ impl<'a> VSCBuilder<'a> {
             }
             Err(err)
         } else {
-            let mut internal = Box::new(VSCInternal::default());
+            let mut internal = Box::new(StatsImpl::default());
             unsafe {
                 ffi::VSC_State(
                     self.vsc,
                     Some(add_point),
                     Some(del_point),
-                    ptr::from_mut::<VSCInternal>(&mut *internal).cast::<c_void>(),
+                    ptr::from_mut::<StatsImpl>(&mut *internal).cast::<c_void>(),
                 );
             }
             let vsm = self.vsm;
@@ -138,7 +138,7 @@ impl<'a> VSCBuilder<'a> {
             // nullify so that .drop() doesn't destroy vsm/vsc
             self.vsm = ptr::null_mut();
             self.vsc = ptr::null_mut();
-            Ok(VSC { vsm, vsc, internal })
+            Ok(Stats { vsm, vsc, internal })
         }
     }
 }
@@ -154,7 +154,7 @@ fn vsm_error(p: *const ffi::vsm) -> VclError {
     }
 }
 
-impl<'a> Drop for VSCBuilder<'a> {
+impl<'a> Drop for StatsBuilder<'a> {
     fn drop(&mut self) {
         assert!(
             (self.vsc.is_null() && self.vsm.is_null())
@@ -168,7 +168,7 @@ impl<'a> Drop for VSCBuilder<'a> {
     }
 }
 
-impl<'a> Drop for VSC<'a> {
+impl<'a> Drop for Stats<'a> {
     fn drop(&mut self) {
         unsafe {
             ffi::VSC_Destroy(&mut self.vsc, self.vsm);
@@ -252,7 +252,7 @@ impl From<Format> for char {
 }
 
 unsafe extern "C" fn add_point(ptr: *mut c_void, point: *const ffi::VSC_point) -> *mut c_void {
-    let internal = ptr.cast::<VSCInternal>().as_mut().unwrap();
+    let internal = ptr.cast::<StatsImpl>().as_mut().unwrap();
     let k = point as usize;
     let point = point.as_ref().unwrap();
 
@@ -271,7 +271,7 @@ unsafe extern "C" fn add_point(ptr: *mut c_void, point: *const ffi::VSC_point) -
 }
 
 unsafe extern "C" fn del_point(ptr: *mut c_void, point: *const ffi::VSC_point) {
-    let internal = ptr.cast::<VSCInternal>().as_mut().unwrap();
+    let internal = ptr.cast::<StatsImpl>().as_mut().unwrap();
     let k = point as usize;
     assert!(internal.points.contains_key(&k));
     internal.deleted.push(k);
@@ -296,7 +296,7 @@ impl<'a> Stat<'a> {
     pub fn get_raw_value(&self) -> u64 {
         // # Safety
         // the pointer is valid as long as the VSC exist, and
-        // VSC.update() isn't called (which uses `&mut self`)
+        // Stats::update() isn't called (which uses `&mut self`)
         unsafe { *self.value }
     }
 
@@ -308,7 +308,7 @@ impl<'a> Stat<'a> {
     pub fn get_clamped_value(&self) -> u64 {
         // # Safety
         // the pointer is valid as long as VSC exist, and
-        // VSC.update() isn't called (which uses `&mut self`)
+        // Stats::update() isn't called (which uses `&mut self`)
         let v = unsafe { *self.value };
         if i64::try_from(v).is_ok() {
             v
@@ -318,11 +318,11 @@ impl<'a> Stat<'a> {
     }
 }
 
-impl<'a> VSC<'a> {
+impl<'a> Stats<'a> {
     /// Return a statistic set
     ///
     /// Names are not necessarily unique, so instead, statistics are tracked using `usize` handle
-    /// that can help you track which ones (dis)appeared during a [`VSC::update()`] call.
+    /// that can help you track which ones (dis)appeared during a [`Stats::update()`] call.
     ///
     /// The C API guarantees we can access all the `Stat` in the `HashMap`, until the next `update`
     /// call, so the `rust` API mirrors this here.
