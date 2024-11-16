@@ -1,6 +1,5 @@
 use std::borrow::Cow;
 use std::ffi::{c_char, c_uint, CStr};
-use std::mem::size_of;
 use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
@@ -49,17 +48,7 @@ pub(crate) fn into_vcl_probe<T: AsRef<str>>(
     src: Probe<T>,
     ws: &mut Workspace,
 ) -> Result<VCL_PROBE, VclError> {
-    // FIXME: this will be changed with the new Workspace API
-    #[allow(clippy::cast_ptr_alignment)]
-    let probe = unsafe {
-        ws.alloc(size_of::<vrt_backend_probe>())?
-            .as_mut_ptr()
-            .cast::<vrt_backend_probe>()
-            .as_mut()
-            .unwrap()
-    };
-
-    *probe = vrt_backend_probe {
+    let probe = ws.copy_value(vrt_backend_probe {
         magic: VRT_BACKEND_PROBE_MAGIC,
         timeout: src.timeout.into(),
         interval: src.interval.into(),
@@ -67,7 +56,7 @@ pub(crate) fn into_vcl_probe<T: AsRef<str>>(
         window: src.window,
         initial: src.initial,
         ..Default::default()
-    };
+    })?;
 
     match src.request {
         Request::URL(s) => {

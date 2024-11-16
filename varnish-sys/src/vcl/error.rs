@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 use std::ffi::CStr;
+use std::num::NonZeroUsize;
 use std::str::Utf8Error;
 
 // TODO: at some point we may want to add a `txt` variant - e.g. if user wants to handle error creation directly.
@@ -19,6 +20,9 @@ pub enum VclError {
     /// Create a new `VclError` from a C string
     #[error("{}", cstr_to_string(.0))]
     CStr(&'static CStr),
+    /// In case Workspace allocation fails
+    #[error("Unable to allocate {0} bytes in a Workspace")]
+    WsOutOfMemory(NonZeroUsize),
     /// Create a new `VclError` from a UTF-8 error
     #[error("{0}")]
     Utf8Error(#[from] Utf8Error),
@@ -40,6 +44,9 @@ impl VclError {
             Self::Str(s) => Cow::Borrowed(s),
             Self::Box(e) => Cow::Owned(e.to_string()),
             Self::CStr(s) => Cow::Owned(cstr_to_string(s)),
+            Self::WsOutOfMemory(sz) => {
+                Cow::Owned(format!("Unable to allocate {sz} bytes in a Workspace"))
+            }
         }
     }
 }

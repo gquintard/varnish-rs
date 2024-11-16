@@ -1,12 +1,24 @@
 # Unpublished
 
-- All `Workspace` functions now return `VclError` rather than error strings
 - User functions can return `&CStr` as a return value or a `&'static CStr` error
-- Mark `Workspace::alloc` as unsafe because the allocated array is not
-  initialized
 - Rename `VSC` &rarr; `Stats`, `VSCBuilder` &rarr; `StatsBuilder`, and `VSCInternal` into `StatsImpl`
 - Consolidate `Probe` and `CowProbe<'a>` into one `Probe<T>` struct with a generic `String` or `Cow<str>`.
 - Rename `new` to `from_ptr` for `Buffer`, `Workspace`, `HttpHeaders`, `FetchProcCtx`, `DeliveryProcCtx`, and make them private. Only `Ctx::from_ptr` is public because it gets created by a macro-generated function.
+- Make `txt::from_bytes` private - use other constructors instead
+- Added `VclError::WsOutOfMemory` variant when `Workspace::alloc` fails
+- Many changes to `Workspace` API:
+  - All `Workspace` functions now return `VclError` rather than error strings
+  - `alloc` was marked as `unsafe`
+  - `alloc` now returns a `*mut c_void` instead of a `VclResult<&'a mut [u8]>`
+  - `alloc` now panics if requested size is 0
+  - Renamed `is_slice_allocated` to `contains`
+  - Added allocation and copying functions:
+    - `allocate(...) -> &mut [MaybeUninit<u8>]` (un-initialized memory)
+    - `allocate_zeroed(...) -> &mut [u8]` (initialized memory)
+    - `copy_blob(...) -> VCL_BLOB`
+    - `copy_txt(...) -> txt`
+  - Removed `copy_bytes` - use `copy_*` and `alloc_*` functions instead
+  - Removed `copy_str` - use `copy_cstr` instead
 
 # 0.1.0 (2024-11-12)
 

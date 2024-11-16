@@ -414,12 +414,13 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
                             return -1;
                         };
                         let Ok(t) = Workspace::from_ptr(bo.ws.as_mut_ptr())
-                            .copy_bytes_with_null(&backend.get_type())
+                            .copy_bytes_with_null(backend.get_type())
                         else {
                             ctx.fail(format!("{}: insufficient workspace", backend.get_type()));
                             return -1;
                         };
-                        vfp.name = t.as_ptr();
+
+                        vfp.name = t.b;
                         vfp.init = None;
                         vfp.pull = Some(vfp_pull::<T>);
                         vfp.fini = None;
