@@ -6,7 +6,6 @@ edition.workspace = true
 
 [dependencies]
 varnish.workspace = true
-rand = "0.8.3"
 
 [lib]
 crate-type = ["cdylib"]
