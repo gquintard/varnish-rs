@@ -10,14 +10,19 @@
 //! **Note:** unless you know what you are doing, you should probably just use the automatic type
 //! conversion provided by [`crate::vcl::convert`], or store things in
 //! [`crate::vcl::vpriv::VPriv`].
+
+use std::any::type_name;
 use std::ffi::{c_char, c_void, CStr};
+use std::fmt::Debug;
 use std::marker::PhantomData;
-use std::mem::align_of;
+use std::mem::{align_of, size_of, transmute, MaybeUninit};
+use std::num::NonZeroUsize;
 use std::ptr;
 use std::slice::from_raw_parts_mut;
-use std::str::from_utf8;
 
-use crate::ffi::{WS_Allocated, VCL_STRING};
+use memchr::memchr;
+
+use crate::ffi::{txt, vrt_blob, WS_Allocated, VCL_BLOB, VCL_STRING};
 use crate::vcl::VclError;
 use crate::{ffi, validate_ws};
 
@@ -32,7 +37,7 @@ use crate::{ffi, validate_ws};
 pub struct Workspace<'a> {
     /// Raw pointer to the C struct
     pub raw: *mut ffi::ws,
-    phantom_a: PhantomData<&'a u8>,
+    _phantom: PhantomData<&'a ()>,
 }
 
 impl<'a> Workspace<'a> {
@@ -41,105 +46,134 @@ impl<'a> Workspace<'a> {
         assert!(!raw.is_null(), "raw pointer was null");
         Self {
             raw,
-            phantom_a: PhantomData,
+            _phantom: PhantomData,
         }
     }
 
-    /// Allocate a `[u8; sz]` and return a reference to it.
+    /// Allocate a buffer of a given size.
     ///
     /// # Safety
-    /// Allocated memory is not initialized with zeroes
-    #[cfg(not(test))]
-    pub unsafe fn alloc(&mut self, sz: usize) -> Result<&'a mut [u8], VclError> {
-        let ws = unsafe { validate_ws(self.raw) };
-        let p = unsafe { ffi::WS_Alloc(ws, sz as u32).cast::<u8>() };
-        if p.is_null() {
-            Err(VclError::String(format!(
-                "workspace allocation ({sz} bytes) failed"
-            )))
-        } else {
-            unsafe { Ok(from_raw_parts_mut(p, sz)) }
+    /// Allocated memory is not initialized.
+    pub unsafe fn alloc(&mut self, size: NonZeroUsize) -> *mut c_void {
+        #[cfg(not(test))]
+        {
+            ffi::WS_Alloc(validate_ws(self.raw), size.get() as u32)
         }
-    }
 
-    /// Allocate a `[u8; sz]` and return a reference to it.
-    /// We must implement this method because `WS_Alloc` is a private part of `varnishd`, not the library,
-    /// so it is only available if the output is a `cdylib`.  When testing, VMOD is a lib or a bin,
-    /// so we have to fake our own allocator.
-    #[cfg(test)]
-    pub unsafe fn alloc(&mut self, sz: usize) -> Result<&'a mut [u8], VclError> {
-        let ws = unsafe { validate_ws(self.raw) };
-        let al = align_of::<*const c_void>();
-        let aligned_sz = ((sz + al - 1) / al) * al;
-
-        unsafe {
+        #[cfg(test)]
+        {
+            // `WS_Alloc` is a private part of `varnishd`, not the Varnish library,
+            // so it is only available if the output is a `cdylib`.
+            // When testing, VMOD is a lib or a bin,
+            // so we have to fake our own allocator.
+            let ws = validate_ws(self.raw);
+            let align = align_of::<*const c_void>();
+            let aligned_sz = ((size.get() + align - 1) / align) * align;
             if ws.e.offset_from(ws.f) < aligned_sz as isize {
-                Err(VclError::String(format!(
-                    "not enough room for {aligned_sz} (rounded up from {sz}). f: {:?}, e: {:?}",
-                    ws.f, ws.e
-                )))
+                ptr::null_mut()
             } else {
-                let buf = from_raw_parts_mut(ws.f.cast::<u8>(), aligned_sz);
+                let p = ws.f.cast::<c_void>();
                 ws.f = ws.f.add(aligned_sz);
-                Ok(buf)
+                p
             }
         }
     }
 
-    /// Check if a byte slice is allocated in the workspace
-    pub fn is_slice_allocated(&self, slice: &[u8]) -> bool {
-        // FIXME: why check for slice size + 1?  In case of a string,
-        //  the caller should pass `CStr::to_bytes_with_nul`.
-        //  In case of a byte buffer, there shouldn't be an extra NULL byte
-        unsafe {
-            WS_Allocated(
-                self.raw,
-                slice.as_ptr().cast::<c_void>(),
-                slice.len() as isize + 1,
-            ) == 1
+    /// Check if a pointer is part of the current workspace
+    pub fn contains(&self, data: &[u8]) -> bool {
+        unsafe { WS_Allocated(self.raw, data.as_ptr().cast(), data.len() as isize) == 1 }
+    }
+
+    /// Allocate `[u8; size]` array on Workspace.
+    /// Returns a reference to uninitialized buffer, or an out of memory error.
+    pub fn allocate(&mut self, size: NonZeroUsize) -> Result<&'a mut [MaybeUninit<u8>], VclError> {
+        let ptr = unsafe { self.alloc(size) };
+        if ptr.is_null() {
+            Err(VclError::WsOutOfMemory(size))
+        } else {
+            Ok(unsafe { from_raw_parts_mut(ptr.cast(), size.get()) })
         }
+    }
+
+    /// Allocate `[u8; size]` array on Workspace, and zero it.
+    pub fn allocate_zeroed(&mut self, size: NonZeroUsize) -> Result<&'a mut [u8], VclError> {
+        let buf = self.allocate(size)?;
+        unsafe {
+            buf.as_mut_ptr().write_bytes(0, buf.len());
+            Ok(slice_assume_init_mut(buf))
+        }
+    }
+
+    /// Allocate memory on Workspace, and move a value into it.
+    /// The value will be dropped in case of out of memory error.
+    pub(crate) fn copy_value<T>(&mut self, value: T) -> Result<&'a mut T, VclError> {
+        let size = NonZeroUsize::new(size_of::<T>())
+            .unwrap_or_else(|| panic!("Type {} has sizeof=0", type_name::<T>()));
+
+        let val = unsafe { self.alloc(size).cast::<T>().as_mut() };
+        let val = val.ok_or(VclError::WsOutOfMemory(size))?;
+        *val = value;
+        Ok(val)
     }
 
     /// Copy any `AsRef<[u8]>` into the workspace
-    pub fn copy_bytes<T: AsRef<[u8]>>(&mut self, src: &T) -> Result<&'a [u8], VclError> {
-        let buf = src.as_ref();
-        let l = buf.len();
-
-        let dest = unsafe { self.alloc(l)? };
-        dest.copy_from_slice(buf);
-        Ok(dest)
+    fn copy_bytes(&mut self, src: impl AsRef<[u8]>) -> Result<&'a [u8], VclError> {
+        // Re-implement unstable `maybe_uninit_write_slice` and `maybe_uninit_slice`
+        // See https://github.com/rust-lang/rust/issues/79995
+        // See https://github.com/rust-lang/rust/issues/63569
+        let src = src.as_ref();
+        let Some(len) = NonZeroUsize::new(src.len()) else {
+            Err(VclError::CStr(c"Unable to allocate 0 bytes in a Workspace"))?
+        };
+        let dest = self.allocate(len)?;
+        dest.copy_from_slice(maybe_uninit(src));
+        Ok(unsafe { slice_assume_init_mut(dest) })
     }
 
-    /// Copy any `AsRef<CStr>` into the workspace
-    pub fn copy_cstr<T: AsRef<CStr>>(&mut self, src: &T) -> Result<VCL_STRING, VclError> {
-        let buf = self.copy_bytes(&src.as_ref().to_bytes_with_nul())?;
-        Ok(VCL_STRING(buf.as_ptr().cast::<c_char>()))
+    /// Copy any `AsRef<[u8]>` into a new [`VCL_BLOB`] stored in the workspace
+    pub fn copy_blob(&mut self, value: impl AsRef<[u8]>) -> Result<VCL_BLOB, VclError> {
+        let buf = self.copy_bytes(value)?;
+        let blob = self.copy_value(vrt_blob {
+            blob: ptr::from_ref(buf).cast::<c_void>(),
+            len: buf.len(),
+            ..Default::default()
+        })?;
+        Ok(VCL_BLOB(ptr::from_ref(blob)))
     }
 
-    /// Same as [`Workspace::copy_bytes`] but adds NULL character at the end to help converts buffers into
-    /// `VCL_STRING`s. Returns an error if `src` contain NULL characters.
-    pub fn copy_bytes_with_null<T: AsRef<[u8]>>(&mut self, src: &T) -> Result<&'a CStr, VclError> {
-        let buf = src.as_ref();
-        if buf.contains(&0) {
-            return Err("source buffer contains NULL character".into());
+    /// Copy any `AsRef<CStr>` into a new [`txt`] stored in the workspace
+    pub fn copy_txt(&mut self, value: impl AsRef<CStr>) -> Result<txt, VclError> {
+        let dest = self.copy_bytes(value.as_ref().to_bytes_with_nul())?;
+        Ok(bytes_with_nul_to_txt(dest))
+    }
+
+    /// Copy any `AsRef<CStr>` into a new [`VCL_STRING`] stored in the workspace
+    pub fn copy_cstr(&mut self, value: impl AsRef<CStr>) -> Result<VCL_STRING, VclError> {
+        Ok(VCL_STRING(self.copy_txt(value)?.b))
+    }
+
+    /// Same as [`Workspace::copy_blob`], copying bytes into Workspace, but treats bytes
+    /// as a string with an optional NULL character at the end.  A `NULL` is added if it is missing.
+    /// Returns an error if `src` contain NULL characters in a non-last position.
+    pub fn copy_bytes_with_null(&mut self, src: impl AsRef<[u8]>) -> Result<txt, VclError> {
+        let src = src.as_ref();
+        match memchr(0, src) {
+            Some(pos) if pos + 1 == src.len() => {
+                // Safe because there is only one NULL at the end of the buffer.
+                self.copy_txt(unsafe { CStr::from_bytes_with_nul_unchecked(src) })
+            }
+            Some(_) => Err(VclError::CStr(c"NULL byte found in the source string")),
+            None => {
+                // NUL byte not found, add one at the end
+                // Similar to copy_bytes above
+                let len = src.len();
+                let dest = self.allocate(unsafe { NonZeroUsize::new_unchecked(len + 1) })?;
+                dest[..len].copy_from_slice(maybe_uninit(src));
+                dest[len].write(b'\0');
+                let dest = unsafe { slice_assume_init_mut(dest) };
+                Ok(bytes_with_nul_to_txt(dest))
+            }
         }
-        let l = buf.len();
-        let dest = unsafe { self.alloc(l + 1)? };
-        dest[..l].copy_from_slice(buf);
-        dest[l] = b'\0';
-        // Safe because there are no NULLs in the source, and we just added a NULL
-        Ok(unsafe { CStr::from_bytes_with_nul_unchecked(dest) })
-    }
-
-    /// Copy any "`str`-like" struct into the workspace
-    pub fn copy_str<T: AsRef<str>>(&mut self, src: &T) -> Result<&'a str, VclError> {
-        let s: &str = src.as_ref();
-        let buf = s.as_bytes();
-        let l = buf.len();
-
-        let dest = unsafe { self.alloc(l)? };
-        dest.copy_from_slice(buf);
-        Ok(from_utf8(dest).unwrap())
     }
 
     /// Allocate all the free space in the workspace in a buffer that can be reclaimed or truncated
@@ -161,6 +195,29 @@ impl<'a> Workspace<'a> {
             }
         }
     }
+}
+
+/// Internal helper to convert a `&[u8]` to a `&[MaybeUninit<u8>]`
+fn maybe_uninit(value: &[u8]) -> &[MaybeUninit<u8>] {
+    // SAFETY: &[T] and &[MaybeUninit<T>] have the same layout
+    // This was copied from MaybeUninit::copy_from_slice, ignoring clippy lints
+    unsafe {
+        #[allow(clippy::transmute_ptr_to_ptr)]
+        transmute(value)
+    }
+}
+
+/// Internal helper to convert a `&mut [MaybeUninit<u8>]` to a `&[u8]`, assuming all elements are initialized
+unsafe fn slice_assume_init_mut(value: &mut [MaybeUninit<u8>]) -> &mut [u8] {
+    // SAFETY: Valid elements have just been copied into `this` so it is initialized
+    // This was copied from MaybeUninit::slice_assume_init_mut, ignoring clippy lints
+    #[allow(clippy::ref_as_ptr)]
+    &mut *(value as *mut [MaybeUninit<u8>] as *mut [u8])
+}
+
+/// Helper to convert a byte slice with a null terminator to a `txt` struct.
+fn bytes_with_nul_to_txt(buf: &[u8]) -> txt {
+    txt::from_cstr(unsafe { CStr::from_bytes_with_nul_unchecked(buf) })
 }
 
 /// The free region of the workspace. The buffer is fully writable but must be finalized using
@@ -289,17 +346,19 @@ impl TestWS {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::num::NonZero;
 
     #[test]
     fn ws_test() {
         let mut test_ws = TestWS::new(160);
         let mut ws = test_ws.workspace();
         for _ in 0..10 {
-            let buf = unsafe { ws.alloc(16).unwrap() };
-            assert_eq!(buf.len(), 16);
+            unsafe {
+                assert!(!ws.alloc(NonZero::new(16).unwrap()).is_null());
+            }
         }
         unsafe {
-            assert!(ws.alloc(1).is_err());
+            assert!(ws.alloc(NonZero::new(1).unwrap()).is_null());
         }
     }
 }

@@ -50,7 +50,7 @@ impl<'a> HttpHeaders<'a> {
         let mut ws = Workspace::from_ptr(self.raw.ws);
         unsafe {
             let hd = self.raw.hd.offset(idx as isize).as_mut().unwrap();
-            *hd = ffi::txt::from_cstr(ws.copy_bytes_with_null(&value)?);
+            *hd = ws.copy_bytes_with_null(value)?;
             let hdf = self.raw.hdf.offset(idx as isize).as_mut().unwrap();
             *hdf = 0;
         }
@@ -62,7 +62,7 @@ impl<'a> HttpHeaders<'a> {
     pub fn set_header(&mut self, name: &str, value: &str) -> VclResult<()> {
         assert!(self.raw.nhd <= self.raw.shd);
         if self.raw.nhd == self.raw.shd {
-            return Err("no more header slot".into());
+            return Err(c"no more header slot".into());
         }
 
         let idx = self.raw.nhd;

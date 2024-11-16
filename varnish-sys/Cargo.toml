@@ -29,6 +29,7 @@ bindgen_helpers.workspace = true
 pkg-config.workspace = true
 
 [dependencies]
+memchr.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 

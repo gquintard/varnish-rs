@@ -42,8 +42,8 @@ build-all-features:
     cargo build --workspace --all-targets --features "ffi,vsc"
 
 # Run all tests
-test: build
-    cargo test --workspace --all-targets
+test *ARGS: build
+    cargo test --workspace --all-targets {{ARGS}}
 
 # Find the minimum supported Rust version. Install it with `cargo install cargo-msrv`
 msrv:

@@ -5,7 +5,9 @@ use std::str::from_utf8;
 use crate::ffi::txt;
 
 impl txt {
-    pub fn from_bytes(s: &[u8]) -> Self {
+    /// Internal helper to create a `txt` struct from a byte slice.
+    /// The entire slice is assumed to not contain any null bytes.
+    fn from_bytes(s: &[u8]) -> Self {
         Self {
             b: s.as_ptr().cast::<c_char>(),
             e: unsafe { s.as_ptr().add(s.len()).cast::<c_char>() },

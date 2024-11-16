@@ -46,14 +46,15 @@
 use std::borrow::Cow;
 use std::ffi::{c_char, c_void, CStr};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
+use std::num::NonZeroUsize;
 use std::ptr;
 use std::ptr::{null, null_mut};
 use std::time::{Duration, SystemTime};
 
 use crate::ffi::{
-    sa_family_t, suckaddr, vsa_suckaddr_len, vtim_dur, vtim_real, VSA_BuildFAP, VSA_GetPtr,
-    VSA_Port, PF_INET, PF_INET6, VCL_ACL, VCL_BACKEND, VCL_BLOB, VCL_BODY, VCL_BOOL, VCL_DURATION,
-    VCL_ENUM, VCL_HEADER, VCL_HTTP, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL, VCL_REGEX, VCL_STEVEDORE,
+    sa_family_t, vsa_suckaddr_len, vtim_dur, vtim_real, VSA_BuildFAP, VSA_GetPtr, VSA_Port,
+    PF_INET, PF_INET6, VCL_ACL, VCL_BACKEND, VCL_BLOB, VCL_BODY, VCL_BOOL, VCL_DURATION, VCL_ENUM,
+    VCL_HEADER, VCL_HTTP, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL, VCL_REGEX, VCL_STEVEDORE,
     VCL_STRANDS, VCL_STRING, VCL_SUB, VCL_TIME, VCL_VCL,
 };
 use crate::vcl::{from_vcl_probe, into_vcl_probe, CowProbe, Probe, VclError, Workspace};
@@ -191,11 +192,17 @@ default_null_ptr!(VCL_IP);
 impl IntoVCL<VCL_IP> for SocketAddr {
     fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_IP, VclError> {
         unsafe {
-            let p = ws.alloc(vsa_suckaddr_len)?.as_mut_ptr().cast::<suckaddr>();
+            // We cannot use sizeof::<suckaddr>() because suckaddr is a zero-sized
+            // struct from Rust's perspective
+            let size = NonZeroUsize::new(vsa_suckaddr_len).unwrap();
+            let p = ws.alloc(size);
+            if p.is_null() {
+                Err(VclError::WsOutOfMemory(size))?;
+            }
             match self {
                 SocketAddr::V4(sa) => {
                     assert!(!VSA_BuildFAP(
-                        p.cast::<c_void>(),
+                        p,
                         PF_INET as sa_family_t,
                         sa.ip().octets().as_slice().as_ptr().cast::<c_void>(),
                         4,
@@ -206,7 +213,7 @@ impl IntoVCL<VCL_IP> for SocketAddr {
                 }
                 SocketAddr::V6(sa) => {
                     assert!(!VSA_BuildFAP(
-                        p.cast::<c_void>(),
+                        p,
                         PF_INET6 as sa_family_t,
                         sa.ip().octets().as_slice().as_ptr().cast::<c_void>(),
                         16,
@@ -216,7 +223,7 @@ impl IntoVCL<VCL_IP> for SocketAddr {
                     .is_null());
                 }
             }
-            Ok(VCL_IP(p))
+            Ok(VCL_IP(p.cast()))
         }
     }
 }
@@ -296,14 +303,12 @@ default_null_ptr!(VCL_REGEX);
 default_null_ptr!(VCL_STRING);
 impl IntoVCL<VCL_STRING> for &[u8] {
     fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_STRING, VclError> {
-        // try to save some work if the buffer is already in the workspace
-        // and if it ends in a null byte
-        // FIXME: UB here - we check if the value AFTER the slice is a null byte
-        //        in other words we access memory that is not ours. This is a bug.
-        if unsafe { ws.is_slice_allocated(self) && *self.as_ptr().add(self.len()) == b'\0' } {
+        // Try to save some work if the buffer is already in the workspace.
+        // We assume that &[u8] has always been readonly, so workspace data is valid.
+        if ws.contains(self) {
             Ok(VCL_STRING(self.as_ptr().cast::<c_char>()))
         } else {
-            Ok(VCL_STRING(ws.copy_bytes_with_null(&self)?.as_ptr()))
+            Ok(VCL_STRING(ws.copy_bytes_with_null(self)?.b))
         }
     }
 }
@@ -314,7 +319,7 @@ impl IntoVCL<VCL_STRING> for &str {
 }
 impl IntoVCL<VCL_STRING> for &CStr {
     fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_STRING, VclError> {
-        ws.copy_cstr(&self)
+        ws.copy_cstr(self)
     }
 }
 impl IntoVCL<VCL_STRING> for &Cow<'_, str> {

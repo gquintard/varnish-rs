@@ -1,3 +1,5 @@
+extern crate core;
+
 #[allow(
     improper_ctypes,
     non_upper_case_globals,
