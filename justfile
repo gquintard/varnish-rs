@@ -45,9 +45,13 @@ build-all-features:
 test: build
     cargo test --workspace --all-targets
 
-# Find the minimum supported Rust version
+# Find the minimum supported Rust version. Install it with `cargo install cargo-msrv`
 msrv:
     cargo msrv find --min 1.77 --component rustfmt -- {{just_executable()}} ci-test-msrv
+
+# Find unused dependencies. Install it with `cargo install cargo-udeps`
+udeps:
+    cargo +nightly udeps --workspace --all-targets
 
 # Publish crates to crates.io in the right order
 publish:
