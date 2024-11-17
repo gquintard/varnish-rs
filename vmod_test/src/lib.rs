@@ -16,9 +16,7 @@ mod rustest {
 
     use varnish::ffi;
     use varnish::ffi::VCL_STRING;
-    use varnish::vcl::{
-        new_vfp, CowProbe, CowRequest, Ctx, Event, Probe, Request, VclError, Workspace,
-    };
+    use varnish::vcl::{new_vfp, CowProbe, Ctx, Event, Probe, Request, VclError, Workspace};
 
     use super::VFPTest;
 
@@ -126,8 +124,8 @@ mod rustest {
             Some(probe) => format!(
                 "{}-{}-{}-{}-{}-{}",
                 match probe.request {
-                    CowRequest::URL(url) => format!("url:{url}"),
-                    CowRequest::Text(text) => format!("text:{text}"),
+                    Request::URL(url) => format!("url:{url}"),
+                    Request::Text(text) => format!("text:{text}"),
                 },
                 probe.threshold,
                 probe.timeout.as_secs(),
