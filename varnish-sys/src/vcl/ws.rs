@@ -37,7 +37,7 @@ pub struct Workspace<'a> {
 
 impl<'a> Workspace<'a> {
     /// Wrap a raw pointer into an object we can use.
-    pub fn new(raw: *mut ffi::ws) -> Self {
+    pub(crate) fn new(raw: *mut ffi::ws) -> Self {
         assert!(!raw.is_null(), "raw pointer was null");
         Self {
             raw,

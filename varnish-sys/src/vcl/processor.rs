@@ -102,9 +102,8 @@ pub unsafe extern "C" fn gen_vdp_push<T: DeliveryProcessor>(
         return 1; /* TODO: log */
     }
 
-    let empty_buffer: [u8; 0] = [0; 0];
     let buf = if ptr.is_null() {
-        &empty_buffer
+        &[0; 0]
     } else {
         std::slice::from_raw_parts(ptr.cast::<u8>(), len as usize)
     };
@@ -139,7 +138,7 @@ impl<'a> DeliveryProcCtx<'a> {
     /// # Safety
     ///
     /// The caller is in charge of making sure the structure doesn't outlive the pointer.
-    pub unsafe fn new(raw: *mut vdp_ctx) -> Self {
+    pub(crate) unsafe fn new(raw: *mut vdp_ctx) -> Self {
         let raw = raw.as_mut().unwrap();
         assert_eq!(raw.magic, ffi::VDP_CTX_MAGIC);
         Self { raw }
@@ -198,9 +197,8 @@ pub unsafe extern "C" fn wrap_vfp_pull<T: FetchProcessor>(
 ) -> VfpStatus {
     let ctx = validate_vfp_ctx(ctxp);
     let vfe = validate_vfp_entry(vfep);
-    let mut empty_buffer: [u8; 0] = [0; 0];
     let buf = if ptr.is_null() {
-        empty_buffer.as_mut()
+        [0; 0].as_mut()
     } else {
         std::slice::from_raw_parts_mut(ptr.cast::<u8>(), *len as usize)
     };
@@ -224,12 +222,10 @@ pub unsafe extern "C" fn wrap_vfp_fini<T: FetchProcessor>(
 ) {
     validate_vfp_ctx(ctxp);
     let vfe = validate_vfp_entry(vfep);
-    if vfe.priv1.is_null() {
-        return;
+    if !vfe.priv1.is_null() {
+        let p = ptr::replace(&mut vfe.priv1, ptr::null_mut());
+        drop(Box::from_raw(p.cast::<T>()));
     }
-
-    drop(Box::from_raw(vfe.priv1.cast::<T>()));
-    vfe.priv1 = ptr::null_mut();
 }
 
 /// Create a `ffi::vfp` that can be fed to `ffi::VRT_AddVFP`
@@ -255,7 +251,7 @@ impl<'a> FetchProcCtx<'a> {
     /// # Safety
     ///
     /// The caller is in charge of making sure the structure doesn't outlive the pointer.
-    pub unsafe fn new(raw: *mut vfp_ctx) -> Self {
+    pub(crate) unsafe fn new(raw: *mut vfp_ctx) -> Self {
         Self {
             raw: validate_vfp_ctx(raw),
         }
