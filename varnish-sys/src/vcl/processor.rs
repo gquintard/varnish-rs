@@ -65,7 +65,7 @@ pub unsafe extern "C" fn gen_vdp_init<T: DeliveryProcessor>(
     assert_eq!(*priv_, ptr::null_mut());
     match T::new(
         &mut Ctx::from_ptr(vrt_ctx),
-        &mut DeliveryProcCtx::new(ctx_raw),
+        &mut DeliveryProcCtx::from_ptr(ctx_raw),
     ) {
         InitResult::Ok(proc) => {
             *priv_ = Box::into_raw(Box::new(proc)).cast::<c_void>();
@@ -108,7 +108,7 @@ pub unsafe extern "C" fn gen_vdp_push<T: DeliveryProcessor>(
         std::slice::from_raw_parts(ptr.cast::<u8>(), len as usize)
     };
 
-    match (*(*priv_).cast::<T>()).push(&mut DeliveryProcCtx::new(ctx_raw), act, buf) {
+    match (*(*priv_).cast::<T>()).push(&mut DeliveryProcCtx::from_ptr(ctx_raw), act, buf) {
         PushResult::Err => -1, // TODO: log error
         PushResult::Ok => 0,
         PushResult::End => 1,
@@ -138,7 +138,7 @@ impl<'a> DeliveryProcCtx<'a> {
     /// # Safety
     ///
     /// The caller is in charge of making sure the structure doesn't outlive the pointer.
-    pub(crate) unsafe fn new(raw: *mut vdp_ctx) -> Self {
+    pub(crate) unsafe fn from_ptr(raw: *mut vdp_ctx) -> Self {
         let raw = raw.as_mut().unwrap();
         assert_eq!(raw.magic, ffi::VDP_CTX_MAGIC);
         Self { raw }
@@ -179,7 +179,10 @@ unsafe extern "C" fn wrap_vfp_init<T: FetchProcessor>(
 ) -> VfpStatus {
     let ctx = validate_vfp_ctx(ctxp);
     let vfe = validate_vfp_entry(vfep);
-    match T::new(&mut Ctx::from_ptr(vrt_ctx), &mut FetchProcCtx::new(ctx)) {
+    match T::new(
+        &mut Ctx::from_ptr(vrt_ctx),
+        &mut FetchProcCtx::from_ptr(ctx),
+    ) {
         InitResult::Ok(proc) => {
             vfe.priv1 = Box::into_raw(Box::new(proc)).cast::<c_void>();
             VfpStatus::Ok
@@ -203,7 +206,7 @@ pub unsafe extern "C" fn wrap_vfp_pull<T: FetchProcessor>(
         std::slice::from_raw_parts_mut(ptr.cast::<u8>(), *len as usize)
     };
     let obj = vfe.priv1.cast::<T>().as_mut().unwrap();
-    match obj.pull(&mut FetchProcCtx::new(ctx), buf) {
+    match obj.pull(&mut FetchProcCtx::from_ptr(ctx), buf) {
         PullResult::Err => VfpStatus::Error, // TODO: log error
         PullResult::Ok(l) => {
             *len = l as isize;
@@ -251,7 +254,7 @@ impl<'a> FetchProcCtx<'a> {
     /// # Safety
     ///
     /// The caller is in charge of making sure the structure doesn't outlive the pointer.
-    pub(crate) unsafe fn new(raw: *mut vfp_ctx) -> Self {
+    pub(crate) unsafe fn from_ptr(raw: *mut vfp_ctx) -> Self {
         Self {
             raw: validate_vfp_ctx(raw),
         }

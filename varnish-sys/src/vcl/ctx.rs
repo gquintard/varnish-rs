@@ -51,12 +51,12 @@ impl<'a> Ctx<'a> {
     pub fn from_ref(raw: &'a mut vrt_ctx) -> Self {
         assert_eq!(raw.magic, VRT_CTX_MAGIC);
         Self {
-            http_req: HttpHeaders::new(raw.http_req),
-            http_req_top: HttpHeaders::new(raw.http_req_top),
-            http_resp: HttpHeaders::new(raw.http_resp),
-            http_bereq: HttpHeaders::new(raw.http_bereq),
-            http_beresp: HttpHeaders::new(raw.http_beresp),
-            ws: Workspace::new(raw.ws),
+            http_req: HttpHeaders::from_ptr(raw.http_req),
+            http_req_top: HttpHeaders::from_ptr(raw.http_req_top),
+            http_resp: HttpHeaders::from_ptr(raw.http_resp),
+            http_bereq: HttpHeaders::from_ptr(raw.http_bereq),
+            http_beresp: HttpHeaders::from_ptr(raw.http_beresp),
+            ws: Workspace::from_ptr(raw.ws),
             raw,
         }
     }

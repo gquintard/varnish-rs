@@ -323,13 +323,13 @@ unsafe extern "C" fn wrap_list<S: Serve<T>, T: Transfer>(
     json: i32,
 ) {
     let mut ctx = Ctx::from_ptr(ctxp);
-    let mut vsb = Buffer::new(vsbp);
+    let mut vsb = Buffer::from_ptr(vsbp);
     let backend: &S = get_backend(validate_director(be));
     backend.list(&mut ctx, &mut vsb, detailed != 0, json != 0);
 }
 
 unsafe extern "C" fn wrap_panic<S: Serve<T>, T: Transfer>(be: VCL_BACKEND, vsbp: *mut ffi::vsb) {
-    let mut vsb = Buffer::new(vsbp);
+    let mut vsb = Buffer::from_ptr(vsbp);
     let backend: &S = get_backend(validate_director(be));
     backend.panic(&mut vsb);
 }
@@ -413,7 +413,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
                             ctx.fail(format!("{}: insufficient workspace", backend.get_type()));
                             return -1;
                         };
-                        let Ok(t) = Workspace::new(bo.ws.as_mut_ptr())
+                        let Ok(t) = Workspace::from_ptr(bo.ws.as_mut_ptr())
                             .copy_bytes_with_null(&backend.get_type())
                         else {
                             ctx.fail(format!("{}: insufficient workspace", backend.get_type()));
