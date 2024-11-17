@@ -37,7 +37,7 @@ pub struct HttpHeaders<'a> {
 
 impl<'a> HttpHeaders<'a> {
     /// Wrap a raw pointer into an object we can use.
-    pub fn new(p: ffi::VCL_HTTP) -> Option<Self> {
+    pub(crate) fn from_ptr(p: ffi::VCL_HTTP) -> Option<Self> {
         Some(HttpHeaders {
             raw: unsafe { p.0.as_mut()? },
         })
@@ -47,7 +47,7 @@ impl<'a> HttpHeaders<'a> {
         assert!(idx < self.raw.nhd);
 
         /* XXX: aliasing warning, it's the same pointer as the one in Ctx */
-        let mut ws = Workspace::new(self.raw.ws);
+        let mut ws = Workspace::from_ptr(self.raw.ws);
         unsafe {
             let hd = self.raw.hd.offset(idx as isize).as_mut().unwrap();
             *hd = ffi::txt::from_cstr(ws.copy_bytes_with_null(&value)?);
