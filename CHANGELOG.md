@@ -5,6 +5,7 @@
 - Mark `Workspace::alloc` as unsafe because the allocated array is not
   initialized
 - Rename `VSC` &rarr; `Stats`, `VSCBuilder` &rarr; `StatsBuilder`, and `VSCInternal` into `StatsImpl`
+- Consolidate `Probe` and `CowProbe<'a>` into one `Probe<T>` struct with a generic `String` or `Cow<str>`.
 
 # 0.1.0 (2024-11-12)
 

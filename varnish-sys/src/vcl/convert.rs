@@ -45,19 +45,18 @@
 
 use std::borrow::Cow;
 use std::ffi::{c_char, c_void, CStr};
-use std::mem::size_of;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::ptr;
 use std::ptr::{null, null_mut};
 use std::time::{Duration, SystemTime};
 
 use crate::ffi::{
-    sa_family_t, suckaddr, vrt_backend_probe, vsa_suckaddr_len, vtim_dur, vtim_real, VSA_BuildFAP,
-    VSA_GetPtr, VSA_Port, PF_INET, PF_INET6, VCL_ACL, VCL_BACKEND, VCL_BLOB, VCL_BODY, VCL_BOOL,
-    VCL_DURATION, VCL_ENUM, VCL_HEADER, VCL_HTTP, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL, VCL_REGEX,
-    VCL_STEVEDORE, VCL_STRANDS, VCL_STRING, VCL_SUB, VCL_TIME, VCL_VCL, VRT_BACKEND_PROBE_MAGIC,
+    sa_family_t, suckaddr, vsa_suckaddr_len, vtim_dur, vtim_real, VSA_BuildFAP, VSA_GetPtr,
+    VSA_Port, PF_INET, PF_INET6, VCL_ACL, VCL_BACKEND, VCL_BLOB, VCL_BODY, VCL_BOOL, VCL_DURATION,
+    VCL_ENUM, VCL_HEADER, VCL_HTTP, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL, VCL_REGEX, VCL_STEVEDORE,
+    VCL_STRANDS, VCL_STRING, VCL_SUB, VCL_TIME, VCL_VCL,
 };
-use crate::vcl::{CowProbe, CowRequest, Probe, Request, VclError, Workspace};
+use crate::vcl::{from_vcl_probe, into_vcl_probe, CowProbe, Probe, VclError, Workspace};
 
 /// Convert a Rust type into a VCL one
 ///
@@ -257,102 +256,22 @@ impl From<VCL_IP> for Option<SocketAddr> {
 default_null_ptr!(VCL_PROBE);
 impl<'a> IntoVCL<VCL_PROBE> for CowProbe<'a> {
     fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_PROBE, VclError> {
-        // FIXME!  We need to rethink the alloc API to not be byte-aligned
-        #[allow(clippy::cast_ptr_alignment)]
-        let probe = unsafe {
-            ws.alloc(size_of::<vrt_backend_probe>())?
-                .as_mut_ptr()
-                .cast::<vrt_backend_probe>()
-                .as_mut()
-                .unwrap()
-        };
-        probe.magic = VRT_BACKEND_PROBE_MAGIC;
-        match self.request {
-            CowRequest::URL(ref s) => {
-                probe.url = s.into_vcl(ws)?.0;
-            }
-            CowRequest::Text(ref s) => {
-                probe.request = s.into_vcl(ws)?.0;
-            }
-        }
-        probe.timeout = self.timeout.into();
-        probe.interval = self.interval.into();
-        probe.exp_status = self.exp_status;
-        probe.window = self.window;
-        probe.initial = self.initial;
-        Ok(VCL_PROBE(probe))
+        into_vcl_probe(self, ws)
     }
 }
 impl IntoVCL<VCL_PROBE> for Probe {
     fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_PROBE, VclError> {
-        // FIXME!  We need to rethink the alloc API to not be byte-aligned
-        #[allow(clippy::cast_ptr_alignment)]
-        let probe = unsafe {
-            ws.alloc(size_of::<vrt_backend_probe>())?
-                .as_mut_ptr()
-                .cast::<vrt_backend_probe>()
-                .as_mut()
-                .unwrap()
-        };
-        probe.magic = VRT_BACKEND_PROBE_MAGIC;
-        match self.request {
-            Request::URL(ref s) => {
-                probe.url = s.as_str().into_vcl(ws)?.0;
-            }
-            Request::Text(ref s) => {
-                probe.request = s.as_str().into_vcl(ws)?.0;
-            }
-        }
-        probe.timeout = self.timeout.into();
-        probe.interval = self.interval.into();
-        probe.exp_status = self.exp_status;
-        probe.window = self.window;
-        probe.initial = self.initial;
-        Ok(VCL_PROBE(probe))
+        into_vcl_probe(self, ws)
     }
 }
 impl<'a> From<VCL_PROBE> for Option<CowProbe<'a>> {
     fn from(value: VCL_PROBE) -> Self {
-        let pr = unsafe { value.0.as_ref()? };
-        assert!(
-            (pr.url.is_null() && !pr.request.is_null())
-                || pr.request.is_null() && !pr.url.is_null()
-        );
-        Some(CowProbe {
-            request: if pr.url.is_null() {
-                CowRequest::Text(from_str(pr.request))
-            } else {
-                CowRequest::URL(from_str(pr.url))
-            },
-            timeout: VCL_DURATION(pr.timeout).into(),
-            interval: VCL_DURATION(pr.interval).into(),
-            exp_status: pr.exp_status,
-            window: pr.window,
-            threshold: pr.threshold,
-            initial: pr.initial,
-        })
+        from_vcl_probe(value)
     }
 }
 impl From<VCL_PROBE> for Option<Probe> {
     fn from(value: VCL_PROBE) -> Self {
-        let pr = unsafe { value.0.as_ref()? };
-        assert!(
-            (pr.url.is_null() && !pr.request.is_null())
-                || pr.request.is_null() && !pr.url.is_null()
-        );
-        Some(Probe {
-            request: if pr.url.is_null() {
-                Request::Text(from_str(pr.request).into())
-            } else {
-                Request::URL(from_str(pr.url).into())
-            },
-            timeout: VCL_DURATION(pr.timeout).into(),
-            interval: VCL_DURATION(pr.interval).into(),
-            exp_status: pr.exp_status,
-            window: pr.window,
-            threshold: pr.threshold,
-            initial: pr.initial,
-        })
+        from_vcl_probe(value)
     }
 }
 
@@ -441,16 +360,6 @@ impl<'a> TryFrom<VCL_STRING> for &'a str {
     type Error = VclError;
     fn try_from(value: VCL_STRING) -> Result<Self, Self::Error> {
         Ok(<Option<&'a str>>::try_from(value)?.unwrap_or(""))
-    }
-}
-
-/// Helper function
-fn from_str<'a>(value: *const c_char) -> Cow<'a, str> {
-    if value.is_null() {
-        Cow::Borrowed("")
-    } else {
-        // FIXME: this should NOT be lossy IMO
-        unsafe { CStr::from_ptr(value).to_string_lossy() }
     }
 }
 
