@@ -4,7 +4,7 @@ varnish::run_vtc_tests!("tests/*.vtc");
 
 #[allow(non_camel_case_types)]
 struct parrot {
-    be: Backend<Sentence, Body>,
+    backend: Backend<Sentence, Body>,
 }
 
 /// a simple STRING dictionary in your VCL
@@ -31,27 +31,27 @@ mod be {
             // - the vcl context, that we just pass along
             // - the vcl_name (how the vcl writer named the object)
             // - a struct that implements the Serve trait
-            let be = Backend::new(
+            let backend = Backend::new(
                 ctx,
                 name,
                 Sentence {
-                    v: Vec::from(to_repeat),
+                    data: Vec::from(to_repeat),
                 },
                 false,
             )?;
 
-            Ok(parrot { be })
+            Ok(parrot { backend })
         }
 
         pub fn backend(&self) -> VCL_BACKEND {
-            self.be.vcl_ptr()
+            self.backend.vcl_ptr()
         }
     }
 }
 
 // Sentence is just a Vec<u8> holding the string we were asked to repeat
-pub struct Sentence {
-    v: Vec<u8>,
+struct Sentence {
+    data: Vec<u8>,
 }
 
 // a lot of the Serve trait's methods are optional, but we need to implement
@@ -69,8 +69,8 @@ impl Serve<Body> for Sentence {
         beresp.set_header("server", "parrot")?;
 
         Ok(Some(Body {
-            p: self.v.as_ptr(),
-            left: self.v.len(),
+            p: self.data.as_ptr(),
+            left: self.data.len(),
         }))
     }
 }
@@ -78,7 +78,7 @@ impl Serve<Body> for Sentence {
 // it's not great to be passing pointers around, but that save us from copying
 // the vector or from using a mutex/arc, and we know the Vec will survive the
 // transfer
-pub struct Body {
+struct Body {
     p: *const u8,
     left: usize,
 }

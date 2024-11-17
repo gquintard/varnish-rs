@@ -20,7 +20,7 @@ mod error {
 
         // try to convert the string into an i64, if parsing fails, force 0
         // no need to return as the last expression is automatically returned
-        content.parse::<i64>().unwrap_or(0)
+        content.parse().unwrap_or(0)
     }
 
     /// If the file cannot be parsed into an INT, the vmod will trigger a VCL error,
@@ -37,7 +37,7 @@ mod error {
 
         // try to convert the string into an i64
         // no need to return as the last expression is automatically returned
-        let Ok(result) = content.parse::<i64>() else {
+        let Ok(result) = content.parse() else {
             ctx.fail("manual_fail: conversion failed");
             return 0;
         };
@@ -56,7 +56,7 @@ mod error {
             // convert the error (if any!), into a string and return right away with the `?` operator
             .map_err(|e| format!("result_fail: {e}"))?
             // try to parse content into i64
-            .parse::<i64>()
+            .parse()
             // map the error to a string message and return either the parsed integer or that error
             .map_err(|e| format!("result_fail: {e}"))
     }
