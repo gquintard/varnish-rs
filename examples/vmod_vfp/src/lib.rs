@@ -65,9 +65,10 @@ impl FetchProcessor for Lower {
         };
 
         // iterate over the written buffer, and lowercase each element
-        for e in &mut buf[..len] {
-            e.make_ascii_lowercase();
+        for ch in &mut buf[..len] {
+            ch.make_ascii_lowercase();
         }
+
         pull_res
     }
 }

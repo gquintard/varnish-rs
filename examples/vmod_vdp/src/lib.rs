@@ -71,14 +71,14 @@ impl DeliveryProcessor for Flipper {
         // ingest everything we're given
         self.body.extend_from_slice(buf);
 
-        // nod along if it isn't the last call
-        if !matches!(act, VdpAction::End) {
-            return PushResult::Ok;
+        if matches!(act, VdpAction::End) {
+            // flip the whole body
+            self.body.reverse();
+            // send
+            ctx.push(act, &self.body)
+        } else {
+            // nod along if it isn't the last call
+            PushResult::Ok
         }
-
-        // flip the whole body
-        self.body.reverse();
-        // send
-        ctx.push(act, &self.body)
     }
 }

@@ -23,7 +23,7 @@ use crate::vcl::{HttpHeaders, LogTag, TestWS, VclError, Workspace};
 /// fn foo(ctx: &Ctx) {
 ///     if let Some(ref req) = ctx.http_req {
 ///         for (name, value) in req {
-///             println!("header {} has value {}", name, value);
+///             println!("header {name} has value {value}");
 ///         }
 ///     }
 /// }
