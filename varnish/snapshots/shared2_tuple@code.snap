@@ -30,7 +30,6 @@ mod tuple {
             __vp: *mut vmod_priv,
             __ev: VclEvent,
         ) -> VCL_INT {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             let mut __obj_per_vcl = (*__vp).take();
             super::on_event(&mut __obj_per_vcl);
             let __result = VCL_INT(0);
@@ -44,7 +43,6 @@ mod tuple {
             tsk_vals: *mut vmod_priv,
             vcl_vals: *const vmod_priv,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             let mut __obj_per_task = (*tsk_vals).take();
             let __result = super::per_tsk_val(
                 &mut __obj_per_task,

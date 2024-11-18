@@ -16,7 +16,6 @@ mod types {
         use varnish::vcl::{Ctx, IntoVCL, Workspace};
         use super::*;
         unsafe extern "C" fn vmod_c_to_void(__ctx: *mut vrt_ctx) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::to_void()
         }
         unsafe extern "C" fn vmod_c_to_res_void_err(__ctx: *mut vrt_ctx) {
@@ -50,11 +49,9 @@ mod types {
                 })
         }
         unsafe extern "C" fn vmod_c_type_bool(__ctx: *mut vrt_ctx, _v: VCL_BOOL) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::type_bool(_v.into())
         }
         unsafe extern "C" fn vmod_c_type_bool_dflt(__ctx: *mut vrt_ctx, _v: VCL_BOOL) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::type_bool_dflt(_v.into())
         }
         #[repr(C)]
@@ -66,7 +63,6 @@ mod types {
             __ctx: *mut vrt_ctx,
             __args: *const arg_vmod_types_opt_bool,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
             super::opt_bool(if __args.valid__v != 0 { __args._v.into() } else { None })
         }
@@ -93,7 +89,6 @@ mod types {
                 })
         }
         unsafe extern "C" fn vmod_c_type_cstr(__ctx: *mut vrt_ctx, _v: VCL_STRING) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::type_cstr(_v.into())
         }
         #[repr(C)]
@@ -105,23 +100,19 @@ mod types {
             __ctx: *mut vrt_ctx,
             __args: *const arg_vmod_types_opt_cstr,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
             super::opt_cstr(if __args.valid__v != 0 { __args._v.into() } else { None })
         }
         unsafe extern "C" fn vmod_c_opt_cstr_req(__ctx: *mut vrt_ctx, _v: VCL_STRING) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::opt_cstr_req(_v.into())
         }
         unsafe extern "C" fn vmod_c_type_cstr_dflt(__ctx: *mut vrt_ctx, _v: VCL_STRING) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::type_cstr_dflt(_v.into())
         }
         unsafe extern "C" fn vmod_c_type_cstr_dflt2(
             __ctx: *mut vrt_ctx,
             _v: VCL_STRING,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::type_cstr_dflt2(_v.into())
         }
         #[repr(C)]
@@ -133,14 +124,12 @@ mod types {
             __ctx: *mut vrt_ctx,
             __args: *const arg_vmod_types_opt_cstr_dflt,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
             super::opt_cstr_dflt(
                 if __args.valid__v != 0 { __args._v.into() } else { None },
             )
         }
         unsafe extern "C" fn vmod_c_opt_cstr_dflt2(__ctx: *mut vrt_ctx, _v: VCL_STRING) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::opt_cstr_dflt2(_v.into())
         }
         unsafe extern "C" fn vmod_c_to_cstr(__ctx: *mut vrt_ctx) -> VCL_STRING {
@@ -180,7 +169,6 @@ mod types {
             __ctx: *mut vrt_ctx,
             _v: VCL_DURATION,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::type_duration(_v.into())
         }
         #[repr(C)]
@@ -192,7 +180,6 @@ mod types {
             __ctx: *mut vrt_ctx,
             __args: *const arg_vmod_types_opt_duration,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
             super::opt_duration(
                 if __args.valid__v != 0 { __args._v.into() } else { None },
@@ -223,11 +210,9 @@ mod types {
                 })
         }
         unsafe extern "C" fn vmod_c_type_f64(__ctx: *mut vrt_ctx, _v: VCL_REAL) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::type_f64(_v.into())
         }
         unsafe extern "C" fn vmod_c_type_f64_dflt(__ctx: *mut vrt_ctx, _v: VCL_REAL) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::type_f64_dflt(_v.into())
         }
         #[repr(C)]
@@ -239,7 +224,6 @@ mod types {
             __ctx: *mut vrt_ctx,
             __args: *const arg_vmod_types_opt_f64,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
             super::opt_f64(if __args.valid__v != 0 { __args._v.into() } else { None })
         }
@@ -266,11 +250,9 @@ mod types {
                 })
         }
         unsafe extern "C" fn vmod_c_type_i64(__ctx: *mut vrt_ctx, _v: VCL_INT) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::type_i64(_v.into())
         }
         unsafe extern "C" fn vmod_c_type_i64_dflt(__ctx: *mut vrt_ctx, _v: VCL_INT) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::type_i64_dflt(_v.into())
         }
         #[repr(C)]
@@ -282,7 +264,6 @@ mod types {
             __ctx: *mut vrt_ctx,
             __args: *const arg_vmod_types_opt_i64,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
             super::opt_i64(if __args.valid__v != 0 { __args._v.into() } else { None })
         }
@@ -461,12 +442,10 @@ mod types {
             __ctx: *mut vrt_ctx,
             __args: *const arg_vmod_types_type_probe,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
             super::type_probe(if __args.valid__v != 0 { __args._v.into() } else { None })
         }
         unsafe extern "C" fn vmod_c_type_probe_req(__ctx: *mut vrt_ctx, _v: VCL_PROBE) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::type_probe_req(_v.into())
         }
         unsafe extern "C" fn vmod_c_to_probe(__ctx: *mut vrt_ctx) -> VCL_PROBE {
@@ -500,7 +479,6 @@ mod types {
             __ctx: *mut vrt_ctx,
             __args: *const arg_vmod_types_type_cow_probe,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
             super::type_cow_probe(
                 if __args.valid__v != 0 { __args._v.into() } else { None },
@@ -510,7 +488,6 @@ mod types {
             __ctx: *mut vrt_ctx,
             _v: VCL_PROBE,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::type_cow_probe_req(_v.into())
         }
         unsafe extern "C" fn vmod_c_to_cow_probe(__ctx: *mut vrt_ctx) -> VCL_PROBE {
@@ -544,12 +521,10 @@ mod types {
             __ctx: *mut vrt_ctx,
             __args: *const arg_vmod_types_type_ip,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
             super::type_ip(if __args.valid__v != 0 { __args._v.into() } else { None })
         }
         unsafe extern "C" fn vmod_c_type_ip_req(__ctx: *mut vrt_ctx, _v: VCL_IP) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::type_ip_req(_v.into())
         }
         unsafe extern "C" fn vmod_c_to_ip(__ctx: *mut vrt_ctx) -> VCL_IP {
@@ -575,7 +550,6 @@ mod types {
                 })
         }
         unsafe extern "C" fn vmod_c_to_vcl_string(__ctx: *mut vrt_ctx) -> VCL_STRING {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::to_vcl_string()
         }
         unsafe extern "C" fn vmod_c_to_res_vcl_string(

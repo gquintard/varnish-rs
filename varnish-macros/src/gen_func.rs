@@ -23,6 +23,8 @@ pub struct FuncProcessor {
     func_call_vars: Vec<TokenStream>,
     /// Rust wrapper steps to be executed after the user function call even if it fails, e.g. releasing ownership of shared objects.
     func_always_after_call: Vec<TokenStream>,
+    /// Rust wrapper requires `__ctx`
+    func_needs_ctx: bool,
 
     /// C function list of arguments for funcs with no optional args, e.g. `["VCL_INT", "VCL_STRING"]`
     cproto_wrapper_args: Vec<&'static str>,
@@ -82,8 +84,6 @@ impl FuncProcessor {
             self.func_pre_call
                 .push(quote! { drop(Box::from_raw(*__objp)); *__objp = ::std::ptr::null_mut(); });
         } else {
-            self.func_pre_call
-                .push(quote! { let mut __ctx = Ctx::from_ptr(__ctx); });
             self.wrap_fn_arg_decl.push(quote! { __ctx: *mut vrt_ctx });
             self.cproto_fn_arg_decl.push("VRT_CTX".to_string());
         }
@@ -196,6 +196,7 @@ impl FuncProcessor {
 
         match &arg_info.ty {
             ParamType::Context { is_mut } => {
+                self.func_needs_ctx = true;
                 self.func_call_vars.push(if *is_mut {
                     quote! { &mut __ctx }
                 } else {
@@ -203,6 +204,7 @@ impl FuncProcessor {
                 });
             }
             ParamType::Workspace { is_mut } => {
+                self.func_needs_ctx = true;
                 self.func_call_vars.push(if *is_mut {
                     quote! { &mut __ctx.ws }
                 } else {
@@ -414,6 +416,7 @@ impl FuncProcessor {
         let signature = self.get_wrapper_fn_sig(true);
         let func_pre_call = &self.func_pre_call;
         let func_always_after_call = &self.func_always_after_call;
+        let mut needs_ctx = self.func_needs_ctx;
 
         let is_void = self.output_hdr == "VCL_VOID";
         let mut func_steps = Vec::new();
@@ -434,6 +437,7 @@ impl FuncProcessor {
                 func_steps.push(quote! { #func_call; });
                 func_call = quote! { VCL_INT(0) }
             } else if !is_void && !matches!(info.output_ty, OutputTy::VclType(_)) {
+                needs_ctx = true;
                 func_call = quote! { #func_call.into_vcl(&mut __ctx.ws)? };
             }
 
@@ -477,6 +481,7 @@ impl FuncProcessor {
                     __result
                 }
             };
+            needs_ctx = true;
             quote! {
                 #res.unwrap_or_else(|err| {
                     __ctx.fail(err);
@@ -501,10 +506,16 @@ impl FuncProcessor {
                 __result
             }
         };
+        let create_ctx = if needs_ctx {
+            quote! { let mut __ctx = Ctx::from_ptr(__ctx); }
+        } else {
+            quote! {}
+        };
 
         quote! {
             #opt_param_struct
             #signature {
+                #create_ctx
                 #(#func_pre_call)*
                 #result
             }

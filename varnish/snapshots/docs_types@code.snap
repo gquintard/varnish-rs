@@ -25,11 +25,9 @@ mod types {
         use varnish::vcl::{Ctx, IntoVCL, Workspace};
         use super::*;
         unsafe extern "C" fn vmod_c_with_docs(__ctx: *mut vrt_ctx) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::with_docs()
         }
         unsafe extern "C" fn vmod_c_no_docs(__ctx: *mut vrt_ctx) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::no_docs()
         }
         unsafe extern "C" fn vmod_c_doctest(
@@ -37,11 +35,9 @@ mod types {
             _no_docs: VCL_INT,
             _v: VCL_INT,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::doctest(_no_docs.into(), _v.into())
         }
         unsafe extern "C" fn vmod_c_arg_only(__ctx: *mut vrt_ctx, _v: VCL_INT) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::arg_only(_v.into())
         }
         #[repr(C)]
@@ -55,7 +51,6 @@ mod types {
             __vcl_name: *const c_char,
             __args: *const arg_vmod_types_DocStruct__init,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
             let __result = Box::new(
                 super::DocStruct::new(
