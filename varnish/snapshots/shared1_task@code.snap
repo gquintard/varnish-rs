@@ -43,7 +43,6 @@ mod task {
             __ctx: *mut vrt_ctx,
             vcl: *const vmod_priv,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::per_vcl_val(vcl.as_ref().and_then(|v| v.get_ref()))
         }
         #[repr(C)]
@@ -56,7 +55,6 @@ mod task {
             __ctx: *mut vrt_ctx,
             __args: *const arg_vmod_task_per_vcl_opt,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
             super::per_vcl_opt(
                 __args.vcl.as_ref().and_then(|v| v.get_ref()),
@@ -67,7 +65,6 @@ mod task {
             __ctx: *mut vrt_ctx,
             tsk: *mut vmod_priv,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             let mut __obj_per_task = (*tsk).take();
             let __result = super::per_tsk_val(&mut __obj_per_task);
             if let Some(obj) = __obj_per_task {
@@ -85,7 +82,6 @@ mod task {
             __ctx: *mut vrt_ctx,
             __args: *const arg_vmod_task_per_tsk_opt,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
             let mut __obj_per_task = (*__args.tsk).take();
             let __result = super::per_tsk_opt(
@@ -103,7 +99,6 @@ mod task {
             __vcl_name: *const c_char,
             vcl: *mut vmod_priv,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             let mut __obj_per_vcl = (*vcl).take();
             let __result = Box::new(super::PerVcl::new(&mut __obj_per_vcl));
             *__objp = Box::into_raw(__result);
@@ -121,7 +116,6 @@ mod task {
             tsk: *mut vmod_priv,
             vcl: *const vmod_priv,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             let __obj = __obj.as_ref().unwrap();
             let mut __obj_per_task = (*tsk).take();
             let __result = __obj
@@ -138,7 +132,6 @@ mod task {
             vcl: *const vmod_priv,
             val: VCL_INT,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             let __obj = __obj.as_ref().unwrap();
             let mut __obj_per_task = (*tsk).take();
             let __result = __obj
@@ -164,7 +157,6 @@ mod task {
             __obj: *const super::PerVcl,
             __args: *const arg_vmod_task_PerVcl_both_opt,
         ) {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             let __args = __args.as_ref().unwrap();
             let __obj = __obj.as_ref().unwrap();
             let mut __obj_per_task = (*__args.tsk).take();

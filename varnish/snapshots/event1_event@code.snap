@@ -20,7 +20,6 @@ mod event {
             __vp: *mut vmod_priv,
             __ev: VclEvent,
         ) -> VCL_INT {
-            let mut __ctx = Ctx::from_ptr(__ctx);
             super::on_event(__ev);
             VCL_INT(0)
         }
