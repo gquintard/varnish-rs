@@ -1,7 +1,9 @@
+use crate::ffi;
 use crate::ffi::{
     director, req, sess, vcldir, vfp_ctx, vfp_entry, vrt_ctx, ws, DIRECTOR_MAGIC, REQ_MAGIC,
     SESS_MAGIC, VCLDIR_MAGIC, VCL_BACKEND, VFP_CTX_MAGIC, VFP_ENTRY_MAGIC, VRT_CTX_MAGIC, WS_MAGIC,
 };
+use crate::vcl::{DeliveryFilters, FetchFilters};
 
 pub unsafe fn validate_vfp_ctx(ctxp: *mut vfp_ctx) -> &'static mut vfp_ctx {
     let val = ctxp.as_mut().unwrap();
@@ -44,6 +46,20 @@ impl vrt_ctx {
         let val = unsafe { self.req.as_mut().unwrap() };
         assert_eq!(val.magic, REQ_MAGIC);
         val
+    }
+
+    pub fn fetch_filters<'c, 'f>(
+        &'c self,
+        filters: &'f mut Vec<Box<ffi::vfp>>,
+    ) -> FetchFilters<'c, 'f> {
+        FetchFilters::<'c, 'f>::new(self, filters)
+    }
+
+    pub fn delivery_filters<'c, 'f>(
+        &'c self,
+        filters: &'f mut Vec<Box<ffi::vdp>>,
+    ) -> DeliveryFilters<'c, 'f> {
+        DeliveryFilters::<'c, 'f>::new(self, filters)
     }
 }
 

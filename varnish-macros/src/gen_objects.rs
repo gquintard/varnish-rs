@@ -5,7 +5,7 @@ use std::fmt::Write;
 use serde_json::{json, Value};
 
 use crate::gen_func::FuncProcessor;
-use crate::model::ObjInfo;
+use crate::model::{ObjInfo, SharedTypes};
 use crate::names::Names;
 
 #[derive(Debug, Default)]
@@ -21,10 +21,12 @@ pub struct ObjProcessor {
 }
 
 impl ObjProcessor {
-    pub fn from_info(names: Names, info: &ObjInfo) -> Self {
+    pub fn from_info(names: Names, info: &ObjInfo, types: &SharedTypes) -> Self {
         let funcs = info
             .iter()
-            .map(|f| FuncProcessor::from_info(names.to_func(f.func_type, f.ident.as_str()), f))
+            .map(|f| {
+                FuncProcessor::from_info(names.to_func(f.func_type, f.ident.as_str()), f, types)
+            })
             .collect();
 
         let mut obj = Self {

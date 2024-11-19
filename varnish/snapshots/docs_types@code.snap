@@ -22,7 +22,7 @@ mod types {
             VCL_STRING, VCL_VOID, VMOD_ABI_Version, VMOD_PRIV_METHODS_MAGIC, VclEvent,
             vmod_priv, vmod_priv_methods, vrt_ctx,
         };
-        use varnish::vcl::{Ctx, IntoVCL, Workspace};
+        use varnish::vcl::{Ctx, IntoVCL, PerVclState, Workspace};
         use super::*;
         unsafe extern "C" fn vmod_c_with_docs(__ctx: *mut vrt_ctx) {
             super::with_docs()
@@ -163,7 +163,7 @@ mod types {
     impl DocStruct {
         /// doctest for `new`
         pub fn new(cap: Option<i64>) -> Self {
-            DocStruct
+            Self
         }
         /// doctest for the object function
         #[rustfmt::skip]

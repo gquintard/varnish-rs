@@ -157,7 +157,7 @@ impl From<Duration> for VCL_DURATION {
 //
 impl From<vtim_dur> for Duration {
     fn from(value: vtim_dur) -> Self {
-        Duration::from_secs_f64(value.0)
+        Self::from_secs_f64(value.0)
     }
 }
 impl From<Duration> for vtim_dur {

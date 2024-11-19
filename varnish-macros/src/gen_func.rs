@@ -2,12 +2,13 @@
 
 use std::fmt::Write as _;
 
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use serde_json::{json, Value};
+use syn::Type;
 
 use crate::model::FuncType::{Constructor, Destructor, Event, Function, Method};
-use crate::model::{FuncInfo, OutputTy, ParamKind, ParamTy, ParamType, ParamTypeInfo};
+use crate::model::{FuncInfo, OutputTy, ParamKind, ParamTy, ParamType, ParamTypeInfo, SharedTypes};
 use crate::names::{Names, ToIdent};
 
 #[derive(Debug, Default)]
@@ -65,7 +66,7 @@ pub struct FuncProcessor {
 }
 
 impl FuncProcessor {
-    pub fn from_info(names: Names, info: &FuncInfo) -> Self {
+    pub fn from_info(names: Names, info: &FuncInfo, shared_types: &SharedTypes) -> Self {
         let mut obj = Self {
             opt_args_ty_name: if info.has_optional_args {
                 names.arg_struct_name()
@@ -75,11 +76,11 @@ impl FuncProcessor {
             names,
             ..Default::default()
         };
-        obj.init(info);
+        obj.init(info, shared_types);
         obj
     }
 
-    fn init(&mut self, info: &FuncInfo) {
+    fn init(&mut self, info: &FuncInfo, shared_types: &SharedTypes) {
         if matches!(info.func_type, Destructor) {
             self.func_pre_call
                 .push(quote! { drop(Box::from_raw(*__objp)); *__objp = ::std::ptr::null_mut(); });
@@ -115,6 +116,23 @@ impl FuncProcessor {
                 .push(quote! { let __args = __args.as_ref().unwrap(); });
             let ty = self.opt_args_ty_name.to_ident();
             self.wrap_fn_arg_decl.push(quote! { __args: *const #ty });
+        }
+        if info.use_shared_per_vcl() {
+            let arg_name = "__vp".to_ident();
+            let arg_value = Self::get_arg_value(info, &arg_name);
+            let shared_ty = shared_types.get_per_vcl_ty();
+            let shared_ty = syn::parse_str::<Type>(shared_ty).expect("Unable to parse second time");
+            self.add_wrapper_arg(info, quote! { #arg_name: *mut vmod_priv });
+            self.func_pre_call.push(
+                quote! { let mut __obj_per_vcl = (* #arg_value).take_per_vcl::<#shared_ty>(); },
+            );
+            self.func_always_after_call.push(quote! {
+                // Release ownership back to Varnish
+                (* __vp).put(__obj_per_vcl, &PRIV_VCL_METHODS);
+            });
+            let json = Self::arg_to_json("__vp".to_string(), false, "PRIV_VCL", Value::Null);
+            self.args_json.push(json);
+            self.add_cproto_arg(info, "struct vmod_priv *", "__vp");
         }
 
         for arg in &info.args {
@@ -186,13 +204,7 @@ impl FuncProcessor {
     #[allow(clippy::too_many_lines)]
     fn do_fn_param(&mut self, func_info: &FuncInfo, arg_info: &ParamTypeInfo) {
         let arg_name_ident = arg_info.ident.to_ident();
-
-        // Access to the input value, either from the args struct or directly
-        let input_val = if func_info.has_optional_args {
-            quote! { __args.#arg_name_ident }
-        } else {
-            quote! { #arg_name_ident }
-        };
+        let arg_value = Self::get_arg_value(func_info, &arg_name_ident);
 
         match &arg_info.ty {
             ParamType::Context { is_mut } => {
@@ -221,11 +233,11 @@ impl FuncProcessor {
                 self.args_json.push(json);
             }
             ParamType::VclName(pi) => {
-                let input_val = quote! { VCL_STRING(__vcl_name) };
+                let arg_value = quote! { VCL_STRING(__vcl_name) };
                 let input_expr = if pi.ty_info.use_try_from() {
-                    quote! { #input_val.try_into()? }
+                    quote! { #arg_value.try_into()? }
                 } else {
-                    quote! { #input_val.into() }
+                    quote! { #arg_value.into() }
                 };
                 self.func_call_vars.push(quote! { #input_expr });
             }
@@ -233,12 +245,12 @@ impl FuncProcessor {
                 self.add_wrapper_arg(func_info, quote! { #arg_name_ident: *mut vmod_priv });
                 let temp_var = format_ident!("__obj_per_task");
                 self.func_pre_call
-                    .push(quote! { let mut #temp_var = (* #input_val).take(); });
+                    .push(quote! { let mut #temp_var = (* #arg_value).take(); });
                 self.func_call_vars.push(quote! { &mut #temp_var });
                 self.func_always_after_call.push(quote! {
                     // Release ownership back to Varnish
                     if let Some(obj) = #temp_var {
-                        (* #input_val).put(obj, &PRIV_TASK_METHODS);
+                        (* #arg_value).put(obj, &PRIV_TASK_METHODS);
                     }
                 });
 
@@ -251,48 +263,46 @@ impl FuncProcessor {
                 self.add_wrapper_arg(func_info, quote! { #arg_name_ident: *const vmod_priv });
                 // defensive programming: *vmod_priv should never be NULL,
                 // but might as well just treat it as None rather than crashing - its readonly anyway
-                self.func_call_vars
-                    .push(quote! { #input_val.as_ref().and_then(|v| v.get_ref()) });
-                let json =
-                    Self::arg_to_json(arg_info.ident.clone(), false, "PRIV_VCL", Value::Null);
-                self.args_json.push(json);
-                self.add_cproto_arg(func_info, "struct vmod_priv *", &arg_info.ident);
-            }
-            ParamType::SharedPerVclMut => {
-                self.add_wrapper_arg(func_info, quote! { #arg_name_ident: *mut vmod_priv });
-                let temp_var = format_ident!("__obj_per_vcl");
-                let input_val = if matches!(func_info.func_type, Event) {
-                    quote! { __vp } // Event input vars are hardcoded (for now), use `__vp`
-                } else {
-                    input_val
-                };
-                self.func_pre_call
-                    .push(quote! { let mut #temp_var = (* #input_val).take(); });
-                self.func_call_vars.push(quote! { &mut #temp_var });
-                self.func_always_after_call.push(quote! {
-                    // Release ownership back to Varnish
-                    if let Some(obj) = #temp_var {
-                        (* #input_val).put(obj, &PRIV_VCL_METHODS);
-                    }
+                self.func_call_vars.push(quote! {
+                    #arg_value
+                        .as_ref()
+                        .and_then::<&PerVclState<_>, _>(|v| v.get_ref())
+                        .and_then(|v| v.get_user_data())
                 });
                 let json =
                     Self::arg_to_json(arg_info.ident.clone(), false, "PRIV_VCL", Value::Null);
                 self.args_json.push(json);
                 self.add_cproto_arg(func_info, "struct vmod_priv *", &arg_info.ident);
             }
+            ParamType::SharedPerVclMut => {
+                self.func_call_vars
+                    .push(quote! { &mut __obj_per_vcl.user_data });
+            }
+            ParamType::DeliveryFilters => {
+                self.func_needs_ctx = true;
+                self.func_call_vars.push(
+                    quote! { &mut __ctx.raw.delivery_filters(&mut __obj_per_vcl.delivery_filters) },
+                );
+            }
+            ParamType::FetchFilters => {
+                self.func_needs_ctx = true;
+                self.func_call_vars.push(
+                    quote! { &mut __ctx.raw.fetch_filters(&mut __obj_per_vcl.fetch_filters) },
+                );
+            }
             ParamType::Value(pi) => {
                 // Convert all other C arg types into a Rust arg, and pass it to the user's function
                 let mut input_expr = if pi.ty_info.use_try_from() {
-                    quote! { #input_val.try_into()? }
+                    quote! { #arg_value.try_into()? }
                 } else {
-                    quote! { #input_val.into() }
+                    quote! { #arg_value.into() }
                 };
                 if matches!(pi.kind, ParamKind::Optional) {
-                    let input_valid = format_ident!("valid_{}", arg_info.ident);
-                    let is_input_valid = quote! { __args.#input_valid != 0 };
-                    input_expr = quote! { if #is_input_valid { #input_expr } else { None } };
-                    self.add_wrapper_arg(func_info, quote! { #input_valid: c_char });
-                    self.cproto_opt_arg_decl.push(format!("char {input_valid}"));
+                    let arg_valid = format_ident!("valid_{}", arg_info.ident);
+                    let is_arg_valid = quote! { __args.#arg_valid != 0 };
+                    input_expr = quote! { if #is_arg_valid { #input_expr } else { None } };
+                    self.add_wrapper_arg(func_info, quote! { #arg_valid: c_char });
+                    self.cproto_opt_arg_decl.push(format!("char {arg_valid}"));
                 }
 
                 let c_type = pi.ty_info.to_c_type().to_ident();
@@ -309,6 +319,15 @@ impl FuncProcessor {
                 self.add_cproto_arg(func_info, pi.ty_info.to_c_type(), &arg_info.ident);
             }
         };
+    }
+
+    /// Access to the input value, either from the args struct or directly
+    fn get_arg_value(func_info: &FuncInfo, arg_name_ident: &Ident) -> TokenStream {
+        if func_info.has_optional_args {
+            quote! { __args.#arg_name_ident }
+        } else {
+            quote! { #arg_name_ident }
+        }
     }
 
     fn add_wrapper_arg(&mut self, func_info: &FuncInfo, code: TokenStream) {

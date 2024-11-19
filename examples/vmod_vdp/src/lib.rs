@@ -13,36 +13,18 @@ varnish::run_vtc_tests!("tests/*.vtc");
 /// processor (VDP) named "flipper".
 #[varnish::vmod(docs = "README.md")]
 mod vdp {
-    use varnish::ffi;
-    use varnish::vcl::{new_vdp, Ctx, Event};
+    use varnish::vcl::{DeliveryFilters, Event};
 
-    use crate::Flipper;
+    use super::Flipper;
 
     /// We need the event function here to declare our VDP.
     /// However, there's no "manual" VCL function for us to implement here,
     /// loading the vmod is sufficient to add the VDP to the list of available processors,
     /// and we'll set it on a per-request basis using `resp.filters` in VCL.
     #[event]
-    pub fn event(ctx: &mut Ctx, #[shared_per_vcl] vp: &mut Option<Box<ffi::vdp>>, event: Event) {
-        match event {
-            // on load, create the VDP C struct, save it into a priv, they register it
-            Event::Load => {
-                let instance = Box::new(new_vdp::<Flipper>());
-                unsafe {
-                    ffi::VRT_AddVDP(ctx.raw, instance.as_ref());
-                }
-                *vp = Some(instance);
-            }
-            // on discard, deregister the VDP, but don't worry about cleaning it, it'll be done by
-            // Varnish automatically
-            Event::Discard => {
-                if let Some(vp) = vp.as_ref() {
-                    unsafe {
-                        ffi::VRT_RemoveVDP(ctx.raw, vp.as_ref());
-                    }
-                }
-            }
-            _ => {}
+    pub fn event(vdp: &mut DeliveryFilters, event: Event) {
+        if let Event::Load = event {
+            vdp.register::<Flipper>();
         }
     }
 }

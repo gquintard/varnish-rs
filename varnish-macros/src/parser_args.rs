@@ -24,6 +24,8 @@ pub struct FuncStatus {
     has_shared_per_vcl: bool,
     has_event: bool,
     has_vcl_name: bool,
+    has_fetch_filters: bool,
+    has_delivery_filters: bool,
 }
 
 impl FuncStatus {
@@ -93,12 +95,12 @@ impl ParamType {
     ) -> ProcResult<Self> {
         // Make param validation a bit more readable
         macro_rules! error {
-            ($msg:literal) => {
+            ($msg:expr) => {
                 Err(error(pat_ty, $msg))?
             };
         }
         macro_rules! unique {
-            ($var:ident, $msg:literal) => {
+            ($var:ident, $msg:expr) => {
                 if status.$var {
                     error!($msg);
                 }
@@ -106,14 +108,14 @@ impl ParamType {
             };
         }
         macro_rules! only_in {
-            ($pat:pat, $msg:literal) => {
+            ($pat:pat, $msg:expr) => {
                 if !matches!(status.func_type, $pat) {
                     error!($msg);
                 }
             };
         }
         macro_rules! not_in {
-            ($pat:pat, $msg:literal) => {
+            ($pat:pat, $msg:expr) => {
                 if matches!(status.func_type, $pat) {
                     error!($msg);
                 }
@@ -181,6 +183,30 @@ impl ParamType {
             } else {
                 Self::Workspace { is_mut: true }
             }
+        } else if as_ref_mut_ty(arg_ty)
+            .and_then(as_simple_ty)
+            .filter(|ident| *ident == "FetchFilters")
+            .is_some()
+        {
+            only_in! { Constructor | Event, if let Function = status.func_type {
+                "FetchFilters parameters are only allowed in object constructors and event handlers. Is this function missing `#[event]`?"
+            } else {
+                "FetchFilters parameters are only allowed in object constructors and event handlers."
+            } }
+            unique! { has_fetch_filters, "A FetchFilters param is allowed only once in a function args list" }
+            Self::FetchFilters
+        } else if as_ref_mut_ty(arg_ty)
+            .and_then(as_simple_ty)
+            .filter(|ident| *ident == "DeliveryFilters")
+            .is_some()
+        {
+            only_in! { Constructor | Event, if let Function = status.func_type {
+                "DeliveryFilters parameters are only allowed in object constructors and event handlers. Is this function missing `#[event]`?"
+            } else {
+                "DeliveryFilters parameters are only allowed in object constructors and event handlers."
+            } }
+            unique! { has_delivery_filters, "A DeliveryFilters param is allowed only once in a function args list" }
+            Self::DeliveryFilters
         } else {
             // Only standard types left, possibly optional
             not_in! { Event, "Event functions can only have `Ctx`, `#[event] Event`, and `#[shared_per_vcl] &mut Option<Box<T>>` arguments." }

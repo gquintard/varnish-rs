@@ -345,8 +345,9 @@ impl TestWS {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::num::NonZero;
+
+    use super::*;
 
     #[test]
     fn ws_test() {

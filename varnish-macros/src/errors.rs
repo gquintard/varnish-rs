@@ -64,7 +64,7 @@ impl Errors {
 
 impl From<syn::Error> for Errors {
     fn from(err: syn::Error) -> Self {
-        let mut errors = Errors::new();
+        let mut errors = Self::new();
         errors.push(err);
         errors
     }
@@ -72,7 +72,7 @@ impl From<syn::Error> for Errors {
 
 impl From<darling::Error> for Errors {
     fn from(err: darling::Error) -> Self {
-        let mut errors = Errors::new();
+        let mut errors = Self::new();
         errors.push(err.into());
         errors
     }

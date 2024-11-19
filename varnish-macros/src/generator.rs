@@ -11,7 +11,7 @@ use syn::{Item, ItemMod, Type};
 
 use crate::gen_func::FuncProcessor;
 use crate::gen_objects::ObjProcessor;
-use crate::model::VmodInfo;
+use crate::model::{FuncInfo, ParamType, VmodInfo};
 use crate::names::{ForceCstr, Names, ToIdent};
 
 pub fn render_model(mut item_mod: ItemMod, info: &VmodInfo) -> TokenStream {
@@ -46,11 +46,15 @@ impl Generator {
             obj.functions.push(FuncProcessor::from_info(
                 obj.names.to_func(info.func_type, &info.ident),
                 info,
+                &vmod.shared_types,
             ));
         }
         for info in &vmod.objects {
-            obj.objects
-                .push(ObjProcessor::from_info(obj.names.to_obj(&info.ident), info));
+            obj.objects.push(ObjProcessor::from_info(
+                obj.names.to_obj(&info.ident),
+                info,
+                &vmod.shared_types,
+            ));
         }
         obj.render_generated_mod(vmod)
     }
@@ -66,21 +70,36 @@ impl Generator {
             })
     }
 
-    fn gen_priv_structs(tokens: &mut Vec<TokenStream>, name: &str, shared_type: Option<&String>) {
-        if let Some(type_name) = shared_type {
-            let ident = name.to_ident();
-            // The type name is stored as a string, but we already validated we can parse it during the `parse` phase.
-            let ty_ident = syn::parse_str::<Type>(type_name).expect("Unable to parse second time");
-            let ty_name = type_name.force_cstr();
-            // Static methods to clean up the `vmod_priv` object's `T`
-            tokens.push(quote! {
-               static #ident: vmod_priv_methods = vmod_priv_methods {
-                   magic: VMOD_PRIV_METHODS_MAGIC,
-                   type_: #ty_name.as_ptr(),
-                   fini: Some(vmod_priv::on_fini::<#ty_ident>),
-               };
-            });
+    fn gen_per_vcl_priv_struct(priv_structs: &mut Vec<TokenStream>, vmod: &VmodInfo) {
+        if vmod.use_shared_per_vcl() {
+            let ty = vmod.shared_types.get_per_vcl_ty();
+            Self::gen_priv_struct(priv_structs, "PRIV_VCL_METHODS", ty, true);
         }
+    }
+
+    fn gen_priv_struct(
+        tokens: &mut Vec<TokenStream>,
+        name: &str,
+        type_name: &str,
+        is_vcl_state: bool,
+    ) {
+        let name = name.to_ident();
+        // The type name is stored as a string, but we already validated we can parse it during the `parse` phase.
+        let ty_ident = syn::parse_str::<Type>(type_name).expect("Unable to parse second time");
+        let ty_name = type_name.force_cstr();
+        let on_fini = if is_vcl_state {
+            "on_fini_per_vcl".to_ident()
+        } else {
+            "on_fini".to_ident()
+        };
+        // Static methods to clean up the `vmod_priv` object's `T`
+        tokens.push(quote! {
+           static #name: vmod_priv_methods = vmod_priv_methods {
+               magic: VMOD_PRIV_METHODS_MAGIC,
+               type_: #ty_name.as_ptr(),
+               fini: Some(vmod_priv::#on_fini::<#ty_ident>),
+           };
+        });
     }
 
     fn iter_all_funcs(&self) -> impl Iterator<Item = &FuncProcessor> {
@@ -147,16 +166,11 @@ impl Generator {
         let c_func_name = self.names.func_struct_name().force_cstr();
         let file_id = &self.file_id;
         let mut priv_structs = Vec::new();
-        Self::gen_priv_structs(
-            &mut priv_structs,
-            "PRIV_TASK_METHODS",
-            vmod.shared_types.shared_per_task_ty.as_ref(),
-        );
-        Self::gen_priv_structs(
-            &mut priv_structs,
-            "PRIV_VCL_METHODS",
-            vmod.shared_types.shared_per_vcl_ty.as_ref(),
-        );
+        if let Some(s) = vmod.shared_types.shared_per_task_ty.as_ref() {
+            Self::gen_priv_struct(&mut priv_structs, "PRIV_TASK_METHODS", s, false);
+        }
+        Self::gen_per_vcl_priv_struct(&mut priv_structs, vmod);
+
         let functions = self.iter_all_funcs().map(|f| &f.wrapper_function_body);
         let json = &self.gen_json().force_cstr();
         let export_decls: Vec<_> = self.iter_all_funcs().map(|f| &f.export_decl).collect();
@@ -195,7 +209,7 @@ impl Generator {
                 use std::ffi::{c_char, c_int, c_uint, c_void, CStr};
                 use std::ptr::null;
                 use varnish::ffi::{#use_ffi_items};
-                use varnish::vcl::{Ctx, IntoVCL, Workspace};
+                use varnish::vcl::{Ctx, IntoVCL, PerVclState, Workspace};
                 use super::*;
 
                 #( #priv_structs )*
@@ -206,7 +220,6 @@ impl Generator {
                     #(#export_decls,)*
                 }
 
-                // #[no_mangle]  // FIXME: no_mangle does not seem to be needed
                 pub static VMOD_EXPORTS: VmodExports = VmodExports {
                     #(#export_inits,)*
                 };
@@ -246,5 +259,22 @@ impl Generator {
                 const JSON: &CStr = #json;
             }
         )
+    }
+}
+
+impl FuncInfo {
+    pub fn use_shared_per_vcl(&self) -> bool {
+        self.count_args(|v| {
+            matches!(
+                v.ty,
+                ParamType::SharedPerVclMut | ParamType::FetchFilters | ParamType::DeliveryFilters
+            )
+        }) > 0
+    }
+}
+
+impl VmodInfo {
+    pub fn use_shared_per_vcl(&self) -> bool {
+        self.count_funcs(|v| v.use_shared_per_vcl()) > 0
     }
 }
