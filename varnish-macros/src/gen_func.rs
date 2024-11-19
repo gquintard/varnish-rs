@@ -188,7 +188,7 @@ impl FuncProcessor {
         let arg_name_ident = arg_info.ident.to_ident();
 
         // Access to the input value, either from the args struct or directly
-        let input_val = if func_info.has_optional_args {
+        let arg_value = if func_info.has_optional_args {
             quote! { __args.#arg_name_ident }
         } else {
             quote! { #arg_name_ident }
@@ -221,11 +221,11 @@ impl FuncProcessor {
                 self.args_json.push(json);
             }
             ParamType::VclName(pi) => {
-                let input_val = quote! { VCL_STRING(__vcl_name) };
+                let arg_value = quote! { VCL_STRING(__vcl_name) };
                 let input_expr = if pi.ty_info.use_try_from() {
-                    quote! { #input_val.try_into()? }
+                    quote! { #arg_value.try_into()? }
                 } else {
-                    quote! { #input_val.into() }
+                    quote! { #arg_value.into() }
                 };
                 self.func_call_vars.push(quote! { #input_expr });
             }
@@ -233,12 +233,12 @@ impl FuncProcessor {
                 self.add_wrapper_arg(func_info, quote! { #arg_name_ident: *mut vmod_priv });
                 let temp_var = format_ident!("__obj_per_task");
                 self.func_pre_call
-                    .push(quote! { let mut #temp_var = (* #input_val).take(); });
+                    .push(quote! { let mut #temp_var = (* #arg_value).take(); });
                 self.func_call_vars.push(quote! { &mut #temp_var });
                 self.func_always_after_call.push(quote! {
                     // Release ownership back to Varnish
                     if let Some(obj) = #temp_var {
-                        (* #input_val).put(obj, &PRIV_TASK_METHODS);
+                        (* #arg_value).put(obj, &PRIV_TASK_METHODS);
                     }
                 });
 
@@ -252,7 +252,7 @@ impl FuncProcessor {
                 // defensive programming: *vmod_priv should never be NULL,
                 // but might as well just treat it as None rather than crashing - its readonly anyway
                 self.func_call_vars
-                    .push(quote! { #input_val.as_ref().and_then(|v| v.get_ref()) });
+                    .push(quote! { #arg_value.as_ref().and_then(|v| v.get_ref()) });
                 let json =
                     Self::arg_to_json(arg_info.ident.clone(), false, "PRIV_VCL", Value::Null);
                 self.args_json.push(json);
@@ -261,18 +261,18 @@ impl FuncProcessor {
             ParamType::SharedPerVclMut => {
                 self.add_wrapper_arg(func_info, quote! { #arg_name_ident: *mut vmod_priv });
                 let temp_var = format_ident!("__obj_per_vcl");
-                let input_val = if matches!(func_info.func_type, Event) {
+                let arg_value = if matches!(func_info.func_type, Event) {
                     quote! { __vp } // Event input vars are hardcoded (for now), use `__vp`
                 } else {
-                    input_val
+                    arg_value
                 };
                 self.func_pre_call
-                    .push(quote! { let mut #temp_var = (* #input_val).take(); });
+                    .push(quote! { let mut #temp_var = (* #arg_value).take(); });
                 self.func_call_vars.push(quote! { &mut #temp_var });
                 self.func_always_after_call.push(quote! {
                     // Release ownership back to Varnish
                     if let Some(obj) = #temp_var {
-                        (* #input_val).put(obj, &PRIV_VCL_METHODS);
+                        (* #arg_value).put(obj, &PRIV_VCL_METHODS);
                     }
                 });
                 let json =
@@ -283,16 +283,16 @@ impl FuncProcessor {
             ParamType::Value(pi) => {
                 // Convert all other C arg types into a Rust arg, and pass it to the user's function
                 let mut input_expr = if pi.ty_info.use_try_from() {
-                    quote! { #input_val.try_into()? }
+                    quote! { #arg_value.try_into()? }
                 } else {
-                    quote! { #input_val.into() }
+                    quote! { #arg_value.into() }
                 };
                 if matches!(pi.kind, ParamKind::Optional) {
-                    let input_valid = format_ident!("valid_{}", arg_info.ident);
-                    let is_input_valid = quote! { __args.#input_valid != 0 };
-                    input_expr = quote! { if #is_input_valid { #input_expr } else { None } };
-                    self.add_wrapper_arg(func_info, quote! { #input_valid: c_char });
-                    self.cproto_opt_arg_decl.push(format!("char {input_valid}"));
+                    let arg_valid = format_ident!("valid_{}", arg_info.ident);
+                    let is_arg_valid = quote! { __args.#arg_valid != 0 };
+                    input_expr = quote! { if #is_arg_valid { #input_expr } else { None } };
+                    self.add_wrapper_arg(func_info, quote! { #arg_valid: c_char });
+                    self.cproto_opt_arg_decl.push(format!("char {arg_valid}"));
                 }
 
                 let c_type = pi.ty_info.to_c_type().to_ident();

@@ -163,7 +163,7 @@ mod types {
     impl DocStruct {
         /// doctest for `new`
         pub fn new(cap: Option<i64>) -> Self {
-            DocStruct
+            Self
         }
         /// doctest for the object function
         #[rustfmt::skip]

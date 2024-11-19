@@ -66,18 +66,19 @@ impl Generator {
             })
     }
 
-    fn gen_priv_structs(tokens: &mut Vec<TokenStream>, name: &str, shared_type: Option<&String>) {
+    fn gen_priv_struct(tokens: &mut Vec<TokenStream>, name: &str, shared_type: Option<&String>) {
         if let Some(type_name) = shared_type {
-            let ident = name.to_ident();
+            let name = name.to_ident();
             // The type name is stored as a string, but we already validated we can parse it during the `parse` phase.
             let ty_ident = syn::parse_str::<Type>(type_name).expect("Unable to parse second time");
             let ty_name = type_name.force_cstr();
+            let on_fini = "on_fini".to_ident();
             // Static methods to clean up the `vmod_priv` object's `T`
             tokens.push(quote! {
-               static #ident: vmod_priv_methods = vmod_priv_methods {
+               static #name: vmod_priv_methods = vmod_priv_methods {
                    magic: VMOD_PRIV_METHODS_MAGIC,
                    type_: #ty_name.as_ptr(),
-                   fini: Some(vmod_priv::on_fini::<#ty_ident>),
+                   fini: Some(vmod_priv::#on_fini::<#ty_ident>),
                };
             });
         }
@@ -147,12 +148,12 @@ impl Generator {
         let c_func_name = self.names.func_struct_name().force_cstr();
         let file_id = &self.file_id;
         let mut priv_structs = Vec::new();
-        Self::gen_priv_structs(
+        Self::gen_priv_struct(
             &mut priv_structs,
             "PRIV_TASK_METHODS",
             vmod.shared_types.shared_per_task_ty.as_ref(),
         );
-        Self::gen_priv_structs(
+        Self::gen_priv_struct(
             &mut priv_structs,
             "PRIV_VCL_METHODS",
             vmod.shared_types.shared_per_vcl_ty.as_ref(),
@@ -206,7 +207,6 @@ impl Generator {
                     #(#export_decls,)*
                 }
 
-                // #[no_mangle]  // FIXME: no_mangle does not seem to be needed
                 pub static VMOD_EXPORTS: VmodExports = VmodExports {
                     #(#export_inits,)*
                 };

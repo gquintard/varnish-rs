@@ -12,6 +12,7 @@ impl vmod_priv {
     ///
     /// SAFETY: `priv_` must reference a valid `T` object pointer or `NULL`
     pub unsafe fn take<T>(&mut self) -> Option<Box<T>> {
+        // methods does not need to be dropped because `put` always sets it to a static reference
         self.methods = null();
         get_owned_bbox(&mut self.priv_)
     }

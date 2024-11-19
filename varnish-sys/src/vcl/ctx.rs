@@ -135,7 +135,7 @@ pub struct TestCtx {
 impl TestCtx {
     /// Instantiate a [`vrt_ctx`], as well as the workspace (of size `sz`) it links to.
     pub fn new(sz: usize) -> Self {
-        let mut test_ctx = TestCtx {
+        let mut test_ctx = Self {
             vrt_ctx: vrt_ctx {
                 magic: VRT_CTX_MAGIC,
                 ..vrt_ctx::default()

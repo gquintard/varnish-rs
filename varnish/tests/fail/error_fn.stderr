@@ -1,8 +1,10 @@
 error: No functions or objects found in this module
- --> tests/fail/error_fn.rs:2:5
+ --> tests/fail/error_fn.rs:1:1
   |
-2 | mod empty {}
-  |     ^^^^^
+1 | #[varnish::vmod]
+  | ^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in the attribute macro `varnish::vmod` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: Only public functions and impl blocks are allowed inside a `mod` tagged with `#[varnish::vmod]`. Add `pub` or move this function outside of this mod.
  --> tests/fail/error_fn.rs:6:5
@@ -23,7 +25,9 @@ error: unsafe functions are not supported
   |         ^^^^^^
 
 error: No functions or objects found in this module
- --> tests/fail/error_fn.rs:5:5
+ --> tests/fail/error_fn.rs:4:1
   |
-5 | mod err_fn {
-  |     ^^^^^^
+4 | #[varnish::vmod]
+  | ^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in the attribute macro `varnish::vmod` (in Nightly builds, run with -Z macro-backtrace for more info)

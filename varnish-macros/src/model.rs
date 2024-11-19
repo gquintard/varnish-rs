@@ -14,6 +14,22 @@ pub struct VmodInfo {
     pub shared_types: SharedTypes,
 }
 
+impl VmodInfo {
+    fn iter_all_funcs(&self) -> impl Iterator<Item = &FuncInfo> {
+        self.funcs
+            .iter()
+            .chain(self.objects.iter().flat_map(|o| o.funcs.iter()))
+    }
+
+    pub fn count_funcs<F: FnMut(&&FuncInfo) -> bool>(&self, filter: F) -> usize {
+        self.iter_all_funcs().filter(filter).count()
+    }
+
+    pub fn count_args<F: Copy + Fn(&&ParamTypeInfo) -> bool>(&self, filter: F) -> usize {
+        self.iter_all_funcs().map(|f| f.count_args(filter)).sum()
+    }
+}
+
 /// Represents the shared types used by multiple functions. Each of these types is unique per VMOD.
 #[derive(Debug, Default)]
 pub struct SharedTypes {
@@ -48,6 +64,12 @@ pub struct FuncInfo {
     pub args: Vec<ParamTypeInfo>,
     pub output_ty: OutputTy,
     pub out_result: bool,
+}
+
+impl FuncInfo {
+    pub fn count_args<F: Fn(&&ParamTypeInfo) -> bool>(&self, filter: F) -> usize {
+        self.args.iter().filter(filter).count()
+    }
 }
 
 /// What kind of function is this?

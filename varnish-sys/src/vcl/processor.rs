@@ -8,7 +8,7 @@
 use std::ffi::{c_int, c_void, CStr};
 use std::ptr;
 
-use crate::ffi::{vdp_ctx, vfp_ctx, vfp_entry, VdpAction, VfpStatus};
+use crate::ffi::{vdp_ctx, vfp_ctx, vfp_entry, vrt_ctx, VdpAction, VfpStatus};
 use crate::vcl::{Ctx, VclError};
 use crate::{ffi, validate_vfp_ctx, validate_vfp_entry};
 
@@ -56,7 +56,7 @@ pub trait DeliveryProcessor: Sized {
 }
 
 pub unsafe extern "C" fn gen_vdp_init<T: DeliveryProcessor>(
-    vrt_ctx: *const ffi::vrt_ctx,
+    vrt_ctx: *const vrt_ctx,
     ctx_raw: *mut vdp_ctx,
     priv_: *mut *mut c_void,
     #[cfg(feature = "_objcore_in_init")] _oc: *mut ffi::objcore,
@@ -173,7 +173,7 @@ pub trait FetchProcessor: Sized {
 }
 
 unsafe extern "C" fn wrap_vfp_init<T: FetchProcessor>(
-    vrt_ctx: *const ffi::vrt_ctx,
+    vrt_ctx: *const vrt_ctx,
     ctxp: *mut vfp_ctx,
     vfep: *mut vfp_entry,
 ) -> VfpStatus {

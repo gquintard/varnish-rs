@@ -282,7 +282,7 @@ mod task {
     pub fn per_vcl_opt(vcl: Option<&PerVcl>, op: Option<i64>) {}
     impl PerVcl {
         pub fn new(vcl: &mut Option<Box<PerVcl>>) -> Self {
-            PerVcl
+            Self
         }
         pub fn both(&self, tsk: &mut Option<Box<PerTask>>, vcl: Option<&PerVcl>) {}
         pub fn both_pos(

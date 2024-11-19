@@ -71,7 +71,9 @@ error: Object must have a constructor called `new`
    |          ^^^^^^^^^^^^^
 
 error: No functions or objects found in this module
- --> tests/fail/error_obj.rs:9:5
+ --> tests/fail/error_obj.rs:8:1
   |
-9 | mod err {
-  |     ^^^
+8 | #[varnish::vmod]
+  | ^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in the attribute macro `varnish::vmod` (in Nightly builds, run with -Z macro-backtrace for more info)

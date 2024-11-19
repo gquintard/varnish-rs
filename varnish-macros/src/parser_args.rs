@@ -93,12 +93,12 @@ impl ParamType {
     ) -> ProcResult<Self> {
         // Make param validation a bit more readable
         macro_rules! error {
-            ($msg:literal) => {
+            ($msg:expr) => {
                 Err(error(pat_ty, $msg))?
             };
         }
         macro_rules! unique {
-            ($var:ident, $msg:literal) => {
+            ($var:ident, $msg:expr) => {
                 if status.$var {
                     error!($msg);
                 }
@@ -106,14 +106,14 @@ impl ParamType {
             };
         }
         macro_rules! only_in {
-            ($pat:pat, $msg:literal) => {
+            ($pat:pat, $msg:expr) => {
                 if !matches!(status.func_type, $pat) {
                     error!($msg);
                 }
             };
         }
         macro_rules! not_in {
-            ($pat:pat, $msg:literal) => {
+            ($pat:pat, $msg:expr) => {
                 if matches!(status.func_type, $pat) {
                     error!($msg);
                 }
