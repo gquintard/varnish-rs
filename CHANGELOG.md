@@ -1,5 +1,9 @@
 # Unpublished
 
+- ...
+
+# 0.2.0 (2024-11-19)
+
 - User functions can return `&CStr` as a return value or a `&'static CStr` error
 - Support for safe fetch and delivery filter registration and automatic cleanup. See `vmod_vfp` and `vmod_vdp` examples.
 - Rename `VSC` &rarr; `Stats`, `VSCBuilder` &rarr; `StatsBuilder`, and `VSCInternal` into `StatsImpl`
