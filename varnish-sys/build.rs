@@ -3,6 +3,9 @@ use std::{env, fs};
 
 use bindgen_helpers::{rename_enum, Renamer};
 
+static BINDINGS_FILE: &str = "bindings.for-docs";
+static BINDINGS_FILE_VER: &str = "7.6.1";
+
 fn main() {
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
 
@@ -65,11 +68,15 @@ fn main() {
     // Compare generated `out_path` file to the checked-in `bindings.for-docs` file,
     // and if they differ, raise a warning.
     let generated = fs::read_to_string(&out_path).unwrap();
-    let checked_in = fs::read_to_string("bindings.for-docs").unwrap_or_default();
+    let checked_in = fs::read_to_string(BINDINGS_FILE).unwrap_or_default();
     if generated != checked_in {
         println!(
-            "cargo::warning=Generated bindings from Varnish {varnish_ver} differ from checked-in bindings.for-docs. Update with   cp {} varnish-sys/bindings.for-docs",
+            "cargo::warning=Generated bindings from Varnish {varnish_ver} differ from checked-in {BINDINGS_FILE}. Update with   cp {} varnish-sys/{BINDINGS_FILE}",
             out_path.display()
+        );
+    } else if BINDINGS_FILE_VER != varnish_ver {
+        println!(
+            r#"cargo::warning=Generated bindings **version** from Varnish {varnish_ver} differ from checked-in {BINDINGS_FILE}. Update `build.rs` file with   BINDINGS_FILE_VER = "{varnish_ver}""#,
         );
     }
 }
@@ -111,8 +118,8 @@ fn find_include_dir(out_path: &PathBuf) -> Option<(Vec<PathBuf>, String)> {
             // See https://docs.rs/about/builds#detecting-docsrs
             if env::var("DOCS_RS").is_ok() {
                 eprintln!("libvarnish not found, using saved bindings for the doc.rs: {e}");
-                fs::copy("bindings.for-docs", out_path).unwrap();
-                println!("cargo::metadata=version_number=7.6.0");
+                fs::copy(BINDINGS_FILE, out_path).unwrap();
+                println!("cargo::metadata=version_number={BINDINGS_FILE_VER}");
                 None
             } else {
                 // FIXME: we should give a URL describing how to install varnishapi

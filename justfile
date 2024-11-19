@@ -53,6 +53,23 @@ msrv:
 udeps:
     cargo +nightly udeps --workspace --all-targets
 
+# Check semver compatibility with prior published version. Install it with `cargo install cargo-semver-checks`
+semver *ARGS:
+    cargo semver-checks {{ARGS}}
+
+# Generate and show coverage report. Requires grcov to be installed.
+grcov:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    find . -name '*.profraw' | xargs rm
+    rm -rf ./target/debug/coverage
+    export LLVM_PROFILE_FILE="varnish-%p-%m.profraw"
+    export RUSTFLAGS="-Cinstrument-coverage"
+    cargo build --workspace --all-targets
+    cargo test --workspace --all-targets
+    grcov . -s . --binary-path ./target/debug/ -t html --branch --ignore-not-existing -o ./target/debug/coverage/
+    open ./target/debug/coverage/index.html
+
 # Publish crates to crates.io in the right order
 publish:
     cargo publish -p varnish-sys
@@ -94,16 +111,3 @@ check-if-published:
     else
         echo "The current crate version has not yet been published."
     fi
-
-# Generate and show coverage report. Requires grcov to be installed.
-grcov:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    find . -name '*.profraw' | xargs rm
-    rm -rf ./target/debug/coverage
-    export LLVM_PROFILE_FILE="varnish-%p-%m.profraw"
-    export RUSTFLAGS="-Cinstrument-coverage"
-    cargo build --workspace --all-targets
-    cargo test --workspace --all-targets
-    grcov . -s . --binary-path ./target/debug/ -t html --branch --ignore-not-existing -o ./target/debug/coverage/
-    open ./target/debug/coverage/index.html

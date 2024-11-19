@@ -1,10 +1,10 @@
 [package]
 name = "varnish"
 authors = ["Guillaume Quintard <guillaume.quintard@gmail.com>", "Yuri Astrakhan <YuriAstrakhan@gmail.com>"]
-description = "Access to the Varnish modules API"
-keywords = ["varnish", "vmod", "cache", "http", "reverse-proxy"]
-categories = ["api-bindings"]
-readme = "../README.md"
+description.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme.workspace = true
 version.workspace = true
 repository.workspace = true
 edition.workspace = true
