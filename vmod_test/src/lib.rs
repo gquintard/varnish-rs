@@ -14,9 +14,8 @@ mod rustest {
     use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
     use std::time::Duration;
 
-    use varnish::ffi;
     use varnish::ffi::VCL_STRING;
-    use varnish::vcl::{new_vfp, CowProbe, Ctx, Event, Probe, Request, VclError, Workspace};
+    use varnish::vcl::{CowProbe, Ctx, Event, FetchFilters, Probe, Request, VclError, Workspace};
 
     use super::VFPTest;
 
@@ -156,30 +155,10 @@ mod rustest {
     }
 
     #[event]
-    pub fn event(
-        ctx: &mut Ctx,
-        #[shared_per_vcl] vp: &mut Option<Box<ffi::vfp>>,
-        event: Event,
-    ) -> Result<(), &'static str> {
-        match event {
-            // on load, create the VFP C struct, save it into a priv, they register it
-            Event::Load => {
-                let instance = Box::new(new_vfp::<VFPTest>());
-                unsafe {
-                    ffi::VRT_AddVFP(ctx.raw, instance.as_ref());
-                }
-                *vp = Some(instance);
-            }
-            // on discard, deregister the VFP, but don't worry about cleaning it, it'll be done by
-            // Varnish automatically
-            Event::Discard => {
-                if let Some(vp) = vp.as_ref() {
-                    unsafe { ffi::VRT_RemoveVFP(ctx.raw, vp.as_ref()) }
-                }
-            }
-            _ => {}
+    pub fn event(event: Event, vfp: &mut FetchFilters) {
+        if let Event::Load = event {
+            vfp.register::<VFPTest>();
         }
-        Ok(())
     }
 }
 

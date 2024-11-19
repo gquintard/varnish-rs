@@ -26,7 +26,7 @@ mod task {
 
     impl PerVcl {
         pub fn new(#[shared_per_vcl] vcl: &mut Option<Box<PerVcl>>) -> Self {
-            PerVcl
+            Self
         }
 
         pub fn both(

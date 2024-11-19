@@ -1,6 +1,7 @@
 # Unpublished
 
 - User functions can return `&CStr` as a return value or a `&'static CStr` error
+- Support for safe fetch and delivery filter registration and automatic cleanup. See `vmod_vfp` and `vmod_vdp` examples.
 - Rename `VSC` &rarr; `Stats`, `VSCBuilder` &rarr; `StatsBuilder`, and `VSCInternal` into `StatsImpl`
 - Consolidate `Probe` and `CowProbe<'a>` into one `Probe<T>` struct with a generic `String` or `Cow<str>`.
 - Rename `new` to `from_ptr` for `Buffer`, `Workspace`, `HttpHeaders`, `FetchProcCtx`, `DeliveryProcCtx`, and make them private. Only `Ctx::from_ptr` is public because it gets created by a macro-generated function.

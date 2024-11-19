@@ -3,6 +3,8 @@ use std::ptr;
 use std::ptr::null;
 
 use crate::ffi::{vmod_priv, vmod_priv_methods, vrt_ctx};
+use crate::validate_vrt_ctx;
+use crate::vcl::PerVclState;
 
 /// SAFETY: ensured by Varnish itself
 unsafe impl Sync for vmod_priv_methods {}
@@ -12,8 +14,18 @@ impl vmod_priv {
     ///
     /// SAFETY: `priv_` must reference a valid `T` object pointer or `NULL`
     pub unsafe fn take<T>(&mut self) -> Option<Box<T>> {
+        // methods does not need to be dropped because `put` always sets it to a static reference
         self.methods = null();
         get_owned_bbox(&mut self.priv_)
+    }
+
+    pub unsafe fn take_per_vcl<T>(&mut self) -> Box<PerVclState<T>> {
+        if let Some(v) = self.take::<PerVclState<T>>() {
+            v
+        } else {
+            let o = PerVclState::<T>::default();
+            Box::new(o)
+        }
     }
 
     /// Set the object and methods for the `vmod_priv`, and the corresponding static methods.
@@ -42,6 +54,24 @@ impl vmod_priv {
     /// SAFETY: `priv_` must be a valid pointer to a `T` object or `NULL`.
     pub unsafe extern "C" fn on_fini<T>(_ctx: *const vrt_ctx, mut priv_: *mut c_void) {
         drop(get_owned_bbox::<T>(&mut priv_));
+    }
+
+    /// A Varnish callback function to clean up the `PerVclState` object.
+    /// Similar to `on_fini`, but also unregisters filters.
+    ///
+    /// SAFETY: `priv_` must be a valid pointer to a `T` object or `NULL`.
+    pub unsafe extern "C" fn on_fini_per_vcl<T>(ctx: *const vrt_ctx, mut priv_: *mut c_void) {
+        if let Some(obj) = get_owned_bbox::<PerVclState<T>>(&mut priv_) {
+            let PerVclState {
+                mut fetch_filters,
+                mut delivery_filters,
+                user_data,
+            } = *obj;
+            let ctx = validate_vrt_ctx(ctx);
+            ctx.fetch_filters(&mut fetch_filters).unregister_all();
+            ctx.delivery_filters(&mut delivery_filters).unregister_all();
+            drop(user_data);
+        }
     }
 }
 

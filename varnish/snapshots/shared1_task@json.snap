@@ -200,7 +200,7 @@ static struct Vmod_vmod_task_Func Vmod_vmod_task_Func;"
         "",
         [
           "PRIV_VCL",
-          "vcl"
+          "__vp"
         ]
       ]
     ],

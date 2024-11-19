@@ -8,7 +8,7 @@
 use std::ffi::{c_int, c_void, CStr};
 use std::ptr;
 
-use crate::ffi::{vdp_ctx, vfp_ctx, vfp_entry, VdpAction, VfpStatus};
+use crate::ffi::{vdp_ctx, vfp_ctx, vfp_entry, vrt_ctx, VdpAction, VfpStatus};
 use crate::vcl::{Ctx, VclError};
 use crate::{ffi, validate_vfp_ctx, validate_vfp_entry};
 
@@ -56,7 +56,7 @@ pub trait DeliveryProcessor: Sized {
 }
 
 pub unsafe extern "C" fn gen_vdp_init<T: DeliveryProcessor>(
-    vrt_ctx: *const ffi::vrt_ctx,
+    vrt_ctx: *const vrt_ctx,
     ctx_raw: *mut vdp_ctx,
     priv_: *mut *mut c_void,
     #[cfg(feature = "_objcore_in_init")] _oc: *mut ffi::objcore,
@@ -173,7 +173,7 @@ pub trait FetchProcessor: Sized {
 }
 
 unsafe extern "C" fn wrap_vfp_init<T: FetchProcessor>(
-    vrt_ctx: *const ffi::vrt_ctx,
+    vrt_ctx: *const vrt_ctx,
     ctxp: *mut vfp_ctx,
     vfep: *mut vfp_entry,
 ) -> VfpStatus {
@@ -282,6 +282,137 @@ impl<'a> FetchProcCtx<'a> {
             // to compile, but we do want a warning when developing locally to add the new one.
             #[allow(unreachable_patterns)]
             n => panic!("unknown VfpStatus {n:?}"),
+        }
+    }
+}
+
+/// This is an unsafe struct that holds the per-VCL state.
+/// It must be public because it is used by the macro-generated code.
+#[doc(hidden)]
+#[derive(Debug)]
+pub struct PerVclState<T> {
+    pub fetch_filters: Vec<Box<ffi::vfp>>,
+    pub delivery_filters: Vec<Box<ffi::vdp>>,
+    pub user_data: Option<Box<T>>,
+}
+
+// Implement the default trait that works even when `T` does not impl `Default`.
+impl<T> Default for PerVclState<T> {
+    fn default() -> Self {
+        Self {
+            fetch_filters: Vec::default(),
+            delivery_filters: Vec::default(),
+            user_data: None,
+        }
+    }
+}
+
+impl<T> PerVclState<T> {
+    pub fn get_user_data(&self) -> Option<&T> {
+        self.user_data.as_ref().map(AsRef::as_ref)
+    }
+}
+
+#[derive(Debug)]
+pub struct FetchFilters<'c, 'f> {
+    ctx: &'c vrt_ctx,
+    // The pointer to the box content must be stable.
+    // Storing values directly in the vector might be moved when the vector grows.
+    #[allow(clippy::vec_box)]
+    filters: &'f mut Vec<Box<ffi::vfp>>,
+}
+
+impl<'c, 'f> FetchFilters<'c, 'f> {
+    #[allow(clippy::vec_box)]
+    pub(crate) fn new(ctx: &'c vrt_ctx, filters: &'f mut Vec<Box<ffi::vfp>>) -> Self {
+        Self { ctx, filters }
+    }
+
+    fn find_position<T: FetchProcessor>(&self) -> Option<usize> {
+        let name = T::name().as_ptr();
+        self.filters.iter().position(|f| f.name == name)
+    }
+
+    pub fn register<T: FetchProcessor>(&mut self) -> bool {
+        if self.find_position::<T>().is_none() {
+            let instance = Box::new(new_vfp::<T>());
+            unsafe {
+                ffi::VRT_AddVFP(self.ctx, instance.as_ref());
+            }
+            self.filters.push(instance);
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn unregister<T: FetchProcessor>(&mut self) -> bool {
+        if let Some(pos) = self.find_position::<T>() {
+            let filter = self.filters.swap_remove(pos);
+            unsafe {
+                ffi::VRT_RemoveVFP(self.ctx, filter.as_ref());
+            }
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn unregister_all(&mut self) {
+        for filter in self.filters.drain(..) {
+            unsafe { ffi::VRT_RemoveVFP(self.ctx, filter.as_ref()) }
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct DeliveryFilters<'c, 'f> {
+    ctx: &'c vrt_ctx,
+    // The pointer to the box content must be stable.
+    // Storing values directly in the vector might be moved when the vector grows.
+    #[allow(clippy::vec_box)]
+    filters: &'f mut Vec<Box<ffi::vdp>>,
+}
+
+impl<'c, 'f> DeliveryFilters<'c, 'f> {
+    #[allow(clippy::vec_box)]
+    pub(crate) fn new(ctx: &'c vrt_ctx, filters: &'f mut Vec<Box<ffi::vdp>>) -> Self {
+        Self { ctx, filters }
+    }
+
+    fn find_position<T: DeliveryProcessor>(&self) -> Option<usize> {
+        let name = T::name().as_ptr();
+        self.filters.iter().position(|f| f.name == name)
+    }
+
+    pub fn register<T: DeliveryProcessor>(&mut self) -> bool {
+        if self.find_position::<T>().is_none() {
+            let instance = Box::new(new_vdp::<T>());
+            unsafe {
+                ffi::VRT_AddVDP(self.ctx, instance.as_ref());
+            }
+            self.filters.push(instance);
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn unregister<T: DeliveryProcessor>(&mut self) -> bool {
+        if let Some(pos) = self.find_position::<T>() {
+            let filter = self.filters.swap_remove(pos);
+            unsafe {
+                ffi::VRT_RemoveVDP(self.ctx, filter.as_ref());
+            }
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn unregister_all(&mut self) {
+        for filter in self.filters.drain(..) {
+            unsafe { ffi::VRT_RemoveVDP(self.ctx, filter.as_ref()) }
         }
     }
 }

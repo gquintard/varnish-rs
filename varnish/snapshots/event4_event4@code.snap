@@ -2,7 +2,7 @@
 source: varnish-macros/src/tests.rs
 snapshot_kind: text
 ---
-mod event {
+mod event4 {
     #[allow(non_snake_case, unused_imports, unused_qualifications, unused_variables)]
     #[allow(clippy::needless_question_mark)]
     mod varnish_generated {
@@ -15,13 +15,24 @@ mod event {
         };
         use varnish::vcl::{Ctx, IntoVCL, PerVclState, Workspace};
         use super::*;
+        static PRIV_VCL_METHODS: vmod_priv_methods = vmod_priv_methods {
+            magic: VMOD_PRIV_METHODS_MAGIC,
+            type_: c"()".as_ptr(),
+            fini: Some(vmod_priv::on_fini_per_vcl::<()>),
+        };
         unsafe extern "C" fn vmod_c_on_event(
             __ctx: *mut vrt_ctx,
             __vp: *mut vmod_priv,
             __ev: VclEvent,
         ) -> VCL_INT {
-            super::on_event(__ev);
-            VCL_INT(0)
+            let mut __ctx = Ctx::from_ptr(__ctx);
+            let mut __obj_per_vcl = (*__vp).take_per_vcl::<()>();
+            super::on_event(
+                &mut __ctx.raw.delivery_filters(&mut __obj_per_vcl.delivery_filters),
+            );
+            let __result = VCL_INT(0);
+            (*__vp).put(__obj_per_vcl, &PRIV_VCL_METHODS);
+            __result
         }
         #[repr(C)]
         pub struct VmodExports {
@@ -52,22 +63,21 @@ mod event {
         unsafe impl Sync for VmodData {}
         #[allow(non_upper_case_globals)]
         #[no_mangle]
-        pub static Vmod_event_Data: VmodData = VmodData {
+        pub static Vmod_event4_Data: VmodData = VmodData {
             vrt_major: 0,
             vrt_minor: 0,
-            file_id: c"4d1200f410ef454f543f699d77aaa0ff7e3c4d4fdc8395b6771c294c71d409a2"
+            file_id: c"884770a967ac851537a1caf26f304aed02fb682067f9b5bfc63423ef05cb4e02"
                 .as_ptr(),
-            name: c"event".as_ptr(),
-            func_name: c"Vmod_vmod_event_Func".as_ptr(),
+            name: c"event4".as_ptr(),
+            func_name: c"Vmod_vmod_event4_Func".as_ptr(),
             func_len: ::std::mem::size_of::<VmodExports>() as c_int,
             func: &VMOD_EXPORTS as *const _ as *const c_void,
             abi: VMOD_ABI_Version.as_ptr(),
             json: JSON.as_ptr(),
             proto: null(),
         };
-        const JSON: &CStr = c"VMOD_JSON_SPEC\u{2}\n[\n  [\n    \"$VMOD\",\n    \"1.0\",\n    \"event\",\n    \"Vmod_vmod_event_Func\",\n    \"4d1200f410ef454f543f699d77aaa0ff7e3c4d4fdc8395b6771c294c71d409a2\",\n    \"Varnish (version) (hash)\",\n    \"0\",\n    \"0\"\n  ],\n  [\n    \"$CPROTO\",\n    \"\\nstruct Vmod_vmod_event_Func {\\n  vmod_event_f *f_on_event;\\n};\\n\\nstatic struct Vmod_vmod_event_Func Vmod_vmod_event_Func;\"\n  ],\n  [\n    \"$EVENT\",\n    \"Vmod_vmod_event_Func.f_on_event\"\n  ]\n]\n\u{3}";
+        const JSON: &CStr = c"VMOD_JSON_SPEC\u{2}\n[\n  [\n    \"$VMOD\",\n    \"1.0\",\n    \"event4\",\n    \"Vmod_vmod_event4_Func\",\n    \"884770a967ac851537a1caf26f304aed02fb682067f9b5bfc63423ef05cb4e02\",\n    \"Varnish (version) (hash)\",\n    \"0\",\n    \"0\"\n  ],\n  [\n    \"$CPROTO\",\n    \"\\nstruct Vmod_vmod_event4_Func {\\n  vmod_event_f *f_on_event;\\n};\\n\\nstatic struct Vmod_vmod_event4_Func Vmod_vmod_event4_Func;\"\n  ],\n  [\n    \"$EVENT\",\n    \"Vmod_vmod_event4_Func.f_on_event\"\n  ]\n]\n\u{3}";
     }
-    use varnish::vcl::Event;
-    /// Event function - the comment is ignored
-    pub fn on_event(event: Event) {}
+    use varnish::vcl::DeliveryFilters;
+    pub fn on_event(vdp: &mut DeliveryFilters) {}
 }

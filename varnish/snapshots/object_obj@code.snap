@@ -13,7 +13,7 @@ mod obj {
             VCL_STRING, VCL_VOID, VMOD_ABI_Version, VMOD_PRIV_METHODS_MAGIC, VclEvent,
             vmod_priv, vmod_priv_methods, vrt_ctx,
         };
-        use varnish::vcl::{Ctx, IntoVCL, Workspace};
+        use varnish::vcl::{Ctx, IntoVCL, PerVclState, Workspace};
         use super::*;
         #[repr(C)]
         struct arg_vmod_obj_kv1__init {
@@ -306,7 +306,7 @@ mod obj {
     use varnish::vcl::Ctx;
     impl kv1 {
         pub fn new(cap: Option<i64>) -> Self {
-            kv1
+            Self
         }
         pub fn set(&self, key: &str, value: &str) {}
         pub fn get(&self, key: &str) -> String {
@@ -315,13 +315,13 @@ mod obj {
     }
     impl kv2 {
         pub fn new(cap: Option<i64>, name: &str) -> Self {
-            kv2
+            Self
         }
         pub fn set(&self, key: &str, value: Option<&str>) {}
     }
     impl kv3 {
         pub fn new(ctx: &mut Ctx, cap: Option<i64>, name: &str) -> Self {
-            kv3
+            Self
         }
         pub fn set(&self, ctx: &mut Ctx, key: &str, value: Option<&str>) {}
     }

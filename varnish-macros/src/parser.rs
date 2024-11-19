@@ -30,7 +30,7 @@ impl VmodInfo {
         let mut funcs = Vec::<FuncInfo>::new();
         let mut objects = Vec::<ObjInfo>::new();
         let mut shared_types = SharedTypes::default();
-        let mut has_event = false;
+
         if let Some((_, content)) = &mut item.content {
             for item in content {
                 match item {
@@ -44,16 +44,6 @@ impl VmodInfo {
                             false,
                         );
                         if let Some(func) = errors.on_err(func) {
-                            if matches!(func.func_type, FuncType::Event) {
-                                if has_event {
-                                    errors.add(
-                                        &fn_item.sig.ident,
-                                        "Only one event handler is allowed",
-                                    );
-                                    continue;
-                                }
-                                has_event = true;
-                            }
                             funcs.push(func);
                         }
                     }
@@ -117,19 +107,37 @@ impl VmodInfo {
                 }
             }
         }
-        if funcs.is_empty() && objects.is_empty() {
-            errors.add(&item.ident, "No functions or objects found in this module");
-        }
-
-        errors.into_result()?;
-        Ok(Self {
+        let info = Self {
             params,
             ident: item.ident.to_string(),
             docs: parser_utils::parse_doc_str(&item.attrs),
             shared_types,
             funcs,
             objects,
-        })
+        };
+        info.validate(item, &mut errors);
+        errors.into_result()?;
+        Ok(info)
+    }
+
+    pub fn validate(&self, item: &ItemMod, errors: &mut Errors) {
+        if self.funcs.is_empty() && self.objects.is_empty() {
+            errors.add(&self.ident, "No functions or objects found in this module");
+        }
+        if self.count_funcs(|v| matches!(v.func_type, FuncType::Event)) > 1 {
+            errors.add(
+                &item,
+                "More than one event handler found. Only one event handler is allowed",
+            );
+        }
+        let per_vcl_mut = self.count_args(|v| matches!(v.ty, ParamType::SharedPerVclMut));
+        let per_vcl_ref = self.count_args(|v| matches!(v.ty, ParamType::SharedPerVclRef));
+        if per_vcl_ref > 0 && per_vcl_mut == 0 {
+            errors.add(
+                &item,
+                "#[shared_per_vcl] value has not been initialized. Add a `&mut Option<Box<...>>` param to an event handler or an object new() function",
+            );
+        }
     }
 }
 

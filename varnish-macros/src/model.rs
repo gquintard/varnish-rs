@@ -14,11 +14,33 @@ pub struct VmodInfo {
     pub shared_types: SharedTypes,
 }
 
+impl VmodInfo {
+    fn iter_all_funcs(&self) -> impl Iterator<Item = &FuncInfo> {
+        self.funcs
+            .iter()
+            .chain(self.objects.iter().flat_map(|o| o.funcs.iter()))
+    }
+
+    pub fn count_funcs<F: FnMut(&&FuncInfo) -> bool>(&self, filter: F) -> usize {
+        self.iter_all_funcs().filter(filter).count()
+    }
+
+    pub fn count_args<F: Copy + Fn(&&ParamTypeInfo) -> bool>(&self, filter: F) -> usize {
+        self.iter_all_funcs().map(|f| f.count_args(filter)).sum()
+    }
+}
+
 /// Represents the shared types used by multiple functions. Each of these types is unique per VMOD.
 #[derive(Debug, Default)]
 pub struct SharedTypes {
     pub shared_per_task_ty: Option<String>,
     pub shared_per_vcl_ty: Option<String>,
+}
+
+impl SharedTypes {
+    pub fn get_per_vcl_ty(&self) -> &str {
+        self.shared_per_vcl_ty.as_deref().unwrap_or("()")
+    }
 }
 
 /// Represents the parameters inside the `#[vmod(....)]` attribute itself.
@@ -48,6 +70,12 @@ pub struct FuncInfo {
     pub args: Vec<ParamTypeInfo>,
     pub output_ty: OutputTy,
     pub out_result: bool,
+}
+
+impl FuncInfo {
+    pub fn count_args<F: Fn(&&ParamTypeInfo) -> bool>(&self, filter: F) -> usize {
+        self.args.iter().filter(filter).count()
+    }
 }
 
 /// What kind of function is this?
@@ -100,6 +128,10 @@ pub enum ParamType {
     SharedPerVclRef,
     /// A mutable argument `&mut Option<Box<T>>` representing any Rust name and type shared across VCL load (i.e. `PRIV_VCL`)
     SharedPerVclMut,
+    /// An argument is a fetch filter registry
+    FetchFilters,
+    /// An argument is a delivery filter registry
+    DeliveryFilters,
     /// An argument representing a basic VCL type
     Value(ParamInfo),
 }
