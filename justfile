@@ -71,10 +71,10 @@ grcov:
     open ./target/debug/coverage/index.html
 
 # Publish crates to crates.io in the right order
-publish:
-    cargo publish -p varnish-sys
-    cargo publish -p varnish-macros
-    cargo publish -p varnish
+publish *ARGS:
+    cargo publish -p varnish-sys {{ARGS}}
+    cargo publish -p varnish-macros {{ARGS}}
+    cargo publish -p varnish {{ARGS}}
 
 # Run tests, and accept their results. Requires insta to be installed.
 bless:

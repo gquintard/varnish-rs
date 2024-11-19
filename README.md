@@ -6,7 +6,7 @@
 [![crates.io version](https://img.shields.io/crates/l/varnish.svg)](https://github.com/gquintard/varnish-rs/blob/main/LICENSE)
 [![CI build](https://github.com/gquintard/varnish-rs/actions/workflows/tests.yaml/badge.svg)](https://github.com/gquintard/varnish-rs/actions)
 
-This library provides a safe and idiomatic interface to the [Varnish](https://varnish-cache.org/intro/index.html) C API, allowing you to write Varnish modules (VMODs) in Rust. See the [crate documentation](https://docs.rs/varnish) for more details.
+The `varnish` crate provides a safe and idiomatic interface to the [Varnish](https://varnish-cache.org/intro/index.html) C API, allowing you to write Varnish modules (VMODs) in Rust. See the [crate API](https://docs.rs/varnish) for more details.
 
 Some VMODs that use this library:
 
@@ -44,3 +44,13 @@ It is recommended if your `varnish` headers are installed where `pkg-config` can
 ```
 VARNISH_INCLUDE_PATHS=/my/custom/libpath:/my/other/custom/libpath cargo build
 ```
+
+See `CONTRIBUTING.md` for other details.
+
+## License
+
+Licensed under the 3-Clause BSD License ([LICENSE](LICENSE) or <https://opensource.org/license/BSD-3-clause>)
+
+### Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you shall be licensed as above, without any additional terms or conditions.
