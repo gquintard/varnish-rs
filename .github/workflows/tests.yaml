@@ -16,9 +16,12 @@ jobs:
       fail-fast: true
       matrix:
         include:
-          - setup: varnish74
+          # default version is also used in the semver check step
+          - type: latest
+            setup: varnish76
           - setup: varnish75
-          - setup: varnish76
+          - setup: varnish74
+
     env:
       RUST_BACKTRACE: 1
       RUSTDOCFLAGS: -D warnings
@@ -28,7 +31,7 @@ jobs:
         with: { tool: just }
       - uses: actions/checkout@v4
       - name: Ensure this crate has not yet been published (on release)
-        if: github.event_name == 'release'
+        if: github.event_name == 'release' && matrix.type == 'latest'
         run: just check-if-published
       - uses: Swatinem/rust-cache@v2
         if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
@@ -38,7 +41,10 @@ jobs:
           sudo apt-get install -y varnish-dev
       - run: just -v ci-test
       - name: Check semver
+        if: matrix.type == 'latest'
         uses: obi1kenobi/cargo-semver-checks-action@v2
+        with:
+          exclude: varnish-sys  # GitHub CI has somehow generates a different output
 
   msrv:
     name: Test MSRV

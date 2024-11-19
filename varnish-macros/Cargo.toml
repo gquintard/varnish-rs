@@ -1,9 +1,12 @@
 [package]
 name = "varnish-macros"
-description = "Varnish VMOD support - macros"
 authors = ["Yuri Astrakhan <YuriAstrakhan@gmail.com>", "Guillaume Quintard <guillaume.quintard@gmail.com>"]
-# FIXME: need categories and keywords
+description.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme.workspace = true
 version.workspace = true
+repository.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true

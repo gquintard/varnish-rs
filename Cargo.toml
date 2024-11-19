@@ -6,11 +6,15 @@ members = ["varnish", "varnish-macros", "varnish-sys", "vmod_test", "examples/vm
 [workspace.package]
 # These fields are used by multiple crates, so it's defined here.
 # Version must also be updated in the `varnish-macros` dependency below.
-version = "0.2.0"
+version = "0.2.1"
 repository = "https://github.com/gquintard/varnish-rs"
 edition = "2021"
 rust-version = "1.79.0"
 license = "BSD-3-Clause"
+description = "A Rust framework for creating Varnish Caching Proxy extensions"
+keywords = ["varnish", "vmod", "cache", "http", "reverse-proxy"]
+categories = ["api-bindings"]
+readme = "README.md"
 
 [workspace.dependencies]
 # These versions must match the one in the [workspace.package] section above
