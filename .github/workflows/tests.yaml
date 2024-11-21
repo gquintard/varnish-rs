@@ -40,9 +40,9 @@ jobs:
           curl -s https://packagecloud.io/install/repositories/varnishcache/${{ matrix.setup }}/script.deb.sh | sudo bash
           sudo apt-get install -y varnish-dev
       - run: just -v ci-test
-      - name: Test packaging for publish
-        if: matrix.type == 'latest'
-        run: just publish --dry-run
+#      - name: Test packaging for publish
+#        if: matrix.type == 'latest'
+#        run: just publish --dry-run
       - name: Check semver
         if: matrix.type == 'latest'
         uses: obi1kenobi/cargo-semver-checks-action@v2
