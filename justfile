@@ -115,3 +115,22 @@ check-if-published:
     else
         echo "The current crate version has not yet been published."
     fi
+
+[private]
+docker-build-ver VERSION:
+    docker build -t varnish-img-{{VERSION}} --build-arg VARNISH_VERSION={{VERSION}} --build-arg USER_UID=$(id -u) --build-arg USER_GID=$(id -g) -f docker/Dockerfile docker
+
+[private]
+docker-run-ver VERSION *ARGS:
+    mkdir -p docker/.cache/{{VERSION}}
+    touch docker/.cache/{{VERSION}}/.bash_history
+    docker run --rm -it \
+        -v "$PWD:/app/" \
+        -v "$PWD/docker/.cache/{{VERSION}}:/home/user/.cache" \
+        -v "$PWD/docker/.cache/{{VERSION}}/.bash_history:/home/user/.bash_history" \
+        varnish-img-{{VERSION}} {{ARGS}}
+
+docker-run-76 *ARGS: (docker-build-ver "76") (docker-run-ver "76" ARGS)
+docker-run-75 *ARGS: (docker-build-ver "75") (docker-run-ver "75" ARGS)
+docker-run-74 *ARGS: (docker-build-ver "74") (docker-run-ver "74" ARGS)
+docker-run-60 *ARGS: (docker-build-ver "60") (docker-run-ver "60" ARGS)
