@@ -1,6 +1,8 @@
 //! The data model is the validated result of parsing user code.
 //! Once fully parsed and vetted, the data model is used to generate the Varnish VMOD code.
 
+use std::iter::once;
+
 use darling::FromMeta;
 
 /// Represents the entire VMOD. A single instance of this struct is parsed for each VMOD.
@@ -16,9 +18,11 @@ pub struct VmodInfo {
 
 impl VmodInfo {
     fn iter_all_funcs(&self) -> impl Iterator<Item = &FuncInfo> {
-        self.funcs
-            .iter()
-            .chain(self.objects.iter().flat_map(|o| o.funcs.iter()))
+        self.funcs.iter().chain(self.objects.iter().flat_map(|o| {
+            o.funcs
+                .iter()
+                .chain(once(&o.constructor).chain(once(&o.destructor)))
+        }))
     }
 
     pub fn count_funcs<F: FnMut(&&FuncInfo) -> bool>(&self, filter: F) -> usize {

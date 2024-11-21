@@ -128,7 +128,7 @@ impl FuncProcessor {
             );
             self.func_always_after_call.push(quote! {
                 // Release ownership back to Varnish
-                (* __vp).put(__obj_per_vcl, &PRIV_VCL_METHODS);
+                (* #arg_value).put(__obj_per_vcl, &PRIV_VCL_METHODS);
             });
             let json = Self::arg_to_json("__vp".to_string(), false, "PRIV_VCL", Value::Null);
             self.args_json.push(json);
