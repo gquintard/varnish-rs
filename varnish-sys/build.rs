@@ -38,6 +38,7 @@ fn main() {
     let bindings = bindgen::Builder::default()
         .header("src/wrapper.h")
         .blocklist_item("FP_.*")
+        .blocklist_item("FILE")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .clang_args(
             varnish_paths

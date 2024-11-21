@@ -1,15 +1,17 @@
 use crate::ffi;
 use crate::ffi::{
-    director, req, sess, vcldir, vfp_ctx, vfp_entry, vrt_ctx, ws, DIRECTOR_MAGIC, REQ_MAGIC,
-    SESS_MAGIC, VCLDIR_MAGIC, VCL_BACKEND, VFP_CTX_MAGIC, VFP_ENTRY_MAGIC, VRT_CTX_MAGIC, WS_MAGIC,
+    director, req, sess, vcldir, /*vfp_ctx, vfp_entry, */vrt_ctx, ws, DIRECTOR_MAGIC, REQ_MAGIC,
+    SESS_MAGIC, VCLDIR_MAGIC, VCL_BACKEND, /*VFP_CTX_MAGIC, */VFP_ENTRY_MAGIC, VRT_CTX_MAGIC, WS_MAGIC,
 };
-use crate::vcl::{DeliveryFilters, FetchFilters};
+//use crate::vcl::{DeliveryFilters, FetchFilters};
 
+/*
 pub unsafe fn validate_vfp_ctx(ctxp: *mut vfp_ctx) -> &'static mut vfp_ctx {
     let val = ctxp.as_mut().unwrap();
     assert_eq!(val.magic, VFP_CTX_MAGIC);
     val
 }
+*/
 
 pub unsafe fn validate_vrt_ctx(ctxp: *const vrt_ctx) -> &'static vrt_ctx {
     let val = ctxp.as_ref().unwrap();
@@ -17,11 +19,13 @@ pub unsafe fn validate_vrt_ctx(ctxp: *const vrt_ctx) -> &'static vrt_ctx {
     val
 }
 
+/*
 pub unsafe fn validate_vfp_entry(vfep: *mut vfp_entry) -> &'static mut vfp_entry {
     let val = vfep.as_mut().unwrap();
     assert_eq!(val.magic, VFP_ENTRY_MAGIC);
     val
 }
+*/
 
 pub unsafe fn validate_director(be: VCL_BACKEND) -> &'static director {
     let val = be.0.as_ref().unwrap();
@@ -47,7 +51,7 @@ impl vrt_ctx {
         assert_eq!(val.magic, REQ_MAGIC);
         val
     }
-
+/*
     pub fn fetch_filters<'c, 'f>(
         &'c self,
         filters: &'f mut Vec<Box<ffi::vfp>>,
@@ -61,6 +65,7 @@ impl vrt_ctx {
     ) -> DeliveryFilters<'c, 'f> {
         DeliveryFilters::<'c, 'f>::new(self, filters)
     }
+*/
 }
 
 impl req {

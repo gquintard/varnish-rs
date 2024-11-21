@@ -286,33 +286,6 @@ impl<'a> FetchProcCtx<'a> {
     }
 }
 
-/// This is an unsafe struct that holds the per-VCL state.
-/// It must be public because it is used by the macro-generated code.
-#[doc(hidden)]
-#[derive(Debug)]
-pub struct PerVclState<T> {
-    pub fetch_filters: Vec<Box<ffi::vfp>>,
-    pub delivery_filters: Vec<Box<ffi::vdp>>,
-    pub user_data: Option<Box<T>>,
-}
-
-// Implement the default trait that works even when `T` does not impl `Default`.
-impl<T> Default for PerVclState<T> {
-    fn default() -> Self {
-        Self {
-            fetch_filters: Vec::default(),
-            delivery_filters: Vec::default(),
-            user_data: None,
-        }
-    }
-}
-
-impl<T> PerVclState<T> {
-    pub fn get_user_data(&self) -> Option<&T> {
-        self.user_data.as_ref().map(AsRef::as_ref)
-    }
-}
-
 #[derive(Debug)]
 pub struct FetchFilters<'c, 'f> {
     ctx: &'c vrt_ctx,

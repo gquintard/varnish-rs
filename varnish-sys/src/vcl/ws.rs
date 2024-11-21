@@ -22,7 +22,7 @@ use std::slice::from_raw_parts_mut;
 
 use memchr::memchr;
 
-use crate::ffi::{txt, vrt_blob, WS_Allocated, VCL_BLOB, VCL_STRING};
+use crate::ffi::{txt, /*vrt_blob, WS_Allocated, */VCL_BLOB, VCL_STRING};
 use crate::vcl::VclError;
 use crate::{ffi, validate_ws};
 
@@ -81,7 +81,8 @@ impl<'a> Workspace<'a> {
 
     /// Check if a pointer is part of the current workspace
     pub fn contains(&self, data: &[u8]) -> bool {
-        unsafe { WS_Allocated(self.raw, data.as_ptr().cast(), data.len() as isize) == 1 }
+        //unsafe { WS_Allocated(self.raw, data.as_ptr().cast(), data.len() as isize) == 1 }
+        false
     }
 
     /// Allocate `[u8; size]` array on Workspace.
@@ -130,6 +131,7 @@ impl<'a> Workspace<'a> {
         Ok(unsafe { slice_assume_init_mut(dest) })
     }
 
+    /*
     /// Copy any `AsRef<[u8]>` into a new [`VCL_BLOB`] stored in the workspace
     pub fn copy_blob(&mut self, value: impl AsRef<[u8]>) -> Result<VCL_BLOB, VclError> {
         let buf = self.copy_bytes(value)?;
@@ -140,6 +142,7 @@ impl<'a> Workspace<'a> {
         })?;
         Ok(VCL_BLOB(ptr::from_ref(blob)))
     }
+    */
 
     /// Copy any `AsRef<CStr>` into a new [`txt`] stored in the workspace
     pub fn copy_txt(&mut self, value: impl AsRef<CStr>) -> Result<txt, VclError> {

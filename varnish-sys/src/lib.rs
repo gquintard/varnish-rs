@@ -18,9 +18,9 @@ pub mod ffi {
 
 mod extensions;
 mod txt;
-mod utils;
+//mod utils;
 mod validate;
 pub mod vcl;
 
-pub use utils::*;
+//pub use utils::*;
 pub use validate::*;
