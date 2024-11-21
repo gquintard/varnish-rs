@@ -20,6 +20,7 @@
 //! number of times.
 //!
 //! ```
+//! # mod varnish { pub use varnish_sys::vcl; }
 //! use varnish::vcl::{Ctx, Backend, Serve, Transfer, VclError};
 //!
 //! // First we need to define a struct that implement [Transfer]:

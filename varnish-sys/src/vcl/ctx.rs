@@ -18,6 +18,7 @@ use crate::vcl::{HttpHeaders, LogTag, TestWS, VclError, Workspace};
 /// Which `http_*` are present will depend on which VCL sub routine the function is called from.
 ///
 /// ``` rust
+/// # mod varnish { pub use varnish_sys::vcl; }
 /// use varnish::vcl::Ctx;
 ///
 /// fn foo(ctx: &Ctx) {

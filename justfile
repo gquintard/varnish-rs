@@ -76,6 +76,10 @@ publish *ARGS:
     cargo publish -p varnish-macros {{ARGS}}
     cargo publish -p varnish {{ARGS}}
 
+# Use the experimental workspace publishing with --dry-run. Requires nightly Rust.
+test-publish:
+    cargo +nightly -Z package-workspace publish --dry-run
+
 # Run tests, and accept their results. Requires insta to be installed.
 bless:
     TRYBUILD=overwrite cargo insta test -p varnish-macros -p varnish --accept --unreferenced=delete
