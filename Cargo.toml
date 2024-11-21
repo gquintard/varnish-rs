@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-default-members = ["varnish"]
+default-members = ["varnish", "varnish-macros", "varnish-sys"]
 members = ["varnish", "varnish-macros", "varnish-sys", "vmod_test", "examples/vmod_*"]
 
 [workspace.package]
@@ -8,7 +8,7 @@ members = ["varnish", "varnish-macros", "varnish-sys", "vmod_test", "examples/vm
 # Version must also be updated in the `varnish-macros` dependency below.
 #
 # ! STOP !  Update the version in dependencies below!!!
-version = "0.2.2"  ## <<<----- ! STOP !!!
+version = "0.2.3"  ## <<<----- ! STOP !!!
 # ! STOP !  Update the version in dependencies below!!!
 #
 repository = "https://github.com/gquintard/varnish-rs"
@@ -22,9 +22,9 @@ readme = "README.md"
 
 [workspace.dependencies]
 # These versions must match the one in the [workspace.package] section above
-varnish = { path = "./varnish", version = "0.2.2" }
-varnish-macros = { path = "./varnish-macros", version = "0.2.2" }
-varnish-sys = { path = "./varnish-sys", version = "0.2.2" }
+varnish = { path = "./varnish", version = "0.2.3" }
+varnish-macros = { path = "./varnish-macros", version = "0.2.3" }
+varnish-sys = { path = "./varnish-sys", version = "0.2.3" }
 #
 # These dependencies are used by one or more crates, and easier to maintain in one place.
 bindgen = "0.70.1"

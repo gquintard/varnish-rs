@@ -32,7 +32,7 @@ use crate::{ffi, validate_ws};
 /// transaction and the workspace is wiped, so there's no need to free the objects living in it.
 ///
 /// The workspace is usually a few tens of kilobytes large, don't be greedy. If you need more
-/// space, consider storing your data in a [`VPriv`](crate::vcl::vpriv::VPriv).
+/// space, consider storing your data in a `#[shared_per_task]` or `#[shared_per_vcl]` objects.
 #[derive(Debug)]
 pub struct Workspace<'a> {
     /// Raw pointer to the C struct
