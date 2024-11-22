@@ -16,11 +16,20 @@ if [ ! -f "$CARGO_HOME/env" ]; then
 fi
 . "$CARGO_HOME/env"
 
+if ! command -v cargo-insta; then
+  echo "cargo-insta is not found. Installing..." >&2
+  curl -LsSf https://insta.rs/install.sh | sh
+fi
+
 if ! command -v cargo-binstall; then
   echo "cargo-binstall is not found. Installing..." >&2
   curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
 fi
 
-cargo binstall --no-confirm just ripgrep
+cargo binstall --no-confirm just ripgrep cargo-expand
 
+echo "##################################################"
+echo "##  Welcome to the Varnish development container"
+echo "##  Use 'just' to see the available commands."
+echo "##################################################"
 exec "$@"
