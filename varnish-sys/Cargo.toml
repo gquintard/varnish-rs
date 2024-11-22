@@ -1,6 +1,7 @@
 [package]
 name = "varnish-sys"
 authors = ["Guillaume Quintard <guillaume.quintard@gmail.com>", "Yuri Astrakhan <YuriAstrakhan@gmail.com>"]
+links = "varnishapi"
 description.workspace = true
 keywords.workspace = true
 categories.workspace = true
@@ -10,13 +11,6 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 readme.workspace = true
-
-[features]
-default = []
-#
-# These features are used to match the lib to the various Varnish API versions.
-# They are set in the build.rs file and should not be used directly by the user.
-_objcore_in_init = []  # <=7.5 passed *objcore in vdp_init_f as the 4th param
 
 [lib]
 name = "varnish_sys"

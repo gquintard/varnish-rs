@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::str::Split;
 use std::{env, fs};
 
 use bindgen_helpers::{rename_enum, Renamer};
@@ -7,6 +8,9 @@ static BINDINGS_FILE: &str = "bindings.for-docs";
 static BINDINGS_FILE_VER: &str = "7.6.1";
 
 fn main() {
+    // <=7.5 passed *objcore in vdp_init_f as the 4th param
+    println!("cargo::rustc-check-cfg=cfg(varnishsys_objcore_in_init)");
+
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
 
     println!("cargo:rerun-if-env-changed=VARNISH_INCLUDE_PATHS");
@@ -76,7 +80,7 @@ fn main() {
         );
     } else if BINDINGS_FILE_VER != varnish_ver {
         println!(
-            r#"cargo::warning=Generated bindings **version** from Varnish {varnish_ver} differ from checked-in {BINDINGS_FILE}. Update `build.rs` file with   BINDINGS_FILE_VER = "{varnish_ver}""#,
+            r#"cargo::warning=Generated bindings **version** from Varnish {varnish_ver} differ from checked-in {BINDINGS_FILE}. Update `build.rs` file with   BINDINGS_FILE_VER = "{varnish_ver}""#
         );
     }
 }
@@ -96,23 +100,19 @@ fn find_include_dir(out_path: &PathBuf) -> Option<(Vec<PathBuf>, String)> {
     let pkg = pkg_config::Config::new();
     match pkg.probe("varnishapi") {
         Ok(l) => {
-            // version is "7.5.0" and similar
-            let mut version = l.version.split('.');
-            let major = version
-                .next()
-                .expect("varnishapi invalid version major")
-                .parse::<u32>()
-                .expect("varnishapi invalid version major number");
-            let minor = version
-                .next()
-                .expect("varnishapi invalid version minor")
-                .parse::<u32>()
-                .expect("varnishapi invalid version minor number");
-            println!("cargo::metadata=version_number={}", l.version);
+            let ver = l.version;
+            // version string usually looks like "7.5.0"
+            let mut parts = ver.split('.');
+            let major = parse_next_int(&mut parts, "major");
+            let minor = parse_next_int(&mut parts, "minor");
+            println!("cargo::metadata=version_number={ver}");
             if major == 7 && minor <= 5 {
-                println!("cargo::rustc-cfg=feature=\"_objcore_in_init\"");
+                println!("cargo::rustc-cfg=varnishsys_objcore_in_init");
             }
-            Some((l.include_paths, l.version))
+            if major < 6 || major > 7 {
+                println!("cargo::warning=Varnish v{ver} is not supported and may not work with this crate");
+            }
+            Some((l.include_paths, ver))
         }
         Err(e) => {
             // See https://docs.rs/about/builds#detecting-docsrs
@@ -128,4 +128,12 @@ fn find_include_dir(out_path: &PathBuf) -> Option<(Vec<PathBuf>, String)> {
             }
         }
     }
+}
+
+fn parse_next_int(parts: &mut Split<char>, name: &str) -> u32 {
+    let val = parts
+        .next()
+        .unwrap_or_else(|| panic!("varnishapi invalid version {name}"));
+    val.parse::<u32>()
+        .unwrap_or_else(|_| panic!("varnishapi invalid version - {name} value is '{val}'"))
 }
