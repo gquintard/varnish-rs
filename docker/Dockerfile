@@ -1,6 +1,6 @@
 FROM ubuntu:22.04
 
-RUN    apt-get update \
+RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y \
         apt-transport-https \
         bash-completion \
@@ -17,8 +17,12 @@ RUN    apt-get update \
 
 # Pass in the VARNISH_VERSION build arg to specify the version of Varnish to install
 ARG VARNISH_VERSION=76
-RUN curl -sSf "https://packagecloud.io/install/repositories/varnishcache/varnish${VARNISH_VERSION}/script.deb.sh" | sudo bash \
-    && (sudo apt-get install -y varnish-dev || sudo apt-get install -y libvarnishapi-dev)
+RUN set -ex; \
+    curl -sSf "https://packagecloud.io/install/repositories/varnishcache/varnish${VARNISH_VERSION}/script.deb.sh" | sudo bash; \
+    echo 'Package: varnish varnish-dev\nPin: origin "packagecloud.io"\nPin-Priority: 1001' > /etc/apt/preferences.d/varnish; \
+    cat /etc/apt/preferences.d/varnish; \
+    apt-cache policy varnish; \
+    sudo apt-get install -y varnish varnish-dev;
 
 ARG USERNAME=user
 ARG USER_UID=1000

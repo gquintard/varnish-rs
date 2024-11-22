@@ -49,6 +49,7 @@ impl<'a> Ctx<'a> {
     }
 
     /// Instantiate from a mutable reference to a [`vrt_ctx`].
+    #[cfg(not(feature = "_lts_60"))]
     pub fn from_ref(raw: &'a mut vrt_ctx) -> Self {
         assert_eq!(raw.magic, VRT_CTX_MAGIC);
         Self {
@@ -57,6 +58,20 @@ impl<'a> Ctx<'a> {
             http_resp: HttpHeaders::from_ptr(raw.http_resp),
             http_bereq: HttpHeaders::from_ptr(raw.http_bereq),
             http_beresp: HttpHeaders::from_ptr(raw.http_beresp),
+            ws: Workspace::from_ptr(raw.ws),
+            raw,
+        }
+    }
+    /// Instantiate from a mutable reference to a [`vrt_ctx`].
+    #[cfg(feature = "_lts_60")]
+    pub fn from_ref(raw: &'a mut vrt_ctx) -> Self {
+        assert_eq!(raw.magic, VRT_CTX_MAGIC);
+        Self {
+            http_req: HttpHeaders::from_ptr(ffi::VCL_HTTP(raw.http_req)),
+            http_req_top: HttpHeaders::from_ptr(ffi::VCL_HTTP(raw.http_req_top)),
+            http_resp: HttpHeaders::from_ptr(ffi::VCL_HTTP(raw.http_resp)),
+            http_bereq: HttpHeaders::from_ptr(ffi::VCL_HTTP(raw.http_bereq)),
+            http_beresp: HttpHeaders::from_ptr(ffi::VCL_HTTP(raw.http_beresp)),
             ws: Workspace::from_ptr(raw.ws),
             raw,
         }

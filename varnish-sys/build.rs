@@ -113,7 +113,10 @@ fn find_include_dir(out_path: &PathBuf) -> Option<(Vec<PathBuf>, String)> {
             if major < 6 || major > 7 {
                 println!("cargo::warning=Varnish v{ver} is not supported and may not work with this crate");
             }
-            Some((l.include_paths, ver))
+            if major == 6 && minor == 5 {
+                println!("cargo::rustc-cfg=feature=\"_lts_60\"");
+            }
+            Some((l.include_paths, l.version))
         }
         Err(e) => {
             // See https://docs.rs/about/builds#detecting-docsrs

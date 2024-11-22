@@ -85,10 +85,16 @@ pub use varnish_sys::vcl;
 pub mod ffi {
     // This list must match the `use_ffi_items` in generator.rs
     pub use varnish_sys::ffi::{
-        vmod_priv, vmod_priv_methods, vrt_ctx, VMOD_ABI_Version, VclEvent, VCL_BACKEND, VCL_BOOL,
+        vmod_priv, vrt_ctx, VMOD_ABI_Version, VclEvent, VCL_BACKEND, VCL_BOOL,
         VCL_DURATION, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL, VCL_STRING, VCL_VOID,
-        VMOD_PRIV_METHODS_MAGIC,
     };
+    #[cfg(not(feature = "_lts_60"))]
+    pub use varnish_sys::ffi::{
+        vmod_priv_methods, VMOD_PRIV_METHODS_MAGIC,
+    };
+
+    #[cfg(feature = "_lts_60")]
+    pub use varnish_sys::ffi::vmod_priv_free_f;
 }
 
 #[cfg(feature = "ffi")]

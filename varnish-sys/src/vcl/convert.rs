@@ -54,9 +54,11 @@ use std::time::{Duration, SystemTime};
 use crate::ffi::{
     sa_family_t, vsa_suckaddr_len, vtim_dur, vtim_real, /*VSA_BuildFAP, */VSA_GetPtr, VSA_Port,
     PF_INET, PF_INET6, VCL_ACL, VCL_BACKEND, VCL_BLOB, VCL_BODY, VCL_BOOL, VCL_DURATION, VCL_ENUM,
-    VCL_HEADER, VCL_HTTP, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL, VCL_REGEX, VCL_STEVEDORE,
-    VCL_STRANDS, VCL_STRING, VCL_SUB, VCL_TIME, VCL_VCL,
+    VCL_HEADER, VCL_HTTP, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL, VCL_STEVEDORE,
+    VCL_STRANDS, VCL_STRING, VCL_TIME, VCL_VCL,
 };
+#[cfg(not(feature = "_lts_60"))]
+use crate::ffi::{VCL_REGEX, VCL_SUB};
 use crate::vcl::{from_vcl_probe, into_vcl_probe, CowProbe, Probe, VclError, Workspace};
 
 /// Convert a Rust type into a VCL one
@@ -297,6 +299,7 @@ impl From<VCL_REAL> for f64 {
 }
 
 // VCL_REGEX
+#[cfg(not(feature = "_lts_60"))]
 default_null_ptr!(VCL_REGEX);
 
 //
@@ -375,6 +378,7 @@ default_null_ptr!(VCL_STEVEDORE);
 // VCL_STRANDS
 default_null_ptr!(VCL_STRANDS);
 // VCL_SUB
+#[cfg(not(feature = "_lts_60"))]
 default_null_ptr!(VCL_SUB);
 
 //

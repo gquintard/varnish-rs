@@ -22,8 +22,11 @@ use std::slice::from_raw_parts_mut;
 
 use memchr::memchr;
 
-use crate::ffi::{txt, /*vrt_blob, WS_Allocated, */VCL_BLOB, VCL_STRING};
+#[cfg(not(feature = "_lts_60"))]
+use crate::ffi::{vrt_blob, WS_Allocated};
+#[cfg(feature = "_lts_60")]
 use crate::ffi::WS_Inside;
+use crate::ffi::{txt, VCL_BLOB, VCL_STRING};
 use crate::vcl::VclError;
 use crate::{ffi, validate_ws};
 
@@ -82,12 +85,18 @@ impl<'a> Workspace<'a> {
 
     /// Check if a pointer is part of the current workspace
     pub fn contains(&self, data: &[u8]) -> bool {
-        //unsafe { WS_Allocated(self.raw, data.as_ptr().cast(), data.len() as isize) == 1 }
-        let last = match data.last() {
-            None => data.as_ptr(),
-            Some(p) => p as *const _,
-        };
-        unsafe { WS_Inside(self.raw, data.as_ptr().cast(), last.cast()) == 1 }
+        #[cfg(feature = "_lts_60")]
+        {
+            let last = match data.last() {
+                None => data.as_ptr(),
+                Some(p) => p as *const _,
+            };
+            unsafe { WS_Inside(self.raw, data.as_ptr().cast(), last.cast()) == 1 }
+        }
+        #[cfg(not(feature = "_lts_60"))]
+        {
+            unsafe { WS_Allocated(self.raw, data.as_ptr().cast(), data.len() as isize) == 1 }
+        }
     }
 
     /// Allocate `[u8; size]` array on Workspace.
