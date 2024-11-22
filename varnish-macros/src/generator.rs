@@ -119,41 +119,35 @@ impl Generator {
         let mod_name = &self.names.mod_name();
         let mut json = Vec::<Value>::new();
 
-        json.push(json! {[
-            "$VMOD",
-            "1.0",
-            mod_name,
-            self.names.func_struct_name(),
-            self.file_id.to_str().unwrap(),
-            // Ohh the irony, this string from VMOD_ABI_Version is the reason
-            // why `varnish-sys` must exist. Without it, we could run bindgen
-            // from the `varnish` crate directly.  Ohh well.
-            //
-            // FIXME: figure out a way to assert that the version string used by varnish_macro is the same
-            //        as the value accessible by generated code from varnish::ffi::VMOD_ABI_Version.
-            //        Currently it seems not possible to do a constant assert at compile time on b-str/c-str equality.
-            varnish_sys::ffi::VMOD_ABI_Version.to_str().unwrap(),
-            "0",
-            "0"
-        ]});
+        if cfg!(lts_60) {
+            json.push(json! {[
+                "$VMOD",
+                "1.0",
+            ]});
+        } else {
+            json.push(json! {[
+                "$VMOD",
+                "1.0",
+                mod_name,
+                self.names.func_struct_name(),
+                self.file_id.to_str().unwrap(),
+                // Ohh the irony, this string from VMOD_ABI_Version is the reason
+                // why `varnish-sys` must exist. Without it, we could run bindgen
+                // from the `varnish` crate directly.  Ohh well.
+                //
+                // FIXME: figure out a way to assert that the version string used by varnish_macro is the same
+                //        as the value accessible by generated code from varnish::ffi::VMOD_ABI_Version.
+                //        Currently it seems not possible to do a constant assert at compile time on b-str/c-str equality.
+                varnish_sys::ffi::VMOD_ABI_Version.to_str().unwrap(),
+                "0",
+                "0"
+            ]});
+        }
 
-        let mut cproto = String::new();
-        for obj in &self.objects {
-            cproto.push_str(&obj.cproto_typedef_decl);
+        let cproto = self.generate_proto();
+        if !cfg!(lts_60) {
+            json.push(json! {[ "$CPROTO", cproto ]});
         }
-        for func in self.iter_all_funcs() {
-            cproto.push_str(&func.cproto_typedef_decl);
-        }
-        let _ = write!(cproto, "\nstruct {} {{\n", self.names.func_struct_name());
-        for func in self.iter_all_funcs() {
-            cproto.push_str(&func.cproto_typedef_init);
-        }
-        let _ = write!(
-            cproto,
-            "}};\n\nstatic struct {struct_name} {struct_name};",
-            struct_name = self.names.func_struct_name()
-        );
-        json.push(json! {[ "$CPROTO", cproto ]});
 
         for func in &self.functions {
             json.push(func.json.clone());
@@ -171,7 +165,28 @@ impl Generator {
         }
     }
 
+    fn generate_proto(&self) -> String {
+        let mut cproto = String::new();
+        for obj in &self.objects {
+            cproto.push_str(&obj.cproto_typedef_decl);
+        }
+        for func in self.iter_all_funcs() {
+            cproto.push_str(&func.cproto_typedef_decl);
+        }
+        let _ = write!(cproto, "\nstruct {} {{\n", self.names.func_struct_name());
+        for func in self.iter_all_funcs() {
+            cproto.push_str(&func.cproto_typedef_init);
+        }
+        let _ = write!(
+            cproto,
+            "}};\n\nstatic struct {struct_name} {struct_name};",
+            struct_name = self.names.func_struct_name()
+        );
+        cproto
+    }
+
     fn render_generated_mod(&self, vmod: &VmodInfo) -> TokenStream {
+        let cproto = self.generate_proto().force_cstr();
         let vmod_name_data = self.names.data_struct_name().to_ident();
         let c_name = self.names.mod_name().force_cstr();
         let c_func_name = self.names.func_struct_name().force_cstr();
@@ -241,7 +256,6 @@ impl Generator {
                     vrt_minor: c_uint,
                     file_id: *const c_char,
                     name: *const c_char,
-                    func_name: *const c_char,
                     func: *const c_void,
                     func_len: c_int,
                     proto: *const c_char,
@@ -259,15 +273,15 @@ impl Generator {
                     vrt_minor: 0,
                     file_id: #file_id.as_ptr(),
                     name: #c_name.as_ptr(),
-                    func_name: #c_func_name.as_ptr(),
                     func_len: ::std::mem::size_of::<VmodExports>() as c_int,
                     func: &VMOD_EXPORTS as *const _ as *const c_void,
                     abi: VMOD_ABI_Version.as_ptr(),
                     json: JSON.as_ptr(),
-                    proto: null(),
+                    proto: cproto.as_ptr(),
                 };
 
                 const JSON: &CStr = #json;
+                const cproto: &CStr = #cproto;
             }
         )
     }
