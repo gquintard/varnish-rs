@@ -116,7 +116,7 @@ fn find_include_dir(out_path: &PathBuf) -> Option<(Vec<PathBuf>, String)> {
             if major == 6 && minor == 5 {
                 println!("cargo::rustc-cfg=feature=\"_lts_60\"");
             }
-            Some((l.include_paths, l.version))
+            Some((l.include_paths, ver))
         }
         Err(e) => {
             // See https://docs.rs/about/builds#detecting-docsrs
