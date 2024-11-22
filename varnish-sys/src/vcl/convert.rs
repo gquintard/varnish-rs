@@ -57,7 +57,7 @@ use crate::ffi::{
     VCL_HEADER, VCL_HTTP, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL, VCL_STEVEDORE,
     VCL_STRANDS, VCL_STRING, VCL_TIME, VCL_VCL,
 };
-#[cfg(not(feature = "_lts_60"))]
+#[cfg(not(lts_60))]
 use crate::ffi::{VCL_REGEX, VCL_SUB};
 use crate::vcl::{from_vcl_probe, into_vcl_probe, CowProbe, Probe, VclError, Workspace};
 
@@ -299,7 +299,7 @@ impl From<VCL_REAL> for f64 {
 }
 
 // VCL_REGEX
-#[cfg(not(feature = "_lts_60"))]
+#[cfg(not(lts_60))]
 default_null_ptr!(VCL_REGEX);
 
 //
@@ -378,7 +378,7 @@ default_null_ptr!(VCL_STEVEDORE);
 // VCL_STRANDS
 default_null_ptr!(VCL_STRANDS);
 // VCL_SUB
-#[cfg(not(feature = "_lts_60"))]
+#[cfg(not(lts_60))]
 default_null_ptr!(VCL_SUB);
 
 //

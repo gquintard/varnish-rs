@@ -3,13 +3,13 @@ use crate::ffi::{
     director, req, sess, vrt_ctx, ws, DIRECTOR_MAGIC, REQ_MAGIC,
     SESS_MAGIC, VCL_BACKEND, VRT_CTX_MAGIC, WS_MAGIC,
 };
-#[cfg(not(feature = "_lts_60"))]
+#[cfg(not(lts_60))]
 use crate::ffi::{vcldir, vfp_ctx, vfp_entry, VCLDIR_MAGIC, VFP_CTX_MAGIC, VFP_ENTRY_MAGIC};
 
-#[cfg(not(feature = "_lts_60"))]
+#[cfg(not(lts_60))]
 use crate::vcl::{DeliveryFilters, FetchFilters};
 
-#[cfg(not(feature = "_lts_60"))]
+#[cfg(not(lts_60))]
 pub unsafe fn validate_vfp_ctx(ctxp: *mut vfp_ctx) -> &'static mut vfp_ctx {
     let val = ctxp.as_mut().unwrap();
     assert_eq!(val.magic, VFP_CTX_MAGIC);
@@ -22,7 +22,7 @@ pub unsafe fn validate_vrt_ctx(ctxp: *const vrt_ctx) -> &'static vrt_ctx {
     val
 }
 
-#[cfg(not(feature = "_lts_60"))]
+#[cfg(not(lts_60))]
 pub unsafe fn validate_vfp_entry(vfep: *mut vfp_entry) -> &'static mut vfp_entry {
     let val = vfep.as_mut().unwrap();
     assert_eq!(val.magic, VFP_ENTRY_MAGIC);
@@ -41,7 +41,7 @@ pub unsafe fn validate_ws(wsp: *mut ws) -> &'static mut ws {
     val
 }
 
-#[cfg(not(feature = "_lts_60"))]
+#[cfg(not(lts_60))]
 pub unsafe fn validate_vdir(be: &director) -> &'static mut vcldir {
     let val = be.vdir.as_mut().unwrap();
     assert_eq!(val.magic, VCLDIR_MAGIC);
@@ -55,7 +55,7 @@ impl vrt_ctx {
         val
     }
 
-    #[cfg(not(feature = "_lts_60"))]
+    #[cfg(not(lts_60))]
     pub fn fetch_filters<'c, 'f>(
         &'c self,
         filters: &'f mut Vec<Box<ffi::vfp>>,
@@ -63,7 +63,7 @@ impl vrt_ctx {
         FetchFilters::<'c, 'f>::new(self, filters)
     }
 
-    #[cfg(not(feature = "_lts_60"))]
+    #[cfg(not(lts_60))]
     pub fn delivery_filters<'c, 'f>(
         &'c self,
         filters: &'f mut Vec<Box<ffi::vdp>>,

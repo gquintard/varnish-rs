@@ -3,15 +3,15 @@ use std::ptr;
 use std::ptr::null;
 
 use crate::ffi::{vmod_priv, vrt_ctx};
-#[cfg(not(feature = "_lts_60"))]
+#[cfg(not(lts_60))]
 use crate::ffi::vmod_priv_methods;
-#[cfg(feature = "_lts_60")]
+#[cfg(lts_60)]
 use crate::ffi::vmod_priv_free_f;
 use crate::validate_vrt_ctx;
 use crate::vcl::PerVclState;
 
 /// SAFETY: ensured by Varnish itself
-#[cfg(not(feature = "_lts_60"))]
+#[cfg(not(lts_60))]
 unsafe impl Sync for vmod_priv_methods {}
 
 impl vmod_priv {
@@ -20,7 +20,7 @@ impl vmod_priv {
     /// SAFETY: `priv_` must reference a valid `T` object pointer or `NULL`
     pub unsafe fn take<T>(&mut self) -> Option<Box<T>> {
         // methods does not need to be dropped because `put` always sets it to a static reference
-        #[cfg(not(feature = "_lts_60"))]
+        #[cfg(not(lts_60))]
         {
         self.methods = null();
         }
@@ -39,13 +39,13 @@ impl vmod_priv {
     /// Set the object and methods for the `vmod_priv`, and the corresponding static methods.
     ///
     /// SAFETY: The type of `obj` must match the type of the function pointers in `methods`.
-    #[cfg(not(feature = "_lts_60"))]
+    #[cfg(not(lts_60))]
     pub unsafe fn put<T>(&mut self, obj: Box<T>, methods: &'static vmod_priv_methods) {
         self.priv_ = Box::into_raw(obj).cast();
         self.methods = methods;
     }
 
-    #[cfg(feature = "_lts_60")]
+    #[cfg(lts_60)]
     pub unsafe fn put<T>(&mut self, obj: Box<T>, free_method: vmod_priv_free_f) {
         self.priv_ = Box::into_raw(obj).cast();
         self.free = free_method;

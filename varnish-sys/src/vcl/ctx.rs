@@ -49,7 +49,7 @@ impl<'a> Ctx<'a> {
     }
 
     /// Instantiate from a mutable reference to a [`vrt_ctx`].
-    #[cfg(not(feature = "_lts_60"))]
+    #[cfg(not(lts_60))]
     pub fn from_ref(raw: &'a mut vrt_ctx) -> Self {
         assert_eq!(raw.magic, VRT_CTX_MAGIC);
         Self {
@@ -63,7 +63,7 @@ impl<'a> Ctx<'a> {
         }
     }
     /// Instantiate from a mutable reference to a [`vrt_ctx`].
-    #[cfg(feature = "_lts_60")]
+    #[cfg(lts_60)]
     pub fn from_ref(raw: &'a mut vrt_ctx) -> Self {
         assert_eq!(raw.magic, VRT_CTX_MAGIC);
         Self {

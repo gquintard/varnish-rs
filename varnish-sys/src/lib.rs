@@ -18,11 +18,11 @@ pub mod ffi {
 
 mod extensions;
 mod txt;
-#[cfg(not(feature = "_lts_60"))]
+#[cfg(not(lts_60))]
 mod utils;
 mod validate;
 pub mod vcl;
 
-#[cfg(not(feature = "_lts_60"))]
+#[cfg(not(lts_60))]
 pub use utils::*;
 pub use validate::*;

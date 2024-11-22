@@ -93,13 +93,20 @@ impl Generator {
             "on_fini".to_ident()
         };
         // Static methods to clean up the `vmod_priv` object's `T`
-        tokens.push(quote! {
-           static #name: vmod_priv_methods = vmod_priv_methods {
-               magic: VMOD_PRIV_METHODS_MAGIC,
-               type_: #ty_name.as_ptr(),
-               fini: Some(vmod_priv::#on_fini::<#ty_ident>),
-           };
-        });
+        if cfg!(lts_60) {
+            tokens.push(quote! {
+                static #name: vmod_priv_free = Some(vmod_priv::#on_fini::<#ty_ident>);
+            });
+        } else {
+            #[cfg(not(lts_60))]
+            tokens.push(quote! {
+                static #name: vmod_priv_methods = vmod_priv_methods {
+                    magic: VMOD_PRIV_METHODS_MAGIC,
+                    type_: #ty_name.as_ptr(),
+                    fini: Some(vmod_priv::#on_fini::<#ty_ident>),
+                };
+            });
+        }
     }
 
     fn iter_all_funcs(&self) -> impl Iterator<Item = &FuncProcessor> {
@@ -157,7 +164,11 @@ impl Generator {
         }
 
         let json = serde_json::to_string_pretty(&json! {json}).unwrap();
-        format!("VMOD_JSON_SPEC\u{2}\n{json}\n\u{3}")
+        if cfg!(lts_60) {
+            format!("{json}")
+        } else {
+            format!("VMOD_JSON_SPEC\u{2}\n{json}\n\u{3}")
+        }
     }
 
     fn render_generated_mod(&self, vmod: &VmodInfo) -> TokenStream {
@@ -177,7 +188,7 @@ impl Generator {
         let export_inits: Vec<_> = self.iter_all_funcs().map(|f| &f.export_init).collect();
 
         // This list must match the list in varnish-macros/src/lib.rs
-        let use_ffi_items = quote![
+        let mut use_ffi_items = quote![
             VCL_BACKEND,
             VCL_BOOL,
             VCL_DURATION,
@@ -188,12 +199,12 @@ impl Generator {
             VCL_STRING,
             VCL_VOID,
             VMOD_ABI_Version,
-            VMOD_PRIV_METHODS_MAGIC,
             VclEvent,
             vmod_priv,
-            vmod_priv_methods,
             vrt_ctx,
         ];
+        #[cfg(not(lts_60))]
+        use_ffi_items.append_all(["VMOD_PRIV_METHODS_MAGIC,", "vmod_priv_methods,"]);
 
         quote!(
             #[allow(

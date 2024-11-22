@@ -10,6 +10,8 @@ static BINDINGS_FILE_VER: &str = "7.6.1";
 fn main() {
     // <=7.5 passed *objcore in vdp_init_f as the 4th param
     println!("cargo::rustc-check-cfg=cfg(varnishsys_objcore_in_init)");
+    // 6.0 support
+    println!("cargo::rustc-check-cfg=cfg(lts_60)");
 
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
 
@@ -113,8 +115,8 @@ fn find_include_dir(out_path: &PathBuf) -> Option<(Vec<PathBuf>, String)> {
             if major < 6 || major > 7 {
                 println!("cargo::warning=Varnish v{ver} is not supported and may not work with this crate");
             }
-            if major == 6 && minor == 5 {
-                println!("cargo::rustc-cfg=feature=\"_lts_60\"");
+            if major == 6 && minor == 0 {
+                println!("cargo::rustc-cfg=lts_60");
             }
             Some((l.include_paths, ver))
         }

@@ -126,9 +126,14 @@ impl FuncProcessor {
             self.func_pre_call.push(
                 quote! { let mut __obj_per_vcl = (* #arg_value).take_per_vcl::<#shared_ty>(); },
             );
+            let fini = if cfg!(lts_60) {
+                quote! { blah }
+            } else {
+                quote! { &PRIV_VCL_METHODS }
+            };
             self.func_always_after_call.push(quote! {
                 // Release ownership back to Varnish
-                (* #arg_value).put(__obj_per_vcl, &PRIV_VCL_METHODS);
+                (* #arg_value).put(__obj_per_vcl, #fini);
             });
             let json = Self::arg_to_json("__vp".to_string(), false, "PRIV_VCL", Value::Null);
             self.args_json.push(json);
