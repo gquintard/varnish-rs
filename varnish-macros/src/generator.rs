@@ -92,7 +92,7 @@ impl Generator {
             "on_fini".to_ident()
         };
         // Static methods to clean up the `vmod_priv` object's `T`
-        if cfg!(lts_60) {
+        if cfg!(varnishsys_use_priv_free_f) {
             tokens.push(quote! {
                 static #name: vmod_priv_free_f = Some(vmod_priv::#on_fini::<#ty_ident>);
             });
@@ -219,23 +219,26 @@ impl Generator {
             vmod_priv,
             vrt_ctx,
         ];
+        if cfg!(varnishsys_use_priv_free_f) {
+            use_ffi_items.append_all(quote![vmod_priv_free_f]);
+        } else {
+            use_ffi_items.append_all(quote![VMOD_PRIV_METHODS_MAGIC, vmod_priv_methods]);
+        }
         // WARNING: This list must match the list in varnish-macros/src/lib.rs
 
         let fname;
         let cproto_ptr;
         let cproto_def;
-
         if cfg!(lts_60) {
-            use_ffi_items.append_all(quote![vmod_priv_free_f]);
-            fname = quote!();
-            cproto_ptr = quote!(cproto.as_ptr());
-            cproto_def = quote!(const cproto: &CStr = #cproto;);
+            fname = quote! {};
+            cproto_ptr = quote! { cproto.as_ptr() };
+            cproto_def = quote! { const cproto: &CStr = #cproto; };
         } else {
-            use_ffi_items.append_all(quote![VMOD_PRIV_METHODS_MAGIC, vmod_priv_methods]);
-            fname = quote!(func_name: #c_func_name.as_ptr(),);
-            cproto_ptr = quote!(null());
-            cproto_def = quote!();
-        };
+            fname = quote! { func_name: #c_func_name.as_ptr(), };
+            cproto_ptr = quote! { null()};
+            cproto_def = quote! {};
+        }
+
         quote!(
             #[allow(
                 non_snake_case,

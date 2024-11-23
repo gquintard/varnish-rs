@@ -15,7 +15,6 @@ readme.workspace = true
 default = []
 ffi = []
 vsc = []
-lts_60 = []
 
 [dependencies]
 glob.workspace = true

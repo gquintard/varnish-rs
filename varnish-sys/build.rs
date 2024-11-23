@@ -12,6 +12,7 @@ fn main() {
     println!("cargo::rustc-check-cfg=cfg(varnishsys_objcore_in_init)");
     // 6.0 support
     println!("cargo::rustc-check-cfg=cfg(lts_60)");
+    println!("cargo::rustc-check-cfg=cfg(varnishsys_use_priv_free_f)");
 
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
 
@@ -34,6 +35,7 @@ fn main() {
     let is_lts_60 = major == 6 && minor == 0;
     if is_lts_60 {
         println!("cargo::rustc-cfg=lts_60");
+        println!("cargo::rustc-cfg=varnishsys_use_priv_free_f");
     }
     if major < 6 || major > 7 {
         println!("cargo::warning=Varnish v{varnish_ver} is not supported and may not work with this crate");
