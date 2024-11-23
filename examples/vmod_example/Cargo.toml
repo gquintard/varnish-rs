@@ -6,7 +6,6 @@ edition.workspace = true
 
 [dependencies]
 varnish.workspace = true
-varnish.features = ["lts_60"]
 
 [lib]
 crate-type = ["cdylib"]
