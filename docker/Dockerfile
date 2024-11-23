@@ -1,6 +1,6 @@
 FROM ubuntu:22.04
 
-RUN apt-get update \
+RUN    apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y \
         apt-transport-https \
         bash-completion \
@@ -17,6 +17,7 @@ RUN apt-get update \
 
 # Pass in the VARNISH_VERSION build arg to specify the version of Varnish to install
 ARG VARNISH_VERSION=76
+# These steps should be the same as in the CI workflow
 RUN set -ex; \
     curl -sSf "https://packagecloud.io/install/repositories/varnishcache/varnish${VARNISH_VERSION}/script.deb.sh" | sudo bash; \
     echo 'Package: varnish varnish-dev\nPin: origin "packagecloud.io"\nPin-Priority: 1001' > /etc/apt/preferences.d/varnish; \
