@@ -176,7 +176,7 @@ impl Generator {
         let export_decls: Vec<_> = self.iter_all_funcs().map(|f| &f.export_decl).collect();
         let export_inits: Vec<_> = self.iter_all_funcs().map(|f| &f.export_init).collect();
 
-        // This list must match the list in varnish-macros/src/lib.rs
+        // WARNING: This list must match the list in varnish-macros/src/lib.rs
         let use_ffi_items = quote![
             VCL_BACKEND,
             VCL_BOOL,
@@ -190,10 +190,12 @@ impl Generator {
             VMOD_ABI_Version,
             VMOD_PRIV_METHODS_MAGIC,
             VclEvent,
+            vmod_data,
             vmod_priv,
             vmod_priv_methods,
             vrt_ctx,
         ];
+        // WARNING: This list must match the list in varnish-macros/src/lib.rs
 
         quote!(
             #[allow(
@@ -224,26 +226,10 @@ impl Generator {
                     #(#export_inits,)*
                 };
 
-                #[repr(C)]
-                pub struct VmodData {
-                    vrt_major: c_uint,
-                    vrt_minor: c_uint,
-                    file_id: *const c_char,
-                    name: *const c_char,
-                    func_name: *const c_char,
-                    func: *const c_void,
-                    func_len: c_int,
-                    proto: *const c_char,
-                    json: *const c_char,
-                    abi: *const c_char,
-                }
-
-                unsafe impl Sync for VmodData {}
-
                 // This name must be in the format `Vmod_{modulename}_Data`.
                 #[allow(non_upper_case_globals)]
                 #[no_mangle]
-                pub static #vmod_name_data: VmodData = VmodData {
+                pub static #vmod_name_data: vmod_data = vmod_data {
                     vrt_major: 0,
                     vrt_minor: 0,
                     file_id: #file_id.as_ptr(),
