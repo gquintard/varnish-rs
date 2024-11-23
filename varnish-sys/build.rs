@@ -32,7 +32,7 @@ fn main() {
     }
     // TODO: do we want to test for `minor == 0` here, or just `major == 6`?
     //   the rationale being that major=6 is much closer to LTS.
-    let is_lts_60 = major == 6 && minor == 0;
+    let is_lts_60 = major == 6;
     if is_lts_60 {
         println!("cargo::rustc-cfg=lts_60");
         println!("cargo::rustc-cfg=varnishsys_use_priv_free_f");
@@ -86,7 +86,7 @@ fn main() {
         .parse_callbacks(Box::new(ren));
 
     if is_lts_60 {
-        bindings_builder = bindings_builder.clang_args(&["-D", "VARNISH_LTS_60"]);
+        bindings_builder = bindings_builder.clang_args(&["-D", "VARNISH_RS_LTS_60"]);
     }
     let bindings = bindings_builder
         .generate()
