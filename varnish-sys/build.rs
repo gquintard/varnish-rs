@@ -25,15 +25,18 @@ fn main() {
     let major = parse_next_int(&mut parts, "major");
     let minor = parse_next_int(&mut parts, "minor");
     println!("cargo::metadata=version_number={varnish_ver}");
+
     if major == 7 && minor <= 5 {
         println!("cargo::rustc-cfg=varnishsys_objcore_in_init");
     }
+    // TODO: do we want to test for `minor == 0` here, or just `major == 6`?
+    //   the rationale being that major=6 is much closer to LTS.
+    let is_lts_60 = major == 6 && minor == 0;
+    if is_lts_60 {
+        println!("cargo::rustc-cfg=lts_60");
+    }
     if major < 6 || major > 7 {
         println!("cargo::warning=Varnish v{varnish_ver} is not supported and may not work with this crate");
-    }
-    let lts_60 = major == 6 && minor == 0;
-    if lts_60 {
-        println!("cargo::rustc-cfg=lts_60");
     }
 
     let mut ren = Renamer::default();
@@ -80,8 +83,8 @@ fn main() {
         .rustified_non_exhaustive_enum(ren.get_regex_str())
         .parse_callbacks(Box::new(ren));
 
-    if lts_60 {
-        bindings_builder = bindings_builder.clang_args(&["-D", "LTS_60"]);
+    if is_lts_60 {
+        bindings_builder = bindings_builder.clang_args(&["-D", "VARNISH_LTS_60"]);
     }
     let bindings = bindings_builder
         .generate()
