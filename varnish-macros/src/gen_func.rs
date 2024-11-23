@@ -252,10 +252,15 @@ impl FuncProcessor {
                 self.func_pre_call
                     .push(quote! { let mut #temp_var = (* #arg_value).take(); });
                 self.func_call_vars.push(quote! { &mut #temp_var });
+                let meth = if cfg!(lts_60) {
+                    quote!(PRIV_TASK_METHODS)
+                } else {
+                    quote!(&PRIV_TASK_METHODS)
+                };
                 self.func_always_after_call.push(quote! {
                     // Release ownership back to Varnish
                     if let Some(obj) = #temp_var {
-                        (* #arg_value).put(obj, &PRIV_TASK_METHODS);
+                        (* #arg_value).put(obj, #meth);
                     }
                 });
 
