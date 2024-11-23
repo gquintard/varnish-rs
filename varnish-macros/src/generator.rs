@@ -92,11 +92,7 @@ impl Generator {
             "on_fini".to_ident()
         };
         // Static methods to clean up the `vmod_priv` object's `T`
-        if cfg!(varnishsys_use_priv_free_f) {
-            tokens.push(quote! {
-                static #name: vmod_priv_free_f = Some(vmod_priv::#on_fini::<#ty_ident>);
-            });
-        } else {
+        if cfg!(varnishsys_7_vmod_priv_methods) {
             let ty_name = type_name.force_cstr();
             tokens.push(quote! {
                 static #name: vmod_priv_methods = vmod_priv_methods {
@@ -104,6 +100,10 @@ impl Generator {
                     type_: #ty_name.as_ptr(),
                     fini: Some(vmod_priv::#on_fini::<#ty_ident>),
                 };
+            });
+        } else {
+            tokens.push(quote! {
+                static #name: vmod_priv_free_f = Some(vmod_priv::#on_fini::<#ty_ident>);
             });
         }
     }
@@ -219,10 +219,10 @@ impl Generator {
             vmod_priv,
             vrt_ctx,
         ];
-        if cfg!(varnishsys_use_priv_free_f) {
-            use_ffi_items.append_all(quote![vmod_priv_free_f]);
-        } else {
+        if cfg!(varnishsys_7_vmod_priv_methods) {
             use_ffi_items.append_all(quote![VMOD_PRIV_METHODS_MAGIC, vmod_priv_methods]);
+        } else {
+            use_ffi_items.append_all(quote![vmod_priv_free_f]);
         }
         // WARNING: This list must match the list in varnish-macros/src/lib.rs
 

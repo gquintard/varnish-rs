@@ -1,5 +1,4 @@
 use std::path::PathBuf;
-use std::str::Split;
 use std::{env, fs};
 
 use bindgen_helpers::{rename_enum, Renamer};
@@ -8,11 +7,12 @@ static BINDINGS_FILE: &str = "bindings.for-docs";
 static BINDINGS_FILE_VER: &str = "7.6.1";
 
 fn main() {
-    // <=7.5 passed *objcore in vdp_init_f as the 4th param
-    println!("cargo::rustc-check-cfg=cfg(varnishsys_objcore_in_init)");
+    // >=7.6 stopped passing *objcore in vdp_init_f as the 4th param
+    println!("cargo::rustc-check-cfg=cfg(varnishsys_7_6_no_objcore_init)");
+    // >=7.0 has vmod_priv_methods instead of passing a cleanup function reference
+    println!("cargo::rustc-check-cfg=cfg(varnishsys_7_vmod_priv_methods)");
     // 6.0 support
     println!("cargo::rustc-check-cfg=cfg(lts_60)");
-    println!("cargo::rustc-check-cfg=cfg(varnishsys_use_priv_free_f)");
 
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
 
@@ -21,22 +21,18 @@ fn main() {
         return;
     };
 
-    // version string usually looks like "7.5.0"
-    let mut parts = varnish_ver.split('.');
-    let major = parse_next_int(&mut parts, "major");
-    let minor = parse_next_int(&mut parts, "minor");
     println!("cargo::metadata=version_number={varnish_ver}");
+    let (major, minor) = parse_version(&varnish_ver);
 
-    if major == 7 && minor <= 5 {
-        println!("cargo::rustc-cfg=varnishsys_objcore_in_init");
+    if major == 7 && minor >= 6 {
+        println!("cargo::rustc-cfg=varnishsys_7_6_no_objcore_init");
     }
-    // TODO: do we want to test for `minor == 0` here, or just `major == 6`?
-    //   the rationale being that major=6 is much closer to LTS.
-    let is_lts_60 = major == 6;
-    if is_lts_60 {
+    if major >= 7 {
+        println!("cargo::rustc-cfg=varnishsys_7_vmod_priv_methods");
+    } else {
         println!("cargo::rustc-cfg=lts_60");
-        println!("cargo::rustc-cfg=varnishsys_use_priv_free_f");
     }
+
     if major < 6 || major > 7 {
         println!("cargo::warning=Varnish v{varnish_ver} is not supported and may not work with this crate");
     }
@@ -85,7 +81,7 @@ fn main() {
         .rustified_non_exhaustive_enum(ren.get_regex_str())
         .parse_callbacks(Box::new(ren));
 
-    if is_lts_60 {
+    if major == 6 {
         bindings_builder = bindings_builder.clang_args(&["-D", "VARNISH_RS_LTS_60"]);
     }
     let bindings = bindings_builder
@@ -144,7 +140,16 @@ fn find_include_dir(out_path: &PathBuf) -> Option<(Vec<PathBuf>, String)> {
     }
 }
 
-fn parse_next_int(parts: &mut Split<char>, name: &str) -> u32 {
+fn parse_version(version: &str) -> (u32, u32) {
+    // version string usually looks like "7.5.0"
+    let mut parts = version.split('.');
+    (
+        parse_next_int(&mut parts, "major"),
+        parse_next_int(&mut parts, "minor"),
+    )
+}
+
+fn parse_next_int(parts: &mut std::str::Split<char>, name: &str) -> u32 {
     let val = parts
         .next()
         .unwrap_or_else(|| panic!("varnishapi invalid version {name}"));
