@@ -7,10 +7,12 @@ static BINDINGS_FILE: &str = "bindings.for-docs";
 static BINDINGS_FILE_VER: &str = "7.6.1";
 
 fn main() {
-    // >=7.6 stopped passing *objcore in vdp_init_f as the 4th param
-    println!("cargo::rustc-check-cfg=cfg(varnishsys_7_6_no_objcore_init)");
-    // >=7.0 has vmod_priv_methods instead of passing a cleanup function reference
-    println!("cargo::rustc-check-cfg=cfg(varnishsys_7_vmod_priv_methods)");
+    // All varnishsys_* flags are used to enable some features that are not available in all versions.
+    // The crate must compile for the latest supported version with none of these flags enabled.
+    // By convention, the version number is the last version where the feature was available.
+
+    // 7.0..=7.5 passed *objcore in vdp_init_f as the 4th param
+    println!("cargo::rustc-check-cfg=cfg(varnishsys_7_5_objcore_init)");
     // 6.0 support
     println!("cargo::rustc-check-cfg=cfg(lts_60)");
 
@@ -24,12 +26,10 @@ fn main() {
     println!("cargo::metadata=version_number={varnish_ver}");
     let (major, minor) = parse_version(&varnish_ver);
 
-    if major == 7 && minor >= 6 {
-        println!("cargo::rustc-cfg=varnishsys_7_6_no_objcore_init");
+    if major == 7 && minor < 6 {
+        println!("cargo::rustc-cfg=varnishsys_7_5_objcore_init");
     }
-    if major >= 7 {
-        println!("cargo::rustc-cfg=varnishsys_7_vmod_priv_methods");
-    } else {
+    if major < 7 {
         println!("cargo::rustc-cfg=lts_60");
     }
 
@@ -115,9 +115,10 @@ fn find_include_dir(out_path: &PathBuf) -> Option<(Vec<PathBuf>, String)> {
         //    At the moment we have no way to detect which version it is.
         //    vmod_abi.h  seems to have this line, which can be used in the future.
         //    #define VMOD_ABI_Version "Varnish 7.5.0 eef25264e5ca5f96a77129308edb83ccf84cb1b1"
+        println!("cargo::warning=Using VARNISH_INCLUDE_PATHS='{s}' env var, and assume it is the latest supported version {BINDINGS_FILE_VER}");
         return Some((
             s.split(':').map(PathBuf::from).collect(),
-            "version unknown".into(),
+            BINDINGS_FILE_VER.into(), // Assume manual version is the latest supported
         ));
     }
 

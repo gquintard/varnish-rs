@@ -59,7 +59,7 @@ pub unsafe extern "C" fn gen_vdp_init<T: DeliveryProcessor>(
     vrt_ctx: *const vrt_ctx,
     ctx_raw: *mut vdp_ctx,
     priv_: *mut *mut c_void,
-    #[cfg(not(varnishsys_7_6_no_objcore_init))] _oc: *mut ffi::objcore,
+    #[cfg(varnishsys_7_5_objcore_init)] _oc: *mut ffi::objcore,
 ) -> c_int {
     assert_ne!(priv_, ptr::null_mut());
     assert_eq!(*priv_, ptr::null_mut());
