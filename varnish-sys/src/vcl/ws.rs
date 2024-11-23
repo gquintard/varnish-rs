@@ -22,11 +22,11 @@ use std::slice::from_raw_parts_mut;
 
 use memchr::memchr;
 
-#[cfg(not(lts_60))]
-use crate::ffi::{vrt_blob, WS_Allocated};
 #[cfg(lts_60)]
 use crate::ffi::WS_Inside;
 use crate::ffi::{txt, VCL_BLOB, VCL_STRING};
+#[cfg(not(lts_60))]
+use crate::ffi::{vrt_blob, WS_Allocated};
 use crate::vcl::VclError;
 use crate::{ffi, validate_ws};
 

@@ -36,7 +36,6 @@ fn main() {
         println!("cargo::rustc-cfg=lts_60");
     }
 
-
     let mut ren = Renamer::default();
     rename_enum!(ren, "VSL_tag_e" => "VslTag", remove: "SLT_"); // SLT_Debug
     rename_enum!(ren, "boc_state_e" => "BocState", remove: "BOS_"); // BOS_INVALID
@@ -80,7 +79,7 @@ fn main() {
         // FIXME: some enums should probably be done as rustified_enum (exhaustive)
         .rustified_non_exhaustive_enum(ren.get_regex_str())
         .parse_callbacks(Box::new(ren));
-    
+
     if lts_60 {
         bindings_builder = bindings_builder.clang_args(&["-D", "LTS_60"]);
     }
@@ -123,9 +122,7 @@ fn find_include_dir(out_path: &PathBuf) -> Option<(Vec<PathBuf>, String)> {
 
     let pkg = pkg_config::Config::new();
     match pkg.probe("varnishapi") {
-        Ok(l) => {
-            Some((l.include_paths, l.version))
-        }
+        Ok(l) => Some((l.include_paths, l.version)),
         Err(e) => {
             // See https://docs.rs/about/builds#detecting-docsrs
             if env::var("DOCS_RS").is_ok() {

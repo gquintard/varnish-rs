@@ -169,7 +169,14 @@ impl<'a> HttpHeaders<'a> {
 
     /// Set the response status, it will also set the reason
     pub fn set_status(&mut self, status: u16) {
-        unsafe { ffi::http_SetStatus(self.raw, status, #[cfg(not(lts_60))] std::ptr::null()) }
+        unsafe {
+            ffi::http_SetStatus(
+                self.raw,
+                status,
+                #[cfg(not(lts_60))]
+                std::ptr::null(),
+            )
+        }
     }
 
     /// Response reason, `None` for a request

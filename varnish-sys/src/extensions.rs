@@ -1,9 +1,8 @@
+use crate::ffi::vmod_priv;
 use std::ffi::c_void;
 use std::ptr;
-use crate::ffi::vmod_priv;
 
 use crate::vcl::PerVclState;
-
 
 impl vmod_priv {
     pub unsafe fn take_per_vcl<T>(&mut self) -> Box<PerVclState<T>> {
@@ -29,12 +28,12 @@ impl vmod_priv {
 
 #[cfg(not(lts_60))]
 mod current_ver {
-    use crate::vcl::PerVclState;
-    use crate::validate_vrt_ctx;
     use super::get_owned_bbox;
-    use std::ffi::c_void;
-    use crate::ffi::{vmod_priv, vrt_ctx};
     use crate::ffi::vmod_priv_methods;
+    use crate::ffi::{vmod_priv, vrt_ctx};
+    use crate::validate_vrt_ctx;
+    use crate::vcl::PerVclState;
+    use std::ffi::c_void;
     use std::ptr::null;
 
     /// SAFETY: ensured by Varnish itself
@@ -91,11 +90,11 @@ pub use current_ver::*;
 
 #[cfg(lts_60)]
 mod lts_60 {
-    use std::ffi::c_void;
     use super::get_owned_bbox;
-    use crate::vcl::PerVclState;
-    use crate::ffi::{vmod_priv, vrt_ctx};
     use crate::ffi::vmod_priv_free_f;
+    use crate::ffi::{vmod_priv, vrt_ctx};
+    use crate::vcl::PerVclState;
+    use std::ffi::c_void;
 
     impl vmod_priv {
         /// Transfer ownership of the object to the caller, cleaning up the internal state.
@@ -128,9 +127,7 @@ mod lts_60 {
         /// SAFETY: `priv_` must be a valid pointer to a `T` object or `NULL`.
         pub unsafe extern "C" fn on_fini_per_vcl<T>(mut priv_: *mut c_void) {
             if let Some(obj) = get_owned_bbox::<PerVclState<T>>(&mut priv_) {
-                let PerVclState {
-                    user_data,
-                } = *obj;
+                let PerVclState { user_data } = *obj;
                 drop(user_data);
             }
         }
