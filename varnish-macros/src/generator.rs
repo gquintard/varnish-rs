@@ -4,7 +4,7 @@ use std::ffi::CString;
 use std::fmt::Write as _;
 
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{quote, TokenStreamExt};
 use serde_json::{json, Value};
 use sha2::{Digest as _, Sha256};
 use syn::{Item, ItemMod, Type};
@@ -95,7 +95,7 @@ impl Generator {
         // Static methods to clean up the `vmod_priv` object's `T`
         if cfg!(lts_60) {
             tokens.push(quote! {
-                static #name: vmod_priv_free = Some(vmod_priv::#on_fini::<#ty_ident>);
+                static #name: vmod_priv_free_f = Some(vmod_priv::#on_fini::<#ty_ident>);
             });
         } else {
             #[cfg(not(lts_60))]
@@ -218,8 +218,11 @@ impl Generator {
             vmod_priv,
             vrt_ctx,
         ];
-        #[cfg(not(lts_60))]
-        use_ffi_items.append_all(["VMOD_PRIV_METHODS_MAGIC,", "vmod_priv_methods,"]);
+        if cfg!(lts_60) {
+            use_ffi_items.append_all(quote![vmod_priv_free_f]);
+        } else {
+            use_ffi_items.append_all(quote![VMOD_PRIV_METHODS_MAGIC, vmod_priv_methods]);
+        }
 
         quote!(
             #[allow(

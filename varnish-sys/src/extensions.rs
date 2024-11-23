@@ -68,7 +68,13 @@ impl vmod_priv {
     /// Note that here we get `*priv_` directly, not the `*vmod_priv`
     ///
     /// SAFETY: `priv_` must be a valid pointer to a `T` object or `NULL`.
+    #[cfg(not(lts_60))]
     pub unsafe extern "C" fn on_fini<T>(_ctx: *const vrt_ctx, mut priv_: *mut c_void) {
+        drop(get_owned_bbox::<T>(&mut priv_));
+    }
+
+    #[cfg(lts_60)]
+    pub unsafe extern "C" fn on_fini<T>(mut priv_: *mut c_void) {
         drop(get_owned_bbox::<T>(&mut priv_));
     }
 
@@ -76,6 +82,7 @@ impl vmod_priv {
     /// Similar to `on_fini`, but also unregisters filters.
     ///
     /// SAFETY: `priv_` must be a valid pointer to a `T` object or `NULL`.
+    #[cfg(not(lts_60))]
     pub unsafe extern "C" fn on_fini_per_vcl<T>(ctx: *const vrt_ctx, mut priv_: *mut c_void) {
         if let Some(obj) = get_owned_bbox::<PerVclState<T>>(&mut priv_) {
             let PerVclState {
@@ -89,6 +96,18 @@ impl vmod_priv {
             drop(user_data);
         }
     }
+    #[cfg(lts_60)]
+    pub unsafe extern "C" fn on_fini_per_vcl<T>(mut priv_: *mut c_void) {
+        if let Some(obj) = get_owned_bbox::<PerVclState<T>>(&mut priv_) {
+            let PerVclState {
+                //mut fetch_filters,
+                //mut delivery_filters,
+                user_data,
+            } = *obj;
+            drop(user_data);
+        }
+    }
+
 }
 
 /// Take ownership of the object of type `T` and return it as a `Box<T>`.

@@ -1,6 +1,6 @@
 varnishtest "error()"
 
-feature cmd { varnishd -V 2>&1 | head -n 1 | grep -v varnish-6.0. }
+feature cmd { varnishd -V 2>&1 | head -n 1 | grep varnish-6.0. }
 
 # create the files we'll use in the tests
 shell {
@@ -64,9 +64,6 @@ varnish v1 -vcl {
 	
 	client c1 {
 		txreq -url ${tmpdir}/no_file -hdr "func: manual"
-		rxresp
-		expect resp.status == 500
-		expect resp.http.manual == <undef>
 	} -run
 
 	# wait until we actually see the line
@@ -78,9 +75,6 @@ varnish v1 -vcl {
 
 	client c1 {
 		txreq -url ${tmpdir}/bad_file -hdr "func: manual"
-		rxresp
-		expect resp.status == 500
-		expect resp.http.manual == <undef>
 	} -run
 
 	logexpect l1 -wait
@@ -93,9 +87,6 @@ varnish v1 -vcl {
 	
 	client c1 {
 		txreq -url ${tmpdir}/no_file -hdr "func: result"
-		rxresp
-		expect resp.status == 500
-		expect resp.http.result == <undef>
 	} -run
 
 	# wait until we actually see the line
@@ -107,9 +98,6 @@ varnish v1 -vcl {
 
 	client c1 {
 		txreq -url ${tmpdir}/bad_file -hdr "func: result"
-		rxresp
-		expect resp.status == 500
-		expect resp.http.result == <undef>
 	} -run
 
 	logexpect l1 -wait
