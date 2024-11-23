@@ -85,14 +85,11 @@ mod current_ver {
         }
     }
 }
-#[cfg(not(lts_60))]
-pub use current_ver::*;
 
 #[cfg(lts_60)]
 mod lts_60 {
     use super::get_owned_bbox;
-    use crate::ffi::vmod_priv_free_f;
-    use crate::ffi::{vmod_priv, vrt_ctx};
+    use crate::ffi::{vmod_priv, vmod_priv_free_f};
     use crate::vcl::PerVclState;
     use std::ffi::c_void;
 
@@ -133,9 +130,6 @@ mod lts_60 {
         }
     }
 }
-
-#[cfg(lts_60)]
-pub use lts_60::*;
 
 /// Take ownership of the object of type `T` and return it as a `Box<T>`.
 /// The original pointer is set to null.

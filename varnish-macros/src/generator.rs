@@ -86,7 +86,6 @@ impl Generator {
         let name = name.to_ident();
         // The type name is stored as a string, but we already validated we can parse it during the `parse` phase.
         let ty_ident = syn::parse_str::<Type>(type_name).expect("Unable to parse second time");
-        let ty_name = type_name.force_cstr();
         let on_fini = if is_vcl_state {
             "on_fini_per_vcl".to_ident()
         } else {
@@ -98,7 +97,7 @@ impl Generator {
                 static #name: vmod_priv_free_f = Some(vmod_priv::#on_fini::<#ty_ident>);
             });
         } else {
-            #[cfg(not(lts_60))]
+            let ty_name = type_name.force_cstr();
             tokens.push(quote! {
                 static #name: vmod_priv_methods = vmod_priv_methods {
                     magic: VMOD_PRIV_METHODS_MAGIC,

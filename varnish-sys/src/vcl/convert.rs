@@ -353,9 +353,6 @@ impl TryFrom<SystemTime> for VCL_TIME {
 // VCL_VCL
 default_null_ptr!(mut VCL_VCL);
 
-//#[cfg(not(lts_60))]
-//pub use current_ver::*;
-
 #[cfg(not(lts_60))]
 mod current_ver {
     use super::IntoVCL;

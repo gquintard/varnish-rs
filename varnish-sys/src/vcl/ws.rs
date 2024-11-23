@@ -24,9 +24,9 @@ use memchr::memchr;
 
 #[cfg(lts_60)]
 use crate::ffi::WS_Inside;
-use crate::ffi::{txt, VCL_BLOB, VCL_STRING};
+use crate::ffi::{txt, VCL_STRING};
 #[cfg(not(lts_60))]
-use crate::ffi::{vrt_blob, WS_Allocated};
+use crate::ffi::{vrt_blob, VCL_BLOB, WS_Allocated};
 use crate::vcl::VclError;
 use crate::{ffi, validate_ws};
 
@@ -145,8 +145,8 @@ impl<'a> Workspace<'a> {
         Ok(unsafe { slice_assume_init_mut(dest) })
     }
 
-    /*
     /// Copy any `AsRef<[u8]>` into a new [`VCL_BLOB`] stored in the workspace
+    #[cfg(not(lts_60))]
     pub fn copy_blob(&mut self, value: impl AsRef<[u8]>) -> Result<VCL_BLOB, VclError> {
         let buf = self.copy_bytes(value)?;
         let blob = self.copy_value(vrt_blob {
@@ -156,7 +156,6 @@ impl<'a> Workspace<'a> {
         })?;
         Ok(VCL_BLOB(ptr::from_ref(blob)))
     }
-    */
 
     /// Copy any `AsRef<CStr>` into a new [`txt`] stored in the workspace
     pub fn copy_txt(&mut self, value: impl AsRef<CStr>) -> Result<txt, VclError> {

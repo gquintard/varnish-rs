@@ -1,5 +1,6 @@
 //! Expose the Varnish context [`vrt_ctx`] as a Rust object
 //!
+#[cfg(not(lts_60))]
 use std::ffi::{c_int, c_uint, c_void};
 
 use crate::ffi;
