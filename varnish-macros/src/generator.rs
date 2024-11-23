@@ -202,7 +202,7 @@ impl Generator {
         let export_decls: Vec<_> = self.iter_all_funcs().map(|f| &f.export_decl).collect();
         let export_inits: Vec<_> = self.iter_all_funcs().map(|f| &f.export_init).collect();
 
-        // This list must match the list in varnish-macros/src/lib.rs
+        // WARNING: This list must match the list in varnish-macros/src/lib.rs
         let mut use_ffi_items = quote![
             VCL_BACKEND,
             VCL_BOOL,
@@ -215,50 +215,23 @@ impl Generator {
             VCL_VOID,
             VMOD_ABI_Version,
             VclEvent,
+            vmod_data,
             vmod_priv,
             vrt_ctx,
         ];
-        let vdata;
+        // WARNING: This list must match the list in varnish-macros/src/lib.rs
+
         let fname;
         let cproto_ptr;
         let cproto_def;
 
         if cfg!(lts_60) {
             use_ffi_items.append_all(quote![vmod_priv_free_f]);
-            vdata = quote!(
-                #[repr(C)]
-                pub struct VmodData {
-                    vrt_major: c_uint,
-                    vrt_minor: c_uint,
-                    file_id: *const c_char,
-                    name: *const c_char,
-                    func: *const c_void,
-                    func_len: c_int,
-                    proto: *const c_char,
-                    json: *const c_char,
-                    abi: *const c_char,
-                }
-            );
             fname = quote!();
             cproto_ptr = quote!(cproto.as_ptr());
             cproto_def = quote!(const cproto: &CStr = #cproto;);
         } else {
             use_ffi_items.append_all(quote![VMOD_PRIV_METHODS_MAGIC, vmod_priv_methods]);
-            vdata = quote!(
-                #[repr(C)]
-                pub struct VmodData {
-                    vrt_major: c_uint,
-                    vrt_minor: c_uint,
-                    file_id: *const c_char,
-                    name: *const c_char,
-                    func_name: *const c_char,
-                    func: *const c_void,
-                    func_len: c_int,
-                    proto: *const c_char,
-                    json: *const c_char,
-                    abi: *const c_char,
-                }
-            );
             fname = quote!(func_name: #c_func_name.as_ptr(),);
             cproto_ptr = quote!(null());
             cproto_def = quote!();
@@ -292,14 +265,10 @@ impl Generator {
                     #(#export_inits,)*
                 };
 
-                #vdata
-
-                unsafe impl Sync for VmodData {}
-
                 // This name must be in the format `Vmod_{modulename}_Data`.
                 #[allow(non_upper_case_globals)]
                 #[no_mangle]
-                pub static #vmod_name_data: VmodData = VmodData {
+                pub static #vmod_name_data: vmod_data = vmod_data {
                     vrt_major: 0,
                     vrt_minor: 0,
                     file_id: #file_id.as_ptr(),

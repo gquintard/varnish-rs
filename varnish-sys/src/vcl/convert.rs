@@ -355,17 +355,17 @@ default_null_ptr!(mut VCL_VCL);
 
 #[cfg(not(lts_60))]
 mod current_ver {
-    use super::IntoVCL;
-    use crate::ffi::{
-        sa_family_t, vsa_suckaddr_len, VSA_BuildFAP, PF_INET, PF_INET6, VCL_IP, VCL_REGEX, VCL_SUB,
-    };
-    use crate::vcl::VclError;
-    use crate::vcl::Workspace;
     use std::ffi::c_void;
     use std::net::SocketAddr;
     use std::num::NonZeroUsize;
     use std::ptr;
     use std::ptr::null;
+
+    use super::IntoVCL;
+    use crate::ffi::{
+        sa_family_t, vsa_suckaddr_len, VSA_BuildFAP, PF_INET, PF_INET6, VCL_IP, VCL_REGEX, VCL_SUB,
+    };
+    use crate::vcl::{VclError, Workspace};
     default_null_ptr!(VCL_SUB);
 
     default_null_ptr!(VCL_REGEX);

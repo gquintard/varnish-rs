@@ -10,8 +10,8 @@ mod types {
         use std::ptr::null;
         use varnish::ffi::{
             VCL_BACKEND, VCL_BOOL, VCL_DURATION, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL,
-            VCL_STRING, VCL_VOID, VMOD_ABI_Version, VclEvent, vmod_priv, vrt_ctx,
-            VMOD_PRIV_METHODS_MAGIC, vmod_priv_methods,
+            VCL_STRING, VCL_VOID, VMOD_ABI_Version, VclEvent, vmod_data, vmod_priv,
+            vrt_ctx, VMOD_PRIV_METHODS_MAGIC, vmod_priv_methods,
         };
         use varnish::vcl::{Ctx, IntoVCL, PerVclState, Workspace};
         use super::*;
@@ -869,23 +869,9 @@ mod types {
             vmod_c_get_ws_mut: Some(vmod_c_get_ws_mut),
             vmod_c_get_ws_ref: Some(vmod_c_get_ws_ref),
         };
-        #[repr(C)]
-        pub struct VmodData {
-            vrt_major: c_uint,
-            vrt_minor: c_uint,
-            file_id: *const c_char,
-            name: *const c_char,
-            func_name: *const c_char,
-            func: *const c_void,
-            func_len: c_int,
-            proto: *const c_char,
-            json: *const c_char,
-            abi: *const c_char,
-        }
-        unsafe impl Sync for VmodData {}
         #[allow(non_upper_case_globals)]
         #[no_mangle]
-        pub static Vmod_types_Data: VmodData = VmodData {
+        pub static Vmod_types_Data: vmod_data = vmod_data {
             vrt_major: 0,
             vrt_minor: 0,
             file_id: c"52017119c74321c7fb095e6e0334165ad142d83cfb72627ad44b471f228c1652"

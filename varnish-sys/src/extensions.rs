@@ -1,8 +1,11 @@
-use crate::ffi::vmod_priv;
 use std::ffi::c_void;
 use std::ptr;
 
+use crate::ffi::{vmod_data, vmod_priv};
 use crate::vcl::PerVclState;
+
+/// SAFETY: ensured by Varnish itself
+unsafe impl Sync for vmod_data {}
 
 impl vmod_priv {
     pub unsafe fn take_per_vcl<T>(&mut self) -> Box<PerVclState<T>> {
@@ -28,13 +31,13 @@ impl vmod_priv {
 
 #[cfg(not(lts_60))]
 mod current_ver {
-    use super::get_owned_bbox;
-    use crate::ffi::vmod_priv_methods;
-    use crate::ffi::{vmod_priv, vrt_ctx};
-    use crate::validate_vrt_ctx;
-    use crate::vcl::PerVclState;
     use std::ffi::c_void;
     use std::ptr::null;
+
+    use super::get_owned_bbox;
+    use crate::ffi::{vmod_priv, vmod_priv_methods, vrt_ctx};
+    use crate::validate_vrt_ctx;
+    use crate::vcl::PerVclState;
 
     /// SAFETY: ensured by Varnish itself
     unsafe impl Sync for vmod_priv_methods {}
@@ -88,10 +91,11 @@ mod current_ver {
 
 #[cfg(lts_60)]
 mod lts_60 {
+    use std::ffi::c_void;
+
     use super::get_owned_bbox;
     use crate::ffi::{vmod_priv, vmod_priv_free_f};
     use crate::vcl::PerVclState;
-    use std::ffi::c_void;
 
     impl vmod_priv {
         /// Transfer ownership of the object to the caller, cleaning up the internal state.

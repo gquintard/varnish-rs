@@ -10,8 +10,8 @@ mod tuple {
         use std::ptr::null;
         use varnish::ffi::{
             VCL_BACKEND, VCL_BOOL, VCL_DURATION, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL,
-            VCL_STRING, VCL_VOID, VMOD_ABI_Version, VclEvent, vmod_priv, vrt_ctx,
-            VMOD_PRIV_METHODS_MAGIC, vmod_priv_methods,
+            VCL_STRING, VCL_VOID, VMOD_ABI_Version, VclEvent, vmod_data, vmod_priv,
+            vrt_ctx, VMOD_PRIV_METHODS_MAGIC, vmod_priv_methods,
         };
         use varnish::vcl::{Ctx, IntoVCL, PerVclState, Workspace};
         use super::*;
@@ -75,23 +75,9 @@ mod tuple {
             vmod_c_on_event: Some(vmod_c_on_event),
             vmod_c_per_tsk_val: Some(vmod_c_per_tsk_val),
         };
-        #[repr(C)]
-        pub struct VmodData {
-            vrt_major: c_uint,
-            vrt_minor: c_uint,
-            file_id: *const c_char,
-            name: *const c_char,
-            func_name: *const c_char,
-            func: *const c_void,
-            func_len: c_int,
-            proto: *const c_char,
-            json: *const c_char,
-            abi: *const c_char,
-        }
-        unsafe impl Sync for VmodData {}
         #[allow(non_upper_case_globals)]
         #[no_mangle]
-        pub static Vmod_tuple_Data: VmodData = VmodData {
+        pub static Vmod_tuple_Data: vmod_data = vmod_data {
             vrt_major: 0,
             vrt_minor: 0,
             file_id: c"41c8f93b128c17e6327da85165e29dc663acf100bf5bfb80ffce76925121d6fe"
