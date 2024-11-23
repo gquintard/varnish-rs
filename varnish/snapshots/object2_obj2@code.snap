@@ -11,7 +11,7 @@ mod obj2 {
         use varnish::ffi::{
             VCL_BACKEND, VCL_BOOL, VCL_DURATION, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL,
             VCL_STRING, VCL_VOID, VMOD_ABI_Version, VMOD_PRIV_METHODS_MAGIC, VclEvent,
-            vmod_priv, vmod_priv_methods, vrt_ctx,
+            vmod_data, vmod_priv, vmod_priv_methods, vrt_ctx,
         };
         use varnish::vcl::{Ctx, IntoVCL, PerVclState, Workspace};
         use super::*;
@@ -164,23 +164,9 @@ mod obj2 {
             vmod_c_Obj4__init: Some(vmod_c_Obj4__init),
             vmod_c_Obj4__fini: Some(vmod_c_Obj4__fini),
         };
-        #[repr(C)]
-        pub struct VmodData {
-            vrt_major: c_uint,
-            vrt_minor: c_uint,
-            file_id: *const c_char,
-            name: *const c_char,
-            func_name: *const c_char,
-            func: *const c_void,
-            func_len: c_int,
-            proto: *const c_char,
-            json: *const c_char,
-            abi: *const c_char,
-        }
-        unsafe impl Sync for VmodData {}
         #[allow(non_upper_case_globals)]
         #[no_mangle]
-        pub static Vmod_obj2_Data: VmodData = VmodData {
+        pub static Vmod_obj2_Data: vmod_data = vmod_data {
             vrt_major: 0,
             vrt_minor: 0,
             file_id: c"0cd5a7608f16067dbb42bb21d157e185290d63e1a33e73c3715eee45ee3fc2b6"

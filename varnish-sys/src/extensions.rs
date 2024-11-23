@@ -2,9 +2,12 @@ use std::ffi::c_void;
 use std::ptr;
 use std::ptr::null;
 
-use crate::ffi::{vmod_priv, vmod_priv_methods, vrt_ctx};
+use crate::ffi::{vmod_data, vmod_priv, vmod_priv_methods, vrt_ctx};
 use crate::validate_vrt_ctx;
 use crate::vcl::PerVclState;
+
+/// SAFETY: ensured by Varnish itself
+unsafe impl Sync for vmod_data {}
 
 /// SAFETY: ensured by Varnish itself
 unsafe impl Sync for vmod_priv_methods {}
