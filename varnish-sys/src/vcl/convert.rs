@@ -44,21 +44,17 @@
 //! and will create a synthetic error object.
 
 use std::borrow::Cow;
-use std::ffi::{c_char, c_void, CStr};
+use std::ffi::{c_char, CStr};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
-use std::num::NonZeroUsize;
-use std::ptr;
 use std::ptr::{null, null_mut};
 use std::time::{Duration, SystemTime};
 
 use crate::ffi::{
-    sa_family_t, vsa_suckaddr_len, vtim_dur, vtim_real, VSA_GetPtr, VSA_Port,
+    vtim_dur, vtim_real, VSA_GetPtr, VSA_Port,
     PF_INET, PF_INET6, VCL_ACL, VCL_BACKEND, VCL_BLOB, VCL_BODY, VCL_BOOL, VCL_DURATION, VCL_ENUM,
     VCL_HEADER, VCL_HTTP, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL, VCL_STEVEDORE,
     VCL_STRANDS, VCL_STRING, VCL_TIME, VCL_VCL,
 };
-#[cfg(not(lts_60))]
-use crate::ffi::{VCL_REGEX, VCL_SUB, VSA_BuildFAP};
 use crate::vcl::{from_vcl_probe, into_vcl_probe, CowProbe, Probe, VclError, Workspace};
 
 /// Convert a Rust type into a VCL one
@@ -191,47 +187,6 @@ impl From<VCL_INT> for i64 {
 // VCL_IP
 //
 default_null_ptr!(VCL_IP);
-#[cfg(not(lts_60))]
-impl IntoVCL<VCL_IP> for SocketAddr {
-    fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_IP, VclError> {
-        unsafe {
-            // We cannot use sizeof::<suckaddr>() because suckaddr is a zero-sized
-            // struct from Rust's perspective
-            let size = NonZeroUsize::new(vsa_suckaddr_len).unwrap();
-            let p = ws.alloc(size);
-            if p.is_null() {
-                Err(VclError::WsOutOfMemory(size))?;
-            }
-            match self {
-                SocketAddr::V4(sa) => {
-                    assert!(!VSA_BuildFAP(
-                        p,
-                        PF_INET as sa_family_t,
-                        sa.ip().octets().as_slice().as_ptr().cast::<c_void>(),
-                        4,
-                        ptr::from_ref::<u16>(&sa.port().to_be()).cast::<c_void>(),
-                        2
-                    )
-                    .is_null());
-                }
-                SocketAddr::V6(sa) => {
-                    assert!(!VSA_BuildFAP(
-                        p,
-                        PF_INET6 as sa_family_t,
-                        sa.ip().octets().as_slice().as_ptr().cast::<c_void>(),
-                        16,
-                        ptr::from_ref::<u16>(&sa.port().to_be()).cast::<c_void>(),
-                        2
-                    )
-                    .is_null());
-                }
-            }
-            Ok(VCL_IP(p.cast()))
-        }
-    }
-}
-
-#[cfg(not(lts_60))]
 impl From<VCL_IP> for Option<SocketAddr> {
     fn from(value: VCL_IP) -> Self {
         let value = value.0;
@@ -298,10 +253,6 @@ impl From<VCL_REAL> for f64 {
         b.0
     }
 }
-
-// VCL_REGEX
-#[cfg(not(lts_60))]
-default_null_ptr!(VCL_REGEX);
 
 //
 // VCL_STRING
@@ -378,9 +329,6 @@ impl<'a> TryFrom<VCL_STRING> for &'a str {
 default_null_ptr!(VCL_STEVEDORE);
 // VCL_STRANDS
 default_null_ptr!(VCL_STRANDS);
-// VCL_SUB
-#[cfg(not(lts_60))]
-default_null_ptr!(VCL_SUB);
 
 //
 // VCL_TIME
@@ -405,3 +353,62 @@ impl TryFrom<SystemTime> for VCL_TIME {
 
 // VCL_VCL
 default_null_ptr!(mut VCL_VCL);
+
+//#[cfg(not(lts_60))]
+//pub use current_ver::*;
+
+#[cfg(not(lts_60))]
+mod current_ver {
+use crate::ffi::{PF_INET, PF_INET6, vsa_suckaddr_len, VCL_REGEX, VCL_SUB, VCL_IP, VSA_BuildFAP, sa_family_t};
+use std::num::NonZeroUsize;
+use std::ptr;
+use std::ffi::c_void;
+use crate::vcl::Workspace;
+use std::ptr::null;
+use crate::vcl::VclError;
+use std::net::SocketAddr;
+use super::IntoVCL;
+    default_null_ptr!(VCL_SUB);
+
+    default_null_ptr!(VCL_REGEX);
+
+    impl IntoVCL<VCL_IP> for SocketAddr {
+        fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_IP, VclError> {
+            unsafe {
+                // We cannot use sizeof::<suckaddr>() because suckaddr is a zero-sized
+                // struct from Rust's perspective
+                let size = NonZeroUsize::new(vsa_suckaddr_len).unwrap();
+                let p = ws.alloc(size);
+                if p.is_null() {
+                    Err(VclError::WsOutOfMemory(size))?;
+                }
+                match self {
+                    SocketAddr::V4(sa) => {
+                        assert!(!VSA_BuildFAP(
+                                p,
+                                PF_INET as sa_family_t,
+                                sa.ip().octets().as_slice().as_ptr().cast::<c_void>(),
+                                4,
+                                ptr::from_ref::<u16>(&sa.port().to_be()).cast::<c_void>(),
+                                2
+                        )
+                            .is_null());
+                            }
+                    SocketAddr::V6(sa) => {
+                        assert!(!VSA_BuildFAP(
+                                p,
+                                PF_INET6 as sa_family_t,
+                                sa.ip().octets().as_slice().as_ptr().cast::<c_void>(),
+                                16,
+                                ptr::from_ref::<u16>(&sa.port().to_be()).cast::<c_void>(),
+                                2
+                        )
+                            .is_null());
+                            }
+                }
+                Ok(VCL_IP(p.cast()))
+            }
+        }
+    }
+
+}
