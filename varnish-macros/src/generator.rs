@@ -218,12 +218,48 @@ impl Generator {
             vmod_priv,
             vrt_ctx,
         ];
+        let vdata;
+        let fname;
+        let cproto_ptr;
+
         if cfg!(lts_60) {
             use_ffi_items.append_all(quote![vmod_priv_free_f]);
+            vdata = quote!(
+                #[repr(C)]
+                pub struct VmodData {
+                    vrt_major: c_uint,
+                    vrt_minor: c_uint,
+                    file_id: *const c_char,
+                    name: *const c_char,
+                    func: *const c_void,
+                    func_len: c_int,
+                    proto: *const c_char,
+                    json: *const c_char,
+                    abi: *const c_char,
+                }
+            );
+            fname = quote!();
+            cproto_ptr = quote!(cproto.as_ptr())
         } else {
             use_ffi_items.append_all(quote![VMOD_PRIV_METHODS_MAGIC, vmod_priv_methods]);
-        }
-
+            vdata = quote!(
+                #[repr(C)]
+                pub struct VmodData {
+                    vrt_major: c_uint,
+                    vrt_minor: c_uint,
+                    file_id: *const c_char,
+                    name: *const c_char,
+                    func_name: *const c_char,
+                    func: *const c_void,
+                    func_len: c_int,
+                    proto: *const c_char,
+                    json: *const c_char,
+                    abi: *const c_char,
+                }
+            );
+            fname = quote!(func_name: #c_func_name.as_ptr(),);
+            cproto_ptr = quote!(null())
+        };
         quote!(
             #[allow(
                 non_snake_case,
@@ -253,18 +289,7 @@ impl Generator {
                     #(#export_inits,)*
                 };
 
-                #[repr(C)]
-                pub struct VmodData {
-                    vrt_major: c_uint,
-                    vrt_minor: c_uint,
-                    file_id: *const c_char,
-                    name: *const c_char,
-                    func: *const c_void,
-                    func_len: c_int,
-                    proto: *const c_char,
-                    json: *const c_char,
-                    abi: *const c_char,
-                }
+                #vdata
 
                 unsafe impl Sync for VmodData {}
 
@@ -276,11 +301,12 @@ impl Generator {
                     vrt_minor: 0,
                     file_id: #file_id.as_ptr(),
                     name: #c_name.as_ptr(),
+                    #fname
                     func_len: ::std::mem::size_of::<VmodExports>() as c_int,
                     func: &VMOD_EXPORTS as *const _ as *const c_void,
                     abi: VMOD_ABI_Version.as_ptr(),
                     json: JSON.as_ptr(),
-                    proto: cproto.as_ptr(),
+                    proto: #cproto_ptr,
                 };
 
                 const JSON: &CStr = #json;

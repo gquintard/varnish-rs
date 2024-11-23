@@ -86,13 +86,17 @@ impl vmod_priv {
     pub unsafe extern "C" fn on_fini_per_vcl<T>(ctx: *const vrt_ctx, mut priv_: *mut c_void) {
         if let Some(obj) = get_owned_bbox::<PerVclState<T>>(&mut priv_) {
             let PerVclState {
-                //mut fetch_filters,
-                //mut delivery_filters,
+		#[cfg(not(lts_60))]
+                mut fetch_filters,
+		#[cfg(not(lts_60))]
+                mut delivery_filters,
                 user_data,
             } = *obj;
             let ctx = validate_vrt_ctx(ctx);
-            //ctx.fetch_filters(&mut fetch_filters).unregister_all();
-            //ctx.delivery_filters(&mut delivery_filters).unregister_all();
+            #[cfg(not(lts_60))]
+            ctx.fetch_filters(&mut fetch_filters).unregister_all();
+            #[cfg(not(lts_60))]
+            ctx.delivery_filters(&mut delivery_filters).unregister_all();
             drop(user_data);
         }
     }

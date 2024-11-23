@@ -20,6 +20,23 @@ fn main() {
         return;
     };
 
+    // version string usually looks like "7.5.0"
+    let mut parts = varnish_ver.split('.');
+    let major = parse_next_int(&mut parts, "major");
+    let minor = parse_next_int(&mut parts, "minor");
+    println!("cargo::metadata=version_number={varnish_ver}");
+    if major == 7 && minor <= 5 {
+        println!("cargo::rustc-cfg=varnishsys_objcore_in_init");
+    }
+    if major < 6 || major > 7 {
+        println!("cargo::warning=Varnish v{varnish_ver} is not supported and may not work with this crate");
+    }
+    let lts_60 = major == 6 && minor == 0;
+    if lts_60 {
+        println!("cargo::rustc-cfg=lts_60");
+    }
+
+
     let mut ren = Renamer::default();
     rename_enum!(ren, "VSL_tag_e" => "VslTag", remove: "SLT_"); // SLT_Debug
     rename_enum!(ren, "boc_state_e" => "BocState", remove: "BOS_"); // BOS_INVALID
@@ -37,7 +54,7 @@ fn main() {
 
     println!("cargo:rustc-link-lib=varnishapi");
     println!("cargo:rerun-if-changed=src/wrapper.h");
-    let bindings = bindgen::Builder::default()
+    let mut bindings_builder = bindgen::Builder::default()
         .header("src/wrapper.h")
         .blocklist_item("FP_.*")
         .blocklist_item("FILE")
@@ -62,8 +79,12 @@ fn main() {
         //
         // FIXME: some enums should probably be done as rustified_enum (exhaustive)
         .rustified_non_exhaustive_enum(ren.get_regex_str())
-        .parse_callbacks(Box::new(ren))
-        //
+        .parse_callbacks(Box::new(ren));
+    
+    if lts_60 {
+        bindings_builder = bindings_builder.clang_args(&["-D", "LTS_60"]);
+    }
+    let bindings = bindings_builder
         .generate()
         .expect("Unable to generate bindings");
 
@@ -103,22 +124,7 @@ fn find_include_dir(out_path: &PathBuf) -> Option<(Vec<PathBuf>, String)> {
     let pkg = pkg_config::Config::new();
     match pkg.probe("varnishapi") {
         Ok(l) => {
-            let ver = l.version;
-            // version string usually looks like "7.5.0"
-            let mut parts = ver.split('.');
-            let major = parse_next_int(&mut parts, "major");
-            let minor = parse_next_int(&mut parts, "minor");
-            println!("cargo::metadata=version_number={ver}");
-            if major == 7 && minor <= 5 {
-                println!("cargo::rustc-cfg=varnishsys_objcore_in_init");
-            }
-            if major < 6 || major > 7 {
-                println!("cargo::warning=Varnish v{ver} is not supported and may not work with this crate");
-            }
-            if major == 6 && minor == 0 {
-                println!("cargo::rustc-cfg=lts_60");
-            }
-            Some((l.include_paths, ver))
+            Some((l.include_paths, l.version))
         }
         Err(e) => {
             // See https://docs.rs/about/builds#detecting-docsrs

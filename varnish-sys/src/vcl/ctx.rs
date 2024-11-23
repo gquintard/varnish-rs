@@ -101,7 +101,7 @@ impl<'a> Ctx<'a> {
             }
         }
     }
-/*
+    #[cfg(not(lts_60))]
     pub fn cached_req_body(&mut self) -> Result<Vec<&'a [u8]>, VclError> {
         unsafe extern "C" fn chunk_collector(
             priv_: *mut c_void,
@@ -136,7 +136,6 @@ impl<'a> Ctx<'a> {
             _ => Err("req.body iteration failed".into()),
         }
     }
-*/
 }
 
 /// A struct holding both a native [`vrt_ctx`] struct and the space it points to.
@@ -173,7 +172,10 @@ pub fn log(tag: LogTag, msg: impl AsRef<str>) {
     unsafe {
         ffi::VSL(
             tag,
-            0, //ffi::vxids { vxid: 0 },
+            #[cfg(lts_60)]
+            0,
+            #[cfg(not(lts_60))]
+            ffi::vxids { vxid: 0 },
             c"%.*s".as_ptr(),
             msg.len(),
             msg.as_ptr(),
@@ -197,8 +199,10 @@ mod tests {
 #[doc(hidden)]
 #[derive(Debug)]
 pub struct PerVclState<T> {
-//    pub fetch_filters: Vec<Box<ffi::vfp>>,
-//    pub delivery_filters: Vec<Box<ffi::vdp>>,
+    #[cfg(not(lts_60))]
+    pub fetch_filters: Vec<Box<ffi::vfp>>,
+    #[cfg(not(lts_60))]
+    pub delivery_filters: Vec<Box<ffi::vdp>>,
     pub user_data: Option<Box<T>>,
 }
 
@@ -206,8 +210,10 @@ pub struct PerVclState<T> {
 impl<T> Default for PerVclState<T> {
     fn default() -> Self {
         Self {
-//            fetch_filters: Vec::default(),
-//            delivery_filters: Vec::default(),
+            #[cfg(not(lts_60))]
+            fetch_filters: Vec::default(),
+            #[cfg(not(lts_60))]
+            delivery_filters: Vec::default(),
             user_data: None,
         }
     }

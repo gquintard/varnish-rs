@@ -52,13 +52,13 @@ use std::ptr::{null, null_mut};
 use std::time::{Duration, SystemTime};
 
 use crate::ffi::{
-    sa_family_t, vsa_suckaddr_len, vtim_dur, vtim_real, /*VSA_BuildFAP, */VSA_GetPtr, VSA_Port,
+    sa_family_t, vsa_suckaddr_len, vtim_dur, vtim_real, VSA_GetPtr, VSA_Port,
     PF_INET, PF_INET6, VCL_ACL, VCL_BACKEND, VCL_BLOB, VCL_BODY, VCL_BOOL, VCL_DURATION, VCL_ENUM,
     VCL_HEADER, VCL_HTTP, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL, VCL_STEVEDORE,
     VCL_STRANDS, VCL_STRING, VCL_TIME, VCL_VCL,
 };
 #[cfg(not(lts_60))]
-use crate::ffi::{VCL_REGEX, VCL_SUB};
+use crate::ffi::{VCL_REGEX, VCL_SUB, VSA_BuildFAP};
 use crate::vcl::{from_vcl_probe, into_vcl_probe, CowProbe, Probe, VclError, Workspace};
 
 /// Convert a Rust type into a VCL one
@@ -190,8 +190,8 @@ impl From<VCL_INT> for i64 {
 //
 // VCL_IP
 //
-/*
 default_null_ptr!(VCL_IP);
+#[cfg(not(lts_60))]
 impl IntoVCL<VCL_IP> for SocketAddr {
     fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_IP, VclError> {
         unsafe {
@@ -230,7 +230,8 @@ impl IntoVCL<VCL_IP> for SocketAddr {
         }
     }
 }
-*/
+
+#[cfg(not(lts_60))]
 impl From<VCL_IP> for Option<SocketAddr> {
     fn from(value: VCL_IP) -> Self {
         let value = value.0;
