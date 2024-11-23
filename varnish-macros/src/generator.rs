@@ -220,6 +220,7 @@ impl Generator {
         let vdata;
         let fname;
         let cproto_ptr;
+        let cproto_def;
 
         if cfg!(lts_60) {
             use_ffi_items.append_all(quote![vmod_priv_free_f]);
@@ -238,7 +239,8 @@ impl Generator {
                 }
             );
             fname = quote!();
-            cproto_ptr = quote!(cproto.as_ptr())
+            cproto_ptr = quote!(cproto.as_ptr());
+            cproto_def = quote!(const cproto: &CStr = #cproto;);
         } else {
             use_ffi_items.append_all(quote![VMOD_PRIV_METHODS_MAGIC, vmod_priv_methods]);
             vdata = quote!(
@@ -257,7 +259,8 @@ impl Generator {
                 }
             );
             fname = quote!(func_name: #c_func_name.as_ptr(),);
-            cproto_ptr = quote!(null())
+            cproto_ptr = quote!(null());
+            cproto_def = quote!();
         };
         quote!(
             #[allow(
@@ -309,7 +312,7 @@ impl Generator {
                 };
 
                 const JSON: &CStr = #json;
-                const cproto: &CStr = #cproto;
+                #cproto_def
             }
         )
     }
