@@ -26,7 +26,7 @@ use memchr::memchr;
 use crate::ffi::WS_Inside;
 use crate::ffi::{txt, VCL_STRING};
 #[cfg(not(lts_60))]
-use crate::ffi::{vrt_blob, VCL_BLOB, WS_Allocated};
+use crate::ffi::{vrt_blob, WS_Allocated, VCL_BLOB};
 use crate::vcl::VclError;
 use crate::{ffi, validate_ws};
 

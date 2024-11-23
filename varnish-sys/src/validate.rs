@@ -1,9 +1,9 @@
+#[cfg(not(lts_60))]
+use crate::ffi::{self, vcldir, vfp_ctx, vfp_entry, VCLDIR_MAGIC, VFP_CTX_MAGIC, VFP_ENTRY_MAGIC};
 use crate::ffi::{
     director, req, sess, vrt_ctx, ws, DIRECTOR_MAGIC, REQ_MAGIC, SESS_MAGIC, VCL_BACKEND,
     VRT_CTX_MAGIC, WS_MAGIC,
 };
-#[cfg(not(lts_60))]
-use crate::ffi::{self, vcldir, vfp_ctx, vfp_entry, VCLDIR_MAGIC, VFP_CTX_MAGIC, VFP_ENTRY_MAGIC};
 
 #[cfg(not(lts_60))]
 use crate::vcl::{DeliveryFilters, FetchFilters};
