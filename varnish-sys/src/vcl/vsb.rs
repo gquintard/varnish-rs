@@ -12,7 +12,7 @@ pub struct Buffer<'a> {
 impl<'a> Buffer<'a> {
     /// Create a `Vsb` from a C pointer
     #[allow(clippy::not_unsafe_ptr_arg_deref)]
-    pub(crate) fn from_ptr(raw: *mut ffi::vsb) -> Self {
+    pub fn from_ptr(raw: *mut ffi::vsb) -> Self {
         let raw = unsafe { raw.as_mut().unwrap() };
         assert_eq!(raw.magic, ffi::VSB_MAGIC);
         Self { raw }
