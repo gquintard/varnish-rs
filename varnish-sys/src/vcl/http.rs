@@ -175,7 +175,7 @@ impl<'a> HttpHeaders<'a> {
                 status,
                 #[cfg(not(lts_60))]
                 std::ptr::null(),
-            )
+            );
         }
     }
 

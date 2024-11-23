@@ -158,7 +158,7 @@ impl Generator {
 
         let json = serde_json::to_string_pretty(&json! {json}).unwrap();
         if cfg!(lts_60) {
-            format!("{json}")
+            json.to_string()
         } else {
             format!("VMOD_JSON_SPEC\u{2}\n{json}\n\u{3}")
         }
@@ -184,6 +184,7 @@ impl Generator {
         cproto
     }
 
+    #[allow(clippy::too_many_lines)]
     fn render_generated_mod(&self, vmod: &VmodInfo) -> TokenStream {
         let cproto = self.generate_proto().force_cstr();
         let vmod_name_data = self.names.data_struct_name().to_ident();
