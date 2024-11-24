@@ -7,7 +7,32 @@ use crate::vcl::PerVclState;
 /// SAFETY: ensured by Varnish itself
 unsafe impl Sync for vmod_data {}
 
+/// Take ownership of the object of type `T` and return it as a `Box<T>`.
+/// The original pointer is set to null.
+///
+/// SAFETY: `priv_` must reference a valid `T` object pointer or `NULL`
+unsafe fn get_owned_bbox<T>(priv_: &mut *mut c_void) -> Option<Box<T>> {
+    let obj = ptr::replace(priv_, ptr::null_mut());
+    if obj.is_null() {
+        None
+    } else {
+        Some(Box::from_raw(obj.cast::<T>()))
+    }
+}
+
 impl vmod_priv {
+    /// Transfer ownership of the object to the caller, cleaning up the internal state.
+    ///
+    /// SAFETY: `priv_` must reference a valid `T` object pointer or `NULL`
+    pub unsafe fn take<T>(&mut self) -> Option<Box<T>> {
+        // methods does not need to be dropped because `put` always sets it to a static reference
+        #[cfg(not(lts_60))]
+        {
+            self.methods = ptr::null();
+        }
+        get_owned_bbox(&mut self.priv_)
+    }
+
     pub unsafe fn take_per_vcl<T>(&mut self) -> Box<PerVclState<T>> {
         if let Some(v) = self.take::<PerVclState<T>>() {
             v
@@ -29,10 +54,48 @@ impl vmod_priv {
     }
 }
 
-#[cfg(not(lts_60))]
-mod current_ver {
+#[cfg(lts_60)]
+mod version_v6 {
     use std::ffi::c_void;
-    use std::ptr::null;
+
+    use super::get_owned_bbox;
+    use crate::ffi::{vmod_priv, vmod_priv_free_f};
+    use crate::vcl::PerVclState;
+
+    impl vmod_priv {
+        /// Set the object and methods for the `vmod_priv`, and the corresponding static methods.
+        ///
+        /// SAFETY: The type of `obj` must match the type of the function pointers in `methods`.
+        pub unsafe fn put<T>(&mut self, obj: Box<T>, free_method: vmod_priv_free_f) {
+            self.priv_ = Box::into_raw(obj).cast();
+            self.free = free_method;
+        }
+
+        /// A Varnish callback function to free a `vmod_priv` object.
+        /// Here we take the ownership and immediately drop the object of type `T`.
+        /// Note that here we get `*priv_` directly, not the `*vmod_priv`
+        ///
+        /// SAFETY: `priv_` must be a valid pointer to a `T` object or `NULL`.
+        pub unsafe extern "C" fn on_fini<T>(mut priv_: *mut c_void) {
+            drop(get_owned_bbox::<T>(&mut priv_));
+        }
+
+        /// A Varnish callback function to clean up the `PerVclState` object.
+        /// Similar to `on_fini`, but also unregisters filters.
+        ///
+        /// SAFETY: `priv_` must be a valid pointer to a `T` object or `NULL`.
+        pub unsafe extern "C" fn on_fini_per_vcl<T>(mut priv_: *mut c_void) {
+            if let Some(obj) = get_owned_bbox::<PerVclState<T>>(&mut priv_) {
+                let PerVclState { user_data } = *obj;
+                drop(user_data);
+            }
+        }
+    }
+}
+
+#[cfg(not(lts_60))]
+mod version_after_v6 {
+    use std::ffi::c_void;
 
     use super::get_owned_bbox;
     use crate::ffi::{vmod_priv, vmod_priv_methods, vrt_ctx};
@@ -43,15 +106,6 @@ mod current_ver {
     unsafe impl Sync for vmod_priv_methods {}
 
     impl vmod_priv {
-        /// Transfer ownership of the object to the caller, cleaning up the internal state.
-        ///
-        /// SAFETY: `priv_` must reference a valid `T` object pointer or `NULL`
-        pub unsafe fn take<T>(&mut self) -> Option<Box<T>> {
-            // methods does not need to be dropped because `put` always sets it to a static reference
-            self.methods = null();
-            get_owned_bbox(&mut self.priv_)
-        }
-
         /// Set the object and methods for the `vmod_priv`, and the corresponding static methods.
         ///
         /// SAFETY: The type of `obj` must match the type of the function pointers in `methods`.
@@ -86,64 +140,5 @@ mod current_ver {
                 drop(user_data);
             }
         }
-    }
-}
-
-#[cfg(lts_60)]
-mod lts_60 {
-    use std::ffi::c_void;
-
-    use super::get_owned_bbox;
-    use crate::ffi::{vmod_priv, vmod_priv_free_f};
-    use crate::vcl::PerVclState;
-
-    impl vmod_priv {
-        /// Transfer ownership of the object to the caller, cleaning up the internal state.
-        ///
-        /// SAFETY: `priv_` must reference a valid `T` object pointer or `NULL`
-        pub unsafe fn take<T>(&mut self) -> Option<Box<T>> {
-            get_owned_bbox(&mut self.priv_)
-        }
-
-        /// Set the object and methods for the `vmod_priv`, and the corresponding static methods.
-        ///
-        /// SAFETY: The type of `obj` must match the type of the function pointers in `methods`.
-        pub unsafe fn put<T>(&mut self, obj: Box<T>, free_method: vmod_priv_free_f) {
-            self.priv_ = Box::into_raw(obj).cast();
-            self.free = free_method;
-        }
-
-        /// A Varnish callback function to free a `vmod_priv` object.
-        /// Here we take the ownership and immediately drop the object of type `T`.
-        /// Note that here we get `*priv_` directly, not the `*vmod_priv`
-        ///
-        /// SAFETY: `priv_` must be a valid pointer to a `T` object or `NULL`.
-        pub unsafe extern "C" fn on_fini<T>(mut priv_: *mut c_void) {
-            drop(get_owned_bbox::<T>(&mut priv_));
-        }
-
-        /// A Varnish callback function to clean up the `PerVclState` object.
-        /// Similar to `on_fini`, but also unregisters filters.
-        ///
-        /// SAFETY: `priv_` must be a valid pointer to a `T` object or `NULL`.
-        pub unsafe extern "C" fn on_fini_per_vcl<T>(mut priv_: *mut c_void) {
-            if let Some(obj) = get_owned_bbox::<PerVclState<T>>(&mut priv_) {
-                let PerVclState { user_data } = *obj;
-                drop(user_data);
-            }
-        }
-    }
-}
-
-/// Take ownership of the object of type `T` and return it as a `Box<T>`.
-/// The original pointer is set to null.
-///
-/// SAFETY: `priv_` must reference a valid `T` object pointer or `NULL`
-unsafe fn get_owned_bbox<T>(priv_: &mut *mut c_void) -> Option<Box<T>> {
-    let obj = ptr::replace(priv_, ptr::null_mut());
-    if obj.is_null() {
-        None
-    } else {
-        Some(Box::from_raw(obj.cast::<T>()))
     }
 }

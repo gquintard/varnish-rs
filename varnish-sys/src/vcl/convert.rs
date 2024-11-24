@@ -50,9 +50,9 @@ use std::ptr::{null, null_mut};
 use std::time::{Duration, SystemTime};
 
 use crate::ffi::{
-    vtim_dur, vtim_real, VSA_GetPtr, VSA_Port, PF_INET, PF_INET6, VCL_ACL, VCL_BACKEND, VCL_BLOB,
-    VCL_BODY, VCL_BOOL, VCL_DURATION, VCL_ENUM, VCL_HEADER, VCL_HTTP, VCL_INT, VCL_IP, VCL_PROBE,
-    VCL_REAL, VCL_STEVEDORE, VCL_STRANDS, VCL_STRING, VCL_TIME, VCL_VCL,
+    http, vtim_dur, vtim_real, VSA_GetPtr, VSA_Port, PF_INET, PF_INET6, VCL_ACL, VCL_BACKEND,
+    VCL_BLOB, VCL_BODY, VCL_BOOL, VCL_DURATION, VCL_ENUM, VCL_HEADER, VCL_HTTP, VCL_INT, VCL_IP,
+    VCL_PROBE, VCL_REAL, VCL_STEVEDORE, VCL_STRANDS, VCL_STRING, VCL_TIME, VCL_VCL,
 };
 use crate::vcl::{from_vcl_probe, into_vcl_probe, CowProbe, Probe, VclError, Workspace};
 
@@ -169,6 +169,12 @@ default_null_ptr!(VCL_ENUM);
 default_null_ptr!(VCL_HEADER);
 // VCL_HTTP
 default_null_ptr!(mut VCL_HTTP);
+impl From<*mut http> for VCL_HTTP {
+    // This is needed because pre-v7 vrt_ctx used http instead of VCL_HTTP
+    fn from(value: *mut http) -> Self {
+        Self(value)
+    }
+}
 
 //
 // VCL_INT
@@ -354,7 +360,7 @@ impl TryFrom<SystemTime> for VCL_TIME {
 default_null_ptr!(mut VCL_VCL);
 
 #[cfg(not(lts_60))]
-mod current_ver {
+mod version_after_v6 {
     use std::ffi::c_void;
     use std::net::SocketAddr;
     use std::num::NonZeroUsize;

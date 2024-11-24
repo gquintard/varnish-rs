@@ -1,7 +1,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#ifdef VARNISH_RS_LTS_60
+#ifdef VARNISH_RS_6_0
 #define FILE void *
 #endif
 
@@ -14,7 +14,7 @@
 #include "vapi/vsm.h"
 #include "vapi/vsc.h"
 
-#ifndef VARNISH_RS_LTS_60
+#ifndef VARNISH_RS_6_0
 struct http_conn {
         unsigned                magic;
 #define HTTP_CONN_MAGIC         0x3e19edd1

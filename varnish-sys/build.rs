@@ -82,7 +82,7 @@ fn main() {
         .parse_callbacks(Box::new(ren));
 
     if major == 6 {
-        bindings_builder = bindings_builder.clang_args(&["-D", "VARNISH_RS_LTS_60"]);
+        bindings_builder = bindings_builder.clang_args(&["-D", "VARNISH_RS_6_0"]);
     }
     let bindings = bindings_builder
         .generate()

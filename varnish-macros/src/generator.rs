@@ -115,21 +115,12 @@ impl Generator {
     }
 
     fn gen_json(&self) -> String {
-        let mod_name = &self.names.mod_name();
-        let mut json = Vec::<Value>::new();
-
-        if cfg!(lts_60) {
-            json.push(json! {[
-                "$VMOD",
-                "1.0",
-            ]});
-        } else {
-            json.push(json! {[
-                "$VMOD",
-                "1.0",
-                mod_name,
-                self.names.func_struct_name(),
-                self.file_id.to_str().unwrap(),
+        let mut header: Vec<Value> = vec!["$VMOD".into(), "1.0".into()];
+        if !cfg!(lts_60) {
+            header.extend(vec![
+                self.names.mod_name().into(),
+                self.names.func_struct_name().into(),
+                self.file_id.to_str().unwrap().into(),
                 // Ohh the irony, this string from VMOD_ABI_Version is the reason
                 // why `varnish-sys` must exist. Without it, we could run bindgen
                 // from the `varnish` crate directly.  Ohh well.
@@ -137,15 +128,16 @@ impl Generator {
                 // FIXME: figure out a way to assert that the version string used by varnish_macro is the same
                 //        as the value accessible by generated code from varnish::ffi::VMOD_ABI_Version.
                 //        Currently it seems not possible to do a constant assert at compile time on b-str/c-str equality.
-                varnish_sys::ffi::VMOD_ABI_Version.to_str().unwrap(),
-                "0",
-                "0"
-            ]});
+                varnish_sys::ffi::VMOD_ABI_Version.to_str().unwrap().into(),
+                "0".into(),
+                "0".into(),
+            ]);
         }
 
-        let cproto = self.generate_proto();
+        let mut json: Vec<Value> = vec![header.into()];
+
         if !cfg!(lts_60) {
-            json.push(json! {[ "$CPROTO", cproto ]});
+            json.push(json! {[ "$CPROTO", self.generate_proto() ]});
         }
 
         for func in &self.functions {
@@ -156,12 +148,14 @@ impl Generator {
             json.push(obj.json.clone());
         }
 
-        let json = serde_json::to_string_pretty(&json! {json}).unwrap();
-        if cfg!(lts_60) {
-            json.to_string()
-        } else {
-            format!("VMOD_JSON_SPEC\u{2}\n{json}\n\u{3}")
+        let mut json = serde_json::to_string_pretty(&json! {json}).unwrap();
+
+        if !cfg!(lts_60) {
+            // 7.0+ wrap the JSON in a special format
+            json = format!("VMOD_JSON_SPEC\u{2}\n{json}\n\u{3}");
         }
+
+        json
     }
 
     fn generate_proto(&self) -> String {
@@ -189,7 +183,6 @@ impl Generator {
         let cproto = self.generate_proto().force_cstr();
         let vmod_name_data = self.names.data_struct_name().to_ident();
         let c_name = self.names.mod_name().force_cstr();
-        let c_func_name = self.names.func_struct_name().force_cstr();
         let file_id = &self.file_id;
         let mut priv_structs = Vec::new();
         if let Some(s) = vmod.shared_types.shared_per_task_ty.as_ref() {
@@ -226,16 +219,17 @@ impl Generator {
         }
         // WARNING: This list must match the list in varnish-macros/src/lib.rs
 
-        let fname;
+        let func_name;
         let cproto_ptr;
         let cproto_def;
         if cfg!(lts_60) {
-            fname = quote! {};
+            func_name = quote! {};
             cproto_ptr = quote! { cproto.as_ptr() };
             cproto_def = quote! { const cproto: &CStr = #cproto; };
         } else {
-            fname = quote! { func_name: #c_func_name.as_ptr(), };
-            cproto_ptr = quote! { null()};
+            let c_func_name = self.names.func_struct_name().force_cstr();
+            func_name = quote! { func_name: #c_func_name.as_ptr(), };
+            cproto_ptr = quote! { null() };
             cproto_def = quote! {};
         }
 
@@ -276,7 +270,7 @@ impl Generator {
                     vrt_minor: 0,
                     file_id: #file_id.as_ptr(),
                     name: #c_name.as_ptr(),
-                    #fname
+                    #func_name
                     func_len: ::std::mem::size_of::<VmodExports>() as c_int,
                     func: &VMOD_EXPORTS as *const _ as *const c_void,
                     abi: VMOD_ABI_Version.as_ptr(),

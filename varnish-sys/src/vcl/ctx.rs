@@ -50,29 +50,15 @@ impl<'a> Ctx<'a> {
     }
 
     /// Instantiate from a mutable reference to a [`vrt_ctx`].
-    #[cfg(not(lts_60))]
+    #[allow(clippy::useless_conversion)] // Varnish v6 has a different struct, requiring .into()
     pub fn from_ref(raw: &'a mut vrt_ctx) -> Self {
         assert_eq!(raw.magic, VRT_CTX_MAGIC);
         Self {
-            http_req: HttpHeaders::from_ptr(raw.http_req),
-            http_req_top: HttpHeaders::from_ptr(raw.http_req_top),
-            http_resp: HttpHeaders::from_ptr(raw.http_resp),
-            http_bereq: HttpHeaders::from_ptr(raw.http_bereq),
-            http_beresp: HttpHeaders::from_ptr(raw.http_beresp),
-            ws: Workspace::from_ptr(raw.ws),
-            raw,
-        }
-    }
-    /// Instantiate from a mutable reference to a [`vrt_ctx`].
-    #[cfg(lts_60)]
-    pub fn from_ref(raw: &'a mut vrt_ctx) -> Self {
-        assert_eq!(raw.magic, VRT_CTX_MAGIC);
-        Self {
-            http_req: HttpHeaders::from_ptr(ffi::VCL_HTTP(raw.http_req)),
-            http_req_top: HttpHeaders::from_ptr(ffi::VCL_HTTP(raw.http_req_top)),
-            http_resp: HttpHeaders::from_ptr(ffi::VCL_HTTP(raw.http_resp)),
-            http_bereq: HttpHeaders::from_ptr(ffi::VCL_HTTP(raw.http_bereq)),
-            http_beresp: HttpHeaders::from_ptr(ffi::VCL_HTTP(raw.http_beresp)),
+            http_req: HttpHeaders::from_ptr(raw.http_req.into()),
+            http_req_top: HttpHeaders::from_ptr(raw.http_req_top.into()),
+            http_resp: HttpHeaders::from_ptr(raw.http_resp.into()),
+            http_bereq: HttpHeaders::from_ptr(raw.http_bereq.into()),
+            http_beresp: HttpHeaders::from_ptr(raw.http_beresp.into()),
             ws: Workspace::from_ptr(raw.ws),
             raw,
         }
@@ -170,17 +156,14 @@ impl TestCtx {
 
 pub fn log(tag: LogTag, msg: impl AsRef<str>) {
     let msg = msg.as_ref();
+    #[cfg(not(lts_60))]
     unsafe {
-        ffi::VSL(
-            tag,
-            #[cfg(lts_60)]
-            0,
-            #[cfg(not(lts_60))]
-            ffi::vxids { vxid: 0 },
-            c"%.*s".as_ptr(),
-            msg.len(),
-            msg.as_ptr(),
-        );
+        let vxids = ffi::vxids::default();
+        ffi::VSL(tag, vxids, c"%.*s".as_ptr(), msg.len(), msg.as_ptr());
+    }
+    #[cfg(lts_60)]
+    unsafe {
+        ffi::VSL(tag, 0, c"%.*s".as_ptr(), msg.len(), msg.as_ptr());
     }
 }
 
