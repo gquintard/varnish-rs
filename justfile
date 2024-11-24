@@ -15,7 +15,7 @@ update:
 
 # Run cargo clippy
 clippy:
-    cargo clippy --workspace --all-targets -- -D warnings
+    cargo clippy --all-targets --workspace $({{just_executable()}} get-package-exclude-args) -- -D warnings
 
 # Test code formatting
 test-fmt:
@@ -31,19 +31,19 @@ docs:
 
 # Quick compile
 check:
-    cargo check --workspace --all-targets
+    cargo check --all-targets --workspace $({{just_executable()}} get-package-exclude-args)
 
 # Default build
 build:
-    cargo build --workspace --all-targets
+    cargo build --all-targets --workspace $({{just_executable()}} get-package-exclude-args)
 
 # build all
 build-all-features:
-    cargo build --workspace --all-targets --features "ffi,vsc"
+    cargo build --all-targets --workspace $({{just_executable()}} get-package-exclude-args) --features "ffi,vsc"
 
 # Run all tests
 test *ARGS: build
-    cargo test --workspace --all-targets {{ARGS}}
+    cargo test --all-targets --workspace $({{just_executable()}} get-package-exclude-args) {{ARGS}}
 
 # Find the minimum supported Rust version. Install it with `cargo install cargo-msrv`
 msrv:
@@ -51,7 +51,7 @@ msrv:
 
 # Find unused dependencies. Install it with `cargo install cargo-udeps`
 udeps:
-    cargo +nightly udeps --workspace --all-targets
+    cargo +nightly udeps --all-targets --workspace
 
 # Check semver compatibility with prior published version. Install it with `cargo install cargo-semver-checks`
 semver *ARGS:
@@ -65,8 +65,8 @@ grcov:
     rm -rf ./target/debug/coverage
     export LLVM_PROFILE_FILE="varnish-%p-%m.profraw"
     export RUSTFLAGS="-Cinstrument-coverage"
-    cargo build --workspace --all-targets
-    cargo test --workspace --all-targets
+    cargo build --all-targets --workspace
+    cargo test --all-targets --workspace
     grcov . -s . --binary-path ./target/debug/ -t html --branch --ignore-not-existing -o ./target/debug/coverage/
     open ./target/debug/coverage/index.html
 
@@ -93,8 +93,11 @@ rust-info:
     rustc --version
     cargo --version
 
+# Run tests only relevant to the latest Varnish version
+ci-test-extras: test-doc
+
 # Run all tests as expected by CI
-ci-test: rust-info test-fmt clippy test test-doc build-all-features
+ci-test: rust-info test-fmt clippy test build-all-features
 
 # Run minimal subset of tests to ensure compatibility with MSRV
 ci-test-msrv: rust-info test
@@ -116,6 +119,39 @@ check-if-published:
         echo "The current crate version has not yet been published."
     fi
 
+# Get the `--exclude <SPEC>` parameter for the cargo build/test/... command, depending on the installed version of Varnish
+[private]
+get-package-exclude-args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if {{just_executable()}} get-varnish-version 7.0 > /dev/null 2> /dev/null ; then
+        echo ""
+    else
+        EXCLUDE="--exclude vmod_be --exclude vmod_vfp --exclude vmod_vdp --exclude vmod_test"
+        echo "INFO: Due to older Varnish, running with: $EXCLUDE" >&2
+        echo "$EXCLUDE"
+    fi
+
+# Get the version of Varnish installed on the system. If a version arg is provided, check that the installed version is at least that version.
+get-varnish-version $required_version="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    VARNISH_VER=$(dpkg-query -W -f='${source:Upstream-Version}\n' varnish-dev || echo "unknown")
+    if [ -n "$required_version" ]; then
+        if [ "$(printf "$required_version\n$VARNISH_VER" | sort -V | head -n1)" != "$required_version" ]; then
+            echo "ERROR: Varnish version $required_version is required, but $VARNISH_VER is installed."
+            exit 1
+        else
+            echo "Found varnish-dev package v$VARNISH_VER >= $required_version"
+        fi
+    elif [ "$VARNISH_VER" = "unknown" ]; then
+        echo "ERROR: varnish-dev package was not found"
+        exit 1
+    else
+        echo "Found varnish-dev package v$VARNISH_VER"
+    fi
+
+
 [private]
 docker-build-ver VERSION:
     docker build --progress=plain -t varnish-img-{{VERSION}} --build-arg VARNISH_VERSION={{VERSION}} --build-arg USER_UID=$(id -u) --build-arg USER_GID=$(id -g) -f docker/Dockerfile docker
@@ -133,4 +169,4 @@ docker-run-ver VERSION *ARGS:
 docker-run-76 *ARGS: (docker-build-ver "76") (docker-run-ver "76" ARGS)
 docker-run-75 *ARGS: (docker-build-ver "75") (docker-run-ver "75" ARGS)
 docker-run-74 *ARGS: (docker-build-ver "74") (docker-run-ver "74" ARGS)
-docker-run-60 *ARGS: (docker-build-ver "60") (docker-run-ver "60" ARGS)
+docker-run-60 *ARGS: (docker-build-ver "60lts") (docker-run-ver "60lts" ARGS)

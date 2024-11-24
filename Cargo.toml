@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 default-members = ["varnish", "varnish-macros", "varnish-sys"]
-members = ["varnish", "varnish-macros", "varnish-sys", "vmod_test", "examples/vmod_*"]
+members = ["varnish", "varnish-macros", "varnish-sys", "varnish/tests/vmod_test", "examples/vmod_*"]
 
 [workspace.package]
 # These fields are used by multiple crates, so it's defined here.

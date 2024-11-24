@@ -1,5 +1,6 @@
 //! Expose the Varnish context [`vrt_ctx`] as a Rust object
 //!
+#[cfg(not(varnishsys_6))]
 use std::ffi::{c_int, c_uint, c_void};
 
 use crate::ffi;
@@ -49,14 +50,15 @@ impl<'a> Ctx<'a> {
     }
 
     /// Instantiate from a mutable reference to a [`vrt_ctx`].
+    #[allow(clippy::useless_conversion)] // Varnish v6 has a different struct, requiring .into()
     pub fn from_ref(raw: &'a mut vrt_ctx) -> Self {
         assert_eq!(raw.magic, VRT_CTX_MAGIC);
         Self {
-            http_req: HttpHeaders::from_ptr(raw.http_req),
-            http_req_top: HttpHeaders::from_ptr(raw.http_req_top),
-            http_resp: HttpHeaders::from_ptr(raw.http_resp),
-            http_bereq: HttpHeaders::from_ptr(raw.http_bereq),
-            http_beresp: HttpHeaders::from_ptr(raw.http_beresp),
+            http_req: HttpHeaders::from_ptr(raw.http_req.into()),
+            http_req_top: HttpHeaders::from_ptr(raw.http_req_top.into()),
+            http_resp: HttpHeaders::from_ptr(raw.http_resp.into()),
+            http_bereq: HttpHeaders::from_ptr(raw.http_bereq.into()),
+            http_beresp: HttpHeaders::from_ptr(raw.http_beresp.into()),
             ws: Workspace::from_ptr(raw.ws),
             raw,
         }
@@ -86,7 +88,7 @@ impl<'a> Ctx<'a> {
             }
         }
     }
-
+    #[cfg(not(varnishsys_6))]
     pub fn cached_req_body(&mut self) -> Result<Vec<&'a [u8]>, VclError> {
         unsafe extern "C" fn chunk_collector(
             priv_: *mut c_void,
@@ -154,14 +156,14 @@ impl TestCtx {
 
 pub fn log(tag: LogTag, msg: impl AsRef<str>) {
     let msg = msg.as_ref();
+    #[cfg(not(varnishsys_6))]
     unsafe {
-        ffi::VSL(
-            tag,
-            ffi::vxids { vxid: 0 },
-            c"%.*s".as_ptr(),
-            msg.len(),
-            msg.as_ptr(),
-        );
+        let vxids = ffi::vxids::default();
+        ffi::VSL(tag, vxids, c"%.*s".as_ptr(), msg.len(), msg.as_ptr());
+    }
+    #[cfg(varnishsys_6)]
+    unsafe {
+        ffi::VSL(tag, 0, c"%.*s".as_ptr(), msg.len(), msg.as_ptr());
     }
 }
 
@@ -173,5 +175,36 @@ mod tests {
     fn ctx_test() {
         let mut test_ctx = TestCtx::new(100);
         test_ctx.ctx();
+    }
+}
+
+/// This is an unsafe struct that holds the per-VCL state.
+/// It must be public because it is used by the macro-generated code.
+#[doc(hidden)]
+#[derive(Debug)]
+pub struct PerVclState<T> {
+    #[cfg(not(varnishsys_6))]
+    pub fetch_filters: Vec<Box<ffi::vfp>>,
+    #[cfg(not(varnishsys_6))]
+    pub delivery_filters: Vec<Box<ffi::vdp>>,
+    pub user_data: Option<Box<T>>,
+}
+
+// Implement the default trait that works even when `T` does not impl `Default`.
+impl<T> Default for PerVclState<T> {
+    fn default() -> Self {
+        Self {
+            #[cfg(not(varnishsys_6))]
+            fetch_filters: Vec::default(),
+            #[cfg(not(varnishsys_6))]
+            delivery_filters: Vec::default(),
+            user_data: None,
+        }
+    }
+}
+
+impl<T> PerVclState<T> {
+    pub fn get_user_data(&self) -> Option<&T> {
+        self.user_data.as_ref().map(AsRef::as_ref)
     }
 }

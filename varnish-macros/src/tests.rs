@@ -54,8 +54,9 @@ fn run_parse_tests(path: &str) {
 }
 
 fn test(name: &str, args: TokenStream, mut item_mod: ItemMod) {
-    // panic!("{name} {args:?} {item_mod:?}");
-    with_settings!({ snapshot_path => "../../varnish/snapshots", omit_expression => true, prepend_module_to_snapshot => false }, {
+    let version = if cfg!(varnishsys_6) { "_v6" } else { "" };
+    let snapshot_path = format!("../../varnish/snapshots{version}");
+    with_settings!({ snapshot_path => snapshot_path, omit_expression => true, prepend_module_to_snapshot => false }, {
         let Ok(info) = tokens_to_model(args, &mut item_mod).map_err(|err| {
             // On error, save the error output as a snapshot and return early.
             let err = err.into_compile_error();

@@ -1,6 +1,5 @@
 ---
 source: varnish-macros/src/tests.rs
-snapshot_kind: text
 ---
 /// main docs
 /// # Big header
@@ -19,8 +18,8 @@ mod types {
         use std::ptr::null;
         use varnish::ffi::{
             VCL_BACKEND, VCL_BOOL, VCL_DURATION, VCL_INT, VCL_IP, VCL_PROBE, VCL_REAL,
-            VCL_STRING, VCL_VOID, VMOD_ABI_Version, VMOD_PRIV_METHODS_MAGIC, VclEvent,
-            vmod_data, vmod_priv, vmod_priv_methods, vrt_ctx,
+            VCL_STRING, VCL_VOID, VMOD_ABI_Version, VclEvent, vmod_data, vmod_priv,
+            vrt_ctx, VMOD_PRIV_METHODS_MAGIC, vmod_priv_methods,
         };
         use varnish::vcl::{Ctx, IntoVCL, PerVclState, Workspace};
         use super::*;

@@ -59,7 +59,7 @@ pub unsafe extern "C" fn gen_vdp_init<T: DeliveryProcessor>(
     vrt_ctx: *const vrt_ctx,
     ctx_raw: *mut vdp_ctx,
     priv_: *mut *mut c_void,
-    #[cfg(varnishsys_objcore_in_init)] _oc: *mut ffi::objcore,
+    #[cfg(varnishsys_7_5_objcore_init)] _oc: *mut ffi::objcore,
 ) -> c_int {
     assert_ne!(priv_, ptr::null_mut());
     assert_eq!(*priv_, ptr::null_mut());
@@ -283,33 +283,6 @@ impl<'a> FetchProcCtx<'a> {
             #[allow(unreachable_patterns)]
             n => panic!("unknown VfpStatus {n:?}"),
         }
-    }
-}
-
-/// This is an unsafe struct that holds the per-VCL state.
-/// It must be public because it is used by the macro-generated code.
-#[doc(hidden)]
-#[derive(Debug)]
-pub struct PerVclState<T> {
-    pub fetch_filters: Vec<Box<ffi::vfp>>,
-    pub delivery_filters: Vec<Box<ffi::vdp>>,
-    pub user_data: Option<Box<T>>,
-}
-
-// Implement the default trait that works even when `T` does not impl `Default`.
-impl<T> Default for PerVclState<T> {
-    fn default() -> Self {
-        Self {
-            fetch_filters: Vec::default(),
-            delivery_filters: Vec::default(),
-            user_data: None,
-        }
-    }
-}
-
-impl<T> PerVclState<T> {
-    pub fn get_user_data(&self) -> Option<&T> {
-        self.user_data.as_ref().map(AsRef::as_ref)
     }
 }
 

@@ -28,6 +28,10 @@ fi
 
 cargo binstall --no-confirm just ripgrep cargo-expand
 
+if ! grep -q "alias j=" ~/.bashrc; then
+  echo "alias j='just'" >> ~/.bashrc
+fi
+
 echo "##################################################"
 echo "##  Welcome to the Varnish development container"
 echo "##  Use 'just' to see the available commands."

@@ -87,7 +87,11 @@ impl Names {
     }
 
     pub fn func_struct_name(&self) -> String {
-        format!("Vmod_vmod_{}_Func", self.module)
+        if cfg!(varnishsys_6) {
+            format!("Vmod_{}_Func", self.module)
+        } else {
+            format!("Vmod_vmod_{}_Func", self.module)
+        }
     }
 
     pub fn data_struct_name(&self) -> String {

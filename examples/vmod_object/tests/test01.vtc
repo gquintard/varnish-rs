@@ -15,7 +15,7 @@ varnish v1 -vcl+backend {
 	}
 
 	sub vcl_synth {
-		if (req.method == "SET") {
+		if (req.http.method == "SET") {
 			kv.set(req.http.key, req.http.value);
 		} else {
 			set resp.http.value = kv.get(req.http.key);
@@ -28,10 +28,10 @@ client c1 {
 	rxresp
 	expect resp.http.value == ""
 
-	txreq -method "SET" -hdr "key: key1" -hdr "value: value1"
+	txreq -hdr "method: SET" -hdr "key: key1" -hdr "value: value1"
 	rxresp
 
-	txreq -method "SET" -hdr "key: key2" -hdr "value: value2"
+	txreq  -hdr "method: SET" -hdr "key: key2" -hdr "value: value2"
 	rxresp
 
 	txreq -hdr "key: key1"
