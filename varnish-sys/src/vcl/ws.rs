@@ -22,10 +22,10 @@ use std::slice::from_raw_parts_mut;
 
 use memchr::memchr;
 
-#[cfg(lts_60)]
+#[cfg(varnishsys_6)]
 use crate::ffi::WS_Inside;
 use crate::ffi::{txt, VCL_STRING};
-#[cfg(not(lts_60))]
+#[cfg(not(varnishsys_6))]
 use crate::ffi::{vrt_blob, WS_Allocated, VCL_BLOB};
 use crate::vcl::VclError;
 use crate::{ffi, validate_ws};
@@ -85,7 +85,7 @@ impl<'a> Workspace<'a> {
 
     /// Check if a pointer is part of the current workspace
     pub fn contains(&self, data: &[u8]) -> bool {
-        #[cfg(lts_60)]
+        #[cfg(varnishsys_6)]
         {
             let last = match data.last() {
                 None => data.as_ptr(),
@@ -93,7 +93,7 @@ impl<'a> Workspace<'a> {
             };
             unsafe { WS_Inside(self.raw, data.as_ptr().cast(), last.cast()) == 1 }
         }
-        #[cfg(not(lts_60))]
+        #[cfg(not(varnishsys_6))]
         {
             unsafe { WS_Allocated(self.raw, data.as_ptr().cast(), data.len() as isize) == 1 }
         }
@@ -146,7 +146,7 @@ impl<'a> Workspace<'a> {
     }
 
     /// Copy any `AsRef<[u8]>` into a new [`VCL_BLOB`] stored in the workspace
-    #[cfg(not(lts_60))]
+    #[cfg(not(varnishsys_6))]
     pub fn copy_blob(&mut self, value: impl AsRef<[u8]>) -> Result<VCL_BLOB, VclError> {
         let buf = self.copy_bytes(value)?;
         let blob = self.copy_value(vrt_blob {

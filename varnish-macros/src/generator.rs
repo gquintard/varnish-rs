@@ -116,7 +116,7 @@ impl Generator {
 
     fn gen_json(&self) -> String {
         let mut header: Vec<Value> = vec!["$VMOD".into(), "1.0".into()];
-        if !cfg!(lts_60) {
+        if !cfg!(varnishsys_6) {
             header.extend(vec![
                 self.names.mod_name().into(),
                 self.names.func_struct_name().into(),
@@ -136,7 +136,7 @@ impl Generator {
 
         let mut json: Vec<Value> = vec![header.into()];
 
-        if !cfg!(lts_60) {
+        if !cfg!(varnishsys_6) {
             json.push(json! {[ "$CPROTO", self.generate_proto() ]});
         }
 
@@ -150,7 +150,7 @@ impl Generator {
 
         let mut json = serde_json::to_string_pretty(&json! {json}).unwrap();
 
-        if !cfg!(lts_60) {
+        if !cfg!(varnishsys_6) {
             // 7.0+ wrap the JSON in a special format
             json = format!("VMOD_JSON_SPEC\u{2}\n{json}\n\u{3}");
         }
@@ -222,7 +222,7 @@ impl Generator {
         let func_name;
         let cproto_ptr;
         let cproto_def;
-        if cfg!(lts_60) {
+        if cfg!(varnishsys_6) {
             func_name = quote! {};
             cproto_ptr = quote! { cproto.as_ptr() };
             cproto_def = quote! { const cproto: &CStr = #cproto; };

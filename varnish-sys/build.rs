@@ -14,7 +14,7 @@ fn main() {
     // 7.0..=7.5 passed *objcore in vdp_init_f as the 4th param
     println!("cargo::rustc-check-cfg=cfg(varnishsys_7_5_objcore_init)");
     // 6.0 support
-    println!("cargo::rustc-check-cfg=cfg(lts_60)");
+    println!("cargo::rustc-check-cfg=cfg(varnishsys_6)");
 
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
 
@@ -30,7 +30,7 @@ fn main() {
         println!("cargo::rustc-cfg=varnishsys_7_5_objcore_init");
     }
     if major < 7 {
-        println!("cargo::rustc-cfg=lts_60");
+        println!("cargo::rustc-cfg=varnishsys_6");
     }
 
     if major < 6 || major > 7 {

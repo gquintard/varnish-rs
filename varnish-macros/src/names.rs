@@ -87,7 +87,7 @@ impl Names {
     }
 
     pub fn func_struct_name(&self) -> String {
-        if cfg!(lts_60) {
+        if cfg!(varnishsys_6) {
             format!("Vmod_{}_Func", self.module)
         } else {
             format!("Vmod_vmod_{}_Func", self.module)

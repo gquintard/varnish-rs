@@ -18,13 +18,13 @@ pub mod ffi {
 
 mod extensions;
 mod txt;
-#[cfg(not(lts_60))]
+#[cfg(not(varnishsys_6))]
 mod utils;
 
 mod validate;
 
 pub mod vcl;
 
-#[cfg(not(lts_60))]
+#[cfg(not(varnishsys_6))]
 pub use utils::*;
 pub use validate::*;

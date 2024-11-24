@@ -359,7 +359,7 @@ impl TryFrom<SystemTime> for VCL_TIME {
 // VCL_VCL
 default_null_ptr!(mut VCL_VCL);
 
-#[cfg(not(lts_60))]
+#[cfg(not(varnishsys_6))]
 mod version_after_v6 {
     use std::ffi::c_void;
     use std::net::SocketAddr;

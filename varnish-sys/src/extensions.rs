@@ -26,7 +26,7 @@ impl vmod_priv {
     /// SAFETY: `priv_` must reference a valid `T` object pointer or `NULL`
     pub unsafe fn take<T>(&mut self) -> Option<Box<T>> {
         // methods does not need to be dropped because `put` always sets it to a static reference
-        #[cfg(not(lts_60))]
+        #[cfg(not(varnishsys_6))]
         {
             self.methods = ptr::null();
         }
@@ -54,7 +54,7 @@ impl vmod_priv {
     }
 }
 
-#[cfg(lts_60)]
+#[cfg(varnishsys_6)]
 mod version_v6 {
     use std::ffi::c_void;
 
@@ -93,7 +93,7 @@ mod version_v6 {
     }
 }
 
-#[cfg(not(lts_60))]
+#[cfg(not(varnishsys_6))]
 mod version_after_v6 {
     use std::ffi::c_void;
 

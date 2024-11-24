@@ -173,7 +173,7 @@ impl<'a> HttpHeaders<'a> {
             ffi::http_SetStatus(
                 self.raw,
                 status,
-                #[cfg(not(lts_60))]
+                #[cfg(not(varnishsys_6))]
                 std::ptr::null(),
             );
         }
