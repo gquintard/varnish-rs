@@ -46,6 +46,9 @@ jobs:
           sudo apt-cache policy varnish
           sudo apt-get install -y varnish varnish-dev
       - run: just -v ci-test
+      - name: Test for latest Varnish version
+        if: matrix.type == 'latest'
+        run: just ci-test-extras
       - name: Check semver
         if: matrix.type == 'latest'
         uses: obi1kenobi/cargo-semver-checks-action@v2

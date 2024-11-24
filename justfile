@@ -93,8 +93,11 @@ rust-info:
     rustc --version
     cargo --version
 
+# Run tests only relevant to the latest Varnish version
+ci-test-extras: test-doc
+
 # Run all tests as expected by CI
-ci-test: rust-info test-fmt clippy test test-doc build-all-features
+ci-test: rust-info test-fmt clippy test build-all-features
 
 # Run minimal subset of tests to ensure compatibility with MSRV
 ci-test-msrv: rust-info test
