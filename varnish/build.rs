@@ -1,10 +1,12 @@
 fn main() {
+    println!("cargo::rustc-check-cfg=cfg(varnishsys_6)");
     println!("cargo::rustc-check-cfg=cfg(varnishsys_6_priv_free_f)");
 
     let ver = std::env::var("DEP_VARNISHAPI_VERSION_NUMBER");
     let (major, _minor) = parse_version(&ver.expect("DEP_VARNISHAPI_VERSION_NUMBER not set"));
 
     if major < 7 {
+        println!("cargo::rustc-cfg=varnishsys_6");
         println!("cargo::rustc-cfg=varnishsys_6_priv_free_f");
     }
 }
