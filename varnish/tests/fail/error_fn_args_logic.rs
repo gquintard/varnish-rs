@@ -1,6 +1,5 @@
 #[varnish::vmod]
 mod err_fn_args_logic {
-    pub fn good(i: i64) {}
     pub fn string(s: String) {}
     pub fn task_arg_non_mut(#[shared_per_task] a: Option<i64>) {}
     pub fn task_arg_non_mut2(#[shared_per_task] a: Option<&i64>) {}

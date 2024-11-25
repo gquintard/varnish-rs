@@ -149,10 +149,10 @@ mod types {
     }
 
     // VCL_STRING
-    pub fn to_vcl_string() -> VCL_STRING {
+    pub unsafe fn to_vcl_string() -> VCL_STRING {
         VCL_STRING::default()
     }
-    pub fn to_res_vcl_string() -> Result<VCL_STRING, &'static str> {
+    pub unsafe fn to_res_vcl_string() -> Result<VCL_STRING, &'static str> {
         Err("")
     }
 

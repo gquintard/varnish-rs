@@ -121,9 +121,6 @@ impl VmodInfo {
     }
 
     pub fn validate(&self, item: &ItemMod, errors: &mut Errors) {
-        if self.funcs.is_empty() && self.objects.is_empty() {
-            errors.add(&self.ident, "No functions or objects found in this module");
-        }
         if self.count_funcs(|v| matches!(v.func_type, FuncType::Event)) > 1 {
             errors.add(
                 &item,
@@ -137,6 +134,10 @@ impl VmodInfo {
                 &item,
                 "#[shared_per_vcl] value has not been initialized. Add a `&mut Option<Box<...>>` param to an event handler or an object new() function",
             );
+        }
+        if self.funcs.is_empty() && self.objects.is_empty() && errors.is_empty() {
+            // If another error is reported, most likely it was not added to funcs or objects, so we don't need to report this one
+            errors.add(&self.ident, "No functions or objects found in this module");
         }
     }
 }
@@ -231,8 +232,6 @@ impl FuncInfo {
             );
         } else if signature.asyncness.is_some() {
             errors.add(signature, "async functions are not supported");
-        } else if signature.unsafety.is_some() {
-            errors.add(signature, "unsafe functions are not supported");
         }
 
         let func_type = if let Some(attr) = parser_utils::remove_attr(attrs, "event") {
@@ -277,6 +276,17 @@ impl FuncInfo {
         let has_optional_args = args.iter().any(
             |arg| matches!(&arg.ty, ParamType::Value(v) if matches!(v.kind, ParamKind::Optional)),
         );
+
+        let is_unsafe = signature.unsafety.is_some();
+        let out_vcl = matches!(output_ty, OutputTy::VclType(..));
+        if is_unsafe && !out_vcl {
+            errors.add(signature, "functions and methods must not be tagged as `unsafe` unless they return a VCL_* type");
+        } else if out_vcl && !is_unsafe {
+            errors.add(
+                signature,
+                "functions and methods that return a VCL_* type must be tagged as `unsafe`",
+            );
+        }
 
         errors.into_result()?;
         Ok(Self {

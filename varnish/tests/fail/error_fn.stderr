@@ -18,16 +18,14 @@ error: async functions are not supported
 7 |     pub async fn async_fn() {}
   |         ^^^^^
 
-error: unsafe functions are not supported
+error: functions and methods must not be tagged as `unsafe` unless they return a VCL_* type
  --> tests/fail/error_fn.rs:8:9
   |
 8 |     pub unsafe fn unsafe_fn() {}
   |         ^^^^^^
 
-error: No functions or objects found in this module
- --> tests/fail/error_fn.rs:4:1
+error: functions and methods that return a VCL_* type must be tagged as `unsafe`
+ --> tests/fail/error_fn.rs:9:9
   |
-4 | #[varnish::vmod]
-  | ^^^^^^^^^^^^^^^^
-  |
-  = note: this error originates in the attribute macro `varnish::vmod` (in Nightly builds, run with -Z macro-backtrace for more info)
+9 |     pub fn ret_vcl() -> Result<VCL_STRING, &'static str> {
+  |         ^^
