@@ -19,6 +19,10 @@ impl Errors {
         Self { errors: None }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.errors.is_none()
+    }
+
     pub fn on_err<T>(&mut self, result: ProcResult<T>) -> Option<T> {
         match result {
             Ok(val) => Some(val),

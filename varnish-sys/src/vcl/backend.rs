@@ -84,7 +84,8 @@ use crate::{
 
 /// Fat wrapper around [`VCL_BACKEND`].
 ///
-/// It will handle almost all the necessary boilerplate needed to create a vmod. Most importantly, it destroys/unregisters the backend as part of it's `Drop` implementation, and
+/// It will handle almost all the necessary boilerplate needed to create a vmod. Most importantly,
+/// it destroys/unregisters the backend as part of it's `Drop` implementation, and
 /// will convert the C methods to something more idiomatic.
 ///
 /// Once created, a [`Backend`]'s sole purpose is to exist as a C reference for the VCL. As a

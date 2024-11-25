@@ -1003,10 +1003,10 @@ mod types {
     pub fn to_res_ip() -> Result<SocketAddr, &'static str> {
         Err("")
     }
-    pub fn to_vcl_string() -> VCL_STRING {
+    pub unsafe fn to_vcl_string() -> VCL_STRING {
         VCL_STRING::default()
     }
-    pub fn to_res_vcl_string() -> Result<VCL_STRING, &'static str> {
+    pub unsafe fn to_res_vcl_string() -> Result<VCL_STRING, &'static str> {
         Err("")
     }
     pub fn opt_i64_opt_i64(a1: i64, a2: Option<i64>, a3: i64) -> String {

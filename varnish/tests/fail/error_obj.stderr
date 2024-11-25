@@ -69,11 +69,3 @@ error: Object must have a constructor called `new`
    |
 28 |     impl ObjVclNameDup {
    |          ^^^^^^^^^^^^^
-
-error: No functions or objects found in this module
- --> tests/fail/error_obj.rs:8:1
-  |
-8 | #[varnish::vmod]
-  | ^^^^^^^^^^^^^^^^
-  |
-  = note: this error originates in the attribute macro `varnish::vmod` (in Nightly builds, run with -Z macro-backtrace for more info)
