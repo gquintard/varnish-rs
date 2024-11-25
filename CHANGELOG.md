@@ -1,7 +1,8 @@
 # Unpublished
 
 - Support for Varnish v6.0 LTS, but without filters, and without `vmod_be`, `vmod_vfp`, `vmod_vdp` examples
-- Require all user functions that return `VCL_*` types to be `unsafe` 
+- Require all user functions that return `VCL_*` types to be `unsafe`
+- For backends, rename `Serve` &rarr; `vcl::VclBackend`, `Transfer` &rarr; `vcl::VclResponse`
 
 # 0.2.0 (2024-11-19)
 
