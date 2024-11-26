@@ -36,7 +36,7 @@ mod rustest {
         }
     }
 
-    pub fn ws_reserve(ws: &mut Workspace, s: &str) -> Result<VCL_STRING, &'static str> {
+    pub unsafe fn ws_reserve(ws: &mut Workspace, s: &str) -> Result<VCL_STRING, &'static str> {
         let mut rbuf = ws.reserve();
         match write!(rbuf.buf, "{s} {s} {s}\0") {
             Ok(()) => {
@@ -102,7 +102,7 @@ mod rustest {
 
     // this is a pretty terrible idea, the request body is probably big, and your workspace is tiny,
     // but hey, it's a test function
-    pub fn req_body(ctx: &mut Ctx) -> Result<VCL_STRING, VclError> {
+    pub unsafe fn req_body(ctx: &mut Ctx) -> Result<VCL_STRING, VclError> {
         let mut body_chunks = ctx.cached_req_body()?;
         // make sure the body will be null-terminated
         body_chunks.push(b"\0");

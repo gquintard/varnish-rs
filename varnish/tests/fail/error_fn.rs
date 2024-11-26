@@ -6,6 +6,9 @@ mod err_fn {
     fn non_public() {}
     pub async fn async_fn() {}
     pub unsafe fn unsafe_fn() {}
+    pub fn ret_vcl() -> Result<VCL_STRING, &'static str> {
+        Err("error")
+    }
 }
 
 fn main() {}

@@ -45,7 +45,7 @@ mod be {
             Ok(parrot { backend })
         }
 
-        pub fn backend(&self) -> VCL_BACKEND {
+        pub unsafe fn backend(&self) -> VCL_BACKEND {
             self.backend.vcl_ptr()
         }
     }

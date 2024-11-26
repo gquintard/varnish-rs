@@ -7,9 +7,11 @@ members = ["varnish", "varnish-macros", "varnish-sys", "varnish/tests/vmod_test"
 # These fields are used by multiple crates, so it's defined here.
 # Version must also be updated in the `varnish-macros` dependency below.
 #
+#
 # ! STOP !  Update the version in dependencies below!!!
-version = "0.2.3"  ## <<<----- ! STOP !!!
+version = "0.3.0"  ## <<<----- ! STOP !!!
 # ! STOP !  Update the version in dependencies below!!!
+#
 #
 repository = "https://github.com/gquintard/varnish-rs"
 edition = "2021"
@@ -22,9 +24,9 @@ readme = "README.md"
 
 [workspace.dependencies]
 # These versions must match the one in the [workspace.package] section above
-varnish = { path = "./varnish", version = "0.2.3" }
-varnish-macros = { path = "./varnish-macros", version = "0.2.3" }
-varnish-sys = { path = "./varnish-sys", version = "0.2.3" }
+varnish = { path = "./varnish", version = "0.3.0" }
+varnish-macros = { path = "./varnish-macros", version = "0.3.0" }
+varnish-sys = { path = "./varnish-sys", version = "0.3.0" }
 #
 # These dependencies are used by one or more crates, and easier to maintain in one place.
 bindgen = "0.70.1"
