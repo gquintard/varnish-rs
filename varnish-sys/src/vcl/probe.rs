@@ -26,7 +26,7 @@ pub struct Probe<T = String> {
 
 pub type CowProbe<'a> = Probe<Cow<'a, str>>;
 
-impl<'a> CowProbe<'a> {
+impl CowProbe<'_> {
     pub fn to_owned(&self) -> Probe {
         Probe {
             request: match &self.request {

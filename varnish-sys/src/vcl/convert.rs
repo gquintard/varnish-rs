@@ -226,7 +226,7 @@ impl From<VCL_IP> for Option<SocketAddr> {
 // VCL_PROBE
 //
 default_null_ptr!(VCL_PROBE);
-impl<'a> IntoVCL<VCL_PROBE> for CowProbe<'a> {
+impl IntoVCL<VCL_PROBE> for CowProbe<'_> {
     fn into_vcl(self, ws: &mut Workspace) -> Result<VCL_PROBE, VclError> {
         into_vcl_probe(self, ws)
     }
@@ -236,7 +236,7 @@ impl IntoVCL<VCL_PROBE> for Probe {
         into_vcl_probe(self, ws)
     }
 }
-impl<'a> From<VCL_PROBE> for Option<CowProbe<'a>> {
+impl From<VCL_PROBE> for Option<CowProbe<'_>> {
     fn from(value: VCL_PROBE) -> Self {
         from_vcl_probe(value)
     }
@@ -317,7 +317,7 @@ impl From<VCL_STRING> for &CStr {
         <Option<&CStr>>::from(value).unwrap_or_default()
     }
 }
-impl<'a> TryFrom<VCL_STRING> for Option<&'a str> {
+impl TryFrom<VCL_STRING> for Option<&str> {
     type Error = VclError;
     fn try_from(value: VCL_STRING) -> Result<Self, Self::Error> {
         Ok(<Option<&CStr>>::from(value).map(CStr::to_str).transpose()?)

@@ -9,8 +9,9 @@ extern crate core;
 #[allow(
     clippy::pedantic,
     clippy::approx_constant,
-    clippy::useless_transmute,
-    clippy::too_many_arguments
+    clippy::manual_c_str_literals,
+    clippy::too_many_arguments,
+    clippy::useless_transmute
 )]
 pub mod ffi {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));

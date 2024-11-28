@@ -132,7 +132,7 @@ pub struct DeliveryProcCtx<'a> {
     pub raw: &'a mut vdp_ctx,
 }
 
-impl<'a> DeliveryProcCtx<'a> {
+impl DeliveryProcCtx<'_> {
     /// Check the pointer validity and returns the rust equivalent.
     ///
     /// # Safety
@@ -248,7 +248,7 @@ pub struct FetchProcCtx<'a> {
     pub raw: &'a mut vfp_ctx,
 }
 
-impl<'a> FetchProcCtx<'a> {
+impl FetchProcCtx<'_> {
     /// Check the pointer validity and returns the rust equivalent.
     ///
     /// # Safety

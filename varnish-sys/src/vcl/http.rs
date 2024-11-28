@@ -35,7 +35,7 @@ pub struct HttpHeaders<'a> {
     pub raw: &'a mut ffi::http,
 }
 
-impl<'a> HttpHeaders<'a> {
+impl HttpHeaders<'_> {
     /// Wrap a raw pointer into an object we can use.
     pub(crate) fn from_ptr(p: ffi::VCL_HTTP) -> Option<Self> {
         Some(HttpHeaders {
