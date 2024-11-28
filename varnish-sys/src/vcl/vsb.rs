@@ -9,7 +9,7 @@ pub struct Buffer<'a> {
     pub raw: &'a mut ffi::vsb,
 }
 
-impl<'a> Buffer<'a> {
+impl Buffer<'_> {
     /// Create a `Vsb` from a C pointer
     #[allow(clippy::not_unsafe_ptr_arg_deref)]
     pub fn from_ptr(raw: *mut ffi::vsb) -> Self {

@@ -72,7 +72,7 @@ impl<'a> Workspace<'a> {
             // so we have to fake our own allocator.
             let ws = validate_ws(self.raw);
             let align = align_of::<*const c_void>();
-            let aligned_sz = ((size.get() + align - 1) / align) * align;
+            let aligned_sz = size.get().div_ceil(align) * align;
             if ws.e.offset_from(ws.f) < aligned_sz as isize {
                 ptr::null_mut()
             } else {
@@ -308,7 +308,7 @@ impl<'a> ReservedBuf<'a> {
     }
 }
 
-impl<'a> Drop for ReservedBuf<'a> {
+impl Drop for ReservedBuf<'_> {
     fn drop(&mut self) {
         unsafe {
             ffi::WS_Release(validate_ws(self.wsp), self.len as u32);
