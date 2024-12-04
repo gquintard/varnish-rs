@@ -23,8 +23,8 @@ import be from "path/to/libbe.so";
 
 parrot is our VCL object, which just holds a rust Backend,
 it only needs two functions:
-- new(), so that the VCL can instantiate it
-- backend(), so that we can produce a C pointer for varnish to use
+- `new()`, so that the VCL can instantiate it
+- `backend()`, so that we can produce a C pointer for varnish to use
 
 ```vcl
 // Create a new instance of the object in your VCL init function
