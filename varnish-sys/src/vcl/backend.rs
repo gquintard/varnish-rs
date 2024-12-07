@@ -92,7 +92,7 @@ use crate::{
 /// the VCL is discarded and that can only happen once all the backend fetches are done.
 #[derive(Debug)]
 pub struct Backend<S: Serve<T>, T: Transfer> {
-    handle: Handle,
+    handle: BackendHandle,
     #[allow(dead_code)]
     methods: Box<ffi::vdi_methods>,
     inner: Box<S>,
@@ -152,7 +152,7 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
         }
 
         Ok(Backend {
-            handle: Handle(bep),
+            handle: BackendHandle(bep),
             ctype,
             inner,
             methods,
@@ -163,7 +163,7 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
 
 /// An opaque handle to `VCL_BACKEND`
 #[derive(Debug)]
-pub struct Handle(VCL_BACKEND);
+pub struct BackendHandle(VCL_BACKEND);
 
 /// The trait to implement to "be" a backend
 ///
