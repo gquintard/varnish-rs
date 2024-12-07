@@ -92,7 +92,7 @@ use crate::{
 /// the VCL is discarded and that can only happen once all the backend fetches are done.
 #[derive(Debug)]
 pub struct Backend<S: Serve<T>, T: Transfer> {
-    handle: BackendHandle,
+    pub handle: BackendHandle,
     #[allow(dead_code)]
     methods: Box<ffi::vdi_methods>,
     inner: Box<S>,

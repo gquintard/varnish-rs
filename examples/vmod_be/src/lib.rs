@@ -10,8 +10,7 @@ struct parrot {
 /// a simple STRING dictionary in your VCL
 #[varnish::vmod(docs = "API.md")]
 mod be {
-    use varnish::ffi::VCL_BACKEND;
-    use varnish::vcl::{Backend, Ctx, VclError};
+    use varnish::vcl::{Backend, BackendHandle, Ctx, VclError};
 
     use super::{parrot, Sentence};
 
@@ -44,8 +43,8 @@ mod be {
             Ok(parrot { backend })
         }
 
-        pub unsafe fn backend(&self) -> VCL_BACKEND {
-            self.backend.vcl_ptr()
+        pub fn backend(&self) -> &BackendHandle {
+            &self.backend.handle
         }
     }
 }
