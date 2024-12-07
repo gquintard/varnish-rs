@@ -61,7 +61,7 @@
 //! // layers.
 //! fn some_vmod_function(ctx: &mut Ctx) {
 //!     let backend = Backend::new(ctx, "Arepeater", "repeat42", MyBe { n: 42 }, false).expect("couldn't create the backend");
-//!     let ptr = backend.vcl_ptr();
+//!     let ptr = unsafe { backend.vcl_ptr() };
 //! }
 //! ```
 use std::ffi::{c_char, c_int, c_void, CStr, CString};
@@ -92,7 +92,7 @@ use crate::{
 /// the VCL is discarded and that can only happen once all the backend fetches are done.
 #[derive(Debug)]
 pub struct Backend<S: Serve<T>, T: Transfer> {
-    bep: VCL_BACKEND,
+    handle: Handle,
     #[allow(dead_code)]
     methods: Box<ffi::vdi_methods>,
     inner: Box<S>,
@@ -110,8 +110,8 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
 
     /// Return the C pointer wrapped by the [`Backend`]. Conventionally used by the `.backend()`
     /// methods of VCL objects.
-    pub fn vcl_ptr(&self) -> VCL_BACKEND {
-        self.bep
+    pub unsafe fn vcl_ptr(&self) -> VCL_BACKEND {
+        self.handle.0
     }
 
     /// Create a new builder, wrapping the `inner` structure (that implements `Serve`),
@@ -152,7 +152,7 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
         }
 
         Ok(Backend {
-            bep,
+            handle: Handle(bep),
             ctype,
             inner,
             methods,
@@ -160,6 +160,10 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
         })
     }
 }
+
+/// An opaque handle to `VCL_BACKEND`
+#[derive(Debug)]
+pub struct Handle(VCL_BACKEND);
 
 /// The trait to implement to "be" a backend
 ///
@@ -530,7 +534,7 @@ unsafe extern "C" fn wrap_finish<S: Serve<T>, T: Transfer>(
 impl<S: Serve<T>, T: Transfer> Drop for Backend<S, T> {
     fn drop(&mut self) {
         unsafe {
-            ffi::VRT_DelDirector(&mut self.bep);
+            ffi::VRT_DelDirector(&mut self.handle.0);
         };
     }
 }
