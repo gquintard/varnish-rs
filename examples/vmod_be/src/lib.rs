@@ -33,6 +33,7 @@ mod be {
             // - a struct that implements the Serve trait
             let backend = Backend::new(
                 ctx,
+                "parrot",
                 name,
                 Sentence {
                     data: Vec::from(to_repeat),
@@ -59,10 +60,6 @@ struct Sentence {
 // - get_headers() that actually builds the response headers,
 //   and returns a Body
 impl Serve<Body> for Sentence {
-    fn get_type(&self) -> &str {
-        "parrot"
-    }
-
     fn get_headers(&self, ctx: &mut Ctx) -> Result<Option<Body>, VclError> {
         let beresp = ctx.http_beresp.as_mut().unwrap();
         beresp.set_status(200);
