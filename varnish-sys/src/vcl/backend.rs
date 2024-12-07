@@ -163,7 +163,7 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
 
 /// An opaque handle to `VCL_BACKEND`
 #[derive(Debug)]
-pub struct BackendHandle(VCL_BACKEND);
+pub struct BackendHandle(pub(crate) VCL_BACKEND);
 
 /// The trait to implement to "be" a backend
 ///
