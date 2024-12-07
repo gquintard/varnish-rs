@@ -1,7 +1,7 @@
 varnish::run_vtc_tests!("tests/*.vtc");
 
 /// Ignore the restart/retry limits
-#[varnish::vmod(docs = "README.md")]
+#[varnish::vmod(docs = "API.md")]
 mod infiniteloop {
     use varnish::ffi::{BUSYOBJ_MAGIC, REQ_MAGIC};
     use varnish::vcl::Ctx;

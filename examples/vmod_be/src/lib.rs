@@ -8,7 +8,7 @@ struct parrot {
 }
 
 /// a simple STRING dictionary in your VCL
-#[varnish::vmod(docs = "README.md")]
+#[varnish::vmod(docs = "API.md")]
 mod be {
     use varnish::ffi::VCL_BACKEND;
     use varnish::vcl::{Backend, Ctx, VclError};

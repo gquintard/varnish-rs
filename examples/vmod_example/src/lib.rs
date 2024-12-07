@@ -4,7 +4,7 @@
 /// as Varnish VMOD functions.  The name of the module will be the name of the VMOD.
 ///
 /// See also <https://varnish-cache.org/docs/trunk/reference/vmod.html>
-#[varnish::vmod(docs = "README.md")]
+#[varnish::vmod(docs = "API.md")]
 mod example {
     /// This will tell you if a number is even, isn't that odd?
     ///
