@@ -50,8 +50,6 @@
 //! }
 //!
 //! impl Serve<BodyResponse> for MyBe {
-//!      fn get_type(&self) -> &str { "example" }
-//!
 //!      fn get_headers(&self, ctx: &mut Ctx) -> Result<Option<BodyResponse>, VclError> {
 //!          Ok(Some(
 //!            BodyResponse { left: self.n },
@@ -62,11 +60,11 @@
 //! // Finally, we create a `Backend` wrapping a `MyBe`, and we can ask for a pointer to give to the C
 //! // layers.
 //! fn some_vmod_function(ctx: &mut Ctx) {
-//!     let backend = Backend::new(ctx, "name", MyBe { n: 42 }, false).expect("couldn't create the backend");
+//!     let backend = Backend::new(ctx, "Arepeater", "repeat42", MyBe { n: 42 }, false).expect("couldn't create the backend");
 //!     let ptr = backend.vcl_ptr();
 //! }
 //! ```
-use std::ffi::{c_char, c_int, c_void, CString};
+use std::ffi::{c_char, c_int, c_void, CStr, CString};
 use std::marker::PhantomData;
 use std::mem::size_of;
 use std::net::{SocketAddr, TcpStream};
@@ -98,8 +96,8 @@ pub struct Backend<S: Serve<T>, T: Transfer> {
     #[expect(dead_code)]
     methods: Box<ffi::vdi_methods>,
     inner: Box<S>,
-    #[expect(dead_code)]
-    type_: CString,
+    #[allow(dead_code)]
+    ctype: CString,
     phantom: PhantomData<T>,
 }
 
@@ -119,11 +117,12 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
     /// Create a new builder, wrapping the `inner` structure (that implements `Serve`),
     /// calling the backend `name`. If the backend has a probe attached to it, set `has_probe` to
     /// true.
-    pub fn new(ctx: &mut Ctx, name: &str, be: S, has_probe: bool) -> VclResult<Self> {
+    pub fn new(ctx: &mut Ctx, type_: &str, name: &str, be: S, has_probe: bool) -> VclResult<Self> {
         let mut inner = Box::new(be);
-        let type_: CString = CString::new(inner.get_type()).map_err(|e| e.to_string())?;
+        let ctype: CString = CString::new(type_).map_err(|e| e.to_string())?;
+        let cname: CString = CString::new(name).map_err(|e| e.to_string())?;
         let methods = Box::new(ffi::vdi_methods {
-            type_: type_.as_ptr(),
+            type_: ctype.as_ptr(),
             magic: ffi::VDI_METHODS_MAGIC,
             destroy: None,
             event: Some(wrap_event::<S, T>),
@@ -144,8 +143,8 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
                 &*methods,
                 ptr::from_mut::<S>(&mut *inner).cast::<c_void>(),
                 c"%.*s".as_ptr(),
-                name.len(),
-                name.as_ptr().cast::<c_char>(),
+                cname.as_bytes().len(),
+                cname.as_ptr().cast::<c_char>(),
             )
         };
         if bep.0.is_null() {
@@ -154,7 +153,7 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
 
         Ok(Backend {
             bep,
-            type_,
+            ctype,
             inner,
             methods,
             phantom: PhantomData,
@@ -165,16 +164,11 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
 /// The trait to implement to "be" a backend
 ///
 /// `Serve` maps to the `vdi_methods` structure of the C api, but presented in a more
-/// "rusty" form. Apart from [`Serve::get_type`] and [`Serve::get_headers`] all methods are optional.
+/// "rusty" form. Apart from [`Serve::get_headers`] all methods are optional.
 ///
 /// If your backend doesn't return any content body, you can implement `Serve<()>` as `()` has a default
 /// `Transfer` implementation.
 pub trait Serve<T: Transfer> {
-    /// What kind of backend this is, for example, pick a descriptive name, possibly linked to the
-    /// vmod which creates it. Pick an ASCII string, otherwise building the [`Backend`] via
-    /// [`Backend::new`] will fail.
-    fn get_type(&self) -> &str;
-
     /// If the VCL pick this backend (or a director ended up choosing it), this method gets called
     /// so that the `Serve` implementer can:
     /// - inspect the request headers (`ctx.http_bereq`)
@@ -351,12 +345,33 @@ unsafe extern "C" fn wrap_pipe<S: Serve<T>, T: Transfer>(
     sc_to_ptr(backend.pipe(&mut ctx, tcp_stream))
 }
 
+// CStr is tied to the lifetime of bep, but we only use it for error messages
+unsafe fn get_type(bep: VCL_BACKEND) -> &'static str {
+    CStr::from_ptr(
+        bep.0
+            .as_ref()
+            .unwrap()
+            .vdir
+            .as_ref()
+            .unwrap()
+            .methods
+            .as_ref()
+            .unwrap()
+            .type_
+            .as_ref()
+            .unwrap(),
+    )
+    .to_str()
+    .unwrap()
+}
+
+#[allow(clippy::too_many_lines)] // fixme
 unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
     ctxp: *const ffi::vrt_ctx,
-    be: VCL_BACKEND,
+    bep: VCL_BACKEND,
 ) -> c_int {
     let mut ctx = Ctx::from_ptr(ctxp);
-    let be = validate_director(be);
+    let be = validate_director(bep);
     let backend: &S = get_backend(be);
     assert!(!be.vcl_name.is_null()); // FIXME: is this validation needed?
     validate_vdir(be); // FIXME: is this validation needed?
@@ -370,7 +385,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
             }
             if beresp.proto().is_none() {
                 if let Err(e) = beresp.set_proto("HTTP/1.1") {
-                    ctx.fail(format!("{}: {e}", backend.get_type()));
+                    ctx.fail(format!("{:?}: {e}", get_type(bep)));
                     return 1;
                 }
             }
@@ -379,7 +394,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
                 .cast::<ffi::http_conn>()
                 .as_mut()
             else {
-                ctx.fail(format!("{}: insufficient workspace", backend.get_type()));
+                ctx.fail(format!("{}: insufficient workspace", get_type(bep)));
                 return -1;
             };
             htc.magic = ffi::HTTP_CONN_MAGIC;
@@ -411,13 +426,13 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
                                 .cast::<ffi::vfp>()
                                 .as_mut()
                         else {
-                            ctx.fail(format!("{}: insufficient workspace", backend.get_type()));
+                            ctx.fail(format!("{}: insufficient workspace", get_type(bep)));
                             return -1;
                         };
                         let Ok(t) = Workspace::from_ptr(bo.ws.as_mut_ptr())
-                            .copy_bytes_with_null(backend.get_type())
+                            .copy_bytes_with_null(get_type(bep))
                         else {
-                            ctx.fail(format!("{}: insufficient workspace", backend.get_type()));
+                            ctx.fail(format!("{}: insufficient workspace", get_type(bep)));
                             return -1;
                         };
 
@@ -428,7 +443,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
                         vfp.priv1 = null();
 
                         let Some(vfe) = ffi::VFP_Push(bo.vfc, vfp).as_mut() else {
-                            ctx.fail(format!("{}: couldn't insert vfp", backend.get_type()));
+                            ctx.fail(format!("{}: couldn't insert vfp", get_type(bep)));
                             return -1;
                         };
                         // we don't need to clean vfe.priv1 at the vfp level, the backend will
@@ -442,7 +457,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
             0
         }
         Err(s) => {
-            let typ = backend.get_type();
+            let typ = get_type(bep);
             ctx.log(LogTag::FetchError, format!("{typ}: {s}"));
             1
         }
