@@ -9,7 +9,7 @@ varnish::run_vtc_tests!("tests/*.vtc");
 /// Varnish Fetch Processors allow a vmod writer to insert themselves into a delivery
 /// pipeline and alter an object body as it is being received from the backend.
 /// In this vmod, we simply lowercase the ascii letters using a filter processor (VFP) named "lower".
-#[varnish::vmod(docs = "README.md")]
+#[varnish::vmod(docs = "API.md")]
 mod vfp {
     use varnish::vcl::{Event, FetchFilters};
 

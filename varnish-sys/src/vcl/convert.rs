@@ -54,7 +54,9 @@ use crate::ffi::{
     VCL_BLOB, VCL_BODY, VCL_BOOL, VCL_DURATION, VCL_ENUM, VCL_HEADER, VCL_HTTP, VCL_INT, VCL_IP,
     VCL_PROBE, VCL_REAL, VCL_STEVEDORE, VCL_STRANDS, VCL_STRING, VCL_TIME, VCL_VCL,
 };
-use crate::vcl::{from_vcl_probe, into_vcl_probe, CowProbe, Probe, VclError, Workspace};
+use crate::vcl::{
+    from_vcl_probe, into_vcl_probe, BackendHandle, CowProbe, Probe, VclError, Workspace,
+};
 
 /// Convert a Rust type into a VCL one
 ///
@@ -413,5 +415,12 @@ mod version_after_v6 {
                 Ok(VCL_IP(p.cast()))
             }
         }
+    }
+}
+
+// VCL_BACKEND
+impl<'a> IntoVCL<VCL_BACKEND> for &'a BackendHandle {
+    fn into_vcl(self, _: &mut Workspace) -> Result<VCL_BACKEND, VclError> {
+        Ok(self.0)
     }
 }

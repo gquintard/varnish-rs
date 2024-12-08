@@ -8,7 +8,7 @@ varnish::run_vtc_tests!("tests/*.vtc");
 static EVENT_LOADED_COUNT: AtomicI64 = AtomicI64::new(0);
 
 /// Listen to VCL event
-#[varnish::vmod(docs = "README.md")]
+#[varnish::vmod(docs = "API.md")]
 mod event {
     use std::sync::atomic::Ordering::Relaxed;
 

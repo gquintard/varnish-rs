@@ -9,7 +9,7 @@ pub struct kv {
 }
 
 /// A simple string dictionary in your VCL
-#[varnish::vmod(docs = "README.md")]
+#[varnish::vmod(docs = "API.md")]
 mod object {
     use dashmap::DashMap;
 

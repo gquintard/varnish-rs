@@ -228,6 +228,7 @@ impl ParamTy {
 /// Represents all return types of functions.
 #[derive(Debug, Clone)]
 pub enum OutputTy {
+    BackendHandle,
     Default, // Nothing is returned
     SelfType,
     ParamType(ParamTy),
@@ -240,6 +241,7 @@ impl OutputTy {
     pub fn to_vcc_type(&self) -> String {
         match self {
             // Self is returned by obj constructors which are void in VCC
+            Self::BackendHandle => "BACKEND".into(),
             Self::Default | Self::SelfType => "VOID".into(),
             Self::ParamType(ty) => ty.to_vcc_type().into(),
             Self::Bytes | Self::String => "STRING".into(),
@@ -251,6 +253,7 @@ impl OutputTy {
         // ATTENTION: Each VCL_* type here must also be listed in the `use varnish::...`
         //            statement in the `varnish-macros/src/generator.rs` file.
         match self {
+            Self::BackendHandle => "VCL_BACKEND".into(),
             Self::ParamType(ty) => ty.to_c_type().into(),
             Self::Bytes | Self::String => "VCL_STRING".into(),
             Self::SelfType | Self::Default => "VCL_VOID".into(),

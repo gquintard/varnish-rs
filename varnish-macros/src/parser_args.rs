@@ -391,6 +391,11 @@ impl OutputTy {
                 return Some(Self::VclType(ident));
             }
         }
+        if let Some(ty) = as_ref_ty(ty).and_then(as_simple_ty) {
+            if ty == "BackendHandle" {
+                return Some(Self::BackendHandle);
+            }
+        }
         if let Some(ty) = as_option_type(ty) {
             if let Some(ident) = as_simple_ty(ty) {
                 if ident == "String" {
