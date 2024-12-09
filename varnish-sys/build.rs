@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use std::{env, fs};
 
+use bindgen_helpers as bindgen;
 use bindgen_helpers::{rename_enum, Renamer};
 
 static BINDINGS_FILE: &str = "bindings.for-docs";
