@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::{env, fs};
 
-use bindgen_helpers::{rename_enum, Renamer};
+use bindgen_helpers::{rename_enum, Builder, Renamer};
 
 static BINDINGS_FILE: &str = "bindings.for-docs";
 static BINDINGS_FILE_VER: &str = "7.6.1";
@@ -54,11 +54,11 @@ fn main() {
 
     println!("cargo:rustc-link-lib=varnishapi");
     println!("cargo:rerun-if-changed=src/wrapper.h");
-    let mut bindings_builder = bindgen::Builder::default()
+    let mut bindings_builder = Builder::default()
         .header("src/wrapper.h")
         .blocklist_item("FP_.*")
         .blocklist_item("FILE")
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
+        .parse_callbacks(Box::new(bindgen_helpers::CargoCallbacks::new()))
         .clang_args(
             varnish_paths
                 .iter()
