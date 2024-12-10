@@ -15,7 +15,7 @@ version = "0.3.0"  ## <<<----- ! STOP !!!
 #
 repository = "https://github.com/gquintard/varnish-rs"
 edition = "2021"
-rust-version = "1.79.0"
+rust-version = "1.82.0"
 license = "BSD-3-Clause"
 description = "A Rust framework for creating Varnish Caching Proxy extensions"
 keywords = ["varnish", "vmod", "cache", "http", "reverse-proxy"]
@@ -29,8 +29,7 @@ varnish-macros = { path = "./varnish-macros", version = "0.3.0" }
 varnish-sys = { path = "./varnish-sys", version = "0.3.0" }
 #
 # These dependencies are used by one or more crates, and easier to maintain in one place.
-bindgen = "0.70.1"
-bindgen_helpers = "0.2.0"
+bindgen_helpers = "0.3.0"
 darling = "0.20.10"
 glob = "0.3.1"
 insta = "1"
