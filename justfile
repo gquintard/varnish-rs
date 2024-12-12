@@ -71,10 +71,15 @@ grcov:
     open ./target/debug/coverage/index.html
 
 # Publish crates to crates.io in the right order
-publish *ARGS:
-    cargo publish -p varnish-sys {{ARGS}}
-    cargo publish -p varnish-macros {{ARGS}}
-    cargo publish -p varnish {{ARGS}}
+publish:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cargo publish -p varnish-sys
+    cargo publish -p varnish-macros
+    cargo publish -p varnish
+    LOCAL_VERSION="$(grep '^version =' Cargo.toml | sed -E 's/version = "([^"]*)".*/\1/')"
+    echo "Detected crate version:  $LOCAL_VERSION"
+    git tag -a "v$LOCAL_VERSION"
 
 # Use the experimental workspace publishing with --dry-run. Requires nightly Rust.
 test-publish:
