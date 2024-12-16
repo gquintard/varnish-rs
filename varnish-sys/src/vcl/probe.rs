@@ -9,7 +9,7 @@ use crate::vcl::{IntoVCL, VclError, Workspace};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum Request<T> {
-    URL(T),
+    Url(T),
     Text(T),
 }
 
@@ -30,7 +30,7 @@ impl CowProbe<'_> {
     pub fn to_owned(&self) -> Probe {
         Probe {
             request: match &self.request {
-                Request::URL(cow) => Request::URL(cow.to_string()),
+                Request::Url(cow) => Request::Url(cow.to_string()),
                 Request::Text(cow) => Request::Text(cow.to_string()),
             },
             timeout: self.timeout,
@@ -59,7 +59,7 @@ pub(crate) fn into_vcl_probe<T: AsRef<str>>(
     })?;
 
     match src.request {
-        Request::URL(s) => {
+        Request::Url(s) => {
             probe.url = s.as_ref().into_vcl(ws)?.0;
         }
         Request::Text(s) => {
@@ -80,7 +80,7 @@ pub(crate) fn from_vcl_probe<'a, T: From<Cow<'a, str>>>(value: VCL_PROBE) -> Opt
         request: if pr.url.is_null() {
             Request::Text(from_str(pr.request).into())
         } else {
-            Request::URL(from_str(pr.url).into())
+            Request::Url(from_str(pr.url).into())
         },
         timeout: VCL_DURATION(pr.timeout).into(),
         interval: VCL_DURATION(pr.interval).into(),

@@ -49,12 +49,11 @@ jobs:
       - name: Test for latest Varnish version
         if: matrix.type == 'latest'
         run: just ci-test-extras
-# Comment out until after v0.3.0 is published
-#      - name: Check semver
-#        if: matrix.type == 'latest'
-#        uses: obi1kenobi/cargo-semver-checks-action@v2
-#        with:
-#          exclude: varnish-sys  # GitHub CI has somehow generates a different output
+      - name: Check semver
+        if: matrix.type == 'latest'
+        uses: obi1kenobi/cargo-semver-checks-action@v2
+        with:
+          exclude: varnish-sys  # GitHub CI has somehow generates a different output
       - name: Test packaging for publish
         if: matrix.type == 'latest'
         run: |

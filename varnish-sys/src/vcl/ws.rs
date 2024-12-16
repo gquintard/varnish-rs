@@ -218,7 +218,7 @@ fn maybe_uninit(value: &[u8]) -> &[MaybeUninit<u8>] {
     // SAFETY: &[T] and &[MaybeUninit<T>] have the same layout
     // This was copied from MaybeUninit::copy_from_slice, ignoring clippy lints
     unsafe {
-        #[allow(clippy::transmute_ptr_to_ptr)]
+        #[expect(clippy::transmute_ptr_to_ptr)]
         transmute(value)
     }
 }
@@ -227,7 +227,7 @@ fn maybe_uninit(value: &[u8]) -> &[MaybeUninit<u8>] {
 unsafe fn slice_assume_init_mut(value: &mut [MaybeUninit<u8>]) -> &mut [u8] {
     // SAFETY: Valid elements have just been copied into `this` so it is initialized
     // This was copied from MaybeUninit::slice_assume_init_mut, ignoring clippy lints
-    #[allow(clippy::ref_as_ptr)]
+    #[expect(clippy::ref_as_ptr)]
     &mut *(value as *mut [MaybeUninit<u8>] as *mut [u8])
 }
 
@@ -323,7 +323,7 @@ impl Drop for ReservedBuf<'_> {
 #[derive(Debug)]
 pub struct TestWS {
     c_ws: ffi::ws,
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     space: Vec<c_char>,
 }
 

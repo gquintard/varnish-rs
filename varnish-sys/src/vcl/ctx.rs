@@ -50,7 +50,7 @@ impl<'a> Ctx<'a> {
     }
 
     /// Instantiate from a mutable reference to a [`vrt_ctx`].
-    #[allow(clippy::useless_conversion)] // Varnish v6 has a different struct, requiring .into()
+    #[cfg_attr(not(varnishsys_6), expect(clippy::useless_conversion))] // Varnish v6 has a different struct, requiring .into()
     pub fn from_ref(raw: &'a mut vrt_ctx) -> Self {
         assert_eq!(raw.magic, VRT_CTX_MAGIC);
         Self {
@@ -184,8 +184,10 @@ mod tests {
 #[derive(Debug)]
 pub struct PerVclState<T> {
     #[cfg(not(varnishsys_6))]
+    #[expect(clippy::vec_box)] // FIXME: we may want to rethink this
     pub fetch_filters: Vec<Box<ffi::vfp>>,
     #[cfg(not(varnishsys_6))]
+    #[expect(clippy::vec_box)] // FIXME: we may want to rethink this
     pub delivery_filters: Vec<Box<ffi::vdp>>,
     pub user_data: Option<Box<T>>,
 }

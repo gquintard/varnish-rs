@@ -1,15 +1,13 @@
 extern crate core;
 
-#[allow(
+#[expect(
     improper_ctypes,
     non_camel_case_types,
-    non_snake_case,
     non_upper_case_globals,
     unused_qualifications
 )]
-#[allow(
+#[expect(
     clippy::approx_constant,
-    clippy::manual_c_str_literals,
     clippy::pedantic,
     clippy::ptr_offset_with_cast,
     clippy::too_many_arguments,

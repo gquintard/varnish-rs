@@ -33,6 +33,7 @@ impl vmod_priv {
         get_owned_bbox(&mut self.priv_)
     }
 
+    #[expect(clippy::unnecessary_box_returns)]
     pub unsafe fn take_per_vcl<T>(&mut self) -> Box<PerVclState<T>> {
         if let Some(v) = self.take::<PerVclState<T>>() {
             v
