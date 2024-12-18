@@ -95,10 +95,10 @@ use crate::{
 #[derive(Debug)]
 pub struct Backend<S: Serve<T>, T: Transfer> {
     bep: VCL_BACKEND,
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     methods: Box<ffi::vdi_methods>,
     inner: Box<S>,
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     type_: CString,
     phantom: PhantomData<T>,
 }
@@ -247,7 +247,7 @@ pub trait Serve<T: Transfer> {
 /// - `Ok(None)`: headers are set, but the response as no content body.
 /// - `Ok(Some(Transfer))`: headers are set, and Varnish will use the `Transfer` object to build
 ///   the response body.
-#[allow(clippy::len_without_is_empty)] // FIXME: should there be an is_empty() method?
+#[expect(clippy::len_without_is_empty)] // FIXME: should there be an is_empty() method?
 pub trait Transfer {
     /// The only mandatory method, it will be called repeated so that the `Transfer` object can
     /// fill `buf`. The transfer will stop if any of its calls returns an error, and it will
@@ -351,7 +351,6 @@ unsafe extern "C" fn wrap_pipe<S: Serve<T>, T: Transfer>(
     sc_to_ptr(backend.pipe(&mut ctx, tcp_stream))
 }
 
-#[allow(clippy::too_many_lines)] // fixme
 unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
     ctxp: *const ffi::vrt_ctx,
     be: VCL_BACKEND,

@@ -39,7 +39,7 @@ pub struct StatsBuilder<'a> {
 
 impl<'a> StatsBuilder<'a> {
     /// Create a new `VSCBuilder`
-    #[allow(clippy::new_without_default)] // TODO: consider implementing
+    #[expect(clippy::new_without_default)] // TODO: consider implementing
     pub fn new() -> Self {
         unsafe {
             let vsm = ffi::VSM_New();

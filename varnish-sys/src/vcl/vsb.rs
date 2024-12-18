@@ -11,7 +11,7 @@ pub struct Buffer<'a> {
 
 impl Buffer<'_> {
     /// Create a `Vsb` from a C pointer
-    #[allow(clippy::not_unsafe_ptr_arg_deref)]
+    #[expect(clippy::not_unsafe_ptr_arg_deref)]
     pub fn from_ptr(raw: *mut ffi::vsb) -> Self {
         let raw = unsafe { raw.as_mut().unwrap() };
         assert_eq!(raw.magic, ffi::VSB_MAGIC);
@@ -19,7 +19,7 @@ impl Buffer<'_> {
     }
 
     /// Push a buffer into the buffer
-    #[allow(clippy::result_unit_err)] // FIXME: what should the error be? VclError?
+    #[expect(clippy::result_unit_err)] // FIXME: what should the error be? VclError?
     pub fn write<T: AsRef<[u8]>>(&mut self, src: &T) -> Result<(), ()> {
         let buf = src.as_ref().as_ptr().cast::<c_void>();
         let l = src.as_ref().len();

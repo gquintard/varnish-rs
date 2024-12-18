@@ -280,7 +280,7 @@ impl FetchProcCtx<'_> {
             VfpStatus::Null => panic!("VFP_Suck() was never supposed to return VFP_NULL!"),
             // In the future, there might be more enum values, so we should ensure it continues
             // to compile, but we do want a warning when developing locally to add the new one.
-            #[allow(unreachable_patterns)]
+            #[expect(unreachable_patterns)]
             n => panic!("unknown VfpStatus {n:?}"),
         }
     }
@@ -291,12 +291,12 @@ pub struct FetchFilters<'c, 'f> {
     ctx: &'c vrt_ctx,
     // The pointer to the box content must be stable.
     // Storing values directly in the vector might be moved when the vector grows.
-    #[allow(clippy::vec_box)]
+    #[expect(clippy::vec_box)]
     filters: &'f mut Vec<Box<ffi::vfp>>,
 }
 
 impl<'c, 'f> FetchFilters<'c, 'f> {
-    #[allow(clippy::vec_box)]
+    #[expect(clippy::vec_box)]
     pub(crate) fn new(ctx: &'c vrt_ctx, filters: &'f mut Vec<Box<ffi::vfp>>) -> Self {
         Self { ctx, filters }
     }
@@ -343,12 +343,12 @@ pub struct DeliveryFilters<'c, 'f> {
     ctx: &'c vrt_ctx,
     // The pointer to the box content must be stable.
     // Storing values directly in the vector might be moved when the vector grows.
-    #[allow(clippy::vec_box)]
+    #[expect(clippy::vec_box)]
     filters: &'f mut Vec<Box<ffi::vdp>>,
 }
 
 impl<'c, 'f> DeliveryFilters<'c, 'f> {
-    #[allow(clippy::vec_box)]
+    #[expect(clippy::vec_box)]
     pub(crate) fn new(ctx: &'c vrt_ctx, filters: &'f mut Vec<Box<ffi::vdp>>) -> Self {
         Self { ctx, filters }
     }

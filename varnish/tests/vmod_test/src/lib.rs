@@ -1,4 +1,4 @@
-#![allow(clippy::unnecessary_wraps)]
+#![expect(clippy::unnecessary_wraps)]
 
 use std::ffi::CStr;
 
@@ -119,21 +119,7 @@ mod rustest {
     }
 
     pub fn cowprobe_prop(probe: Option<CowProbe<'_>>) -> String {
-        match probe {
-            Some(probe) => format!(
-                "{}-{}-{}-{}-{}-{}",
-                match probe.request {
-                    Request::URL(url) => format!("url:{url}"),
-                    Request::Text(text) => format!("text:{text}"),
-                },
-                probe.threshold,
-                probe.timeout.as_secs(),
-                probe.interval.as_secs(),
-                probe.initial,
-                probe.window
-            ),
-            None => "no probe".to_string(),
-        }
+        probe_prop(probe.map(|v| v.to_owned()))
     }
 
     pub fn probe_prop(probe: Option<Probe>) -> String {
@@ -141,7 +127,7 @@ mod rustest {
             Some(probe) => format!(
                 "{}-{}-{}-{}-{}-{}",
                 match probe.request {
-                    Request::URL(url) => format!("url:{url}"),
+                    Request::Url(url) => format!("url:{url}"),
                     Request::Text(text) => format!("text:{text}"),
                 },
                 probe.threshold,

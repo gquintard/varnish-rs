@@ -16,7 +16,7 @@ use crate::ProcResult;
 
 /// Parser state for a function parser. This is not part of the model, but helps with error detection.
 #[derive(Debug, Default)]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 pub struct FuncStatus {
     func_type: FuncType,
     has_ctx_or_ws: bool,
@@ -87,7 +87,7 @@ impl ParamTypeInfo {
 
 impl ParamType {
     /// Parse an argument type, including the magical types like shared types and context.
-    #[allow(clippy::too_many_lines)]
+    #[expect(clippy::too_many_lines)]
     fn parse(
         shared_types: &mut SharedTypes,
         pat_ty: &mut PatType,

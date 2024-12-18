@@ -1,5 +1,5 @@
-#![allow(unused_variables)]
-#![allow(non_camel_case_types)]
+#![expect(unused_variables)]
+#![expect(non_camel_case_types)]
 
 use varnish::vmod;
 
