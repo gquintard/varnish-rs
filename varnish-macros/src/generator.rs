@@ -242,6 +242,7 @@ impl Generator {
             #[allow(
                 clippy::needless_question_mark,
             )]
+            #[automatically_derived]
             mod varnish_generated {
                 use std::ffi::{c_char, c_int, c_uint, c_void, CStr};
                 use std::ptr::null;
