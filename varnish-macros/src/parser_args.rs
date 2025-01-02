@@ -332,6 +332,8 @@ impl ParamTy {
                 return Some(Self::Probe);
             } else if ident == "SocketAddr" {
                 return Some(Self::SocketAddr);
+            } else if ident == "VCL_BACKEND" {
+                return Some(Self::VCL_BACKEND);
             }
         }
 

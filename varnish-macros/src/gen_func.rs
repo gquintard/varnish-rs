@@ -465,7 +465,7 @@ impl FuncProcessor {
                 // Ignore the result of the event function, override it with 0
                 func_steps.push(quote! { #func_call; });
                 func_call = quote! { VCL_INT(0) }
-            } else if !is_void && !matches!(info.output_ty, OutputTy::VclType(_)) {
+            } else if !is_void && !matches!(info.output_ty, OutputTy::VclType(_)) && !matches!(info.output_ty, OutputTy::ParamType(ParamTy::VCL_BACKEND)) {
                 needs_ctx = true;
                 func_call = quote! { #func_call.into_vcl(&mut __ctx.ws)? };
             }

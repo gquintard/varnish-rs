@@ -1,0 +1,15 @@
+[package]
+name = "vmod_director"
+version = "0.0.0"
+publish = false
+edition.workspace = true
+
+[dependencies]
+rand = { version = "0.8.5", features = ["std"] }
+varnish.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[lints]
+workspace = true
