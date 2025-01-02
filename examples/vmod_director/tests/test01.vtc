@@ -1,0 +1,31 @@
+varnishtest "kv"
+
+server s1 {
+	rxreq
+	txresp
+} -start
+
+server s2 {
+	rxreq
+	txresp
+} -start
+
+varnish v1 -vcl+backend {
+	import director from "${vmod}";
+
+	sub vcl_init {
+		new pool = director.pool();
+		pool.add_backend(s1);
+		pool.add_backend(s2);
+	}
+
+	sub vcl_recv {
+		set req.backend_hint = pool.backend();
+	}
+} -start
+
+client c1 {
+	txreq
+	rxresp
+	expect resp.status == 200
+} -run
