@@ -10,13 +10,23 @@ server s2 {
 	txresp
 } -start
 
-varnish v1 -vcl+backend {
+varnish v1 -vcl {
 	import director from "${vmod}";
+
+	backend b1 {
+		.host = "${s1_addr}";
+		.port = "${s1_port}";
+	}
+
+	backend b2 {
+		.host = "${s2_addr}";
+		.port = "${s2_port}";
+	}
 
 	sub vcl_init {
 		new pool = director.pool();
-		pool.add_backend(s1);
-		pool.add_backend(s2);
+		pool.add_backend(b1);
+		pool.add_backend(b2);
 	}
 
 	sub vcl_recv {
