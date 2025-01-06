@@ -39,6 +39,7 @@ mod director {
                 if (*backend).magic == VRT_BACKEND_MAGIC {
                     println!("backend magic was correct");
                 } else {
+                    println!("expected magic: {:x}, got magic: {:x}", VRT_BACKEND_MAGIC, (*backend).magic);
                     return Err(VclError::new("Invalid VRT_BACKEND_MAGIC".to_string()));
                 }
             }
