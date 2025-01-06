@@ -6,7 +6,7 @@ edition.workspace = true
 
 [dependencies]
 rand = { version = "0.8.5", features = ["std"] }
-varnish.workspace = true
+varnish = { workspace = true, features = ["ffi"] }
 
 [lib]
 crate-type = ["cdylib"]

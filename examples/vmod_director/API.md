@@ -8,7 +8,7 @@
 -->
 # Varnish Module (VMOD) `director`
 
-A simple string dictionary in your VCL
+A simple varnish director
 
 ```vcl
 // Place import statement at the top of your VCL file
