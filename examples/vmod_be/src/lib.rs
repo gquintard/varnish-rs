@@ -59,7 +59,7 @@ struct Sentence {
 // - get_headers() that actually builds the response headers,
 //   and returns a Body
 impl Serve<Body> for Sentence {
-    fn get_type(&self) -> &str {
+    fn get_type(&self) -> &'static str {
         "parrot"
     }
 
