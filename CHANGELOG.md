@@ -1,7 +1,11 @@
 # Unpublished
+- In probe support, renamed `Request::URL` to `Request::Url`
 
+# 0.3.0 (2024-12-12)
+
+- Bump MSRV to 1.82.0
 - Support for Varnish v6.0 LTS, but without filters, and without `vmod_be`, `vmod_vfp`, `vmod_vdp` examples
-- Require all user functions that return `VCL_*` types to be `unsafe` 
+- Require all user functions that return `VCL_*` types to be `unsafe`
 
 # 0.2.0 (2024-11-19)
 

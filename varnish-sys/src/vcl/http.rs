@@ -11,7 +11,6 @@
 //! the case. Future work needs to sanitize the headers to make this safer to use. It is tracked in
 //! this [issue](https://github.com/gquintard/varnish-rs/issues/4).
 
-#![allow(clippy::not_unsafe_ptr_arg_deref)]
 use std::mem::transmute;
 use std::slice::from_raw_parts_mut;
 

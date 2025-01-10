@@ -17,7 +17,7 @@ impl txt {
     /// FIXME: This method is only used when calling [`crate::ffi::VSLbt`],
     /// and current implementation creates a string without a null terminator to pass it in.
     /// Going forward, we should probably refactor it to avoid extra string allocation.
-    #[allow(clippy::should_implement_trait)]
+    #[expect(clippy::should_implement_trait)]
     pub fn from_str(s: &str) -> Self {
         Self::from_bytes(s.as_bytes())
     }
@@ -28,6 +28,7 @@ impl txt {
 
     /// Convert the `txt` struct to a `&[u8]`.
     /// We want to explicitly differentiate between empty (`None`) and null (`Some([])`) strings.
+    #[expect(clippy::wrong_self_convention)] // TODO: drop Copy trait for txt?
     pub fn to_slice<'a>(&self) -> Option<&'a [u8]> {
         if self.b.is_null() {
             None
@@ -45,6 +46,7 @@ impl txt {
     }
 
     /// Convert the `txt` struct to a `&str`.  Will panic if the string is not valid UTF-8.
+    #[expect(clippy::wrong_self_convention)] // TODO: drop Copy trait for txt?
     pub fn to_str<'a>(&self) -> Option<&'a str> {
         self.to_slice().map(|s| from_utf8(s).unwrap())
     }

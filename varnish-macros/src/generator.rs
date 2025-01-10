@@ -178,7 +178,6 @@ impl Generator {
         cproto
     }
 
-    #[allow(clippy::too_many_lines)]
     fn render_generated_mod(&self, vmod: &VmodInfo) -> TokenStream {
         let cproto = self.generate_proto().force_cstr();
         let vmod_name_data = self.names.data_struct_name().to_ident();
@@ -243,6 +242,7 @@ impl Generator {
             #[allow(
                 clippy::needless_question_mark,
             )]
+            #[automatically_derived]
             mod varnish_generated {
                 use std::ffi::{c_char, c_int, c_uint, c_void, CStr};
                 use std::ptr::null;

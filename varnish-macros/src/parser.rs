@@ -24,7 +24,6 @@ pub fn tokens_to_model(args: TokenStream, item_mod: &mut ItemMod) -> ProcResult<
 
 impl VmodInfo {
     /// Parse the `mod` item and generate the model of everything
-    #[allow(clippy::too_many_lines)]
     fn parse(params: VmodParams, item: &mut ItemMod) -> ProcResult<Self> {
         let mut errors = Errors::new();
         let mut funcs = Vec::<FuncInfo>::new();

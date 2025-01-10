@@ -88,10 +88,10 @@ use crate::{ffi, validate_director, validate_vdir, validate_vfp_ctx, validate_vf
 #[derive(Debug)]
 pub struct Backend<S: Serve> {
     pub handle: BackendHandle,
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     methods: Box<ffi::vdi_methods>,
     inner: Box<S>,
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     ctype: CString,
 }
 
@@ -360,7 +360,6 @@ unsafe fn get_type(bep: VCL_BACKEND) -> &'static str {
     .unwrap()
 }
 
-#[allow(clippy::too_many_lines)] // fixme
 unsafe extern "C" fn wrap_gethdrs<S: Serve>(ctxp: *const ffi::vrt_ctx, bep: VCL_BACKEND) -> c_int {
     let mut ctx = Ctx::from_ptr(ctxp);
     let be = validate_director(bep);

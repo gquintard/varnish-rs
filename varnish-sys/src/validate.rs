@@ -67,6 +67,7 @@ mod version_after_v6 {
     }
 
     impl vrt_ctx {
+        #[expect(clippy::vec_box)] // FIXME: we may want to rethink this
         pub fn fetch_filters<'c, 'f>(
             &'c self,
             filters: &'f mut Vec<Box<ffi::vfp>>,
@@ -74,6 +75,7 @@ mod version_after_v6 {
             FetchFilters::<'c, 'f>::new(self, filters)
         }
 
+        #[expect(clippy::vec_box)] // FIXME: we may want to rethink this
         pub fn delivery_filters<'c, 'f>(
             &'c self,
             filters: &'f mut Vec<Box<ffi::vdp>>,
