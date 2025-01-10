@@ -11,7 +11,7 @@ varnish::run_vtc_tests!("tests/*.vtc");
 /// pipeline and alter an object body as it is being delivered to a client.  In this vmod,
 /// the transformation is very simple: we simply send the body backwards using a delivery
 /// processor (VDP) named "flipper".
-#[varnish::vmod(docs = "API.md")]
+#[varnish::vmod(docs = "README.md")]
 mod vdp {
     use varnish::vcl::{DeliveryFilters, Event};
 

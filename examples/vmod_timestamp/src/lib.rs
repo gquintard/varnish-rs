@@ -1,7 +1,7 @@
 varnish::run_vtc_tests!("tests/*.vtc");
 
 /// Measure time in VCL
-#[varnish::vmod(docs = "API.md")]
+#[varnish::vmod(docs = "README.md")]
 mod timestamp {
     use std::mem;
     use std::time::{Duration, Instant};
