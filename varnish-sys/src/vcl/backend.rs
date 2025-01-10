@@ -21,55 +21,50 @@
 //!
 //! ```
 //! # mod varnish { pub use varnish_sys::vcl; }
-//! use varnish::vcl::{Ctx, Backend, Serve, Transfer, VclError};
+//! use std::io::{Read, Error};
+//! use varnish::vcl::{Ctx, Backend, Body, Serve, VclError};
 //!
-//! // First we need to define a struct that implement [Transfer]:
+//! // First we need to define a struct that we'll instantiate for each response
 //! struct BodyResponse {
 //!     left: usize,
 //! }
 //!
-//! impl Transfer for BodyResponse {
-//!     fn read(&mut self, buf: &mut [u8]) -> Result<usize, VclError> {
-//!         let mut done = 0;
-//!         for p in buf {
-//!              if self.left == 0 {
-//!                  break;
-//!              }
+//! // Implement Read to generate content dynamica
+//! impl Read for BodyResponse {
+//!     fn read(&mut self, buf: &mut [u8]) -> Result<usize, Error> {
+//!         // don't overflow the buffer, and don't write more bytes than self.left
+//!         let to_write: usize = std::cmp::min(buf.len(), self.left);
+//!         for p in &mut buf[..to_write] {
 //!              *p = 'A' as u8;
-//!              done += 1;
-//!              self.left -= 1;
 //!         }
-//!         Ok(done)
+//!         self.left -= to_write;
+//!         Ok(to_write)
 //!     }
 //! }
 //!
-//! // Then, we need a struct implementing `Serve` to build the headers and return a BodyResponse
-//! // Here, MyBe only needs to know how many times to repeat the character
 //! struct MyBe {
-//!     n: usize
+//!     n: usize,
 //! }
 //!
-//! impl Serve<BodyResponse> for MyBe {
-//!      fn get_type(&self) -> &str { "example" }
-//!
-//!      fn get_headers(&self, ctx: &mut Ctx) -> Result<Option<BodyResponse>, VclError> {
-//!          Ok(Some(
-//!            BodyResponse { left: self.n },
-//!          ))
+//! impl Serve for MyBe {
+//!      fn get_headers(&self, ctx: &mut Ctx) -> Result<Body, VclError> {
+//!          Ok(
+//!            Body::Reader(Box::new(BodyResponse { left: self.n }), Some(self.n)),
+//!          )
 //!      }
 //! }
 //!
 //! // Finally, we create a `Backend` wrapping a `MyBe`, and we can ask for a pointer to give to the C
 //! // layers.
 //! fn some_vmod_function(ctx: &mut Ctx) {
-//!     let backend = Backend::new(ctx, "name", MyBe { n: 42 }, false).expect("couldn't create the backend");
-//!     let ptr = backend.vcl_ptr();
+//!     let backend = Backend::new(ctx, "Arepeater", "repeat42", MyBe { n: 50}, false).expect("couldn't create the backend");
+//!     let ptr = unsafe { backend.vcl_ptr() };
 //! }
 //! ```
-use std::ffi::{c_char, c_int, c_void, CString};
-use std::marker::PhantomData;
+use std::ffi::{c_char, c_int, c_void, CStr, CString};
+use std::io::{Cursor, Read, Write};
 use std::mem::size_of;
-use std::net::{SocketAddr, TcpStream};
+use std::net::TcpStream;
 use std::os::unix::io::FromRawFd;
 use std::ptr;
 use std::ptr::{null, null_mut};
@@ -77,10 +72,8 @@ use std::time::SystemTime;
 
 use crate::ffi::{VclEvent, VfpStatus, VCL_BACKEND, VCL_BOOL, VCL_IP, VCL_TIME};
 use crate::utils::get_backend;
-use crate::vcl::{Buffer, Ctx, IntoVCL, LogTag, VclError, VclResult, Workspace};
-use crate::{
-    ffi, validate_director, validate_vdir, validate_vfp_ctx, validate_vfp_entry, validate_vrt_ctx,
-};
+use crate::vcl::{Buffer, Ctx, LogTag, VclError, VclResult, Workspace};
+use crate::{ffi, validate_director, validate_vdir, validate_vfp_ctx, validate_vfp_entry};
 
 /// Fat wrapper around [`VCL_BACKEND`].
 ///
@@ -93,17 +86,16 @@ use crate::{
 /// is just to have the backend be part of a vmod object because the object won't be dropped until
 /// the VCL is discarded and that can only happen once all the backend fetches are done.
 #[derive(Debug)]
-pub struct Backend<S: Serve<T>, T: Transfer> {
-    bep: VCL_BACKEND,
+pub struct Backend<S: Serve> {
+    pub handle: BackendHandle,
     #[expect(dead_code)]
     methods: Box<ffi::vdi_methods>,
     inner: Box<S>,
     #[expect(dead_code)]
-    type_: CString,
-    phantom: PhantomData<T>,
+    ctype: CString,
 }
 
-impl<S: Serve<T>, T: Transfer> Backend<S, T> {
+impl<S: Serve> Backend<S> {
     /// Access the inner type wrapped by [Backend]. Note that it isn't `mut` as other threads are
     /// likely to have access to it too.
     pub fn get_inner(&self) -> &S {
@@ -112,28 +104,29 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
 
     /// Return the C pointer wrapped by the [`Backend`]. Conventionally used by the `.backend()`
     /// methods of VCL objects.
-    pub fn vcl_ptr(&self) -> VCL_BACKEND {
-        self.bep
+    pub unsafe fn vcl_ptr(&self) -> VCL_BACKEND {
+        self.handle.0
     }
 
     /// Create a new builder, wrapping the `inner` structure (that implements `Serve`),
     /// calling the backend `name`. If the backend has a probe attached to it, set `has_probe` to
     /// true.
-    pub fn new(ctx: &mut Ctx, name: &str, be: S, has_probe: bool) -> VclResult<Self> {
+    pub fn new(ctx: &mut Ctx, type_: &str, name: &str, be: S, has_probe: bool) -> VclResult<Self> {
         let mut inner = Box::new(be);
-        let type_: CString = CString::new(inner.get_type()).map_err(|e| e.to_string())?;
+        let ctype: CString = CString::new(type_).map_err(|e| e.to_string())?;
+        let cname: CString = CString::new(name).map_err(|e| e.to_string())?;
         let methods = Box::new(ffi::vdi_methods {
-            type_: type_.as_ptr(),
+            type_: ctype.as_ptr(),
             magic: ffi::VDI_METHODS_MAGIC,
             destroy: None,
-            event: Some(wrap_event::<S, T>),
-            finish: Some(wrap_finish::<S, T>),
-            gethdrs: Some(wrap_gethdrs::<S, T>),
-            getip: Some(wrap_getip::<T>),
-            healthy: has_probe.then_some(wrap_healthy::<S, T>),
-            http1pipe: Some(wrap_pipe::<S, T>),
-            list: Some(wrap_list::<S, T>),
-            panic: Some(wrap_panic::<S, T>),
+            event: Some(wrap_event::<S>),
+            finish: Some(wrap_finish::<S>),
+            gethdrs: Some(wrap_gethdrs::<S>),
+            getip: Some(wrap_getip),
+            healthy: has_probe.then_some(wrap_healthy::<S>),
+            http1pipe: Some(wrap_pipe::<S>),
+            list: Some(wrap_list::<S>),
+            panic: Some(wrap_panic::<S>),
             resolve: None,
             release: None,
         });
@@ -144,8 +137,8 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
                 &*methods,
                 ptr::from_mut::<S>(&mut *inner).cast::<c_void>(),
                 c"%.*s".as_ptr(),
-                name.len(),
-                name.as_ptr().cast::<c_char>(),
+                cname.as_bytes().len(),
+                cname.as_ptr().cast::<c_char>(),
             )
         };
         if bep.0.is_null() {
@@ -153,28 +146,26 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
         }
 
         Ok(Backend {
-            bep,
-            type_,
+            handle: BackendHandle(bep),
+            ctype,
             inner,
             methods,
-            phantom: PhantomData,
         })
     }
 }
 
+/// An opaque handle to `VCL_BACKEND`
+#[derive(Debug)]
+pub struct BackendHandle(pub(crate) VCL_BACKEND);
+
 /// The trait to implement to "be" a backend
 ///
 /// `Serve` maps to the `vdi_methods` structure of the C api, but presented in a more
-/// "rusty" form. Apart from [`Serve::get_type`] and [`Serve::get_headers`] all methods are optional.
+/// "rusty" form. Apart from [`Serve::get_headers`] all methods are optional.
 ///
 /// If your backend doesn't return any content body, you can implement `Serve<()>` as `()` has a default
 /// `Transfer` implementation.
-pub trait Serve<T: Transfer> {
-    /// What kind of backend this is, for example, pick a descriptive name, possibly linked to the
-    /// vmod which creates it. Pick an ASCII string, otherwise building the [`Backend`] via
-    /// [`Backend::new`] will fail.
-    fn get_type(&self) -> &str;
-
+pub trait Serve {
     /// If the VCL pick this backend (or a director ended up choosing it), this method gets called
     /// so that the `Serve` implementer can:
     /// - inspect the request headers (`ctx.http_bereq`)
@@ -183,7 +174,7 @@ pub trait Serve<T: Transfer> {
     ///
     /// If this function returns a `Ok(_)` without having set the method and protocol of
     /// `ctx.http_beresp`, we'll default to `HTTP/1.1 200 OK`
-    fn get_headers(&self, _ctx: &mut Ctx) -> Result<Option<T>, VclError>;
+    fn get_headers(&self, _ctx: &mut Ctx) -> Result<Body, VclError>;
 
     /// Once a backend transaction is finished, the [`Backend`] has a chance to clean up, collect
     /// data and others in the finish methods.
@@ -238,46 +229,19 @@ pub trait Serve<T: Transfer> {
     }
 }
 
-/// An in-flight response body
-///
-/// When `Serve::get_headers()` get called, the backend [`Backend`] can return a
-/// `Result<Option<Transfer>>`:
-/// - `Err(_)`: something went wrong, the error will be logged and synthetic backend response will be
-///   generated by Varnish
-/// - `Ok(None)`: headers are set, but the response as no content body.
-/// - `Ok(Some(Transfer))`: headers are set, and Varnish will use the `Transfer` object to build
-///   the response body.
-#[expect(clippy::len_without_is_empty)] // FIXME: should there be an is_empty() method?
-pub trait Transfer {
-    /// The only mandatory method, it will be called repeated so that the `Transfer` object can
-    /// fill `buf`. The transfer will stop if any of its calls returns an error, and it will
-    /// complete successfully when `Ok(0)` is returned.
-    ///
-    /// `.read()` will never be called on an empty buffer, and the implementer must return the
-    /// number of bytes written (which therefore must be less than the buffer size).
-    fn read(&mut self, buf: &mut [u8]) -> Result<usize, VclError>;
-
-    /// If returning `Some(_)`, we know the size of the body generated, and it'll be used to fill the
-    /// `content-length` header of the response. Otherwise, chunked encoding will be used, which is
-    /// what's assumed by default.
-    fn len(&self) -> Option<usize> {
-        None
-    }
-
-    /// Potentially return the IP:port pair that the backend is using to transfer the body. It
-    /// might not make sense for your implementation.
-    fn get_ip(&self) -> Result<Option<SocketAddr>, VclError> {
-        Ok(None)
-    }
+pub enum Body {
+    None,
+    Buffer(Box<dyn AsRef<[u8]>>),
+    Reader(Box<dyn Read>, Option<usize>),
 }
 
-impl Transfer for () {
-    fn read(&mut self, _buf: &mut [u8]) -> Result<usize, VclError> {
-        Ok(0)
-    }
+enum WrappedBody {
+    None,
+    Cursor(Cursor<Box<dyn AsRef<[u8]>>>),
+    Reader(Box<dyn Read>),
 }
 
-unsafe extern "C" fn vfp_pull<T: Transfer>(
+unsafe extern "C" fn vfp_pull(
     ctxp: *mut ffi::vfp_ctx,
     vfep: *mut ffi::vfp_entry,
     ptr: *mut c_void,
@@ -286,38 +250,63 @@ unsafe extern "C" fn vfp_pull<T: Transfer>(
     let ctx = validate_vfp_ctx(ctxp);
     let vfe = validate_vfp_entry(vfep);
 
-    let buf = std::slice::from_raw_parts_mut(ptr.cast::<u8>(), *len as usize);
-    if buf.is_empty() {
+    let mut wbuf = std::slice::from_raw_parts_mut(ptr.cast::<u8>(), *len as usize);
+    if wbuf.is_empty() {
         *len = 0;
         return VfpStatus::Ok;
     }
 
-    let reader = vfe.priv1.cast::<T>().as_mut().unwrap();
-    match reader.read(buf) {
-        Err(e) => {
-            // TODO: we should grow a VSL object
-            // SAFETY: we assume ffi::VSLbt() will not store the pointer to the string's content
-            let msg = ffi::txt::from_str(e.as_str().as_ref());
-            ffi::VSLbt(ctx.req.as_ref().unwrap().vsl, ffi::VslTag::Error, msg);
-            VfpStatus::Error
-        }
-        Ok(0) => {
+    let wrapped_body = vfe.priv1.cast::<WrappedBody>().as_mut().unwrap();
+    match wrapped_body {
+        WrappedBody::None => {
+            // XXX: it may be work panicking as we shouldn't be called
+            // if we specified the body was empty
             *len = 0;
             VfpStatus::End
         }
-        Ok(l) => {
-            *len = l as isize;
-            VfpStatus::Ok
+        WrappedBody::Cursor(cursor) => {
+            let slice = (*cursor.get_ref()).as_ref().as_ref();
+            let total_len = slice.len() as u64;
+            let pos = cursor.position().min(slice.len() as u64);
+            let rbuf = slice.split_at(pos as usize).1;
+            // we can unwrap as we have buffers on both sides
+            *len = wbuf.write(rbuf).unwrap() as isize;
+            cursor.set_position(*len as u64);
+
+            if *len == 0 || cursor.position() == total_len {
+                VfpStatus::End
+            } else {
+                VfpStatus::Ok
+            }
+        }
+        WrappedBody::Reader(reader) => {
+            match reader.read(wbuf) {
+                Err(e) => {
+                    // TODO: we should grow a VSL object
+                    // SAFETY: we assume ffi::VSLbt() will not store the pointer to the string's content
+                    let msg = ffi::txt::from_str(&e.to_string());
+                    ffi::VSLbt(ctx.req.as_ref().unwrap().vsl, ffi::VslTag::Error, msg);
+                    VfpStatus::Error
+                }
+                Ok(0) => {
+                    *len = 0;
+                    VfpStatus::End
+                }
+                Ok(l) => {
+                    *len = l as isize;
+                    VfpStatus::Ok
+                }
+            }
         }
     }
 }
 
-unsafe extern "C" fn wrap_event<S: Serve<T>, T: Transfer>(be: VCL_BACKEND, ev: VclEvent) {
+unsafe extern "C" fn wrap_event<S: Serve>(be: VCL_BACKEND, ev: VclEvent) {
     let backend: &S = get_backend(validate_director(be));
     backend.event(ev);
 }
 
-unsafe extern "C" fn wrap_list<S: Serve<T>, T: Transfer>(
+unsafe extern "C" fn wrap_list<S: Serve>(
     ctxp: *const ffi::vrt_ctx,
     be: VCL_BACKEND,
     vsbp: *mut ffi::vsb,
@@ -330,13 +319,13 @@ unsafe extern "C" fn wrap_list<S: Serve<T>, T: Transfer>(
     backend.list(&mut ctx, &mut vsb, detailed != 0, json != 0);
 }
 
-unsafe extern "C" fn wrap_panic<S: Serve<T>, T: Transfer>(be: VCL_BACKEND, vsbp: *mut ffi::vsb) {
+unsafe extern "C" fn wrap_panic<S: Serve>(be: VCL_BACKEND, vsbp: *mut ffi::vsb) {
     let mut vsb = Buffer::from_ptr(vsbp);
     let backend: &S = get_backend(validate_director(be));
     backend.panic(&mut vsb);
 }
 
-unsafe extern "C" fn wrap_pipe<S: Serve<T>, T: Transfer>(
+unsafe extern "C" fn wrap_pipe<S: Serve>(
     ctxp: *const ffi::vrt_ctx,
     be: VCL_BACKEND,
 ) -> ffi::stream_close_t {
@@ -351,12 +340,29 @@ unsafe extern "C" fn wrap_pipe<S: Serve<T>, T: Transfer>(
     sc_to_ptr(backend.pipe(&mut ctx, tcp_stream))
 }
 
-unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
-    ctxp: *const ffi::vrt_ctx,
-    be: VCL_BACKEND,
-) -> c_int {
+// CStr is tied to the lifetime of bep, but we only use it for error messages
+unsafe fn get_type(bep: VCL_BACKEND) -> &'static str {
+    CStr::from_ptr(
+        bep.0
+            .as_ref()
+            .unwrap()
+            .vdir
+            .as_ref()
+            .unwrap()
+            .methods
+            .as_ref()
+            .unwrap()
+            .type_
+            .as_ref()
+            .unwrap(),
+    )
+    .to_str()
+    .unwrap()
+}
+
+unsafe extern "C" fn wrap_gethdrs<S: Serve>(ctxp: *const ffi::vrt_ctx, bep: VCL_BACKEND) -> c_int {
     let mut ctx = Ctx::from_ptr(ctxp);
-    let be = validate_director(be);
+    let be = validate_director(bep);
     let backend: &S = get_backend(be);
     assert!(!be.vcl_name.is_null()); // FIXME: is this validation needed?
     validate_vdir(be); // FIXME: is this validation needed?
@@ -370,7 +376,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
             }
             if beresp.proto().is_none() {
                 if let Err(e) = beresp.set_proto("HTTP/1.1") {
-                    ctx.fail(format!("{}: {e}", backend.get_type()));
+                    ctx.fail(format!("{:?}: {e}", get_type(bep)));
                     return 1;
                 }
             }
@@ -379,56 +385,68 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
                 .cast::<ffi::http_conn>()
                 .as_mut()
             else {
-                ctx.fail(format!("{}: insufficient workspace", backend.get_type()));
+                ctx.fail(format!("{}: insufficient workspace", get_type(bep)));
                 return -1;
             };
             htc.magic = ffi::HTTP_CONN_MAGIC;
             htc.doclose = &ffi::SC_REM_CLOSE[0];
             htc.content_length = 0;
             match res {
-                None => {
+                Body::None => {
                     htc.body_status = ffi::BS_NONE.as_ptr();
                 }
-                Some(transfer) => {
-                    match transfer.len() {
-                        None => {
-                            htc.body_status = ffi::BS_CHUNKED.as_ptr();
-                            htc.content_length = -1;
-                        }
-                        Some(0) => {
+                Body::Reader(reader, length_hint) => {
+                    if let Some(len) = length_hint {
+                        htc.content_length = len as isize;
+                        if htc.content_length == 0 {
+                            htc.priv_ = Box::into_raw(Box::new(WrappedBody::None)).cast::<c_void>();
                             htc.body_status = ffi::BS_NONE.as_ptr();
-                        }
-                        Some(l) => {
+                        } else {
+                            htc.priv_ = Box::into_raw(Box::new(WrappedBody::Reader(reader)))
+                                .cast::<c_void>();
                             htc.body_status = ffi::BS_LENGTH.as_ptr();
-                            htc.content_length = l as isize;
-                        }
+                        };
+                    } else {
+                        htc.content_length = -1;
+                        htc.body_status = ffi::BS_CHUNKED.as_ptr();
+                    }
+                }
+                Body::Buffer(buffer) => {
+                    htc.content_length = (*buffer).as_ref().len() as isize;
+                    if htc.content_length == 0 {
+                        htc.priv_ = Box::into_raw(Box::new(WrappedBody::None)).cast::<c_void>();
+                        htc.body_status = ffi::BS_NONE.as_ptr();
+                    } else {
+                        htc.priv_ =
+                            Box::into_raw(Box::new(WrappedBody::Cursor(Cursor::new(buffer))))
+                                .cast::<c_void>();
+                        htc.body_status = ffi::BS_LENGTH.as_ptr();
                     };
-                    htc.priv_ = Box::into_raw(Box::new(transfer)).cast::<c_void>();
-                    // build a vfp to wrap the Transfer object if there's something to push
+                    // build a vfp to wrap the Body object if there's something to push
                     if htc.body_status != ffi::BS_NONE.as_ptr() {
                         let Some(vfp) =
                             ffi::WS_Alloc(bo.ws.as_mut_ptr(), size_of::<ffi::vfp>() as u32)
                                 .cast::<ffi::vfp>()
                                 .as_mut()
                         else {
-                            ctx.fail(format!("{}: insufficient workspace", backend.get_type()));
+                            ctx.fail(format!("{}: insufficient workspace", get_type(bep)));
                             return -1;
                         };
                         let Ok(t) = Workspace::from_ptr(bo.ws.as_mut_ptr())
-                            .copy_bytes_with_null(backend.get_type())
+                            .copy_bytes_with_null(get_type(bep))
                         else {
-                            ctx.fail(format!("{}: insufficient workspace", backend.get_type()));
+                            ctx.fail(format!("{}: insufficient workspace", get_type(bep)));
                             return -1;
                         };
 
                         vfp.name = t.b;
                         vfp.init = None;
-                        vfp.pull = Some(vfp_pull::<T>);
+                        vfp.pull = Some(vfp_pull);
                         vfp.fini = None;
                         vfp.priv1 = null();
 
                         let Some(vfe) = ffi::VFP_Push(bo.vfc, vfp).as_mut() else {
-                            ctx.fail(format!("{}: couldn't insert vfp", backend.get_type()));
+                            ctx.fail(format!("{}: couldn't insert vfp", get_type(bep)));
                             return -1;
                         };
                         // we don't need to clean vfe.priv1 at the vfp level, the backend will
@@ -442,14 +460,14 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
             0
         }
         Err(s) => {
-            let typ = backend.get_type();
+            let typ = get_type(bep);
             ctx.log(LogTag::FetchError, format!("{typ}: {s}"));
             1
         }
     }
 }
 
-unsafe extern "C" fn wrap_healthy<S: Serve<T>, T: Transfer>(
+unsafe extern "C" fn wrap_healthy<S: Serve>(
     ctxp: *const ffi::vrt_ctx,
     be: VCL_BACKEND,
     changed: *mut VCL_TIME,
@@ -464,46 +482,40 @@ unsafe extern "C" fn wrap_healthy<S: Serve<T>, T: Transfer>(
     healthy.into()
 }
 
-unsafe extern "C" fn wrap_getip<T: Transfer>(
-    ctxp: *const ffi::vrt_ctx,
-    _be: VCL_BACKEND,
-) -> VCL_IP {
-    let ctxp = validate_vrt_ctx(ctxp);
-    let bo = ctxp.bo.as_ref().unwrap();
-    assert_eq!(bo.magic, ffi::BUSYOBJ_MAGIC);
-    let htc = bo.htc.as_ref().unwrap();
-    // FIXME: document why htc does not use a different magic number
-    assert_eq!(htc.magic, ffi::BUSYOBJ_MAGIC);
-    let transfer = htc.priv_.cast::<T>().as_ref().unwrap();
-
-    let mut ctx = Ctx::from_ptr(ctxp);
-
-    transfer
-        .get_ip()
-        .and_then(|ip| match ip {
-            Some(ip) => Ok(ip.into_vcl(&mut ctx.ws)?),
-            None => Ok(VCL_IP(null())),
-        })
-        .unwrap_or_else(|e| {
-            ctx.fail(format!("{e}"));
-            VCL_IP(null())
-        })
+unsafe extern "C" fn wrap_getip(_ctxp: *const ffi::vrt_ctx, _be: VCL_BACKEND) -> VCL_IP {
+    VCL_IP(null())
+    //    let ctxp = validate_vrt_ctx(ctxp);
+    //    let bo = ctxp.bo.as_ref().unwrap();
+    //    assert_eq!(bo.magic, ffi::BUSYOBJ_MAGIC);
+    //    let htc = bo.htc.as_ref().unwrap();
+    //    // FIXME: document why htc does not use a different magic number
+    //    assert_eq!(htc.magic, ffi::BUSYOBJ_MAGIC);
+    //    let transfer = htc.priv_.cast::<T>().as_ref().unwrap();
+    //
+    //    let mut ctx = Ctx::from_ptr(ctxp);
+    //
+    //    transfer
+    //        .get_ip()
+    //        .and_then(|ip| match ip {
+    //            Some(ip) => Ok(ip.into_vcl(&mut ctx.ws)?),
+    //            None => Ok(VCL_IP(null())),
+    //        })
+    //        .unwrap_or_else(|e| {
+    //            ctx.fail(format!("{e}"));
+    //            VCL_IP(null())
+    //        })
 }
 
-unsafe extern "C" fn wrap_finish<S: Serve<T>, T: Transfer>(
-    ctxp: *const ffi::vrt_ctx,
-    be: VCL_BACKEND,
-) {
+unsafe extern "C" fn wrap_finish<S: Serve>(ctxp: *const ffi::vrt_ctx, be: VCL_BACKEND) {
     let prev_backend: &S = get_backend(validate_director(be));
 
     // FIXME: shouldn't the ctx magic number be checked? If so, use validate_vrt_ctx()
     let ctx = ctxp.as_ref().unwrap();
     let bo = ctx.bo.as_mut().unwrap();
 
-    // drop the Transfer
     // FIXME: can htc be null? We do set it to null later...
     let htc = bo.htc.as_ref().unwrap();
-    if let Some(old) = htc.priv_.cast::<T>().as_mut().take() {
+    if let Some(old) = htc.priv_.cast::<WrappedBody>().as_mut().take() {
         drop(Box::from_raw(old));
     }
     bo.htc = null_mut();
@@ -512,10 +524,10 @@ unsafe extern "C" fn wrap_finish<S: Serve<T>, T: Transfer>(
     prev_backend.finish(&mut Ctx::from_ptr(ctx));
 }
 
-impl<S: Serve<T>, T: Transfer> Drop for Backend<S, T> {
+impl<S: Serve> Drop for Backend<S> {
     fn drop(&mut self) {
         unsafe {
-            ffi::VRT_DelDirector(&mut self.bep);
+            ffi::VRT_DelDirector(&mut self.handle.0);
         };
     }
 }
