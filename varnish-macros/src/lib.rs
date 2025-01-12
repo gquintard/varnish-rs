@@ -111,42 +111,51 @@ pub fn stats(_args: pm::TokenStream, input: pm::TokenStream) -> pm::TokenStream 
 
     let metrics = fields.iter().map(|field| {
         let field_name = field.ident.as_ref().unwrap().to_string();
-
-        // Look for either counter or gauge attribute
-        let (counter_type, attrs) = if let Some(attrs) = field.attrs.iter().find(|attr| attr.path().is_ident("counter")) {
-            ("counter", attrs)
-        } else if let Some(attrs) = field.attrs.iter().find(|attr| attr.path().is_ident("gauge")) {
-            ("gauge", attrs)
+        
+        // Determine counter type from attributes
+        let counter_type = if field.attrs.iter().any(|attr| attr.path().is_ident("counter")) {
+            "counter"
+        } else if field.attrs.iter().any(|attr| attr.path().is_ident("gauge")) {
+            "gauge"
         } else {
             panic!("Field {field_name} must have either #[counter] or #[gauge] attribute")
         };
 
-        let mut oneliner = String::new();
+        // Extract documentation from doc comments
+        let mut doc_lines = field.attrs.iter()
+            .filter(|attr| attr.path().is_ident("doc"))
+            .filter_map(|attr| {
+                let syn::Meta::NameValue(meta) = &attr.meta else { return None };
+                let syn::Expr::Lit(expr) = &meta.value else { return None };
+                let syn::Lit::Str(lit) = &expr.lit else { return None };
+                Some(lit.value())
+            })
+            .filter(|s| !s.is_empty());
+
+        let oneliner = doc_lines.next().unwrap_or_default();
+        let docs = doc_lines.next().unwrap_or_default();
+
+        // Parse optional attributes
         let mut level = String::from("info");
         let mut format = String::from("integer");
-        let mut docs = String::new();
-
-        attrs.parse_nested_meta(|meta| {
-            if meta.path.is_ident("oneliner") {
-                oneliner = meta.value()?.parse::<syn::LitStr>()?.value();
-            } else if meta.path.is_ident("level") {
-                level = meta.value()?.parse::<syn::LitStr>()?.value();
-            } else if meta.path.is_ident("format") {
-                format = meta.value()?.parse::<syn::LitStr>()?.value();
-                match format.as_str() {
-                    "integer" | "bitmap" | "duration" | "bytes" => {},
-                    _ => panic!("Invalid format value for field {field_name}. Must be one of: integer, bitmap, duration, bytes")
+        
+        if let Some(attrs) = field.attrs.iter()
+            .find(|attr| attr.path().is_ident(counter_type)) {
+            
+            let _ = attrs.parse_nested_meta(|meta| {
+                match meta.path.get_ident().map(ToString::to_string).as_deref() {
+                    Some("level") => {
+                        level = meta.value()?.parse::<syn::LitStr>()?.value();
+                    }
+                    Some("format") => {
+                        format = meta.value()?.parse::<syn::LitStr>()?.value();
+                        assert!(["integer", "bitmap", "duration", "bytes"].contains(&format.as_str()), "Invalid format value for field {field_name}. Must be one of: integer, bitmap, duration, bytes")
+                    }
+                    _ => {}
                 }
-            } else if meta.path.is_ident("docs") {
-                docs = meta.value()?.parse::<syn::LitStr>()?.value();
-            }
-            Ok(())
-        }).unwrap();
-
-        let oneliner = oneliner.as_str();
-        let level = level.as_str();
-        let format = format.as_str();
-        let docs = docs.as_str();
+                Ok(())
+            });
+        }
 
         quote! {
             VscMetricDef {

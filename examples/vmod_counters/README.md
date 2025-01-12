@@ -33,3 +33,7 @@ sub vcl_init {
 #### Method `VOID update_temperature(INT value)`
 
 #### Method `INT get_temperature()`
+
+#### Method `INT get_memory()`
+
+#### Method `VOID update_memory(INT value)`
