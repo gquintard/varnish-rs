@@ -1,0 +1,39 @@
+varnishtest "Test counter vmod"
+
+server s1 {
+	rxreq
+	txresp
+} -start
+
+varnish v1 -vcl+backend {
+	import stats from "${vmod}";
+
+	sub vcl_init {
+		new c = stats.test();
+	}
+
+	sub vcl_deliver {
+		c.increment_hits();
+		c.increment_hits();
+		c.update_temperature(17);
+
+		set resp.http.x-hits = c.get_hits();
+	}
+} -start
+
+client c1 {
+	txreq
+	rxresp
+	expect resp.http.x-hits == "2"
+} -run
+
+# Send another request to verify increment
+client c2 {
+	txreq
+	rxresp
+	expect resp.http.x-hits == "4"
+} -run
+
+# Assert on the VSC counter value
+varnish v1 -expect mystats.default.hits == 4
+varnish v1 -expect mystats.default.temperature == 17
