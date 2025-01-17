@@ -20,7 +20,6 @@ jobs:
           - setup: varnish76
             type: latest
           - setup: varnish75
-          - setup: varnish74
           - setup: varnish60lts
 
     env:
