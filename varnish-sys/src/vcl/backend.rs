@@ -96,7 +96,7 @@ pub struct Backend<S: Serve<T>, T: Transfer> {
     #[expect(dead_code)]
     methods: Box<ffi::vdi_methods>,
     inner: Box<S>,
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     ctype: CString,
     phantom: PhantomData<T>,
 }
@@ -115,12 +115,18 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
     }
 
     /// Create a new builder, wrapping the `inner` structure (that implements `Serve`),
-    /// calling the backend `name`. If the backend has a probe attached to it, set `has_probe` to
+    /// calling the backend `backend_id`. If the backend has a probe attached to it, set `has_probe` to
     /// true.
-    pub fn new(ctx: &mut Ctx, type_: &str, name: &str, be: S, has_probe: bool) -> VclResult<Self> {
+    pub fn new(
+        ctx: &mut Ctx,
+        backend_type: &str,
+        backend_id: &str,
+        be: S,
+        has_probe: bool,
+    ) -> VclResult<Self> {
         let mut inner = Box::new(be);
-        let ctype: CString = CString::new(type_).map_err(|e| e.to_string())?;
-        let cname: CString = CString::new(name).map_err(|e| e.to_string())?;
+        let ctype: CString = CString::new(backend_type).map_err(|e| e.to_string())?;
+        let cname: CString = CString::new(backend_id).map_err(|e| e.to_string())?;
         let methods = Box::new(ffi::vdi_methods {
             type_: ctype.as_ptr(),
             magic: ffi::VDI_METHODS_MAGIC,
@@ -148,7 +154,7 @@ impl<S: Serve<T>, T: Transfer> Backend<S, T> {
             )
         };
         if bep.0.is_null() {
-            return Err(format!("VRT_AddDirector return null while creating {name}").into());
+            return Err(format!("VRT_AddDirector return null while creating {backend_id}").into());
         }
 
         Ok(Backend {
@@ -346,23 +352,25 @@ unsafe extern "C" fn wrap_pipe<S: Serve<T>, T: Transfer>(
 }
 
 // CStr is tied to the lifetime of bep, but we only use it for error messages
-unsafe fn get_type(bep: VCL_BACKEND) -> &'static str {
-    CStr::from_ptr(
-        bep.0
-            .as_ref()
-            .unwrap()
-            .vdir
-            .as_ref()
-            .unwrap()
-            .methods
-            .as_ref()
-            .unwrap()
-            .type_
-            .as_ref()
-            .unwrap(),
-    )
-    .to_str()
-    .unwrap()
+impl VCL_BACKEND {
+    unsafe fn get_type(&self) -> &str {
+        CStr::from_ptr(
+            self.0
+                .as_ref()
+                .unwrap()
+                .vdir
+                .as_ref()
+                .unwrap()
+                .methods
+                .as_ref()
+                .unwrap()
+                .type_
+                .as_ref()
+                .unwrap(),
+        )
+        .to_str()
+        .unwrap()
+    }
 }
 
 #[allow(clippy::too_many_lines)] // fixme
@@ -385,7 +393,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
             }
             if beresp.proto().is_none() {
                 if let Err(e) = beresp.set_proto("HTTP/1.1") {
-                    ctx.fail(format!("{:?}: {e}", get_type(bep)));
+                    ctx.fail(format!("{:?}: {e}", bep.get_type()));
                     return 1;
                 }
             }
@@ -394,7 +402,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
                 .cast::<ffi::http_conn>()
                 .as_mut()
             else {
-                ctx.fail(format!("{}: insufficient workspace", get_type(bep)));
+                ctx.fail(format!("{}: insufficient workspace", bep.get_type()));
                 return -1;
             };
             htc.magic = ffi::HTTP_CONN_MAGIC;
@@ -426,13 +434,13 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
                                 .cast::<ffi::vfp>()
                                 .as_mut()
                         else {
-                            ctx.fail(format!("{}: insufficient workspace", get_type(bep)));
+                            ctx.fail(format!("{}: insufficient workspace", bep.get_type()));
                             return -1;
                         };
                         let Ok(t) = Workspace::from_ptr(bo.ws.as_mut_ptr())
-                            .copy_bytes_with_null(get_type(bep))
+                            .copy_bytes_with_null(bep.get_type())
                         else {
-                            ctx.fail(format!("{}: insufficient workspace", get_type(bep)));
+                            ctx.fail(format!("{}: insufficient workspace", bep.get_type()));
                             return -1;
                         };
 
@@ -443,7 +451,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
                         vfp.priv1 = null();
 
                         let Some(vfe) = ffi::VFP_Push(bo.vfc, vfp).as_mut() else {
-                            ctx.fail(format!("{}: couldn't insert vfp", get_type(bep)));
+                            ctx.fail(format!("{}: couldn't insert vfp", bep.get_type()));
                             return -1;
                         };
                         // we don't need to clean vfe.priv1 at the vfp level, the backend will
@@ -457,7 +465,7 @@ unsafe extern "C" fn wrap_gethdrs<S: Serve<T>, T: Transfer>(
             0
         }
         Err(s) => {
-            let typ = get_type(bep);
+            let typ = bep.get_type();
             ctx.log(LogTag::FetchError, format!("{typ}: {s}"));
             1
         }
