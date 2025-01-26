@@ -1,9 +1,34 @@
-use quote::quote;
-use syn::{Data, Fields, Type};
+use syn::{Data, Fields, Type, punctuated::Punctuated, token::Comma, Field};
+use serde::Serialize;
+use crate::parser_utils::parse_doc_str;
 
-pub fn get_struct_fields(
-    data: &Data,
-) -> &syn::punctuated::Punctuated<syn::Field, syn::token::Comma> {
+type FieldList = Punctuated<Field, Comma>;
+
+#[derive(Serialize, Clone)]
+struct VscMetricDef {
+    pub name: String,
+    #[serde(rename = "type")]
+    pub counter_type: String, // "counter", "gauge"
+    pub ctype: String,        // "uint64_t" is only option right now
+    pub level: String,        // "info", "debug", etc
+    pub oneliner: String,     // "Counts the number of X", etc
+    pub format: String,       // "integer", "bytes", "duration", "bitmap", etc
+    pub docs: String,
+    pub index: Option<usize>,
+}
+
+#[derive(Serialize)]
+struct VscMetadata {
+    version: String,
+    name: String,
+    oneliner: String,
+    order: u32,
+    docs: String,
+    elements: usize,
+    elem: std::collections::HashMap<String, VscMetricDef>,
+}
+
+pub fn get_struct_fields(data: &Data) -> &FieldList {
     match data {
         Data::Struct(data) => match &data.fields {
             Fields::Named(fields) => &fields.named,
@@ -13,16 +38,13 @@ pub fn get_struct_fields(
     }
 }
 
-pub fn validate_fields(fields: &syn::punctuated::Punctuated<syn::Field, syn::token::Comma>) {
+pub fn validate_fields(fields: &FieldList) {
     for field in fields {
         match &field.ty {
             Type::Path(path) => {
-                let is_atomic_u64 = path
-                    .path
-                    .segments
-                    .last()
+                let is_atomic_u64 = path.path.segments.last()
                     .is_some_and(|seg| seg.ident == "AtomicU64");
-
+                
                 if !is_atomic_u64 {
                     let field_name = field.ident.as_ref().unwrap();
                     panic!("Field {field_name} must be of type AtomicU64");
@@ -33,41 +55,57 @@ pub fn validate_fields(fields: &syn::punctuated::Punctuated<syn::Field, syn::tok
     }
 }
 
-pub fn generate_field_definitions(
-    fields: &syn::punctuated::Punctuated<syn::Field, syn::token::Comma>,
-) -> impl Iterator<Item = proc_macro2::TokenStream> + '_ {
-    fields.iter().map(|f| {
-        let name = &f.ident;
-        let vis = &f.vis;
-        quote! { #vis #name: std::sync::atomic::AtomicU64 }
-    })
+fn generate_metrics(fields: &FieldList) -> Vec<VscMetricDef> {
+    fields.iter().enumerate().map(|(i, field)| {
+        let name = field.ident.as_ref().unwrap().to_string();
+
+        let counter_type = if field.attrs.iter().any(|attr| attr.path().is_ident("counter")) {
+            "counter"
+        } else if field.attrs.iter().any(|attr| attr.path().is_ident("gauge")) {
+            "gauge"
+        } else {
+            panic!("Field {name} must have either #[counter] or #[gauge] attribute")
+        };
+
+        let doc_str = parse_doc_str(&field.attrs);
+        let mut doc_lines = doc_str.split('\n').filter(|s| !s.is_empty());
+        let oneliner = doc_lines.next().unwrap_or_default().to_string();
+        let docs = doc_lines.next().unwrap_or_default().to_string();
+
+        let (level, format) = parse_counter_attributes(field, counter_type);
+
+        VscMetricDef {
+            name,
+            counter_type: counter_type.to_string(),
+            ctype: "uint64_t".to_string(),
+            level,
+            oneliner,
+            format,
+            docs,
+            index: Some(i * 8),
+        }
+    }).collect()
 }
 
-pub fn parse_doc_comments(field: &syn::Field) -> (String, String) {
-    let mut doc_lines = field
-        .attrs
-        .iter()
-        .filter(|attr| attr.path().is_ident("doc"))
-        .filter_map(|attr| {
-            let syn::Meta::NameValue(meta) = &attr.meta else {
-                return None;
-            };
-            let syn::Expr::Lit(expr) = &meta.value else {
-                return None;
-            };
-            let syn::Lit::Str(lit) = &expr.lit else {
-                return None;
-            };
-            Some(lit.value())
-        })
-        .filter(|s| !s.is_empty());
+pub fn generate_metadata_json(name: &str, fields: &FieldList) -> String {
+    let metrics = generate_metrics(fields);
+    
+    let metadata = VscMetadata {
+        version: "1".to_string(),
+        name: name.to_string(),
+        oneliner: format!("{name} statistics"),
+        order: 100,
+        docs: String::new(),
+        elements: metrics.len(),
+        elem: metrics.iter()
+            .map(|m| (m.name.clone(), m.clone()))
+            .collect(),
+    };
 
-    let oneliner = doc_lines.next().unwrap_or_default();
-    let docs = doc_lines.next().unwrap_or_default();
-    (oneliner, docs)
+    serde_json::to_string(&metadata).unwrap()
 }
 
-pub fn parse_counter_attributes(field: &syn::Field, counter_type: &str) -> (String, String) {
+pub fn parse_counter_attributes(field: &Field, counter_type: &str) -> (String, String) {
     let mut level = String::from("info");
     let mut format = String::from("integer");
 
@@ -97,125 +135,16 @@ pub fn parse_counter_attributes(field: &syn::Field, counter_type: &str) -> (Stri
     (level, format)
 }
 
-pub fn generate_metrics(
-    fields: &syn::punctuated::Punctuated<syn::Field, syn::token::Comma>,
-) -> impl Iterator<Item = proc_macro2::TokenStream> + '_ {
-    fields.iter().map(|field| {
-        let field_name = field.ident.as_ref().unwrap().to_string();
-
-        let counter_type = if field
-            .attrs
-            .iter()
-            .any(|attr| attr.path().is_ident("counter"))
-        {
-            "counter"
-        } else if field.attrs.iter().any(|attr| attr.path().is_ident("gauge")) {
-            "gauge"
-        } else {
-            panic!("Field {field_name} must have either #[counter] or #[gauge] attribute")
+pub fn has_repr_c(input: &syn::DeriveInput) -> bool {
+    input.attrs.iter().any(|attr| {
+        if !attr.path().is_ident("repr") {
+            return false;
+        }
+        
+        let Ok(meta) = attr.parse_args::<syn::Meta>() else {
+            return false;
         };
-
-        let (oneliner, docs) = parse_doc_comments(field);
-        let (level, format) = parse_counter_attributes(field, counter_type);
-
-        quote! {
-            VscMetricDef {
-                name: #field_name,
-                counter_type: #counter_type,
-                ctype: "uint64_t",
-                level: #level,
-                oneliner: #oneliner,
-                format: #format,
-                docs: #docs,
-            }
-        }
+        
+        matches!(meta, syn::Meta::Path(path) if path.is_ident("C"))
     })
-}
-
-pub fn generate_output(
-    name: &syn::Ident,
-    name_inner: &proc_macro2::Ident,
-    vis: &syn::Visibility,
-    original_fields: impl Iterator<Item = proc_macro2::TokenStream>,
-    metrics: impl Iterator<Item = proc_macro2::TokenStream>,
-) -> proc_macro2::TokenStream {
-    quote! {
-        use varnish::ffi::vsc_seg;
-        use varnish::ffi::{VRT_VSC_Alloc, VRT_VSC_Destroy};
-        use varnish::vsc_types::{VscMetricDef, VscCounterStruct};
-        use std::ops::{Deref, DerefMut};
-        use std::ffi::CString;
-
-        #[repr(C)]
-        #[derive(Debug)]
-        #vis struct #name_inner {
-            #(#original_fields,)*
-        }
-
-        // Wrapper struct to hold the VSC segment and the inner counter struct
-        #vis struct #name {
-            value: *mut #name_inner,
-            vsc_seg: *mut vsc_seg,
-            name: CString,
-        }
-
-        impl Deref for #name {
-            type Target = #name_inner;
-
-            fn deref(&self) -> &Self::Target {
-                unsafe { &*self.value }
-            }
-        }
-
-        impl DerefMut for #name {
-            fn deref_mut(&mut self) -> &mut Self::Target {
-                unsafe { &mut *self.value }
-            }
-        }
-
-        impl varnish::vsc_types::VscCounterStruct for #name {
-            fn set_vsc_seg(&mut self, seg: *mut vsc_seg) {
-                self.vsc_seg = seg;
-            }
-
-            fn get_struct_metrics() -> Vec<varnish::vsc_types::VscMetricDef<'static>> {
-                vec![
-                    #(#metrics),*
-                ]
-            }
-
-            fn new(module_name: &str, module_prefix: &str) -> #name {
-                let mut vsc_seg = std::ptr::null_mut();
-                let name = CString::new(module_name).unwrap();
-                let format = CString::new(module_prefix).unwrap();
-
-                let json = Self::build_json(module_name);
-
-                let value = unsafe {
-                    VRT_VSC_Alloc(
-                        std::ptr::null_mut(),
-                        &mut vsc_seg,
-                        name.as_ptr(),
-                        size_of::<#name_inner>(),
-                        json.as_ptr(),
-                        json.len(),
-                        format.as_ptr(),
-                        std::ptr::null_mut()
-                    ) as *mut #name_inner
-                };
-
-                return #name {
-                    value,
-                    vsc_seg,
-                    name,
-                }
-            }
-
-            fn drop(&mut self) {
-                unsafe {
-                    VRT_VSC_Destroy(self.name.as_ptr(), self.vsc_seg);
-                }
-            }
-        }
-    }
 }

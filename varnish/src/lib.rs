@@ -99,12 +99,12 @@ pub mod ffi {
 pub use varnish_sys::ffi;
 
 pub mod varnishtest;
-pub mod vsc_types;
+pub mod vsc_wrapper;
 
 #[cfg(feature = "vsc")]
 pub mod vsc;
 
-pub use varnish_macros::stats;
+pub use varnish_macros::Stats;
 pub use varnish_macros::vmod;
 
 /// Run all VTC tests using `varnishtest` utility.

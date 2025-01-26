@@ -1,5 +1,9 @@
-#[varnish::stats]
-pub struct Stats {
+use varnish::vsc_wrapper::Vsc;
+use varnish::Stats;
+
+#[derive(Stats)]
+#[repr(C)] // required for correct memory layout
+pub struct VariousStats {
     /// Number of hits
     #[counter]
     hits: std::sync::atomic::AtomicU64,
@@ -17,18 +21,17 @@ pub struct Stats {
 
 #[allow(non_camel_case_types)]
 pub struct test {
-    stats: Stats,
+    stats: Vsc<VariousStats>,
 }
 
 #[varnish::vmod(docs = "README.md")]
 mod stats {
-    use super::{test, Stats};
-    use varnish::vsc_types::VscCounterStruct;
+    use super::{test, VariousStats};
+    use varnish::vsc_wrapper::Vsc;
 
     impl test {
         pub fn new() -> Self {
-            let stats = Stats::new("mystats", "default");
-
+            let stats = Vsc::<VariousStats>::new("mystats", "default");
             Self { stats }
         }
 
