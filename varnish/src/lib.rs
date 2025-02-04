@@ -106,8 +106,8 @@ pub mod vsc_wrapper;
 #[cfg(feature = "vsc")]
 pub mod vsc;
 
-pub use varnish_macros::Stats;
 pub use varnish_macros::vmod;
+pub use varnish_macros::Stats;
 
 /// Run all VTC tests using `varnishtest` utility.
 ///

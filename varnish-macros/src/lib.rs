@@ -72,7 +72,7 @@ pub fn vmod(args: pm::TokenStream, input: pm::TokenStream) -> pm::TokenStream {
 /// - `#[counter]` attribute on a field will export it as a counter.
 /// - `#[gauge]` attribute on a field will export it as a gauge.
 #[proc_macro_derive(Stats, attributes(counter, gauge))]
-pub fn get_metadata(input: pm::TokenStream) -> pm::TokenStream {
+pub fn stats(input: pm::TokenStream) -> pm::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
     

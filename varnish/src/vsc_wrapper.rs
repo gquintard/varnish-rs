@@ -1,6 +1,6 @@
-use std::ops::{Deref, DerefMut};
 use std::ffi::CString;
 use std::mem::size_of;
+use std::ops::{Deref, DerefMut};
 use varnish_sys::ffi::{vsc_seg, VRT_VSC_Alloc, VRT_VSC_Destroy};
 
 pub unsafe trait VscMetric {
@@ -16,9 +16,10 @@ pub struct Vsc<T: VscMetric> {
 impl<T: VscMetric> Vsc<T> {
     pub fn new(module_name: &str, module_prefix: &str) -> Self {
         let mut seg = std::ptr::null_mut();
-        let name = CString::new(module_name).unwrap();
-        let format = CString::new(module_prefix).unwrap();
-        
+        let name = CString::new(module_name).expect("module_name contained interior nul byte");
+        let format =
+            CString::new(module_prefix).expect("module_prefix contained interior nul byte");
+
         let metadata_json = T::get_metadata();
 
         let metric = unsafe {
@@ -30,15 +31,16 @@ impl<T: VscMetric> Vsc<T> {
                 metadata_json.as_ptr(),
                 metadata_json.len(),
                 format.as_ptr(),
-                std::ptr::null_mut()
-            ).cast::<T>()
+                std::ptr::null_mut(),
+            )
+            .cast::<T>()
         };
 
-        Self { 
-            metric,
-            seg,
-            name,
+        if metric.is_null() {
+            panic!("VSC segment allocation failed for {}", module_name);
         }
+
+        Self { metric, seg, name }
     }
 }
 
