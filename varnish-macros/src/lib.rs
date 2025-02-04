@@ -2,9 +2,9 @@
 // #![allow(warnings)]
 
 use errors::Errors;
+use quote::quote;
 use syn::{parse_macro_input, DeriveInput, ItemMod};
 use {proc_macro as pm, proc_macro2 as pm2};
-use quote::quote;
 
 use crate::gen_docs::generate_docs;
 use crate::generator::render_model;
@@ -75,17 +75,19 @@ pub fn vmod(args: pm::TokenStream, input: pm::TokenStream) -> pm::TokenStream {
 pub fn stats(input: pm::TokenStream) -> pm::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
-    
+
     if !stats::has_repr_c(&input) {
         return syn::Error::new(
             name.span(),
-            "VSC structs must be marked with #[repr(C)] for correct memory layout"
-        ).into_compile_error().into();
+            "VSC structs must be marked with #[repr(C)] for correct memory layout",
+        )
+        .into_compile_error()
+        .into();
     }
-    
+
     let fields = stats::get_struct_fields(&input.data);
     stats::validate_fields(fields);
-    
+
     let metadata_json = stats::generate_metadata_json(&name.to_string(), fields);
 
     quote! {
@@ -94,5 +96,6 @@ pub fn stats(input: pm::TokenStream) -> pm::TokenStream {
                 #metadata_json
             }
         }
-    }.into()
+    }
+    .into()
 }

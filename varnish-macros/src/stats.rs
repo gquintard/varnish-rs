@@ -1,6 +1,6 @@
-use syn::{Data, Fields, Type, punctuated::Punctuated, token::Comma, Field};
-use serde::Serialize;
 use crate::parser_utils::parse_doc_str;
+use serde::Serialize;
+use syn::{punctuated::Punctuated, token::Comma, Data, Field, Fields, Type};
 
 type FieldList = Punctuated<Field, Comma>;
 
@@ -9,10 +9,10 @@ struct VscMetricDef {
     pub name: String,
     #[serde(rename = "type")]
     pub counter_type: String, // "counter", "gauge"
-    pub ctype: String,        // "uint64_t" is only option right now
-    pub level: String,        // "info", "debug", etc
-    pub oneliner: String,     // "Counts the number of X", etc
-    pub format: String,       // "integer", "bytes", "duration", "bitmap", etc
+    pub ctype: String,    // "uint64_t" is only option right now
+    pub level: String,    // "info", "debug", etc
+    pub oneliner: String, // "Counts the number of X", etc
+    pub format: String,   // "integer", "bytes", "duration", "bitmap", etc
     pub docs: String,
     pub index: Option<usize>,
 }
@@ -42,9 +42,12 @@ pub fn validate_fields(fields: &FieldList) {
     for field in fields {
         match &field.ty {
             Type::Path(path) => {
-                let is_atomic_u64 = path.path.segments.last()
+                let is_atomic_u64 = path
+                    .path
+                    .segments
+                    .last()
                     .is_some_and(|seg| seg.ident == "AtomicU64");
-                
+
                 if !is_atomic_u64 {
                     let field_name = field.ident.as_ref().unwrap();
                     panic!("Field {field_name} must be of type AtomicU64");
@@ -56,40 +59,48 @@ pub fn validate_fields(fields: &FieldList) {
 }
 
 fn generate_metrics(fields: &FieldList) -> Vec<VscMetricDef> {
-    fields.iter().enumerate().map(|(i, field)| {
-        let name = field.ident.as_ref().unwrap().to_string();
+    fields
+        .iter()
+        .enumerate()
+        .map(|(i, field)| {
+            let name = field.ident.as_ref().unwrap().to_string();
 
-        let counter_type = if field.attrs.iter().any(|attr| attr.path().is_ident("counter")) {
-            "counter"
-        } else if field.attrs.iter().any(|attr| attr.path().is_ident("gauge")) {
-            "gauge"
-        } else {
-            panic!("Field {name} must have either #[counter] or #[gauge] attribute")
-        };
+            let counter_type = if field
+                .attrs
+                .iter()
+                .any(|attr| attr.path().is_ident("counter"))
+            {
+                "counter"
+            } else if field.attrs.iter().any(|attr| attr.path().is_ident("gauge")) {
+                "gauge"
+            } else {
+                panic!("Field {name} must have either #[counter] or #[gauge] attribute")
+            };
 
-        let doc_str = parse_doc_str(&field.attrs);
-        let mut doc_lines = doc_str.split('\n').filter(|s| !s.is_empty());
-        let oneliner = doc_lines.next().unwrap_or_default().to_string();
-        let docs = doc_lines.next().unwrap_or_default().to_string();
+            let doc_str = parse_doc_str(&field.attrs);
+            let mut doc_lines = doc_str.split('\n').filter(|s| !s.is_empty());
+            let oneliner = doc_lines.next().unwrap_or_default().to_string();
+            let docs = doc_lines.next().unwrap_or_default().to_string();
 
-        let (level, format) = parse_counter_attributes(field, counter_type);
+            let (level, format) = parse_counter_attributes(field, counter_type);
 
-        VscMetricDef {
-            name,
-            counter_type: counter_type.to_string(),
-            ctype: "uint64_t".to_string(),
-            level,
-            oneliner,
-            format,
-            docs,
-            index: Some(i * 8),
-        }
-    }).collect()
+            VscMetricDef {
+                name,
+                counter_type: counter_type.to_string(),
+                ctype: "uint64_t".to_string(),
+                level,
+                oneliner,
+                format,
+                docs,
+                index: Some(i * 8),
+            }
+        })
+        .collect()
 }
 
 pub fn generate_metadata_json(name: &str, fields: &FieldList) -> String {
     let metrics = generate_metrics(fields);
-    
+
     let metadata = VscMetadata {
         version: "1".to_string(),
         name: name.to_string(),
@@ -97,7 +108,8 @@ pub fn generate_metadata_json(name: &str, fields: &FieldList) -> String {
         order: 100,
         docs: String::new(),
         elements: metrics.len(),
-        elem: metrics.iter()
+        elem: metrics
+            .iter()
             .map(|m| (m.name.clone(), m.clone()))
             .collect(),
     };
@@ -140,11 +152,11 @@ pub fn has_repr_c(input: &syn::DeriveInput) -> bool {
         if !attr.path().is_ident("repr") {
             return false;
         }
-        
+
         let Ok(meta) = attr.parse_args::<syn::Meta>() else {
             return false;
         };
-        
+
         matches!(meta, syn::Meta::Path(path) if path.is_ident("C"))
     })
 }
