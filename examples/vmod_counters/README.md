@@ -26,9 +26,9 @@ sub vcl_init {
 }
 ```
 
-#### Method `VOID increment_hits()`
+#### Method `VOID increment_foo()`
 
-#### Method `INT get_hits()`
+#### Method `INT get_foo()`
 
 #### Method `VOID update_temperature(INT value)`
 

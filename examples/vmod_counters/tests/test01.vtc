@@ -13,27 +13,27 @@ varnish v1 -vcl+backend {
 	}
 
 	sub vcl_deliver {
-		c.increment_hits();
-		c.increment_hits();
+		c.increment_foo();
+		c.increment_foo();
 		c.update_temperature(17);
 
-		set resp.http.x-hits = c.get_hits();
+		set resp.http.x-foo = c.get_foo();
 	}
 } -start
 
 client c1 {
 	txreq
 	rxresp
-	expect resp.http.x-hits == "2"
+	expect resp.http.x-foo == "2"
 } -run
 
 # Send another request to verify increment
 client c2 {
 	txreq
 	rxresp
-	expect resp.http.x-hits == "4"
+	expect resp.http.x-foo == "4"
 } -run
 
 # Assert on the VSC counter value
-varnish v1 -expect mystats.default.hits == 4
+varnish v1 -expect mystats.default.foo == 4
 varnish v1 -expect mystats.default.temperature == 17

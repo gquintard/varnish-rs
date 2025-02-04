@@ -1,22 +1,23 @@
+use std::sync::atomic::AtomicU64;
 use varnish::vsc_wrapper::Vsc;
 use varnish::Stats;
 
 #[derive(Stats)]
 #[repr(C)] // required for correct memory layout
 pub struct VariousStats {
-    /// Number of hits
+    /// Some arbitrary counter
     #[counter]
-    hits: std::sync::atomic::AtomicU64,
+    foo: AtomicU64,
 
-    /// Temperature in degrees Celsius
+    /// Some arbitrary gauge
     #[gauge]
-    temperature: std::sync::atomic::AtomicU64,
+    temperature: AtomicU64,
 
-    /// Memory usage in bytes
+    /// An arbitrary gauge with a longer description
     ///
-    /// Memory usage can vary quite a bit, based on the number of foo objects.
+    /// A more detailed description than the above oneliner could go here.
     #[gauge(level = "debug", format = "bytes")]
-    memory: std::sync::atomic::AtomicU64,
+    memory: AtomicU64,
 }
 
 #[allow(non_camel_case_types)]
@@ -35,15 +36,15 @@ mod stats {
             Self { stats }
         }
 
-        pub fn increment_hits(&self) {
+        pub fn increment_foo(&self) {
             self.stats
-                .hits
+                .foo
                 .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         }
 
-        pub fn get_hits(&self) -> i64 {
+        pub fn get_foo(&self) -> i64 {
             self.stats
-                .hits
+                .foo
                 .load(std::sync::atomic::Ordering::Relaxed)
                 .try_into()
                 .unwrap()
