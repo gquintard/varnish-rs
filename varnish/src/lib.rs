@@ -99,6 +99,8 @@ pub mod ffi {
 pub use varnish_sys::ffi;
 
 pub mod varnishtest;
+
+#[cfg(feature = "vsc")]
 pub mod vsc_wrapper;
 
 #[cfg(feature = "vsc")]
