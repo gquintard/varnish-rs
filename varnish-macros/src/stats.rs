@@ -71,7 +71,7 @@ struct VscMetricDef {
 
 #[derive(Serialize)]
 struct VscMetadata {
-    version: String,
+    version: &'static str,
     name: String,
     oneliner: String,
     order: u32,
@@ -164,7 +164,7 @@ pub fn generate_metadata_json(name: &str, fields: &FieldList) -> String {
     let metrics = generate_metrics(fields);
 
     let metadata = VscMetadata {
-        version: "1".to_string(),
+        version: "1",
         name: name.to_string(),
         oneliner: format!("{name} statistics"),
         order: 100,
