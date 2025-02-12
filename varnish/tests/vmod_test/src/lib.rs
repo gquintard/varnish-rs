@@ -10,7 +10,6 @@ varnish::run_vtc_tests!("tests/*.vtc");
 /// Test vmod
 #[vmod(docs = "README.md")]
 mod rustest {
-    use std::ffi::c_char;
     use std::io::Write;
     use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
     use std::time::Duration;
@@ -144,25 +143,47 @@ mod rustest {
     }
 
     pub fn ws_tests(ctx: &mut Ctx) {
+        //external buffer, 0-length -> new ptr
+        let buf = b"";
+        let ws_ptr = buf.into_vcl(&mut ctx.ws).unwrap().0.cast::<u8>();
+        assert_ne!(ws_ptr, buf.as_ptr().cast::<u8>());
+        let ws_buf = unsafe { std::slice::from_raw_parts(ws_ptr, 1) };
+        assert_eq!(ws_buf, b"\0");
+
         // external buffer -> new ptr
         let buf = b"abc";
         let ws_ptr_main = buf.into_vcl(&mut ctx.ws).unwrap().0.cast::<u8>();
         assert_ne!(ws_ptr_main, buf.as_ptr().cast::<u8>());
+        let ws_buf_main = unsafe { std::slice::from_raw_parts(ws_ptr_main, 4) };
+        assert_eq!(ws_buf_main, b"abc\0");
+
+        //internal buffer, 0-length, no following \0 -> new ptr
+        let buf = &ws_buf_main[0..0];
+        let ws_ptr = buf.into_vcl(&mut ctx.ws).unwrap().0.cast::<u8>();
+        assert_ne!(ws_ptr, buf.as_ptr().cast::<u8>());
+        let ws_buf = unsafe { std::slice::from_raw_parts(ws_ptr, 1) };
+        assert_eq!(ws_buf, b"\0");
 
         // internal buffer without a null byte at the end -> new ptr
-        let buf = unsafe { std::slice::from_raw_parts(ws_ptr_main, 2) };
-        let ws_ptr = buf.into_vcl(&mut ctx.ws).unwrap().0;
-        assert_ne!(ws_ptr, buf.as_ptr().cast::<c_char>());
+        let buf = &ws_buf_main[0..2];
+        let ws_ptr = buf.into_vcl(&mut ctx.ws).unwrap().0.cast::<u8>();
+        assert_ne!(ws_ptr, buf.as_ptr().cast::<u8>());
+        let ws_buf = unsafe { std::slice::from_raw_parts(ws_ptr, 3) };
+        assert_eq!(ws_buf, b"ab\0");
 
         // internal buffer with a null byte at the end -> reuse ptr
-        let buf = unsafe { std::slice::from_raw_parts(ws_ptr_main, 4) };
-        let ws_ptr = buf.into_vcl(&mut ctx.ws).unwrap().0;
-        assert_eq!(ws_ptr, buf.as_ptr().cast::<c_char>());
+        let buf = &ws_buf_main[0..4];
+        let ws_ptr = buf.into_vcl(&mut ctx.ws).unwrap().0.cast::<u8>();
+        assert_eq!(ws_ptr, buf.as_ptr().cast::<u8>());
+        let ws_buf = unsafe { std::slice::from_raw_parts(ws_ptr, 4) };
+        assert_eq!(ws_buf, b"abc\0");
 
         // internal buffer with a null byte at the end, from previous allocation -> reuse ptr
-        let buf = unsafe { std::slice::from_raw_parts(ws_ptr_main, 3) };
-        let ws_ptr = buf.into_vcl(&mut ctx.ws).unwrap().0;
-        assert_eq!(ws_ptr, buf.as_ptr().cast::<c_char>());
+        let buf = &ws_buf_main[0..3];
+        let ws_ptr = buf.into_vcl(&mut ctx.ws).unwrap().0.cast::<u8>();
+        assert_eq!(ws_ptr, buf.as_ptr().cast::<u8>());
+        let ws_buf = unsafe { std::slice::from_raw_parts(ws_ptr, 4) };
+        assert_eq!(ws_buf, b"abc\0");
     }
 
     #[event]

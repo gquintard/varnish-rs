@@ -270,8 +270,8 @@ impl IntoVCL<VCL_STRING> for &[u8] {
         // However, we need to make sure that the buffer is null-terminated, either by its own last
         // byte, or by the one after it
         let with_extra_byte = unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len() + 1) };
-        if (ws.contains(self) && *self.last().unwrap() == b'\0')
-            || (ws.contains(with_extra_byte) && *with_extra_byte.last().unwrap() == b'\0')
+        if (ws.contains(self) && self.last() == Some(&b'\0'))
+            || (ws.contains(with_extra_byte) && with_extra_byte.last() == Some(&b'\0'))
         {
             Ok(VCL_STRING(self.as_ptr().cast::<c_char>()))
         } else {
