@@ -5,10 +5,17 @@ use syn::{punctuated::Punctuated, token::Comma, Data, Field, Fields, Type};
 type FieldList = Punctuated<Field, Comma>;
 
 #[derive(Serialize, Clone)]
+#[serde(rename_all = "lowercase")]
+enum MetricType {
+    Counter,
+    Gauge,
+}
+
+#[derive(Serialize, Clone)]
 struct VscMetricDef {
     pub name: String,
     #[serde(rename = "type")]
-    pub counter_type: String, // "counter", "gauge"
+    pub metric_type: MetricType,
     pub ctype: String,    // "uint64_t" is only option right now
     pub level: String,    // "info", "debug", etc
     pub oneliner: String, // "Counts the number of X", etc
@@ -65,14 +72,14 @@ fn generate_metrics(fields: &FieldList) -> Vec<VscMetricDef> {
         .map(|(i, field)| {
             let name = field.ident.as_ref().unwrap().to_string();
 
-            let counter_type = if field
+            let metric_type = if field
                 .attrs
                 .iter()
                 .any(|attr| attr.path().is_ident("counter"))
             {
-                "counter"
+                MetricType::Counter
             } else if field.attrs.iter().any(|attr| attr.path().is_ident("gauge")) {
-                "gauge"
+                MetricType::Gauge
             } else {
                 panic!("Field {name} must have either #[counter] or #[gauge] attribute")
             };
@@ -82,11 +89,17 @@ fn generate_metrics(fields: &FieldList) -> Vec<VscMetricDef> {
             let oneliner = doc_lines.next().unwrap_or_default().to_string();
             let docs = doc_lines.next().unwrap_or_default().to_string();
 
-            let (level, format) = parse_counter_attributes(field, counter_type);
+            let (level, format) = parse_metric_attributes(
+                field,
+                match metric_type {
+                    MetricType::Counter => "counter",
+                    MetricType::Gauge => "gauge",
+                },
+            );
 
             VscMetricDef {
                 name,
-                counter_type: counter_type.to_string(),
+                metric_type,
                 ctype: "uint64_t".to_string(),
                 level,
                 oneliner,
@@ -117,14 +130,14 @@ pub fn generate_metadata_json(name: &str, fields: &FieldList) -> String {
     serde_json::to_string(&metadata).unwrap()
 }
 
-pub fn parse_counter_attributes(field: &Field, counter_type: &str) -> (String, String) {
+pub fn parse_metric_attributes(field: &Field, metric_type: &str) -> (String, String) {
     let mut level = String::from("info");
     let mut format = String::from("integer");
 
     if let Some(attrs) = field
         .attrs
         .iter()
-        .find(|attr| attr.path().is_ident(counter_type))
+        .find(|attr| attr.path().is_ident(metric_type))
     {
         let _ = attrs.parse_nested_meta(|meta| {
           match meta.path.get_ident().map(ToString::to_string).as_deref() {
