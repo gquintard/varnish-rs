@@ -1,5 +1,6 @@
 # Unpublished
 - In probe support, renamed `Request::URL` to `Request::Url`
+- Fix #167
 
 # 0.3.0 (2024-12-12)
 
