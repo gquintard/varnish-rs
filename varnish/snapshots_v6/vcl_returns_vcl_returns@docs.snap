@@ -1,5 +1,6 @@
 ---
 source: varnish-macros/src/tests.rs
+snapshot_kind: text
 ---
 <!--
 
@@ -20,88 +21,88 @@ import vcl_returns;
 import vcl_returns from "path/to/libvcl_returns.so";
 ```
 
-### Function `ACL val_acl()`
+### Function `ACL vcl_returns.val_acl()`
 
-### Function `ACL res_acl()`
+### Function `ACL vcl_returns.res_acl()`
 
-### Function `BACKEND val_backend()`
+### Function `BACKEND vcl_returns.val_backend()`
 
-### Function `BACKEND res_backend()`
+### Function `BACKEND vcl_returns.res_backend()`
 
-### Function `BLOB val_blob()`
+### Function `BLOB vcl_returns.val_blob()`
 
-### Function `BLOB res_blob()`
+### Function `BLOB vcl_returns.res_blob()`
 
-### Function `BODY val_body()`
+### Function `BODY vcl_returns.val_body()`
 
-### Function `BODY res_body()`
+### Function `BODY vcl_returns.res_body()`
 
-### Function `BOOL val_bool()`
+### Function `BOOL vcl_returns.val_bool()`
 
-### Function `BOOL res_bool()`
+### Function `BOOL vcl_returns.res_bool()`
 
-### Function `BYTES val_bytes()`
+### Function `BYTES vcl_returns.val_bytes()`
 
-### Function `BYTES res_bytes()`
+### Function `BYTES vcl_returns.res_bytes()`
 
-### Function `DURATION val_duration()`
+### Function `DURATION vcl_returns.val_duration()`
 
-### Function `DURATION res_duration()`
+### Function `DURATION vcl_returns.res_duration()`
 
-### Function `ENUM val_enum()`
+### Function `ENUM vcl_returns.val_enum()`
 
-### Function `ENUM res_enum()`
+### Function `ENUM vcl_returns.res_enum()`
 
-### Function `HEADER val_header()`
+### Function `HEADER vcl_returns.val_header()`
 
-### Function `HEADER res_header()`
+### Function `HEADER vcl_returns.res_header()`
 
-### Function `HTTP val_http()`
+### Function `HTTP vcl_returns.val_http()`
 
-### Function `HTTP res_http()`
+### Function `HTTP vcl_returns.res_http()`
 
-### Function `INSTANCE val_instance()`
+### Function `INSTANCE vcl_returns.val_instance()`
 
-### Function `INT val_int()`
+### Function `INT vcl_returns.val_int()`
 
-### Function `INT res_int()`
+### Function `INT vcl_returns.res_int()`
 
-### Function `IP val_ip()`
+### Function `IP vcl_returns.val_ip()`
 
-### Function `IP res_ip()`
+### Function `IP vcl_returns.res_ip()`
 
-### Function `PROBE val_probe()`
+### Function `PROBE vcl_returns.val_probe()`
 
-### Function `PROBE res_probe()`
+### Function `PROBE vcl_returns.res_probe()`
 
-### Function `REAL val_real()`
+### Function `REAL vcl_returns.val_real()`
 
-### Function `REAL res_real()`
+### Function `REAL vcl_returns.res_real()`
 
-### Function `REGEX val_regex()`
+### Function `REGEX vcl_returns.val_regex()`
 
-### Function `REGEX res_regex()`
+### Function `REGEX vcl_returns.res_regex()`
 
-### Function `STEVEDORE val_stevedore()`
+### Function `STEVEDORE vcl_returns.val_stevedore()`
 
-### Function `STEVEDORE res_stevedore()`
+### Function `STEVEDORE vcl_returns.res_stevedore()`
 
-### Function `STRANDS val_strands()`
+### Function `STRANDS vcl_returns.val_strands()`
 
-### Function `STRANDS res_strands()`
+### Function `STRANDS vcl_returns.res_strands()`
 
-### Function `STRING val_string()`
+### Function `STRING vcl_returns.val_string()`
 
-### Function `STRING res_string()`
+### Function `STRING vcl_returns.res_string()`
 
-### Function `SUB val_sub()`
+### Function `SUB vcl_returns.val_sub()`
 
-### Function `SUB res_sub()`
+### Function `SUB vcl_returns.res_sub()`
 
-### Function `TIME val_time()`
+### Function `TIME vcl_returns.val_time()`
 
-### Function `TIME res_time()`
+### Function `TIME vcl_returns.res_time()`
 
-### Function `VCL val_vcl()`
+### Function `VCL vcl_returns.val_vcl()`
 
-### Function `VCL res_vcl()`
+### Function `VCL vcl_returns.res_vcl()`

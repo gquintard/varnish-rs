@@ -24,7 +24,7 @@ import example;
 import example from "path/to/libexample.so";
 ```
 
-### Function `BOOL is_even(INT n)`
+### Function `BOOL example.is_even(INT n)`
 
 This will tell you if a number is even, isn't that odd?
 
@@ -33,7 +33,7 @@ A simple function that returns true if the number is even, false otherwise.
 * `INT n`:
 The number to check for evenness
 
-### Function `STRING captain_obvious([INT opt])`
+### Function `STRING example.captain_obvious([INT opt])`
 
 Produce a string explaining which number you provided as argument.
 

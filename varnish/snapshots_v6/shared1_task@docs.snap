@@ -1,5 +1,6 @@
 ---
 source: varnish-macros/src/tests.rs
+snapshot_kind: text
 ---
 <!--
 
@@ -20,25 +21,18 @@ import task;
 import task from "path/to/libtask.so";
 ```
 
-### Function `VOID per_vcl_val()`
+### Function `VOID task.per_vcl_val()`
 
-### Function `VOID per_vcl_opt([INT op])`
+### Function `VOID task.per_vcl_opt([INT op])`
 
-### Function `VOID per_tsk_val()`
+### Function `VOID task.per_tsk_val()`
 
-### Function `VOID per_tsk_opt([INT op])`
+### Function `VOID task.per_tsk_opt([INT op])`
 
-### Object `PerVcl`
+### Constructor `task.PerVcl()`
 
-```vcl
-// Create a new instance of the object in your VCL init function
-sub vcl_init {
-    new new = PerVcl.new();
-}
-```
+#### Method `VOID <object>.both()`
 
-#### Method `VOID both()`
+#### Method `VOID <object>.both_pos(INT val)`
 
-#### Method `VOID both_pos(INT val)`
-
-#### Method `VOID both_opt([INT opt])`
+#### Method `VOID <object>.both_opt([INT opt])`
