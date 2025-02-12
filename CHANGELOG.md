@@ -1,7 +1,8 @@
 # Unpublished
 - In probe support, renamed `Request::URL` to `Request::Url`
 - Remove `vsc` feature - all of its functionality is now available without any feature flags
-- Rename `Stat` &rarr; `Metrics`, `Stats` &rarr; `MetricsReader`, `StatsBuilder` &rarr; `MetricsReaderBuilder`, and `Format` &rarr; `MetricsFormat` 
+- Rename `Stat` &rarr; `Metrics`, `Stats` &rarr; `MetricsReader`, `StatsBuilder` &rarr; `MetricsReaderBuilder`, and `Format` &rarr; `MetricsFormat`
+- `MetricsReaderBuilder::patience` now returns `Self` 
 
 # 0.3.0 (2024-12-12)
 
