@@ -1,4 +1,4 @@
-use crate::parser_utils::parse_doc_str;
+use crate::parser_utils::{find_attr, has_attr, parse_doc_str};
 use serde::Serialize;
 use std::collections::HashMap;
 use std::mem::size_of;
@@ -118,13 +118,9 @@ fn generate_metrics(fields: &FieldList) -> HashMap<String, VscMetricDef> {
         .map(|field| {
             let name = field.ident.as_ref().unwrap().to_string();
 
-            let metric_type = if field
-                .attrs
-                .iter()
-                .any(|attr| attr.path().is_ident("counter"))
-            {
+            let metric_type = if has_attr(&field.attrs, "counter") {
                 MetricType::Counter
-            } else if field.attrs.iter().any(|attr| attr.path().is_ident("gauge")) {
+            } else if has_attr(&field.attrs, "gauge") {
                 MetricType::Gauge
             } else {
                 panic!("Field {name} must have either #[counter] or #[gauge] attribute")
@@ -183,11 +179,7 @@ fn parse_metric_attributes(field: &Field, metric_type: &str) -> (Level, Format) 
     let mut level = Level::default();
     let mut format = Format::default();
 
-    if let Some(attrs) = field
-        .attrs
-        .iter()
-        .find(|attr| attr.path().is_ident(metric_type))
-    {
+    if let Some(attrs) = find_attr(&field.attrs, metric_type) {
         let _ = attrs.parse_nested_meta(|meta| {
             match meta.path.get_ident().map(ToString::to_string).as_deref() {
                 Some("level") => {
