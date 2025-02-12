@@ -100,10 +100,8 @@ pub use varnish_sys::ffi;
 
 pub mod varnishtest;
 
-#[cfg(feature = "metrics-reader")]
 mod metrics_reader;
-#[cfg(feature = "metrics-reader")]
-pub use metrics_reader::{Format, Metric, MetricsReader, MetricsReaderBuilder, Semantics};
+pub use metrics_reader::{Metric, MetricFormat, MetricsReader, MetricsReaderBuilder, Semantics};
 
 pub use varnish_macros::vmod;
 

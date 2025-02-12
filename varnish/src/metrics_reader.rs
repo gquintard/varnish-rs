@@ -214,7 +214,7 @@ impl From<Semantics> for char {
 
 /// Unit of a value
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum Format {
+pub enum MetricFormat {
     /// No unit
     Integer,
     /// Bytes, for data volumes
@@ -223,35 +223,36 @@ pub enum Format {
     Bitmap,
     /// Time
     Duration,
-    /// Unit unknown
-    Unknown,
 }
 
-impl From<c_int> for Format {
-    fn from(value: c_int) -> Self {
-        match char::from_u32(value as u32).unwrap() {
-            'i' => Format::Integer,
-            'B' => Format::Bytes,
-            'b' => Format::Bitmap,
-            'd' => Format::Duration,
-            _ => Format::Unknown,
+impl TryFrom<c_int> for MetricFormat {
+    type Error = ();
+
+    fn try_from(value: c_int) -> Result<Self, Self::Error> {
+        let value = u8::try_from(value).map_err(|_| ())?;
+        match char::try_from(value).map_err(|_| ())? {
+            'i' => Ok(MetricFormat::Integer),
+            'B' => Ok(MetricFormat::Bytes),
+            'b' => Ok(MetricFormat::Bitmap),
+            'd' => Ok(MetricFormat::Duration),
+            _ => Err(()),
         }
     }
 }
 
-impl From<Format> for char {
-    fn from(value: Format) -> char {
+impl From<MetricFormat> for char {
+    fn from(value: MetricFormat) -> char {
         match value {
-            Format::Integer => 'i',
-            Format::Bytes => 'B',
-            Format::Bitmap => 'b',
-            Format::Duration => 'd',
-            Format::Unknown => '?',
+            MetricFormat::Integer => 'i',
+            MetricFormat::Bytes => 'B',
+            MetricFormat::Bitmap => 'b',
+            MetricFormat::Duration => 'd',
         }
     }
 }
 
 unsafe extern "C" fn add_point(ptr: *mut c_void, point: *const ffi::VSC_point) -> *mut c_void {
+    // FIXME: handle errors without panic
     let internal = ptr.cast::<MetricsReaderImpl>().as_mut().unwrap();
     let k = point as usize;
     let point = point.as_ref().unwrap();
@@ -262,7 +263,9 @@ unsafe extern "C" fn add_point(ptr: *mut c_void, point: *const ffi::VSC_point) -
         short_desc: CStr::from_ptr(point.sdesc).to_str().unwrap(),
         long_desc: CStr::from_ptr(point.ldesc).to_str().unwrap(),
         semantics: point.semantics.into(),
-        format: point.format.into(),
+        // FIXME: Unknown formats should continue to work
+        //        Perhaps use `Option<MetricFormat>` for `format` field?
+        format: point.format.try_into().unwrap(),
     };
     // FIXME: needs to be documented: pointer is used as a key?
     assert_eq!(internal.points.insert(k, stat), None);
@@ -288,7 +291,7 @@ pub struct Metric<'a> {
     pub short_desc: &'a str,
     pub long_desc: &'a str,
     pub semantics: Semantics,
-    pub format: Format,
+    pub format: MetricFormat,
 }
 
 impl<'a> Metric<'a> {
