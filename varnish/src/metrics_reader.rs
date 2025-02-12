@@ -72,23 +72,32 @@ impl<'a> MetricsReaderBuilder<'a> {
     /// When [`MetricsReaderBuilder::build()`] is called, it'll internally call `VSM_Attach`, hoping to find a running
     /// `varnishd` instance. If `None`, the function will not return until it connects, otherwise
     /// it specifies the timeout to use.
-    pub fn patience(self, t: Option<Duration>) -> VclResult<Self> {
-        // the things we do for love...
-        let arg = match t {
+    #[must_use]
+    pub fn patience(self, t: Option<Duration>) -> Self {
+        let mut arg = match t {
             None => "off".to_string(),
-            Some(t) => format!("{}\0", t.as_secs_f64()),
-        };
+            Some(t) => t.as_secs_f64().to_string(),
+        }
+        .into_bytes();
+        arg.push(0);
+
+        // # Safety
+        // we just created this string, no point to double-check it for nul bytes
         unsafe {
-            let ret = ffi::VSM_Arg(self.vsm, 't' as c_char, arg.as_ptr().cast::<c_char>());
+            let arg = CString::from_vec_with_nul_unchecked(arg);
+            // TODO: document why this can fail, and if we should return an error
+            // TODO: Document why using `self.vsm` here, and `self.vsc` in the other `VSM_Arg` calls
+            let ret = ffi::VSM_Arg(self.vsm, 't' as c_char, arg.as_ptr());
             assert_eq!(ret, 1);
         }
-        Ok(self)
+
+        self
     }
 
     fn vsc_arg(self, o: char, s: &str) -> Result<Self, NulError> {
         let c_s = CString::new(s)?;
         unsafe {
-            let ret = ffi::VSC_Arg(self.vsc, o as c_char, c_s.as_ptr().cast::<c_char>());
+            let ret = ffi::VSC_Arg(self.vsc, o as c_char, c_s.as_ptr());
             assert_eq!(ret, 1);
         }
         Ok(self)
@@ -154,7 +163,7 @@ fn vsm_error(p: *const ffi::vsm) -> VclError {
     }
 }
 
-impl<'a> Drop for MetricsReaderBuilder<'a> {
+impl Drop for MetricsReaderBuilder<'_> {
     fn drop(&mut self) {
         assert!(
             (self.vsc.is_null() && self.vsm.is_null())
@@ -168,7 +177,7 @@ impl<'a> Drop for MetricsReaderBuilder<'a> {
     }
 }
 
-impl<'a> Drop for MetricsReader<'a> {
+impl Drop for MetricsReader<'_> {
     fn drop(&mut self) {
         unsafe {
             ffi::VSC_Destroy(&mut self.vsc, self.vsm);
@@ -229,8 +238,7 @@ impl TryFrom<c_int> for MetricFormat {
     type Error = ();
 
     fn try_from(value: c_int) -> Result<Self, Self::Error> {
-        let value = u8::try_from(value).map_err(|_| ())?;
-        match char::try_from(value).map_err(|_| ())? {
+        match From::from(u8::try_from(value).map_err(|_| ())?) {
             'i' => Ok(MetricFormat::Integer),
             'B' => Ok(MetricFormat::Bytes),
             'b' => Ok(MetricFormat::Bitmap),
@@ -294,7 +302,7 @@ pub struct Metric<'a> {
     pub format: MetricFormat,
 }
 
-impl<'a> Metric<'a> {
+impl Metric<'_> {
     /// Retrieve the current value of the statistic, as-is
     pub fn get_raw_value(&self) -> u64 {
         // # Safety
@@ -321,7 +329,7 @@ impl<'a> Metric<'a> {
     }
 }
 
-impl<'a> MetricsReader<'a> {
+impl MetricsReader<'_> {
     /// Return a statistic set
     ///
     /// Names are not necessarily unique, so instead, statistics are tracked using `usize` handle
