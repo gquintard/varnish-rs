@@ -1,5 +1,7 @@
 use crate::parser_utils::parse_doc_str;
 use serde::Serialize;
+use std::mem::size_of;
+use std::sync::atomic::AtomicU64;
 use syn::{punctuated::Punctuated, token::Comma, Data, Field, Fields, Type};
 
 type FieldList = Punctuated<Field, Comma>;
@@ -8,6 +10,14 @@ type FieldList = Punctuated<Field, Comma>;
 enum CType {
     #[serde(rename = "uint64_t")]
     Uint64,
+}
+
+impl CType {
+    const fn size(&self) -> usize {
+        match self {
+            CType::Uint64 => size_of::<AtomicU64>(),
+        }
+    }
 }
 
 #[derive(Serialize, Clone)]
@@ -101,10 +111,10 @@ pub fn validate_fields(fields: &FieldList) {
 }
 
 fn generate_metrics(fields: &FieldList) -> Vec<VscMetricDef> {
+    let mut offset = 0;
     fields
         .iter()
-        .enumerate()
-        .map(|(i, field)| {
+        .map(|field| {
             let name = field.ident.as_ref().unwrap().to_string();
 
             let metric_type = if field
@@ -132,15 +142,19 @@ fn generate_metrics(fields: &FieldList) -> Vec<VscMetricDef> {
                 },
             );
 
+            let ctype = CType::Uint64;
+            let index = Some(offset);
+            offset += ctype.size();
+
             VscMetricDef {
                 name,
                 metric_type,
-                ctype: CType::Uint64,
+                ctype,
                 level,
                 oneliner,
                 format,
                 docs,
-                index: Some(i * 8),
+                index,
             }
         })
         .collect()
