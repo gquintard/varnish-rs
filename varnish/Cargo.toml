@@ -14,7 +14,7 @@ readme.workspace = true
 [features]
 default = []
 ffi = []
-vsc = []
+metrics-reader = []
 
 [dependencies]
 glob.workspace = true
