@@ -170,10 +170,7 @@ pub fn generate_metadata_json(name: &str, fields: &FieldList) -> String {
         order: 100,
         docs: String::new(),
         elements: metrics.len(),
-        elem: metrics
-            .iter()
-            .map(|m| (m.name.clone(), m.clone()))
-            .collect(),
+        elem: metrics.into_iter().map(|m| (m.name.clone(), m)).collect(),
     };
 
     serde_json::to_string(&metadata).unwrap()
