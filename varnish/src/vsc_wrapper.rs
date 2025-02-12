@@ -1,7 +1,7 @@
 use std::ffi::CString;
 use std::mem::size_of;
 use std::ops::{Deref, DerefMut};
-use varnish_sys::ffi::{vsc_seg, VRT_VSC_Alloc, VRT_VSC_Destroy};
+use varnish_sys::ffi::{va_list, vsc_seg, VRT_VSC_Alloc, VRT_VSC_Destroy};
 
 pub unsafe trait VscMetric {
     fn get_metadata() -> &'static str;
@@ -31,7 +31,7 @@ impl<T: VscMetric> Vsc<T> {
                 metadata_json.as_ptr(),
                 metadata_json.len(),
                 format.as_ptr(),
-                std::ptr::null_mut(),
+                va_list::default(),
             )
             .cast::<T>()
         };
