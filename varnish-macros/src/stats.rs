@@ -5,6 +5,12 @@ use syn::{punctuated::Punctuated, token::Comma, Data, Field, Fields, Type};
 type FieldList = Punctuated<Field, Comma>;
 
 #[derive(Serialize, Clone)]
+enum CType {
+    #[serde(rename = "uint64_t")]
+    Uint64,
+}
+
+#[derive(Serialize, Clone)]
 #[serde(rename_all = "lowercase")]
 enum MetricType {
     Counter,
@@ -12,9 +18,17 @@ enum MetricType {
 }
 
 #[derive(Serialize, Clone)]
-enum CType {
-    #[serde(rename = "uint64_t")]
-    Uint64,
+#[serde(rename_all = "lowercase")]
+enum Level {
+    Info,
+    Diag,
+    Debug,
+}
+
+impl Default for Level {
+    fn default() -> Self {
+        Self::Info
+    }
 }
 
 #[derive(Serialize, Clone)]
@@ -23,7 +37,7 @@ struct VscMetricDef {
     #[serde(rename = "type")]
     pub metric_type: MetricType,
     pub ctype: CType,
-    pub level: String,    // "info", "debug", etc
+    pub level: Level,
     pub oneliner: String, // "Counts the number of X", etc
     pub format: String,   // "integer", "bytes", "duration", "bitmap", etc
     pub docs: String,
@@ -136,8 +150,8 @@ pub fn generate_metadata_json(name: &str, fields: &FieldList) -> String {
     serde_json::to_string(&metadata).unwrap()
 }
 
-pub fn parse_metric_attributes(field: &Field, metric_type: &str) -> (String, String) {
-    let mut level = String::from("info");
+fn parse_metric_attributes(field: &Field, metric_type: &str) -> (Level, String) {
+    let mut level = Level::default();
     let mut format = String::from("integer");
 
     if let Some(attrs) = field
@@ -146,22 +160,29 @@ pub fn parse_metric_attributes(field: &Field, metric_type: &str) -> (String, Str
         .find(|attr| attr.path().is_ident(metric_type))
     {
         let _ = attrs.parse_nested_meta(|meta| {
-          match meta.path.get_ident().map(ToString::to_string).as_deref() {
-              Some("level") => {
-                  level = meta.value()?.parse::<syn::LitStr>()?.value();
-              }
-              Some("format") => {
-                  format = meta.value()?.parse::<syn::LitStr>()?.value();
-                  let field_name = field.ident.as_ref().unwrap();
-                  assert!(
-                      ["integer", "bitmap", "duration", "bytes"].contains(&format.as_str()),
-                      "Invalid format value for field {field_name}. Must be one of: integer, bitmap, duration, bytes"
-                  );
-              }
-              _ => {}
-          }
-          Ok(())
-      });
+            match meta.path.get_ident().map(ToString::to_string).as_deref() {
+                Some("level") => {
+                    let level_str = meta.value()?.parse::<syn::LitStr>()?.value();
+                    level = match level_str.as_str() {
+                        "info" => Level::Info,
+                        "diag" => Level::Diag,
+                        "debug" => Level::Debug,
+                        _ => panic!("Invalid level value for field {}. Must be one of: info, diag, debug", 
+                            field.ident.as_ref().unwrap()),
+                    };
+                }
+                Some("format") => {
+                    format = meta.value()?.parse::<syn::LitStr>()?.value();
+                    let field_name = field.ident.as_ref().unwrap();
+                    assert!(
+                        ["integer", "bitmap", "duration", "bytes"].contains(&format.as_str()),
+                        "Invalid format value for field {field_name}. Must be one of: integer, bitmap, duration, bytes"
+                    );
+                }
+                _ => {}
+            }
+            Ok(())
+        });
     }
     (level, format)
 }
