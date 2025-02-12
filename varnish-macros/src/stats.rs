@@ -12,11 +12,17 @@ enum MetricType {
 }
 
 #[derive(Serialize, Clone)]
+enum CType {
+    #[serde(rename = "uint64_t")]
+    Uint64,
+}
+
+#[derive(Serialize, Clone)]
 struct VscMetricDef {
     pub name: String,
     #[serde(rename = "type")]
     pub metric_type: MetricType,
-    pub ctype: String,    // "uint64_t" is only option right now
+    pub ctype: CType,
     pub level: String,    // "info", "debug", etc
     pub oneliner: String, // "Counts the number of X", etc
     pub format: String,   // "integer", "bytes", "duration", "bitmap", etc
@@ -100,7 +106,7 @@ fn generate_metrics(fields: &FieldList) -> Vec<VscMetricDef> {
             VscMetricDef {
                 name,
                 metric_type,
-                ctype: "uint64_t".to_string(),
+                ctype: CType::Uint64,
                 level,
                 oneliner,
                 format,
