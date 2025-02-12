@@ -32,6 +32,21 @@ impl Default for Level {
 }
 
 #[derive(Serialize, Clone)]
+#[serde(rename_all = "lowercase")]
+enum Format {
+    Integer,
+    Bitmap,
+    Duration,
+    Bytes,
+}
+
+impl Default for Format {
+    fn default() -> Self {
+        Self::Integer
+    }
+}
+
+#[derive(Serialize, Clone)]
 struct VscMetricDef {
     pub name: String,
     #[serde(rename = "type")]
@@ -39,7 +54,7 @@ struct VscMetricDef {
     pub ctype: CType,
     pub level: Level,
     pub oneliner: String, // "Counts the number of X", etc
-    pub format: String,   // "integer", "bytes", "duration", "bitmap", etc
+    pub format: Format,
     pub docs: String,
     pub index: Option<usize>,
 }
@@ -150,9 +165,9 @@ pub fn generate_metadata_json(name: &str, fields: &FieldList) -> String {
     serde_json::to_string(&metadata).unwrap()
 }
 
-fn parse_metric_attributes(field: &Field, metric_type: &str) -> (Level, String) {
+fn parse_metric_attributes(field: &Field, metric_type: &str) -> (Level, Format) {
     let mut level = Level::default();
-    let mut format = String::from("integer");
+    let mut format = Format::default();
 
     if let Some(attrs) = field
         .attrs
@@ -172,12 +187,15 @@ fn parse_metric_attributes(field: &Field, metric_type: &str) -> (Level, String) 
                     };
                 }
                 Some("format") => {
-                    format = meta.value()?.parse::<syn::LitStr>()?.value();
-                    let field_name = field.ident.as_ref().unwrap();
-                    assert!(
-                        ["integer", "bitmap", "duration", "bytes"].contains(&format.as_str()),
-                        "Invalid format value for field {field_name}. Must be one of: integer, bitmap, duration, bytes"
-                    );
+                    let format_str = meta.value()?.parse::<syn::LitStr>()?.value();
+                    format = match format_str.as_str() {
+                        "integer" => Format::Integer,
+                        "bitmap" => Format::Bitmap,
+                        "duration" => Format::Duration,
+                        "bytes" => Format::Bytes,
+                        _ => panic!("Invalid format value for field {}. Must be one of: integer, bitmap, duration, bytes",
+                            field.ident.as_ref().unwrap()),
+                    };
                 }
                 _ => {}
             }
