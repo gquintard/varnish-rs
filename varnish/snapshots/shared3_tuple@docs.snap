@@ -1,5 +1,6 @@
 ---
 source: varnish-macros/src/tests.rs
+snapshot_kind: text
 ---
 <!--
 
@@ -20,4 +21,4 @@ import tuple;
 import tuple from "path/to/libtuple.so";
 ```
 
-### Function `STRING ref_to_slice_lifetime()`
+### Function `STRING tuple.ref_to_slice_lifetime()`

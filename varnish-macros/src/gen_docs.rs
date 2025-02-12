@@ -75,41 +75,47 @@ import {ident} from "path/to/lib{ident}.so";
         if !matches!(func.func_type, FuncType::Function) {
             continue;
         }
-        write_function(&mut docs, "###", "Function", func);
+        write_function(&mut docs, &info.ident, "###", "Function", func);
     }
 
     for obj in &info.objects {
-        ln!(docs, "\n### Object `{}`", obj.ident);
-
+        ln!(
+            docs,
+            "\n### Constructor `{sig}`",
+            sig = fn_sig(
+                &info.ident,
+                &obj.constructor,
+                &get_user_args(&obj.constructor),
+                &obj.ident
+            )
+        );
         write_docs(&mut docs, &obj.docs, "###");
-        write_function(&mut docs, "####", &obj.ident, &obj.constructor);
+        write_function(&mut docs, &obj.ident, "####", &obj.ident, &obj.constructor);
+
         for method in &obj.funcs {
-            write_function(&mut docs, "####", "Method", method);
+            write_function(&mut docs, &obj.ident, "####", "Method", method);
         }
     }
 
     docs
 }
 
-fn write_function(mut docs: &mut String, prefix: &str, obj_or_typ: &str, func: &FuncInfo) {
+fn write_function(
+    mut docs: &mut String,
+    top_obj: &str,
+    prefix: &str,
+    obj_or_typ: &str,
+    func: &FuncInfo,
+) {
     let user_args = get_user_args(func);
 
-    if matches!(func.func_type, FuncType::Constructor) {
-        ln!(
-            docs,
-            r"
-```vcl
-// Create a new instance of the object in your VCL init function
-sub vcl_init {{
-    new {ident} = {obj_or_typ}.{sig};
-}}
-```",
-            ident = func.ident,
-            sig = fn_sig(func, &user_args),
-        );
-    } else {
+    if !matches!(func.func_type, FuncType::Constructor) {
         wrt!(docs, "\n{prefix} {obj_or_typ} ");
-        ln!(&mut docs, "{}", fn_sig(func, &user_args));
+        ln!(
+            &mut docs,
+            "`{}`",
+            fn_sig(top_obj, func, &user_args, obj_or_typ)
+        );
     }
 
     write_docs(docs, &func.docs, prefix);
@@ -128,19 +134,23 @@ sub vcl_init {{
     }
 }
 
-fn fn_sig(func: &FuncInfo, user_args: &Vec<(&ParamTypeInfo, &ParamInfo)>) -> String {
+fn fn_sig(
+    top_obj: &str,
+    func: &FuncInfo,
+    user_args: &Vec<(&ParamTypeInfo, &ParamInfo)>,
+    obj_or_typ: &str,
+) -> String {
     let mut res = String::new();
-    let is_md_txt = matches!(
-        func.func_type,
-        FuncType::Function | FuncType::Method | FuncType::Event
-    );
-    if is_md_txt {
-        wrt!(res, "`");
-    }
     if matches!(func.func_type, FuncType::Function | FuncType::Method) {
         wrt!(res, "{} ", func.output_ty.to_vcc_type());
     }
-    wrt!(res, "{}(", func.ident);
+    if matches!(func.func_type, FuncType::Constructor) {
+        wrt!(res, "{}.{}(", top_obj, obj_or_typ);
+    } else if matches!(func.func_type, FuncType::Method) {
+        wrt!(res, "<object>.{}(", func.ident);
+    } else {
+        wrt!(res, "{}.{}(", top_obj, func.ident);
+    }
     let mut first = true;
     for (arg, ty) in user_args {
         if first {
@@ -154,9 +164,6 @@ fn fn_sig(func: &FuncInfo, user_args: &Vec<(&ParamTypeInfo, &ParamInfo)>) -> Str
         }
     }
     wrt!(res, ")");
-    if is_md_txt {
-        wrt!(res, "`");
-    }
     res
 }
 

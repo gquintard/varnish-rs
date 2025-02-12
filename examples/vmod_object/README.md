@@ -19,19 +19,12 @@ import object;
 import object from "path/to/libobject.so";
 ```
 
-### Object `kv`
-
-```vcl
-// Create a new instance of the object in your VCL init function
-sub vcl_init {
-    new new = kv.new([INT cap]);
-}
-```
+### Constructor `object.kv([INT cap])`
 
 Create a new key-value store, with an optional capacity.
 If `cap` is 0 or less, it will be ignored.
 
-#### Method `STRING get(STRING key)`
+#### Method `STRING <object>.get(STRING key)`
 
 Retrieve the value associated `key`, or an empty string if `key` didn't exist.
 
@@ -40,7 +33,7 @@ is a `&str`, so it must be converted to a `String` to be returned, which is then
 copied into an internal Varnish workspace. In the future, we will provide a way
 to avoid this double-copy.
 
-#### Method `VOID set(STRING key, STRING value)`
+#### Method `VOID <object>.set(STRING key, STRING value)`
 
 Insert a key-value pair into the store.
 

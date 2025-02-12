@@ -19,38 +19,38 @@ import rustest;
 import rustest from "path/to/librustest.so";
 ```
 
-### Function `VOID set_hdr(STRING name, STRING value)`
+### Function `VOID rustest.set_hdr(STRING name, STRING value)`
 
-### Function `VOID unset_hdr(STRING name)`
+### Function `VOID rustest.unset_hdr(STRING name)`
 
-### Function `STRING ws_reserve(STRING s)`
+### Function `STRING rustest.ws_reserve(STRING s)`
 
-### Function `STRING out_str()`
+### Function `STRING rustest.out_str()`
 
-### Function `STRING out_res_str()`
+### Function `STRING rustest.out_res_str()`
 
-### Function `STRING out_string()`
+### Function `STRING rustest.out_string()`
 
-### Function `STRING out_res_string()`
+### Function `STRING rustest.out_res_string()`
 
-### Function `BOOL out_bool()`
+### Function `BOOL rustest.out_bool()`
 
-### Function `BOOL out_res_bool()`
+### Function `BOOL rustest.out_res_bool()`
 
-### Function `DURATION out_duration()`
+### Function `DURATION rustest.out_duration()`
 
-### Function `DURATION out_res_duration()`
+### Function `DURATION rustest.out_res_duration()`
 
-### Function `IP build_ip4()`
+### Function `IP rustest.build_ip4()`
 
-### Function `IP build_ip6()`
+### Function `IP rustest.build_ip6()`
 
-### Function `STRING print_ip([IP maybe_ip])`
+### Function `STRING rustest.print_ip([IP maybe_ip])`
 
-### Function `STRING req_body()`
+### Function `STRING rustest.req_body()`
 
-### Function `STRING default_arg(STRING arg = "foo")`
+### Function `STRING rustest.default_arg(STRING arg = "foo")`
 
-### Function `STRING cowprobe_prop([PROBE probe])`
+### Function `STRING rustest.cowprobe_prop([PROBE probe])`
 
-### Function `STRING probe_prop([PROBE probe])`
+### Function `STRING rustest.probe_prop([PROBE probe])`
