@@ -1,5 +1,6 @@
 use crate::parser_utils::parse_doc_str;
 use serde::Serialize;
+use std::collections::HashMap;
 use std::mem::size_of;
 use std::sync::atomic::AtomicU64;
 use syn::{punctuated::Punctuated, token::Comma, Data, Field, Fields, Type};
@@ -77,7 +78,7 @@ struct VscMetadata {
     order: u32,
     docs: String,
     elements: usize,
-    elem: std::collections::HashMap<String, VscMetricDef>,
+    elem: HashMap<String, VscMetricDef>,
 }
 
 pub fn get_struct_fields(data: &Data) -> &FieldList {
@@ -110,7 +111,7 @@ pub fn validate_fields(fields: &FieldList) {
     }
 }
 
-fn generate_metrics(fields: &FieldList) -> Vec<VscMetricDef> {
+fn generate_metrics(fields: &FieldList) -> HashMap<String, VscMetricDef> {
     let mut offset = 0;
     fields
         .iter()
@@ -146,8 +147,8 @@ fn generate_metrics(fields: &FieldList) -> Vec<VscMetricDef> {
             let index = Some(offset);
             offset += ctype.size();
 
-            VscMetricDef {
-                name,
+            let metric = VscMetricDef {
+                name: name.clone(),
                 metric_type,
                 ctype,
                 level,
@@ -155,7 +156,9 @@ fn generate_metrics(fields: &FieldList) -> Vec<VscMetricDef> {
                 format,
                 docs,
                 index,
-            }
+            };
+
+            (name, metric)
         })
         .collect()
 }
@@ -170,7 +173,7 @@ pub fn generate_metadata_json(name: &str, fields: &FieldList) -> String {
         order: 100,
         docs: String::new(),
         elements: metrics.len(),
-        elem: metrics.into_iter().map(|m| (m.name.clone(), m)).collect(),
+        elem: metrics,
     };
 
     serde_json::to_string(&metadata).unwrap()
