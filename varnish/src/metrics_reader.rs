@@ -74,17 +74,15 @@ impl<'a> MetricsReaderBuilder<'a> {
     /// it specifies the timeout to use.
     #[must_use]
     pub fn patience(self, t: Option<Duration>) -> Self {
-        let mut arg = match t {
+        let arg = CString::new(match t {
             None => "off".to_string(),
             Some(t) => t.as_secs_f64().to_string(),
-        }
-        .into_bytes();
-        arg.push(0);
+        })
+        .unwrap(); // Can never fail since we control the content of the string
 
         // # Safety
         // we just created this string, no point to double-check it for nul bytes
         unsafe {
-            let arg = CString::from_vec_with_nul_unchecked(arg);
             // TODO: document why this can fail, and if we should return an error
             // TODO: Document why using `self.vsm` here, and `self.vsc` in the other `VSM_Arg` calls
             let ret = ffi::VSM_Arg(self.vsm, 't' as c_char, arg.as_ptr());
