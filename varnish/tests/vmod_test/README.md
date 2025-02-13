@@ -54,3 +54,5 @@ import rustest from "path/to/librustest.so";
 ### Function `STRING cowprobe_prop([PROBE probe])`
 
 ### Function `STRING probe_prop([PROBE probe])`
+
+### Function `VOID ws_tests()`
