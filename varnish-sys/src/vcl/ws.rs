@@ -27,7 +27,7 @@ use crate::ffi::WS_Inside;
 use crate::ffi::{txt, VCL_STRING};
 #[cfg(not(varnishsys_6))]
 use crate::ffi::{vrt_blob, WS_Allocated, VCL_BLOB};
-use crate::vcl::ws_str_buffer::WsStrBuffer;
+use crate::vcl::ws_str_buffer::{WsBlobBuffer, WsStrBuffer};
 use crate::vcl::VclError;
 use crate::{ffi, validate_ws};
 
@@ -36,8 +36,8 @@ impl ffi::ws {
     pub(crate) unsafe fn alloc(&mut self, size: u32) -> *mut c_void {
         ffi::WS_Alloc(self, size)
     }
-    pub(crate) unsafe fn reserve_all(&mut self) -> usize {
-        ffi::WS_ReserveAll(self) as usize
+    pub(crate) unsafe fn reserve_all(&mut self) -> u32 {
+        ffi::WS_ReserveAll(self)
     }
     pub(crate) unsafe fn release(&mut self, len: u32) {
         ffi::WS_Release(self, len);
@@ -64,7 +64,7 @@ impl ffi::ws {
     }
 
     #[allow(clippy::unused_self)]
-    pub(crate) unsafe fn reserve_all(&mut self) -> usize {
+    pub(crate) unsafe fn reserve_all(&mut self) -> u32 {
         unimplemented!("WS_ReserveAll is not yet available in tests")
     }
 
@@ -222,6 +222,15 @@ impl<'a> Workspace<'a> {
     /// [`WsStrBuffer::finish()`] for more information.
     pub fn get_str_buffer(&mut self) -> WsStrBuffer<'a> {
         unsafe { WsStrBuffer::new(validate_ws(self.raw)) }
+    }
+
+    /// Allocate all the free space in the workspace in a buffer that can be reclaimed or truncated
+    /// later.
+    ///
+    /// Note: don't assume the slice has been zeroed when it is returned to you, see
+    /// [`WsStrBuffer::finish()`] for more information.
+    pub fn get_blob_buffer(&mut self) -> WsBlobBuffer<'a> {
+        unsafe { WsBlobBuffer::new(validate_ws(self.raw)) }
     }
 }
 
