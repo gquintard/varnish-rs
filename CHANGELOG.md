@@ -1,5 +1,11 @@
 # Unpublished
 - In probe support, renamed `Request::URL` to `Request::Url`
+- Refactored Workspace API:
+  - Introduce `Workspace::get_str_buffer() -> WsStrBuffer` instead of `reserve`
+  - There is no longer any need to write NUL bytes to the end of the buffer
+  - The new buffer implements the `Write` trait, and can be inspected for what has been written so far
+  - The buffer does not allow any access to "dirty" (unset) portion of the buffer
+  - The buffer must be finalized with `finish() -> VCL_STRING`
 
 # 0.3.0 (2024-12-12)
 

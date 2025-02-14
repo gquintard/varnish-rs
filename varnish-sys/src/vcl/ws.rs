@@ -27,8 +27,52 @@ use crate::ffi::WS_Inside;
 use crate::ffi::{txt, VCL_STRING};
 #[cfg(not(varnishsys_6))]
 use crate::ffi::{vrt_blob, WS_Allocated, VCL_BLOB};
+use crate::vcl::ws_str_buffer::WsStrBuffer;
 use crate::vcl::VclError;
 use crate::{ffi, validate_ws};
+
+#[cfg(not(test))]
+impl ffi::ws {
+    pub(crate) unsafe fn alloc(&mut self, size: u32) -> *mut c_void {
+        ffi::WS_Alloc(self, size)
+    }
+    pub(crate) unsafe fn reserve_all(&mut self) -> usize {
+        ffi::WS_ReserveAll(self) as usize
+    }
+    pub(crate) unsafe fn release(&mut self, len: u32) {
+        ffi::WS_Release(self, len);
+    }
+}
+
+#[cfg(test)]
+impl ffi::ws {
+    pub(crate) unsafe fn alloc(&mut self, size: u32) -> *mut c_void {
+        // `WS_Alloc` is a private part of `varnishd`, not the Varnish library,
+        // so it is only available if the output is a `cdylib`.
+        // When testing, VMOD is a lib or a bin,
+        // so we have to fake our own allocator.
+        let ws = validate_ws(self);
+        let align = align_of::<*const c_void>();
+        let aligned_sz = (size as usize).div_ceil(align) * align;
+        if ws.e.offset_from(ws.f) < aligned_sz as isize {
+            ptr::null_mut()
+        } else {
+            let p = ws.f.cast::<c_void>();
+            ws.f = ws.f.add(aligned_sz);
+            p
+        }
+    }
+
+    #[allow(clippy::unused_self)]
+    pub(crate) unsafe fn reserve_all(&mut self) -> usize {
+        unimplemented!("WS_ReserveAll is not yet available in tests")
+    }
+
+    #[allow(clippy::unused_self)]
+    pub(crate) unsafe fn release(&mut self, _len: u32) {
+        unimplemented!("WS_Release is not yet available in tests")
+    }
+}
 
 /// A workspace object
 ///
@@ -59,28 +103,7 @@ impl<'a> Workspace<'a> {
     /// # Safety
     /// Allocated memory is not initialized.
     pub unsafe fn alloc(&mut self, size: NonZeroUsize) -> *mut c_void {
-        #[cfg(not(test))]
-        {
-            ffi::WS_Alloc(validate_ws(self.raw), size.get() as u32)
-        }
-
-        #[cfg(test)]
-        {
-            // `WS_Alloc` is a private part of `varnishd`, not the Varnish library,
-            // so it is only available if the output is a `cdylib`.
-            // When testing, VMOD is a lib or a bin,
-            // so we have to fake our own allocator.
-            let ws = validate_ws(self.raw);
-            let align = align_of::<*const c_void>();
-            let aligned_sz = size.get().div_ceil(align) * align;
-            if ws.e.offset_from(ws.f) < aligned_sz as isize {
-                ptr::null_mut()
-            } else {
-                let p = ws.f.cast::<c_void>();
-                ws.f = ws.f.add(aligned_sz);
-                p
-            }
-        }
+        validate_ws(self.raw).alloc(size.get() as u32)
     }
 
     /// Check if a pointer is part of the current workspace
@@ -196,20 +219,9 @@ impl<'a> Workspace<'a> {
     /// later.
     ///
     /// Note: don't assume the slice has been zeroed when it is returned to you, see
-    /// [`ReservedBuf::release()`] for more information.
-    pub fn reserve(&mut self) -> ReservedBuf<'a> {
-        let ws = unsafe { validate_ws(self.raw) };
-
-        unsafe {
-            let sz = ffi::WS_ReserveAll(ws) as usize;
-            let buf = from_raw_parts_mut(ws.f.cast::<u8>(), sz);
-            ReservedBuf {
-                buf,
-                wsp: self.raw,
-                b: ws.f.cast::<u8>(),
-                len: 0,
-            }
-        }
+    /// [`WsStrBuffer::finish()`] for more information.
+    pub fn get_str_buffer(&mut self) -> WsStrBuffer<'a> {
+        unsafe { WsStrBuffer::new(validate_ws(self.raw)) }
     }
 }
 
@@ -236,87 +248,7 @@ fn bytes_with_nul_to_txt(buf: &[u8]) -> txt {
     txt::from_cstr(unsafe { CStr::from_bytes_with_nul_unchecked(buf) })
 }
 
-/// The free region of the workspace. The buffer is fully writable but must be finalized using
-/// `release()` to avoid being reclaimed when the struct is dropped.
-///
-/// Because [`ReservedBuf::release()`] starts counting at the beginning of the slice and because the
-/// `Write` traits will actually move that same beginning of the slice, you can
-/// `reserve/write/release(0)`:
-///
-/// ``` ignore
-/// // write trait needs to be in scope
-/// use std::io::Write;
-/// use varnish::vcl::TestWS;
-///
-/// // init a workspace
-/// let mut test_ws = TestWS::new(160);
-/// let mut ws = test_ws.ws();
-///
-/// // first reservation gets the full buffer
-/// let mut r = ws.reserve();
-/// assert_eq!(r.buf.len(), 160);
-///
-/// // release AFTER the part we've written
-/// r.buf.write(b"0123456789").unwrap();
-/// assert_eq!(r.release(0), b"0123456789");
-///
-/// {
-///     // second reservation get 160 - 10 bytes
-///     let r2 = ws.reserve();
-///     assert_eq!(r2.buf.len(), 150);
-///     // the ReservedBuf goes out of scope without a call to .release()
-///     // so now data is fully allocated
-/// }
-///
-/// let r3 = ws.reserve();
-/// assert_eq!(r3.buf.len(), 150);
-/// ```
-#[derive(Debug)]
-pub struct ReservedBuf<'a> {
-    /// The reserved buffer
-    pub buf: &'a mut [u8],
-    wsp: *mut ffi::ws,
-    b: *mut u8,
-    len: usize,
-}
-
-impl<'a> ReservedBuf<'a> {
-    /// Release a [`ReservedBuf`], returning the allocated and now truncated buffer.
-    ///
-    /// # Safety
-    ///
-    /// `release` doesn't wipe the unused part of the buffer, so you should not assume that the
-    /// slice is pristine when you receive it.
-    ///
-    /// ``` ignore
-    /// use varnish::vcl::TestWS;
-    /// let mut test_ws = TestWS::new(160);
-    /// let mut ws = test_ws.ws();
-    ///
-    /// let r = ws.reserve();
-    /// r.buf[..9].copy_from_slice(b"IAmNotZero");
-    /// r.release(0);
-    ///
-    /// let r2 = ws.reserve();
-    /// assert_eq!(&r2.buf[..9], b"IAmNotZero");
-    /// ```
-    pub fn release(mut self, sz: usize) -> &'a mut [u8] {
-        unsafe {
-            self.len = self.buf.as_ptr().add(sz).offset_from(self.b) as usize;
-            from_raw_parts_mut(self.b, self.len)
-        }
-    }
-}
-
-impl Drop for ReservedBuf<'_> {
-    fn drop(&mut self) {
-        unsafe {
-            ffi::WS_Release(validate_ws(self.wsp), self.len as u32);
-        }
-    }
-}
-
-/// A struct holding both a native ws struct and the space it points to.
+/// A struct holding both a native workspace struct and the space it points to.
 ///
 /// As the name implies, this struct mainly exist to facilitate testing and should probably not be
 /// used elsewhere.
@@ -332,8 +264,8 @@ impl TestWS {
     pub fn new(sz: usize) -> Self {
         let al = align_of::<*const c_void>();
         let aligned_sz = (sz / al) * al;
-        let mut v: Vec<c_char> = vec![0; sz];
-        let s = v.as_mut_ptr();
+        let mut space: Vec<c_char> = vec![0; sz];
+        let s = space.as_mut_ptr();
         Self {
             c_ws: ffi::ws {
                 magic: ffi::WS_MAGIC,
@@ -343,7 +275,7 @@ impl TestWS {
                 r: ptr::null_mut(),
                 e: unsafe { s.add(aligned_sz) },
             },
-            space: v,
+            space,
         }
     }
 
