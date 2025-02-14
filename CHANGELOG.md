@@ -1,5 +1,11 @@
 # Unpublished
 - In probe support, renamed `Request::URL` to `Request::Url`
+- Refactored Workspace API:
+  - Introduce `Workspace::vcl_string_builder`, `vcl_blob_builder`, and `slice_builder` instead of `reserve`
+  - There is no longer any need to write NUL bytes to the end of the buffer
+  - The returned buffers support `Write` trait, and can be inspected/modified what has been written so far
+  - The buffer does not allow any access to "dirty" (unset) portion of the buffer
+  - The buffer must be finalized with `finish()`, which returns `VCL_STRING`, `VCL_BLOB`, or `&[T]` depending on the builder used
 
 # 0.3.0 (2024-12-12)
 
