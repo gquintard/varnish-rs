@@ -171,7 +171,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // TODO: implement ws::reserve_all and ws::release
     fn str_buffer() {
         // init a workspace
         let mut test_ws = TestWS::new(160);
@@ -179,6 +178,9 @@ mod tests {
 
         // first buffer call gets all available space
         let mut buf = ws.get_str_buffer();
+        unsafe {
+            assert_eq!(160, (*ws.raw).r.offset_from((*ws.raw).f));
+        }
         assert_eq!(buf.remaining(), 160);
 
         // Validating writing
@@ -198,7 +200,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // TODO: implement ws::reserve_all and ws::release
     fn blob_buffer() {
         // init a workspace
         let mut test_ws = TestWS::new(160);

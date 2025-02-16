@@ -34,6 +34,7 @@ use crate::{ffi, validate_ws};
 #[cfg(not(test))]
 impl ffi::ws {
     pub(crate) unsafe fn alloc(&mut self, size: u32) -> *mut c_void {
+        assert!(size > 0);
         ffi::WS_Alloc(self, size)
     }
     pub(crate) unsafe fn reserve_all(&mut self) -> u32 {
@@ -46,31 +47,43 @@ impl ffi::ws {
 
 #[cfg(test)]
 impl ffi::ws {
+    const ALIGN: usize = align_of::<*const c_void>();
     pub(crate) unsafe fn alloc(&mut self, size: u32) -> *mut c_void {
         // `WS_Alloc` is a private part of `varnishd`, not the Varnish library,
         // so it is only available if the output is a `cdylib`.
         // When testing, VMOD is a lib or a bin,
         // so we have to fake our own allocator.
         let ws = validate_ws(self);
-        let align = align_of::<*const c_void>();
-        let aligned_sz = (size as usize).div_ceil(align) * align;
+        assert!(size > 0);
+        let aligned_sz = (size as usize).div_ceil(Self::ALIGN) * Self::ALIGN;
         if ws.e.offset_from(ws.f) < aligned_sz as isize {
             ptr::null_mut()
         } else {
             let p = ws.f.cast::<c_void>();
             ws.f = ws.f.add(aligned_sz);
+            assert!(p.is_aligned());
             p
         }
     }
 
     #[allow(clippy::unused_self)]
     pub(crate) unsafe fn reserve_all(&mut self) -> u32 {
-        unimplemented!("WS_ReserveAll is not yet available in tests")
+        let ws = validate_ws(self);
+        assert!(ws.r.is_null());
+        ws.r = ws.e;
+        ws.e.offset_from(ws.f).try_into().unwrap()
     }
 
     #[allow(clippy::unused_self)]
-    pub(crate) unsafe fn release(&mut self, _len: u32) {
-        unimplemented!("WS_Release is not yet available in tests")
+    pub(crate) unsafe fn release(&mut self, size: u32) {
+        let ws = validate_ws(self);
+        assert!(<u32 as TryInto<isize>>::try_into(size).unwrap() <= ws.e.offset_from(ws.f));
+        assert!(<u32 as TryInto<isize>>::try_into(size).unwrap() <= ws.r.offset_from(ws.f));
+        assert!(!ws.r.is_null());
+        let aligned_sz = (size as usize).div_ceil(Self::ALIGN) * Self::ALIGN;
+        ws.f = ws.f.add(aligned_sz.into());
+        assert!(ws.f.is_aligned());
+        ws.r = ptr::null_mut::<c_char>();
     }
 }
 
@@ -275,6 +288,8 @@ impl TestWS {
         let aligned_sz = (sz / al) * al;
         let mut space: Vec<c_char> = vec![0; sz];
         let s = space.as_mut_ptr();
+        assert!(s.is_aligned());
+        assert!(unsafe { s.add(aligned_sz).is_aligned() });
         Self {
             c_ws: ffi::ws {
                 magic: ffi::WS_MAGIC,
@@ -307,7 +322,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn ws_test() {
+    fn ws_test_alloc() {
         let mut test_ws = TestWS::new(160);
         let mut ws = test_ws.workspace();
         for _ in 0..10 {
