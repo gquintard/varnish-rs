@@ -9,6 +9,7 @@ mod probe;
 mod processor;
 mod vsb;
 mod ws;
+mod ws_str_buffer;
 
 #[cfg(not(varnishsys_6))]
 pub use backend::*;
@@ -21,5 +22,6 @@ pub use probe::*;
 pub use processor::*;
 pub use vsb::*;
 pub use ws::*;
+pub use ws_str_buffer::WsStrBuffer;
 
 pub use crate::ffi::{VclEvent as Event, VslTag as LogTag};

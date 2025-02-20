@@ -1,5 +1,3 @@
-#![expect(unused_variables)]
-
 use varnish::vmod;
 
 fn main() {}

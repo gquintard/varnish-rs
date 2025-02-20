@@ -10,6 +10,7 @@ varnish::run_vtc_tests!("tests/*.vtc");
 /// Test vmod
 #[vmod(docs = "README.md")]
 mod rustest {
+    use std::ffi::CStr;
     use std::io::Write;
     use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
     use std::time::Duration;
@@ -37,12 +38,14 @@ mod rustest {
     }
 
     pub unsafe fn ws_reserve(ws: &mut Workspace, s: &str) -> Result<VCL_STRING, &'static str> {
-        let mut rbuf = ws.reserve();
-        match write!(rbuf.buf, "{s} {s} {s}\0") {
+        let mut buf = ws.vcl_string_builder().unwrap();
+        match write!(buf, "{s} {s} {s}") {
             Ok(()) => {
-                let final_buf = rbuf.release(0);
-                assert_eq!(final_buf.len(), 3 * s.len() + 3);
-                Ok(VCL_STRING(final_buf.as_ptr().cast::<i8>()))
+                let buffer = buf.finish();
+                let res = CStr::from_ptr(buffer.0);
+                // Note that count_bytes does NOT include nul terminator
+                assert_eq!(res.count_bytes(), 3 * s.len() + 2);
+                Ok(buffer)
             }
             _ => Err("workspace issue"),
         }
@@ -103,15 +106,12 @@ mod rustest {
     // this is a pretty terrible idea, the request body is probably big, and your workspace is tiny,
     // but hey, it's a test function
     pub unsafe fn req_body(ctx: &mut Ctx) -> Result<VCL_STRING, VclError> {
-        let mut body_chunks = ctx.cached_req_body()?;
-        // make sure the body will be null-terminated
-        body_chunks.push(b"\0");
         // open a ws reservation and blast the body into it
-        let mut r = ctx.ws.reserve();
-        for chunk in body_chunks {
-            r.buf.write_all(chunk).map_err(|_| "workspace issue")?;
+        let mut buf = ctx.ws.vcl_string_builder()?;
+        for chunk in ctx.cached_req_body()? {
+            buf.write_all(chunk).map_err(|_| "workspace issue")?;
         }
-        Ok(VCL_STRING(r.release(0).as_ptr().cast::<i8>()))
+        Ok(buf.finish())
     }
 
     pub fn default_arg(#[default("foo")] arg: &str) -> &str {
