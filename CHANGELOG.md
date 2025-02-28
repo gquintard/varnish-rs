@@ -6,6 +6,7 @@
   - The returned buffers support `Write` trait, and can be inspected/modified what has been written so far
   - The buffer does not allow any access to "dirty" (unset) portion of the buffer
   - The buffer must be finalized with `finish()`, which returns `VCL_STRING`, `VCL_BLOB`, or `&[T]` depending on the builder used
+- Fix #167
 
 # 0.3.0 (2024-12-12)
 
