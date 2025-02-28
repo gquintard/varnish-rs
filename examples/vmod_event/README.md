@@ -19,6 +19,6 @@ import event;
 import event from "path/to/libevent.so";
 ```
 
-### Function `INT loaded()`
+### Function `INT event.loaded()`
 
 Return the number of VCL loads stored during when the event function ran.

@@ -524,12 +524,14 @@ unsafe extern "C" fn wrap_finish<S: Serve<T>, T: Transfer>(
     let bo = ctx.bo.as_mut().unwrap();
 
     // drop the Transfer
-    // FIXME: can htc be null? We do set it to null later...
-    let htc = bo.htc.as_ref().unwrap();
-    if let Some(old) = htc.priv_.cast::<T>().as_mut().take() {
-        drop(Box::from_raw(old));
+    if let Some(htc) = ptr::replace(&mut bo.htc, null_mut()).as_mut() {
+        if let Some(val) = ptr::replace(&mut htc.priv_, null_mut())
+            .cast::<T>()
+            .as_mut()
+        {
+            drop(Box::from_raw(val));
+        }
     }
-    bo.htc = null_mut();
 
     // FIXME?: should _prev be set to NULL?
     prev_backend.finish(&mut Ctx::from_ptr(ctx));

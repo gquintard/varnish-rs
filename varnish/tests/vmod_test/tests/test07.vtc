@@ -13,7 +13,7 @@ varnish v1 -vcl+backend {
 	sub vcl_backend_response {
 		set beresp.filters = "vfptest";
 	}
-        
+
 	sub vcl_backend_error {
 		set beresp.status = 200;
 	}

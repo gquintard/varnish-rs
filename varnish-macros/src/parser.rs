@@ -16,7 +16,7 @@ use crate::parser_args::FuncStatus;
 use crate::{parser_utils, ProcResult};
 
 pub fn tokens_to_model(args: TokenStream, item_mod: &mut ItemMod) -> ProcResult<VmodInfo> {
-    let args = NestedMeta::parse_meta_list(args).map_err(syn::Error::from)?;
+    let args = NestedMeta::parse_meta_list(args)?;
     let args = VmodParams::from_list(&args)?;
     let info = VmodInfo::parse(args, item_mod)?;
     Ok(info)

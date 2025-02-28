@@ -19,18 +19,11 @@ import be;
 import be from "path/to/libbe.so";
 ```
 
-### Object `parrot`
+### Constructor `be.parrot(STRING to_repeat)`
 
 parrot is our VCL object, which just holds a rust Backend,
 it only needs two functions:
 - new(), so that the VCL can instantiate it
 - backend(), so that we can produce a C pointer for varnish to use
 
-```vcl
-// Create a new instance of the object in your VCL init function
-sub vcl_init {
-    new new = parrot.new(STRING to_repeat);
-}
-```
-
-#### Method `BACKEND backend()`
+#### Method `BACKEND <object>.backend()`

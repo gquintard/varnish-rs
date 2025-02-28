@@ -19,7 +19,7 @@ import infiniteloop;
 import infiniteloop from "path/to/libinfiniteloop.so";
 ```
 
-### Function `VOID reset()`
+### Function `VOID infiniteloop.reset()`
 
 Set the `retries` and `restarts` internal counters to 0.
 This is extremely dangerous, and you only use this if you know what you are doing,
