@@ -8,7 +8,7 @@
   - The buffer must be finalized with `finish()`, which returns `VCL_STRING`, `VCL_BLOB`, or `&[T]` depending on the builder used
 - Remove `vsc` feature - all of its functionality is now available without any feature flags
 - Rename `Stat` &rarr; `Metrics`, `Stats` &rarr; `MetricsReader`, `StatsBuilder` &rarr; `MetricsReaderBuilder`, and `Format` &rarr; `MetricsFormat`
-- `MetricsReaderBuilder::patience` now returns `Self` 
+- `MetricsReaderBuilder::patience` now returns `Self`
 
 # 0.3.0 (2024-12-12)
 
