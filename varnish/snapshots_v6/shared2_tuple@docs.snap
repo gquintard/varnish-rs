@@ -1,5 +1,6 @@
 ---
 source: varnish-macros/src/tests.rs
+snapshot_kind: text
 ---
 <!--
 
@@ -20,4 +21,4 @@ import tuple;
 import tuple from "path/to/libtuple.so";
 ```
 
-### Function `VOID per_tsk_val()`
+### Function `VOID tuple.per_tsk_val()`

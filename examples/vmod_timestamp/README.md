@@ -19,7 +19,7 @@ import timestamp;
 import timestamp from "path/to/libtimestamp.so";
 ```
 
-### Function `DURATION timestamp()`
+### Function `DURATION timestamp.timestamp()`
 
 Returns the duration since the same function was called for the last time (in the same task).
 If it's the first time it's been called, return 0.

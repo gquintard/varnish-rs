@@ -1,5 +1,6 @@
 ---
 source: varnish-macros/src/tests.rs
+snapshot_kind: text
 ---
 <!--
 
@@ -29,7 +30,7 @@ import types;
 import types from "path/to/libtypes.so";
 ```
 
-### Function `VOID with_docs()`
+### Function `VOID types.with_docs()`
 
 doctest on a function
 with multiple lines
@@ -38,9 +39,9 @@ with multiple lines
 * foo
 * bar
 
-### Function `VOID no_docs()`
+### Function `VOID types.no_docs()`
 
-### Function `VOID doctest(INT _no_docs, INT _v)`
+### Function `VOID types.doctest(INT _no_docs, INT _v)`
 
 doctest on a function
 
@@ -53,28 +54,21 @@ we can generate documentation for param `_v` here.
 ##### Example
 This comment is multi-lined to ensure multiple `#[doc]` are parsed correctly.
 
-### Function `VOID arg_only(INT _v)`
+### Function `VOID types.arg_only(INT _v)`
 
 * `INT _v`:
 doc comment for `arg_only`
 
-### Object `DocStruct`
+### Constructor `types.DocStruct([INT cap])`
 
 doctest for `DocStruct` implementation
-
-```vcl
-// Create a new instance of the object in your VCL init function
-sub vcl_init {
-    new new = DocStruct.new([INT cap]);
-}
-```
 
 doctest for `new`
 
 * `[INT cap]`:
 doc comment for `cap`
 
-#### Method `VOID function(STRING key)`
+#### Method `VOID <object>.function(STRING key)`
 
 doctest for the object function
 

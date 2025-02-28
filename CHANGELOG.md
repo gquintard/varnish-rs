@@ -1,5 +1,11 @@
 # Unpublished
 - In probe support, renamed `Request::URL` to `Request::Url`
+- Refactored Workspace API:
+  - Introduce `Workspace::vcl_string_builder`, `vcl_blob_builder`, and `slice_builder` instead of `reserve`
+  - There is no longer any need to write NUL bytes to the end of the buffer
+  - The returned buffers support `Write` trait, and can be inspected/modified what has been written so far
+  - The buffer does not allow any access to "dirty" (unset) portion of the buffer
+  - The buffer must be finalized with `finish()`, which returns `VCL_STRING`, `VCL_BLOB`, or `&[T]` depending on the builder used
 
 # 0.3.0 (2024-12-12)
 
@@ -37,7 +43,7 @@
   - The macro attribute must be used on a `mod` block that contains the VMOD functions
   - The macro can generate a markdown file, e.g. `#[varnish(docs = "README.md")]`
   - All examples have been [updated](https://github.com/gquintard/varnish-rs/commit/f0f0120d3fddbdad491ff80fccbfdd1930d24dc6) to use the new system
-  - See [crate documentation](https://docs.rs/varnish/latest/varnish/) for more details 
+  - See [crate documentation](https://docs.rs/varnish/latest/varnish/) for more details
 - `vtc!` macro has been replaced with `run_vtc_tests!("tests/*.vtc")`:
   - supports glob patterns
   - supports `VARNISHTEST_DURATION` env var, defaulting to "5s"

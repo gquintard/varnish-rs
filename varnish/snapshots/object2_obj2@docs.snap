@@ -20,38 +20,10 @@ import obj2;
 import obj2 from "path/to/libobj2.so";
 ```
 
-### Object `Obj1`
+### Constructor `obj2.Obj1([INT val])`
 
-```vcl
-// Create a new instance of the object in your VCL init function
-sub vcl_init {
-    new new = Obj1.new([INT val]);
-}
-```
+### Constructor `obj2.Obj2(INT val)`
 
-### Object `Obj2`
+### Constructor `obj2.Obj3([INT val])`
 
-```vcl
-// Create a new instance of the object in your VCL init function
-sub vcl_init {
-    new new = Obj2.new(INT val);
-}
-```
-
-### Object `Obj3`
-
-```vcl
-// Create a new instance of the object in your VCL init function
-sub vcl_init {
-    new new = Obj3.new([INT val]);
-}
-```
-
-### Object `Obj4`
-
-```vcl
-// Create a new instance of the object in your VCL init function
-sub vcl_init {
-    new new = Obj4.new(INT val);
-}
-```
+### Constructor `obj2.Obj4(INT val)`

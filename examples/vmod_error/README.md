@@ -23,11 +23,11 @@ import error;
 import error from "path/to/liberror.so";
 ```
 
-### Function `INT cannot_fail(STRING path)`
+### Function `INT error.cannot_fail(STRING path)`
 
 This function never fails, returning 0 if anything goes wrong
 
-### Function `INT manual_fail(STRING fp)`
+### Function `INT error.manual_fail(STRING fp)`
 
 If the file cannot be parsed into an INT, the vmod will trigger a VCL error,
 stopping the processing of the request and logging the error.
@@ -35,7 +35,7 @@ The client will receive an error message with a 500 status code.
 
 We call `ctx.fail()` ourselves, but we still need to return an i64.
 
-### Function `INT result_fail(STRING fp)`
+### Function `INT error.result_fail(STRING fp)`
 
 From a user perspective, this function does the same thing as `.manual_fail()`,
 except its underlying `rust` implementation is slightly different.
