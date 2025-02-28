@@ -36,7 +36,7 @@ varnish v1 -vcl {
 
 # this should work for all
 	client c1 {
-		txreq -url ${tmpdir}/good_file 
+		txreq -url ${tmpdir}/good_file
 		rxresp
 		expect resp.http.cannot == 123456
 		expect resp.http.manual == 123456
@@ -49,7 +49,7 @@ varnish v1 -vcl {
 		rxresp
 		expect resp.status == 200
 		expect resp.http.cannot == 0
-	
+
 		txreq -url ${tmpdir}/bad_file -hdr "func: cannot"
 		rxresp
 		expect resp.status == 200
@@ -61,7 +61,7 @@ varnish v1 -vcl {
 	logexpect l1 -v v1 -d 1 -g raw {
 		expect * *   VCL_Error "manual_fail: couldn't read file into string"
 	} -start
-	
+
 	client c1 {
 		txreq -url ${tmpdir}/no_file -hdr "func: manual"
 	} -run
@@ -84,7 +84,7 @@ varnish v1 -vcl {
 	logexpect l1 -v v1 -d 1 -g raw {
 		expect * *   VCL_Error {result_fail: No such file or directory}
 	} -start
-	
+
 	client c1 {
 		txreq -url ${tmpdir}/no_file -hdr "func: result"
 	} -run
