@@ -188,7 +188,7 @@ fn parse_metric_attributes(field: &Field, metric_type: &str) -> (Level, Format) 
                         "info" => Level::Info,
                         "diag" => Level::Diag,
                         "debug" => Level::Debug,
-                        _ => panic!("Invalid level value for field {}. Must be one of: info, diag, debug", 
+                        _ => panic!("Invalid level value for field {}. Must be one of: info, diag, debug",
                             field.ident.as_ref().unwrap()),
                     };
                 }
