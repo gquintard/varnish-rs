@@ -1,8 +1,8 @@
 use std::ffi::CString;
 use std::mem::size_of;
 use std::ops::{Deref, DerefMut};
-
-use varnish_sys::ffi::{va_list, vsc_seg, VRT_VSC_Alloc, VRT_VSC_Destroy};
+use std::ptr::null_mut;
+use varnish_sys::ffi::{vsc_seg, VRT_VSC_Alloc, VRT_VSC_Destroy};
 
 pub unsafe trait VscMetric {
     fn get_metadata() -> &'static str;
@@ -16,7 +16,7 @@ pub struct Vsc<T: VscMetric> {
 
 impl<T: VscMetric> Vsc<T> {
     pub fn new(module_name: &str, module_prefix: &str) -> Self {
-        let mut seg = std::ptr::null_mut();
+        let mut seg = null_mut();
         let name = CString::new(module_name).expect("module_name contained interior nul byte");
         let format =
             CString::new(module_prefix).expect("module_prefix contained interior nul byte");
@@ -25,21 +25,24 @@ impl<T: VscMetric> Vsc<T> {
 
         let metric = unsafe {
             VRT_VSC_Alloc(
-                std::ptr::null_mut(),
+                null_mut(),
                 &mut seg,
                 name.as_ptr(),
                 size_of::<T>(),
                 metadata_json.as_ptr(),
                 metadata_json.len(),
                 format.as_ptr(),
-                va_list::default(),
+                // FIXME: this does not work, and there is an ongoing discussion about it in the PR chat
+                // varnish_sys::ffi::va_list::default(),
+                null_mut(),
             )
             .cast::<T>()
         };
 
-        if metric.is_null() {
-            panic!("VSC segment allocation failed for {}", module_name);
-        }
+        assert!(
+            !metric.is_null(),
+            "VSC segment allocation failed for {module_name}"
+        );
 
         Self { metric, seg, name }
     }

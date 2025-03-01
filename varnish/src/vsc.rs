@@ -154,7 +154,7 @@ fn vsm_error(p: *const ffi::vsm) -> VclError {
     }
 }
 
-impl<'a> Drop for StatsBuilder<'a> {
+impl Drop for StatsBuilder<'_> {
     fn drop(&mut self) {
         assert!(
             (self.vsc.is_null() && self.vsm.is_null())
@@ -168,7 +168,7 @@ impl<'a> Drop for StatsBuilder<'a> {
     }
 }
 
-impl<'a> Drop for Stats<'a> {
+impl Drop for Stats<'_> {
     fn drop(&mut self) {
         unsafe {
             ffi::VSC_Destroy(&mut self.vsc, self.vsm);
@@ -291,7 +291,7 @@ pub struct Stat<'a> {
     pub format: Format,
 }
 
-impl<'a> Stat<'a> {
+impl Stat<'_> {
     /// Retrieve the current value of the statistic, as-is
     pub fn get_raw_value(&self) -> u64 {
         // # Safety
@@ -318,7 +318,7 @@ impl<'a> Stat<'a> {
     }
 }
 
-impl<'a> Stats<'a> {
+impl Stats<'_> {
     /// Return a statistic set
     ///
     /// Names are not necessarily unique, so instead, statistics are tracked using `usize` handle
