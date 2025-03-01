@@ -1,4 +1,5 @@
 use std::sync::atomic::AtomicU64;
+
 use varnish::vsc_wrapper::Vsc;
 use varnish::Stats;
 
@@ -27,8 +28,9 @@ pub struct test {
 
 #[varnish::vmod(docs = "README.md")]
 mod stats {
-    use super::{test, VariousStats};
     use varnish::vsc_wrapper::Vsc;
+
+    use super::{test, VariousStats};
 
     impl test {
         pub fn new() -> Self {

@@ -1,9 +1,13 @@
-use crate::parser_utils::{find_attr, has_attr, parse_doc_str};
-use serde::Serialize;
 use std::collections::HashMap;
 use std::mem::size_of;
 use std::sync::atomic::AtomicU64;
-use syn::{punctuated::Punctuated, token::Comma, Data, Field, Fields, Type};
+
+use serde::Serialize;
+use syn::punctuated::Punctuated;
+use syn::token::Comma;
+use syn::{Data, Field, Fields, Type};
+
+use crate::parser_utils::{find_attr, has_attr, parse_doc_str};
 
 type FieldList = Punctuated<Field, Comma>;
 

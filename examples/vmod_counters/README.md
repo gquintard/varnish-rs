@@ -17,23 +17,16 @@ import stats;
 import stats from "path/to/libstats.so";
 ```
 
-### Object `test`
+### Constructor `stats.test()`
 
-```vcl
-// Create a new instance of the object in your VCL init function
-sub vcl_init {
-    new new = test.new();
-}
-```
+#### Method `VOID <object>.increment_foo()`
 
-#### Method `VOID increment_foo()`
+#### Method `INT <object>.get_foo()`
 
-#### Method `INT get_foo()`
+#### Method `VOID <object>.update_temperature(INT value)`
 
-#### Method `VOID update_temperature(INT value)`
+#### Method `INT <object>.get_temperature()`
 
-#### Method `INT get_temperature()`
+#### Method `INT <object>.get_memory()`
 
-#### Method `INT get_memory()`
-
-#### Method `VOID update_memory(INT value)`
+#### Method `VOID <object>.update_memory(INT value)`

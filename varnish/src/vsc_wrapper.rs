@@ -1,6 +1,7 @@
 use std::ffi::CString;
 use std::mem::size_of;
 use std::ops::{Deref, DerefMut};
+
 use varnish_sys::ffi::{va_list, vsc_seg, VRT_VSC_Alloc, VRT_VSC_Destroy};
 
 pub unsafe trait VscMetric {
