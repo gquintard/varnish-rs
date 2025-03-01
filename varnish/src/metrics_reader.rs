@@ -230,18 +230,19 @@ pub enum MetricFormat {
     Bitmap,
     /// Time
     Duration,
+    /// Unit unknown
+    // FIXME: This should contain original value
+    Unknown,
 }
 
-impl TryFrom<c_int> for MetricFormat {
-    type Error = ();
-
-    fn try_from(value: c_int) -> Result<Self, Self::Error> {
-        match From::from(u8::try_from(value).map_err(|_| ())?) {
-            'i' => Ok(MetricFormat::Integer),
-            'B' => Ok(MetricFormat::Bytes),
-            'b' => Ok(MetricFormat::Bitmap),
-            'd' => Ok(MetricFormat::Duration),
-            _ => Err(()),
+impl From<c_int> for MetricFormat {
+    fn from(value: c_int) -> Self {
+        match char::from_u32(value as u32).unwrap() {
+            'i' => MetricFormat::Integer,
+            'B' => MetricFormat::Bytes,
+            'b' => MetricFormat::Bitmap,
+            'd' => MetricFormat::Duration,
+            _ => MetricFormat::Unknown,
         }
     }
 }
@@ -253,6 +254,7 @@ impl From<MetricFormat> for char {
             MetricFormat::Bytes => 'B',
             MetricFormat::Bitmap => 'b',
             MetricFormat::Duration => 'd',
+            MetricFormat::Unknown => '?',
         }
     }
 }
@@ -269,9 +271,7 @@ unsafe extern "C" fn add_point(ptr: *mut c_void, point: *const ffi::VSC_point) -
         short_desc: CStr::from_ptr(point.sdesc).to_str().unwrap(),
         long_desc: CStr::from_ptr(point.ldesc).to_str().unwrap(),
         semantics: point.semantics.into(),
-        // FIXME: Unknown formats should continue to work
-        //        Perhaps use `Option<MetricFormat>` for `format` field?
-        format: point.format.try_into().unwrap(),
+        format: point.format.into(),
     };
     // FIXME: needs to be documented: pointer is used as a key?
     assert_eq!(internal.points.insert(k, stat), None);
